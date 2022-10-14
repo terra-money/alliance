@@ -2,13 +2,15 @@ syntax = "proto3";
 package alliance.alliance;
 
 import "gogoproto/gogo.proto";
+import "alliance/alliance.proto";
 import "alliance/params.proto";
-// this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "alliance/x/alliance/types";
 
-// GenesisState defines the alliance module's genesis state.
+// GenesisState defines the module's genesis state.
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
-  // this line is used by starport scaffolding # genesis/proto/state
+  repeated AllianceAsset assets = 2 [
+    (gogoproto.nullable) = false
+  ];
 }

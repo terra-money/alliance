@@ -1,31 +1,20 @@
 package cli
 
 import (
-	"fmt"
-	// "strings"
-
-	"github.com/spf13/cobra"
+	"alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	// "github.com/cosmos/cosmos-sdk/client/flags"
-	// sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"alliance/x/alliance/types"
+	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string) *cobra.Command {
-	// Group alliance queries under a subcommand
-	cmd := &cobra.Command{
+func GetQueryCmd() *cobra.Command {
+	queryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
+		Short:                      "Querying commands for the staking module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-
-	cmd.AddCommand(CmdQueryParams())
-	// this line is used by starport scaffolding # 1
-
-	return cmd
+	return queryCmd
 }

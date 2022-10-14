@@ -4,7 +4,7 @@ info:
   name: ''
   description: ''
 paths:
-  /alliance/alliance/params:
+  /alliance/params:
     get:
       summary: Parameters queries the parameters of the module.
       operationId: AllianceAllianceParams
@@ -17,6 +17,9 @@ paths:
               params:
                 description: params holds all the parameters of this module.
                 type: object
+                properties:
+                  reward_delay_time:
+                    type: string
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -44158,16 +44161,39 @@ paths:
       tags:
         - Query
 definitions:
+  alliance.alliance.MsgDelegateResponse:
+    type: object
+  alliance.alliance.MsgRedelegateResponse:
+    type: object
+  alliance.alliance.MsgUndelegateResponse:
+    type: object
   alliance.alliance.Params:
     type: object
-    description: Params defines the parameters for the module.
+    properties:
+      reward_delay_time:
+        type: string
   alliance.alliance.QueryParamsResponse:
     type: object
     properties:
       params:
         description: params holds all the parameters of this module.
         type: object
+        properties:
+          reward_delay_time:
+            type: string
     description: QueryParamsResponse is response type for the Query/Params RPC method.
+  cosmos.base.v1beta1.Coin:
+    type: object
+    properties:
+      denom:
+        type: string
+      amount:
+        type: string
+    description: |-
+      Coin defines a token with a denomination and an amount.
+
+      NOTE: The amount field is an Int which implements the custom method
+      signatures required by gogoproto.
   google.protobuf.Any:
     type: object
     properties:
@@ -46843,18 +46869,6 @@ definitions:
     description: |-
       SendEnabled maps coin denom to a send_enabled status (whether a denom is
       sendable).
-  cosmos.base.v1beta1.Coin:
-    type: object
-    properties:
-      denom:
-        type: string
-      amount:
-        type: string
-    description: |-
-      Coin defines a token with a denomination and an amount.
-
-      NOTE: The amount field is an Int which implements the custom method
-      signatures required by gogoproto.
   cosmos.base.tendermint.v1beta1.ABCIQueryResponse:
     type: object
     properties:

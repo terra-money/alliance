@@ -5,7 +5,6 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "alliance/params.proto";
-// this line is used by starport scaffolding # 1
 
 option go_package = "alliance/x/alliance/types";
 
@@ -13,7 +12,7 @@ option go_package = "alliance/x/alliance/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/alliance/alliance/params";
+    option (google.api.http).get = "/alliance/params";
   }
   // this line is used by starport scaffolding # 2
 }

@@ -266,7 +266,6 @@ func New(
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
-
 	bApp := baseapp.NewBaseApp(Name, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
@@ -486,13 +485,8 @@ func New(
 		govConfig,
 	)
 
-	app.AllianceKeeper = *alliancemodulekeeper.NewKeeper(
-		appCodec,
-		keys[alliancemoduletypes.StoreKey],
-		keys[alliancemoduletypes.MemStoreKey],
-		app.GetSubspace(alliancemoduletypes.ModuleName),
-	)
-	allianceModule := alliancemodule.NewAppModule(appCodec, app.AllianceKeeper, app.AccountKeeper, app.BankKeeper)
+	app.AllianceKeeper = alliancemodulekeeper.NewKeeper(appCodec, keys[alliancemoduletypes.StoreKey], app.GetSubspace(alliancemoduletypes.ModuleName))
+	allianceModule := alliancemodule.NewAppModule(appCodec, app.AllianceKeeper, app.StakingKeeper, app.interfaceRegistry)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
