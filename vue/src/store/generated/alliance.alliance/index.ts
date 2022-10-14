@@ -1,9 +1,13 @@
 import { Client, registry, MissingWalletError } from 'alliance-client-ts'
 
+import { AllianceAsset } from "alliance-client-ts/alliance.alliance/types"
+import { AddAssetProposal } from "alliance-client-ts/alliance.alliance/types"
+import { RemoveAssetProposal } from "alliance-client-ts/alliance.alliance/types"
+import { UpdateAssetProposal } from "alliance-client-ts/alliance.alliance/types"
 import { Params } from "alliance-client-ts/alliance.alliance/types"
 
 
-export { Params };
+export { AllianceAsset, AddAssetProposal, RemoveAssetProposal, UpdateAssetProposal, Params };
 
 function initClient(vuexGetters) {
 	return new Client(vuexGetters['common/env/getEnv'], vuexGetters['common/wallet/signer'])
@@ -37,6 +41,10 @@ const getDefaultState = () => {
 				Params: {},
 				
 				_Structure: {
+						AllianceAsset: getStructure(AllianceAsset.fromPartial({})),
+						AddAssetProposal: getStructure(AddAssetProposal.fromPartial({})),
+						RemoveAssetProposal: getStructure(RemoveAssetProposal.fromPartial({})),
+						UpdateAssetProposal: getStructure(UpdateAssetProposal.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						
 		},

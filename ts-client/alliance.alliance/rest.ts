@@ -9,10 +9,15 @@
  * ---------------------------------------------------------------
  */
 
-/**
- * Params defines the parameters for the module.
- */
-export type AllianceParams = object;
+export type AllianceMsgDelegateResponse = object;
+
+export type AllianceMsgRedelegateResponse = object;
+
+export type AllianceMsgUndelegateResponse = object;
+
+export interface AllianceParams {
+  reward_delay_time?: string;
+}
 
 /**
  * QueryParamsResponse is response type for the Query/Params RPC method.
@@ -31,6 +36,17 @@ export interface RpcStatus {
   code?: number;
   message?: string;
   details?: ProtobufAny[];
+}
+
+/**
+* Coin defines a token with a denomination and an amount.
+
+NOTE: The amount field is an Int which implements the custom method
+signatures required by gogoproto.
+*/
+export interface V1Beta1Coin {
+  denom?: string;
+  amount?: string;
 }
 
 export type QueryParamsType = Record<string | number, any>;
@@ -225,7 +241,7 @@ export class HttpClient<SecurityDataType = unknown> {
 }
 
 /**
- * @title alliance/genesis.proto
+ * @title alliance/alliance.proto
  * @version version not set
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {

@@ -4,7 +4,8 @@ package alliance.alliance;
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 
-// Params defines the parameters for the shared security module.
+option go_package = "alliance/x/alliance/types";
+
 message Params {
   option (gogoproto.equal)            = true;
   google.protobuf.Duration reward_delay_time = 1 [

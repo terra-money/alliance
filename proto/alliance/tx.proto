@@ -6,8 +6,8 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
+option go_package = "alliance/x/alliance/types";
 
-// Msg defines the public RPCs that can be sent as transactions.
 service Msg {
   rpc Delegate(MsgDelegate) returns (MsgDelegateResponse);
   rpc Redelegate(MsgRedelegate) returns(MsgRedelegateResponse);

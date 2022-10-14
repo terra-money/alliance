@@ -4,7 +4,6 @@ package alliance.alliance;
 import "gogoproto/gogo.proto";
 import "alliance/alliance.proto";
 import "alliance/params.proto";
-// this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "alliance/x/alliance/types";
 

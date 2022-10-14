@@ -6,6 +6,7 @@ import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
 import "alliance/params.proto";
 
+option go_package = "alliance/x/alliance/types";
 
 // key: denom value: AllianceAsset
 message AllianceAsset {
