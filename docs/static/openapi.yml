@@ -4,7 +4,7 @@ info:
   name: ''
   description: ''
 paths:
-  /alliance/alliance/params:
+  /alliance/params:
     get:
       summary: Parameters queries the parameters of the module.
       operationId: AllianceAllianceParams

@@ -251,11 +251,11 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryParams
    * @summary Parameters queries the parameters of the module.
-   * @request GET:/alliance/alliance/params
+   * @request GET:/alliance/params
    */
   queryParams = (params: RequestParams = {}) =>
     this.request<AllianceQueryParamsResponse, RpcStatus>({
-      path: `/alliance/alliance/params`,
+      path: `/alliance/params`,
       method: "GET",
       format: "json",
       ...params,

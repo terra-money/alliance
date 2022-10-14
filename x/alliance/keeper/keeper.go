@@ -2,9 +2,13 @@ package keeper
 
 import (
 	"alliance/x/alliance/types"
+	"fmt"
+
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -26,4 +30,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ps paramtype
 		paramstore: ps,
 		cdc:        cdc,
 	}
+}
+
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }

@@ -3,9 +3,6 @@ package keeper
 import (
 	"alliance/x/alliance/types"
 	"context"
-	"time"
-
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -16,19 +13,16 @@ type Querier struct {
 
 var _ types.QueryServer = Querier{}
 
-func NewQuerier(k Keeper) sdk.Querier {
-	return func(ctx sdk.Context, path []string, _ abci.RequestQuery) ([]byte, error) {
+func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	// Define a variable that will store the params
+	var params types.Params
 
-		return nil, nil
-	}
-}
+	// Get context with the information about the environment
+	ctx := sdk.UnwrapSDKContext(c)
 
-func (k Keeper) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	_ = ctx
+	k.paramstore.GetParamSet(ctx, &params)
+
 	return &types.QueryParamsResponse{
-		Params: types.Params{
-			RewardDelayTime: time.Hour,
-		},
+		Params: params,
 	}, nil
 }

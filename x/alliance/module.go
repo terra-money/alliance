@@ -1,6 +1,7 @@
 package alliance
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -48,8 +49,8 @@ func (a AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-func (a AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
-	//TODO implement me
+func (a AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 func (a AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -68,8 +69,9 @@ func (a AppModuleBasic) ValidateGenesis(jsonCodec codec.JSONCodec, config client
 	return ValidateGenesis(&genesis)
 }
 
-func (a AppModuleBasic) RegisterGRPCGatewayRoutes(context client.Context, mux *runtime.ServeMux) {
-	//TODO implement me
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -102,17 +104,15 @@ func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {
 	//TODO implement me
 }
 
-func (a AppModule) Route() sdk.Route {
-	// Deprecated
-	return sdk.Route{}
-}
+// Deprecated: use RegisterServices
+func (am AppModule) Route() sdk.Route { return sdk.Route{} }
 
-func (a AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
+// Deprecated: use RegisterServices
+func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-func (a AppModule) LegacyQuerierHandler(codec *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewLegacyQuerier(a.keeper, codec)
+// Deprecated: use RegisterServices
+func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
+	return nil
 }
 
 // RegisterServices registers a gRPC query service to respond to the module-specific gRPC queries
