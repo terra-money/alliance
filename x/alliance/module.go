@@ -3,24 +3,26 @@ package alliance
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
+
+	// this line is used by starport scaffolding # 1
+
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"alliance/x/alliance/client/cli"
+	"alliance/x/alliance/keeper"
 	"alliance/x/alliance/simulation"
 	"alliance/x/alliance/types"
-	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"alliance/x/alliance/keeper"
-
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var (
@@ -113,9 +115,10 @@ func (a AppModule) LegacyQuerierHandler(codec *codec.LegacyAmino) sdk.Querier {
 	return keeper.NewLegacyQuerier(a.keeper, codec)
 }
 
+// RegisterServices registers a gRPC query service to respond to the module-specific gRPC queries
 func (a AppModule) RegisterServices(cfg module.Configurator) {
-	querier := keeper.NewQuerier(a.keeper)
-	types.RegisterQueryServer(cfg.QueryServer(), querier)
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(a.keeper))
+	types.RegisterQueryServer(cfg.QueryServer(), a.keeper)
 }
 
 func (a AppModule) ConsensusVersion() uint64 {

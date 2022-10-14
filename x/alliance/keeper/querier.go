@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"alliance/x/alliance/types"
+	"context"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -19,4 +20,10 @@ func NewQuerier(k Keeper) sdk.Querier {
 
 		return nil, nil
 	}
+}
+
+func (k Keeper) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	_ = ctx
+	return &types.QueryParamsResponse{}, nil
 }
