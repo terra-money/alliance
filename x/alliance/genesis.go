@@ -1,23 +1,19 @@
 package alliance
 
 import (
-	"alliance/x/alliance/keeper"
 	"alliance/x/alliance/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// InitGenesis initializes the module's state from a provided genesis state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	// this line is used by starport scaffolding # genesis/module/init
-	k.SetParams(ctx, genState.Params)
+// ValidateGenesis
+func ValidateGenesis(data *types.GenesisState) error {
+	return nil
 }
 
-// ExportGenesis returns the module's exported genesis
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	genesis := types.DefaultGenesis()
-	genesis.Params = k.GetParams(ctx)
-
-	// this line is used by starport scaffolding # genesis/module/export
-
-	return genesis
+func DefaultGenesisState() *types.GenesisState {
+	return &types.GenesisState{
+		Params: types.Params{
+			RewardDelayTime: 24 * 60 * 60 * 1000_000_000,
+		},
+		Assets: []types.AllianceAsset{},
+	}
 }

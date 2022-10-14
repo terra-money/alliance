@@ -1,19 +1,25 @@
 package types
 
+import "github.com/cosmos/cosmos-sdk/types/address"
+
 const (
-	// ModuleName defines the module name
+	// ModuleName is the name of the staking module
 	ModuleName = "alliance"
 
-	// StoreKey defines the primary module store key
+	// StoreKey is the string store representation
 	StoreKey = ModuleName
 
-	// RouterKey defines the module's message routing key
-	RouterKey = ModuleName
+	// QuerierRoute is the querier route for the staking module
+	QuerierRoute = ModuleName
 
-	// MemStoreKey defines the in-memory store key
-	MemStoreKey = "mem_alliance"
+	// RouterKey is the msg router key for the staking module
+	RouterKey = ModuleName
 )
 
-func KeyPrefix(p string) []byte {
-	return []byte(p)
+var (
+	AssetKey = []byte{0x11}
+)
+
+func GetAssetKey(denom string) []byte {
+	return append(AssetKey, address.MustLengthPrefix([]byte(denom))...)
 }

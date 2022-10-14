@@ -486,13 +486,8 @@ func New(
 		govConfig,
 	)
 
-	app.AllianceKeeper = *alliancemodulekeeper.NewKeeper(
-		appCodec,
-		keys[alliancemoduletypes.StoreKey],
-		keys[alliancemoduletypes.MemStoreKey],
-		app.GetSubspace(alliancemoduletypes.ModuleName),
-	)
-	allianceModule := alliancemodule.NewAppModule(appCodec, app.AllianceKeeper, app.AccountKeeper, app.BankKeeper)
+	app.AllianceKeeper = alliancemodulekeeper.NewKeeper(appCodec, keys[alliancemoduletypes.StoreKey], app.GetSubspace(alliancemoduletypes.ModuleName))
+	allianceModule := alliancemodule.NewAppModule(appCodec, app.AllianceKeeper, app.StakingKeeper, app.interfaceRegistry)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
