@@ -16,3 +16,14 @@ client:
 faucet:
   name: bob
   coins: ["5token", "100000stake"]
+init:
+  home: "./.testnet"
+genesis:
+  app_state:
+    alliance:
+      assets: 
+        - denom: 'uluna'
+          reward_weight: "0.5"
+          take_rate: "0.5"
+      params: 
+        reward_delay_time: "60s"

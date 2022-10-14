@@ -3,6 +3,7 @@ package keeper
 import (
 	"alliance/x/alliance/types"
 	"context"
+	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -25,5 +26,9 @@ func NewQuerier(k Keeper) sdk.Querier {
 func (k Keeper) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	_ = ctx
-	return &types.QueryParamsResponse{}, nil
+	return &types.QueryParamsResponse{
+		Params: types.Params{
+			RewardDelayTime: time.Hour,
+		},
+	}, nil
 }
