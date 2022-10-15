@@ -9,6 +9,32 @@
  * ---------------------------------------------------------------
  */
 
+export interface AllianceAllianceAsset {
+  denom?: string;
+
+  /**
+   * The reward weight specifies the ratio of rewards that will be given to each alliance asset
+   * It does not need to sum to 1. rate = weight / total_weight
+   * Native asset is always assumed to have a weight of 1.
+   */
+  reward_weight?: string;
+  take_rate?: string;
+  total_tokens?: string;
+  total_shares?: string;
+}
+
+export interface AllianceDelegation {
+  /** delegator_address is the bech32-encoded address of the delegator. */
+  delegator_address?: string;
+
+  /** validator_address is the bech32-encoded address of the validator. */
+  validator_address?: string;
+  denom?: string;
+
+  /** shares define the delegation shares received. */
+  shares?: string;
+}
+
 export type AllianceMsgDelegateResponse = object;
 
 export type AllianceMsgRedelegateResponse = object;
@@ -19,11 +45,34 @@ export interface AllianceParams {
   reward_delay_time?: string;
 }
 
-/**
- * QueryParamsResponse is response type for the Query/Params RPC method.
- */
+export interface AllianceQueryAllianceDelegationResponse {
+  delegations?: AllianceDelegation;
+}
+
+export interface AllianceQueryAllianceDelegationsResponse {
+  delegations?: AllianceDelegation[];
+}
+
+export interface AllianceQueryAllianceResponse {
+  alliance?: AllianceAllianceAsset;
+}
+
+export interface AllianceQueryAlliancesResponse {
+  assets?: AllianceAllianceAsset[];
+
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
+}
+
 export interface AllianceQueryParamsResponse {
-  /** params holds all the parameters of this module. */
   params?: AllianceParams;
 }
 
@@ -47,6 +96,74 @@ signatures required by gogoproto.
 export interface V1Beta1Coin {
   denom?: string;
   amount?: string;
+}
+
+/**
+* message SomeRequest {
+         Foo some_parameter = 1;
+         PageRequest pagination = 2;
+ }
+*/
+export interface V1Beta1PageRequest {
+  /**
+   * key is a value returned in PageResponse.next_key to begin
+   * querying the next page most efficiently. Only one of offset or key
+   * should be set.
+   * @format byte
+   */
+  key?: string;
+
+  /**
+   * offset is a numeric offset that can be used when key is unavailable.
+   * It is less efficient than using key. Only one of offset or key should
+   * be set.
+   * @format uint64
+   */
+  offset?: string;
+
+  /**
+   * limit is the total number of results to be returned in the result page.
+   * If left empty it will default to a value to be set by each app.
+   * @format uint64
+   */
+  limit?: string;
+
+  /**
+   * count_total is set to true  to indicate that the result set should include
+   * a count of the total number of items available for pagination in UIs.
+   * count_total is only respected when offset is used. It is ignored when key
+   * is set.
+   */
+  count_total?: boolean;
+
+  /**
+   * reverse is set to true if results are to be returned in the descending order.
+   *
+   * Since: cosmos-sdk 0.43
+   */
+  reverse?: boolean;
+}
+
+/**
+* PageResponse is to be embedded in gRPC response messages where the
+corresponding request message has used PageRequest.
+
+ message SomeResponse {
+         repeated Bar results = 1;
+         PageResponse page = 2;
+ }
+*/
+export interface V1Beta1PageResponse {
+  /**
+   * next_key is the key to be passed to PageRequest.key to
+   * query the next page most efficiently. It will be empty if
+   * there are no more results.
+   * @format byte
+   */
+  next_key?: string;
+
+  /** @format uint64 */
+  total?: string;
 }
 
 export type QueryParamsType = Record<string | number, any>;
@@ -249,14 +366,98 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Query
+   * @name QueryAlliances
+   * @summary Query all alliances paginated
+   * @request GET:/terra/alliances
+   */
+  queryAlliances = (
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<AllianceQueryAlliancesResponse, RpcStatus>({
+      path: `/terra/alliances`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
    * @name QueryParams
-   * @summary Parameters queries the parameters of the module.
-   * @request GET:/alliance/params
+   * @request GET:/terra/alliances/params
    */
   queryParams = (params: RequestParams = {}) =>
     this.request<AllianceQueryParamsResponse, RpcStatus>({
-      path: `/alliance/params`,
+      path: `/terra/alliances/params`,
       method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryAlliance
+   * @summary Query the overall delegations of an aliance
+   * @request GET:/terra/alliances/{denom}
+   */
+  queryAlliance = (denom: string, params: RequestParams = {}) =>
+    this.request<AllianceQueryAllianceResponse, RpcStatus>({
+      path: `/terra/alliances/${denom}`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryAllianceDelegations
+   * @summary Query the overall delegations of an aliance groupped by delegators
+   * @request GET:/terra/alliances/{denom}/delegations
+   */
+  queryAllianceDelegations = (
+    denom: string,
+    query?: { "pagination.next_key"?: string; "pagination.total"?: string },
+    params: RequestParams = {},
+  ) =>
+    this.request<AllianceQueryAllianceDelegationsResponse, RpcStatus>({
+      path: `/terra/alliances/${denom}/delegations`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryAllianceDelegation
+   * @summary Query the overall delegations of an aliance for a single delegator
+   * @request GET:/terra/alliances/{denom}/delegations/{delegator_address}
+   */
+  queryAllianceDelegation = (
+    denom: string,
+    delegator_address: string,
+    query?: { "pagination.next_key"?: string; "pagination.total"?: string },
+    params: RequestParams = {},
+  ) =>
+    this.request<AllianceQueryAllianceDelegationResponse, RpcStatus>({
+      path: `/terra/alliances/${denom}/delegations/${delegator_address}`,
+      method: "GET",
+      query: query,
       format: "json",
       ...params,
     });

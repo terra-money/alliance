@@ -5,25 +5,85 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "alliance/params.proto";
+import "alliance/alliance.proto";
+import "alliance/delegations.proto";
 
 option go_package = "alliance/x/alliance/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/alliance/params";
+    option (google.api.http).get = "/terra/alliances/params";
   }
-  // this line is used by starport scaffolding # 2
+
+  // Query all alliances paginated
+  rpc Alliances(QueryAlliancesRequest) returns (QueryAlliancesResponse) {
+    option (google.api.http).get = "/terra/alliances";
+  }
+
+  // Query the overall delegations of an aliance
+  rpc Alliance(QueryAllianceRequest) returns (QueryAllianceResponse) {
+    option (google.api.http).get = "/terra/alliances/{denom}";
+  }
+
+  // Query the overall delegations of an aliance groupped by delegators
+  rpc AllianceDelegations(QueryAllianceDelegationsRequest) returns (QueryAllianceDelegationsResponse) {
+    option (google.api.http).get = "/terra/alliances/{denom}/delegations";
+  }
+
+  // Query the overall delegations of an aliance for a single delegator
+  rpc AllianceDelegation(QueryAllianceDelegationRequest) returns (QueryAllianceDelegationResponse) {
+    option (google.api.http).get = "/terra/alliances/{denom}/delegations/{delegator_address}";
+  }
 }
 
-// QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
 
-// QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
-  // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-// this line is used by starport scaffolding # 3
+message QueryAlliancesRequest{
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+
+}
+message QueryAlliancesResponse {
+  repeated AllianceAsset assets = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllianceRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string denom = 1;
+}
+
+message QueryAllianceResponse {
+  AllianceAsset alliance = 1;
+}
+
+message QueryAllianceDelegationsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string denom = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllianceDelegationsResponse {
+  repeated Delegation delegations = 1;
+}
+
+message QueryAllianceDelegationRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string denom = 1;
+  string delegator_address = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 3;
+}
+
+message QueryAllianceDelegationResponse {
+  Delegation delegations = 1;
+}

@@ -4,25 +4,76 @@ info:
   name: ''
   description: ''
 paths:
-  /alliance/params:
+  /terra/alliances:
     get:
-      summary: Parameters queries the parameters of the module.
-      operationId: AllianceAllianceParams
+      summary: Query all alliances paginated
+      operationId: AllianceAllianceAlliances
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              params:
-                description: params holds all the parameters of this module.
+              assets:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                      title: >-
+                        Denom of the asset. It could either be a native token or
+                        an IBC token
+                    reward_weight:
+                      type: string
+                      description: >-
+                        The reward weight specifies the ratio of rewards that
+                        will be given to each alliance asset
+
+                        It does not need to sum to 1. rate = weight /
+                        total_weight
+
+                        Native asset is always assumed to have a weight of 1.
+                    take_rate:
+                      type: string
+                      title: >-
+                        A positive take rate is used for liquid staking
+                        derivatives. It defines an annualized reward rate that
+
+                        will be redirected to the distribution rewards pool
+                    total_tokens:
+                      type: string
+                    total_shares:
+                      type: string
+                  title: 'key: denom value: AllianceAsset'
+              pagination:
                 type: object
                 properties:
-                  reward_delay_time:
+                  next_key:
                     type: string
-            description: >-
-              QueryParamsResponse is response type for the Query/Params RPC
-              method.
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
         default:
           description: An unexpected error response.
           schema:
@@ -41,6 +92,313 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /terra/alliances/params:
+    get:
+      operationId: AllianceAllianceParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  reward_delay_time:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  '/terra/alliances/{denom}':
+    get:
+      summary: Query the overall delegations of an aliance
+      operationId: AllianceAllianceAlliance
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              alliance:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                    title: >-
+                      Denom of the asset. It could either be a native token or
+                      an IBC token
+                  reward_weight:
+                    type: string
+                    description: >-
+                      The reward weight specifies the ratio of rewards that will
+                      be given to each alliance asset
+
+                      It does not need to sum to 1. rate = weight / total_weight
+
+                      Native asset is always assumed to have a weight of 1.
+                  take_rate:
+                    type: string
+                    title: >-
+                      A positive take rate is used for liquid staking
+                      derivatives. It defines an annualized reward rate that
+
+                      will be redirected to the distribution rewards pool
+                  total_tokens:
+                    type: string
+                  total_shares:
+                    type: string
+                title: 'key: denom value: AllianceAsset'
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: denom
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  '/terra/alliances/{denom}/delegations':
+    get:
+      summary: Query the overall delegations of an aliance groupped by delegators
+      operationId: AllianceAllianceAllianceDelegations
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              delegations:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    delegator_address:
+                      type: string
+                      description: >-
+                        delegator_address is the bech32-encoded address of the
+                        delegator.
+                    validator_address:
+                      type: string
+                      description: >-
+                        validator_address is the bech32-encoded address of the
+                        validator.
+                    denom:
+                      type: string
+                      title: denom of token staked
+                    shares:
+                      type: string
+                      description: shares define the delegation shares received.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: denom
+          in: path
+          required: true
+          type: string
+        - name: pagination.next_key
+          description: |-
+            next_key is the key to be passed to PageRequest.key to
+            query the next page most efficiently. It will be empty if
+            there are no more results.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.total
+          description: >-
+            total is total number of results available if
+            PageRequest.count_total
+
+            was set, its value is undefined otherwise
+          in: query
+          required: false
+          type: string
+          format: uint64
+      tags:
+        - Query
+  '/terra/alliances/{denom}/delegations/{delegator_address}':
+    get:
+      summary: Query the overall delegations of an aliance for a single delegator
+      operationId: AllianceAllianceAllianceDelegation
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              delegations:
+                type: object
+                properties:
+                  delegator_address:
+                    type: string
+                    description: >-
+                      delegator_address is the bech32-encoded address of the
+                      delegator.
+                  validator_address:
+                    type: string
+                    description: >-
+                      validator_address is the bech32-encoded address of the
+                      validator.
+                  denom:
+                    type: string
+                    title: denom of token staked
+                  shares:
+                    type: string
+                    description: shares define the delegation shares received.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: denom
+          in: path
+          required: true
+          type: string
+        - name: delegator_address
+          in: path
+          required: true
+          type: string
+        - name: pagination.next_key
+          description: |-
+            next_key is the key to be passed to PageRequest.key to
+            query the next page most efficiently. It will be empty if
+            there are no more results.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.total
+          description: >-
+            total is total number of results available if
+            PageRequest.count_total
+
+            was set, its value is undefined otherwise
+          in: query
+          required: false
+          type: string
+          format: uint64
       tags:
         - Query
   /cosmos/auth/v1beta1/accounts:
@@ -44161,6 +44519,48 @@ paths:
       tags:
         - Query
 definitions:
+  alliance.Delegation:
+    type: object
+    properties:
+      delegator_address:
+        type: string
+        description: delegator_address is the bech32-encoded address of the delegator.
+      validator_address:
+        type: string
+        description: validator_address is the bech32-encoded address of the validator.
+      denom:
+        type: string
+        title: denom of token staked
+      shares:
+        type: string
+        description: shares define the delegation shares received.
+  alliance.alliance.AllianceAsset:
+    type: object
+    properties:
+      denom:
+        type: string
+        title: Denom of the asset. It could either be a native token or an IBC token
+      reward_weight:
+        type: string
+        description: >-
+          The reward weight specifies the ratio of rewards that will be given to
+          each alliance asset
+
+          It does not need to sum to 1. rate = weight / total_weight
+
+          Native asset is always assumed to have a weight of 1.
+      take_rate:
+        type: string
+        title: >-
+          A positive take rate is used for liquid staking derivatives. It
+          defines an annualized reward rate that
+
+          will be redirected to the distribution rewards pool
+      total_tokens:
+        type: string
+      total_shares:
+        type: string
+    title: 'key: denom value: AllianceAsset'
   alliance.alliance.MsgDelegateResponse:
     type: object
   alliance.alliance.MsgRedelegateResponse:
@@ -44172,16 +44572,225 @@ definitions:
     properties:
       reward_delay_time:
         type: string
+  alliance.alliance.QueryAllianceDelegationResponse:
+    type: object
+    properties:
+      delegations:
+        type: object
+        properties:
+          delegator_address:
+            type: string
+            description: delegator_address is the bech32-encoded address of the delegator.
+          validator_address:
+            type: string
+            description: validator_address is the bech32-encoded address of the validator.
+          denom:
+            type: string
+            title: denom of token staked
+          shares:
+            type: string
+            description: shares define the delegation shares received.
+  alliance.alliance.QueryAllianceDelegationsResponse:
+    type: object
+    properties:
+      delegations:
+        type: array
+        items:
+          type: object
+          properties:
+            delegator_address:
+              type: string
+              description: >-
+                delegator_address is the bech32-encoded address of the
+                delegator.
+            validator_address:
+              type: string
+              description: >-
+                validator_address is the bech32-encoded address of the
+                validator.
+            denom:
+              type: string
+              title: denom of token staked
+            shares:
+              type: string
+              description: shares define the delegation shares received.
+  alliance.alliance.QueryAllianceResponse:
+    type: object
+    properties:
+      alliance:
+        type: object
+        properties:
+          denom:
+            type: string
+            title: >-
+              Denom of the asset. It could either be a native token or an IBC
+              token
+          reward_weight:
+            type: string
+            description: >-
+              The reward weight specifies the ratio of rewards that will be
+              given to each alliance asset
+
+              It does not need to sum to 1. rate = weight / total_weight
+
+              Native asset is always assumed to have a weight of 1.
+          take_rate:
+            type: string
+            title: >-
+              A positive take rate is used for liquid staking derivatives. It
+              defines an annualized reward rate that
+
+              will be redirected to the distribution rewards pool
+          total_tokens:
+            type: string
+          total_shares:
+            type: string
+        title: 'key: denom value: AllianceAsset'
+  alliance.alliance.QueryAlliancesResponse:
+    type: object
+    properties:
+      assets:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+              title: >-
+                Denom of the asset. It could either be a native token or an IBC
+                token
+            reward_weight:
+              type: string
+              description: >-
+                The reward weight specifies the ratio of rewards that will be
+                given to each alliance asset
+
+                It does not need to sum to 1. rate = weight / total_weight
+
+                Native asset is always assumed to have a weight of 1.
+            take_rate:
+              type: string
+              title: >-
+                A positive take rate is used for liquid staking derivatives. It
+                defines an annualized reward rate that
+
+                will be redirected to the distribution rewards pool
+            total_tokens:
+              type: string
+            total_shares:
+              type: string
+          title: 'key: denom value: AllianceAsset'
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
   alliance.alliance.QueryParamsResponse:
     type: object
     properties:
       params:
-        description: params holds all the parameters of this module.
         type: object
         properties:
           reward_delay_time:
             type: string
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  cosmos.base.query.v1beta1.PageRequest:
+    type: object
+    properties:
+      key:
+        type: string
+        format: byte
+        description: |-
+          key is a value returned in PageResponse.next_key to begin
+          querying the next page most efficiently. Only one of offset or key
+          should be set.
+      offset:
+        type: string
+        format: uint64
+        description: |-
+          offset is a numeric offset that can be used when key is unavailable.
+          It is less efficient than using key. Only one of offset or key should
+          be set.
+      limit:
+        type: string
+        format: uint64
+        description: >-
+          limit is the total number of results to be returned in the result
+          page.
+
+          If left empty it will default to a value to be set by each app.
+      count_total:
+        type: boolean
+        description: >-
+          count_total is set to true  to indicate that the result set should
+          include
+
+          a count of the total number of items available for pagination in UIs.
+
+          count_total is only respected when offset is used. It is ignored when
+          key
+
+          is set.
+      reverse:
+        type: boolean
+        description: >-
+          reverse is set to true if results are to be returned in the descending
+          order.
+
+
+          Since: cosmos-sdk 0.43
+    description: |-
+      message SomeRequest {
+               Foo some_parameter = 1;
+               PageRequest pagination = 2;
+       }
+    title: |-
+      PageRequest is to be embedded in gRPC request messages for efficient
+      pagination. Ex:
+  cosmos.base.query.v1beta1.PageResponse:
+    type: object
+    properties:
+      next_key:
+        type: string
+        format: byte
+        description: |-
+          next_key is the key to be passed to PageRequest.key to
+          query the next page most efficiently. It will be empty if
+          there are no more results.
+      total:
+        type: string
+        format: uint64
+        title: |-
+          total is total number of results available if PageRequest.count_total
+          was set, its value is undefined otherwise
+    description: |-
+      PageResponse is to be embedded in gRPC response messages where the
+      corresponding request message has used PageRequest.
+
+       message SomeResponse {
+               repeated Bar results = 1;
+               PageResponse page = 2;
+       }
   cosmos.base.v1beta1.Coin:
     type: object
     properties:
@@ -45124,83 +45733,6 @@ definitions:
             type: string
             format: uint64
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
-  cosmos.base.query.v1beta1.PageRequest:
-    type: object
-    properties:
-      key:
-        type: string
-        format: byte
-        description: |-
-          key is a value returned in PageResponse.next_key to begin
-          querying the next page most efficiently. Only one of offset or key
-          should be set.
-      offset:
-        type: string
-        format: uint64
-        description: |-
-          offset is a numeric offset that can be used when key is unavailable.
-          It is less efficient than using key. Only one of offset or key should
-          be set.
-      limit:
-        type: string
-        format: uint64
-        description: >-
-          limit is the total number of results to be returned in the result
-          page.
-
-          If left empty it will default to a value to be set by each app.
-      count_total:
-        type: boolean
-        description: >-
-          count_total is set to true  to indicate that the result set should
-          include
-
-          a count of the total number of items available for pagination in UIs.
-
-          count_total is only respected when offset is used. It is ignored when
-          key
-
-          is set.
-      reverse:
-        type: boolean
-        description: >-
-          reverse is set to true if results are to be returned in the descending
-          order.
-
-
-          Since: cosmos-sdk 0.43
-    description: |-
-      message SomeRequest {
-               Foo some_parameter = 1;
-               PageRequest pagination = 2;
-       }
-    title: |-
-      PageRequest is to be embedded in gRPC request messages for efficient
-      pagination. Ex:
-  cosmos.base.query.v1beta1.PageResponse:
-    type: object
-    properties:
-      next_key:
-        type: string
-        format: byte
-        description: |-
-          next_key is the key to be passed to PageRequest.key to
-          query the next page most efficiently. It will be empty if
-          there are no more results.
-      total:
-        type: string
-        format: uint64
-        title: |-
-          total is total number of results available if PageRequest.count_total
-          was set, its value is undefined otherwise
-    description: |-
-      PageResponse is to be embedded in gRPC response messages where the
-      corresponding request message has used PageRequest.
-
-       message SomeResponse {
-               repeated Bar results = 1;
-               PageResponse page = 2;
-       }
   cosmos.authz.v1beta1.Grant:
     type: object
     properties:
