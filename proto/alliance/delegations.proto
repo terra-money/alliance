@@ -1,0 +1,37 @@
+package alliance
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/terra-money/feather-core/x/alliance/types";
+
+message Delegation {
+option (gogoproto.equal)            = false;
+option (gogoproto.goproto_getters)  = false;
+option (gogoproto.goproto_stringer) = false;
+
+// delegator_address is the bech32-encoded address of the delegator.
+string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+// validator_address is the bech32-encoded address of the validator.
+string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+// denom of token staked
+string denom = 3 [(gogoproto.nullable)   = false];
+// shares define the delegation shares received.
+string shares = 4 [
+(cosmos_proto.scalar)  = "cosmos.Dec",
+(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+(gogoproto.nullable)   = false
+];
+}
+
+// DelegationResponse is equivalent to Delegation except that it contains a
+// balance in addition to shares which is more suitable for client responses.
+message DelegationResponse {
+option (gogoproto.equal)            = false;
+option (gogoproto.goproto_stringer) = false;
+
+Delegation delegation = 1 [(gogoproto.nullable) = false];
+
+cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];
