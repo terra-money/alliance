@@ -22,68 +22,14 @@ genesis:
   app_state:
     alliance:
       assets:
-        - denom: 'aluna'
+        - denom: 'uluna'
           reward_weight: "0.5"
           take_rate: "0.5"
         - denom: 'bluna'
           reward_weight: "0.9"
           take_rate: "0.9"
-        - denom: 'cluna'
-          reward_weight: "0.5"
-          take_rate: "0.5"
-        - denom: 'dluna'
-          reward_weight: "0.8"
-          take_rate: "0.8"
-        - denom: 'eluna'
-          reward_weight: "0.7"
-          take_rate: "0.7"
-        - denom: 'fluna'
-          reward_weight: "0.5"
-          take_rate: "0.5"
-        - denom: 'gluna'
-          reward_weight: "0.5"
-          take_rate: "0.5"
-        - denom: 'hluna'
-          reward_weight: "0.5"
-          take_rate: "0.5"
-        - denom: 'iluna'
-          reward_weight: "0.5"
-          take_rate: "0.5"
-        - denom: 'jluna'
-          reward_weight: "0.5"
-          take_rate: "0.5"
-        - denom: 'kluna'
-          reward_weight: "0.44"
-          take_rate: "0.44"
-        - denom: 'lluna'
-          reward_weight: "0.66"
-          take_rate: "0.66"
-        - denom: 'mluna'
-          reward_weight: "0.5"
-          take_rate: "0.5"
-        - denom: 'nluna'
-          reward_weight: "0.5"
-          take_rate: "0.5"
-        - denom: 'uluna'
-          reward_weight: "0.1"
-          take_rate: "0.1"
-        - denom: 'oluna'
-          reward_weight: "0.5"
-          take_rate: "0.5"
-        - denom: 'pluna'
-          reward_weight: "0.5"
-          take_rate: "0.5"
-        - denom: 'qluna'
-          reward_weight: "0.53"
-          take_rate: "0.53"
-        - denom: 'rluna'
-          reward_weight: "0.3"
-          take_rate: "0.3"
-        - denom: 'sluna'
-          reward_weight: "0.2"
-          take_rate: "0.2"
-        - denom: 'tluna'
-          reward_weight: "0.52"
-          take_rate: "0.52"
+        - denom: 'token'
+          reward_weight: "5"
+          take_rate: "0"
       params: 
         reward_delay_time: "60s"

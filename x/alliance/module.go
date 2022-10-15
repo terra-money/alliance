@@ -96,8 +96,9 @@ func (a AppModule) InitGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec, messa
 }
 
 func (a AppModule) ExportGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec) json.RawMessage {
-	//TODO implement me
-	return json.RawMessage{}
+	// TODO: Check how to implement this properly
+	genesis := DefaultGenesisState()
+	return a.cdc.MustMarshalJSON(genesis)
 }
 
 func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {
