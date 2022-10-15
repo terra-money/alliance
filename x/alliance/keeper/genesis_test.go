@@ -20,6 +20,8 @@ func TestGenesis(t *testing.T) {
 				Denom:        "stake",
 				RewardWeight: sdk.NewDec(1.0),
 				TakeRate:     sdk.NewDec(0.0),
+				TotalShares:  sdk.NewDec(0.0),
+				TotalTokens:  sdk.ZeroInt(),
 			},
 		},
 	})
@@ -33,5 +35,7 @@ func TestGenesis(t *testing.T) {
 		Denom:        "stake",
 		RewardWeight: sdk.NewDec(1.0),
 		TakeRate:     sdk.NewDec(0.0),
+		TotalShares:  sdk.NewDec(0.0),
+		TotalTokens:  sdk.ZeroInt(),
 	}, assets[0])
 }

@@ -28,6 +28,14 @@ func (k Keeper) GetAllAssets(ctx sdk.Context) (assets []types.AllianceAsset) {
 	return assets
 }
 
+func (k Keeper) GetAssetByDenom(ctx sdk.Context, denom string) (asset types.AllianceAsset) {
+	store := ctx.KVStore(k.storeKey)
+	assetKey := types.GetAssetKey(denom)
+	b := store.Get(assetKey)
+	k.cdc.MustUnmarshal(b, &asset)
+	return
+}
+
 func (k Keeper) AddAsset() {
 	panic("implement me")
 }

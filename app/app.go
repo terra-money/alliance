@@ -178,6 +178,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		alliancemoduletypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
@@ -485,7 +486,14 @@ func New(
 		govConfig,
 	)
 
-	app.AllianceKeeper = alliancemodulekeeper.NewKeeper(appCodec, keys[alliancemoduletypes.StoreKey], app.GetSubspace(alliancemoduletypes.ModuleName))
+	app.AllianceKeeper = alliancemodulekeeper.NewKeeper(
+		appCodec,
+		keys[alliancemoduletypes.StoreKey],
+		app.GetSubspace(alliancemoduletypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+	)
 	allianceModule := alliancemodule.NewAppModule(appCodec, app.AllianceKeeper, app.StakingKeeper, app.interfaceRegistry)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition

@@ -3,6 +3,8 @@ package keeper
 import (
 	"alliance/x/alliance/types"
 	"context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type msgServer struct {
@@ -12,8 +14,22 @@ type msgServer struct {
 var _ types.MsgServer = msgServer{}
 
 func (m msgServer) Delegate(ctx context.Context, delegate *types.MsgDelegate) (*types.MsgDelegateResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	delAddr, err := sdk.AccAddressFromBech32(delegate.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	valAddr, err := sdk.ValAddressFromBech32(delegate.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	validator, ok := m.Keeper.stakingKeeper.GetValidator(sdkCtx, valAddr)
+	if !ok {
+		return nil, stakingtypes.ErrNoValidatorFound
+	}
+
+	return m.Keeper.Delegate(sdkCtx, delAddr, validator, delegate.Amount)
 }
 
 func (m msgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelegate) (*types.MsgRedelegateResponse, error) {
