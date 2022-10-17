@@ -70,15 +70,11 @@ func CreateNewAllianceAsset(Keeper *keeper.Keeper, ctx sdk.Context, n int64) typ
 	}
 }
 
-func CreateNewDelegation(Keeper *keeper.Keeper, ctx sdk.Context, n int64) []types.Delegation {
-	items := make([]types.Delegation, n)
-	for i := range items {
-		items[i] = types.Delegation{
-			DelegatorAddress: "alliance1reanw526y9nun5mtajwkf6p8j3g8c6x276hvfl",
-			ValidatorAddress: "alliancevaloper1reanw526y9nun5mtajwkf6p8j3g8c6x2gyesnr",
-			Denom:            "uluna",
-			Shares:           sdk.NewDec(10),
-		}
+func CreateNewDelegation(Keeper *keeper.Keeper, ctx sdk.Context, n int64) types.Delegation {
+	return types.Delegation{
+		DelegatorAddress: "cosmos1c4k24jzduc365kywrsvf5ujz4ya6mwymy8vq4q",
+		ValidatorAddress: "cosmosvaloper1c4k24jzduc365kywrsvf5ujz4ya6mwympnc4en",
+		Denom:            "uluna",
+		Shares:           sdk.NewDec(10),
 	}
-	return items
 }
