@@ -2,6 +2,7 @@ package cli
 
 import (
 	"alliance/x/alliance/types"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
@@ -9,12 +10,22 @@ import (
 
 // GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd() *cobra.Command {
-	queryCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Querying commands for the staking module",
+		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	return queryCmd
+
+	cmd.AddCommand(CmdQueryParams())
+
+	cmd.AddCommand(CmdQueryAlliances())
+	cmd.AddCommand(CmdQueryAlliance())
+
+	cmd.AddCommand(CmdQueryAlliancesDelegation())
+	cmd.AddCommand(CmdQueryAlliancesDelegationByValidator())
+	cmd.AddCommand(CmdQueryAllianceDelegation())
+
+	return cmd
 }

@@ -35,6 +35,22 @@ export interface AllianceDelegation {
   shares?: string;
 }
 
+/**
+* DelegationResponse is equivalent to Delegation except that it contains a
+balance in addition to shares which is more suitable for client responses.
+*/
+export interface AllianceDelegationResponse {
+  delegation?: AllianceDelegation;
+
+  /**
+   * Coin defines a token with a denomination and an amount.
+   *
+   * NOTE: The amount field is an Int which implements the custom method
+   * signatures required by gogoproto.
+   */
+  balance?: V1Beta1Coin;
+}
+
 export type AllianceMsgDelegateResponse = object;
 
 export type AllianceMsgRedelegateResponse = object;
@@ -46,19 +62,34 @@ export interface AllianceParams {
 }
 
 export interface AllianceQueryAllianceDelegationResponse {
-  delegations?: AllianceDelegation;
-}
-
-export interface AllianceQueryAllianceDelegationsResponse {
-  delegations?: AllianceDelegation[];
+  /**
+   * DelegationResponse is equivalent to Delegation except that it contains a
+   * balance in addition to shares which is more suitable for client responses.
+   */
+  delegation?: AllianceDelegationResponse;
 }
 
 export interface AllianceQueryAllianceResponse {
   alliance?: AllianceAllianceAsset;
 }
 
+export interface AllianceQueryAlliancesDelegationsResponse {
+  delegations?: AllianceDelegationResponse[];
+
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
+}
+
 export interface AllianceQueryAlliancesResponse {
-  assets?: AllianceAllianceAsset[];
+  alliances?: AllianceAllianceAsset[];
 
   /**
    * PageResponse is to be embedded in gRPC response messages where the
@@ -367,7 +398,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    *
    * @tags Query
    * @name QueryAlliances
-   * @summary Query all alliances paginated
+   * @summary Query paginated alliances
    * @request GET:/terra/alliances
    */
   queryAlliances = (
@@ -407,14 +438,25 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Query
-   * @name QueryAlliance
-   * @summary Query the overall delegations of an aliance
-   * @request GET:/terra/alliances/{denom}
+   * @name QueryAlliancesDelegation
+   * @summary Query all paginated alliance delegations for a delegator addr
+   * @request GET:/terra/alliances/{delegator_addr}
    */
-  queryAlliance = (denom: string, params: RequestParams = {}) =>
-    this.request<AllianceQueryAllianceResponse, RpcStatus>({
-      path: `/terra/alliances/${denom}`,
+  queryAlliancesDelegation = (
+    delegator_addr: string,
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<AllianceQueryAlliancesDelegationsResponse, RpcStatus>({
+      path: `/terra/alliances/${delegator_addr}`,
       method: "GET",
+      query: query,
       format: "json",
       ...params,
     });
@@ -423,17 +465,24 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Query
-   * @name QueryAllianceDelegations
-   * @summary Query the overall delegations of an aliance groupped by delegators
-   * @request GET:/terra/alliances/{denom}/delegations
+   * @name QueryAlliancesDelegationByValidator
+   * @summary Query all paginated alliance delegations for a delegator addr and validator_addr
+   * @request GET:/terra/alliances/{delegator_addr}/{validator_addr}
    */
-  queryAllianceDelegations = (
-    denom: string,
-    query?: { "pagination.next_key"?: string; "pagination.total"?: string },
+  queryAlliancesDelegationByValidator = (
+    delegator_addr: string,
+    validator_addr: string,
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
     params: RequestParams = {},
   ) =>
-    this.request<AllianceQueryAllianceDelegationsResponse, RpcStatus>({
-      path: `/terra/alliances/${denom}/delegations`,
+    this.request<AllianceQueryAlliancesDelegationsResponse, RpcStatus>({
+      path: `/terra/alliances/${delegator_addr}/${validator_addr}`,
       method: "GET",
       query: query,
       format: "json",
@@ -445,19 +494,42 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    *
    * @tags Query
    * @name QueryAllianceDelegation
-   * @summary Query the overall delegations of an aliance for a single delegator
-   * @request GET:/terra/alliances/{denom}/delegations/{delegator_address}
+   * @summary Query a delegation for a delegator addr and validator_addr
+   * @request GET:/terra/alliances/{delegator_addr}/{validator_addr}/{denom}
    */
   queryAllianceDelegation = (
+    delegator_addr: string,
+    validator_addr: string,
     denom: string,
-    delegator_address: string,
-    query?: { "pagination.next_key"?: string; "pagination.total"?: string },
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
     params: RequestParams = {},
   ) =>
     this.request<AllianceQueryAllianceDelegationResponse, RpcStatus>({
-      path: `/terra/alliances/${denom}/delegations/${delegator_address}`,
+      path: `/terra/alliances/${delegator_addr}/${validator_addr}/${denom}`,
       method: "GET",
       query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryAlliance
+   * @summary Query alliance
+   * @request GET:/terra/alliances/{denom}
+   */
+  queryAlliance = (denom: string, params: RequestParams = {}) =>
+    this.request<AllianceQueryAllianceResponse, RpcStatus>({
+      path: `/terra/alliances/${denom}`,
+      method: "GET",
       format: "json",
       ...params,
     });

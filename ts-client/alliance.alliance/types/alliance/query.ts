@@ -6,25 +6,28 @@ import {
   PageResponse,
 } from "../cosmos/base/query/v1beta1/pagination";
 import { AllianceAsset } from "../alliance/alliance";
-import { Delegation } from "../alliance/delegations";
+import { DelegationResponse } from "../alliance/delegations";
 
 export const protobufPackage = "alliance.alliance";
 
+/** Params */
 export interface QueryParamsRequest {}
 
 export interface QueryParamsResponse {
   params: Params | undefined;
 }
 
+/** Alliances */
 export interface QueryAlliancesRequest {
   pagination: PageRequest | undefined;
 }
 
 export interface QueryAlliancesResponse {
-  assets: AllianceAsset[];
+  alliances: AllianceAsset[];
   pagination: PageResponse | undefined;
 }
 
+/** Alliance */
 export interface QueryAllianceRequest {
   denom: string;
 }
@@ -33,23 +36,34 @@ export interface QueryAllianceResponse {
   alliance: AllianceAsset | undefined;
 }
 
-export interface QueryAllianceDelegationsRequest {
-  denom: string;
+/** AlliancesDelegation */
+export interface QueryAlliancesDelegationsRequest {
+  delegatorAddr: string;
+  pagination: PageRequest | undefined;
+}
+
+/** AlliancesDelegationByValidator */
+export interface QueryAlliancesDelegationByValidatorRequest {
+  delegatorAddr: string;
+  validatorAddr: string;
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryAlliancesDelegationsResponse {
+  delegations: DelegationResponse[];
   pagination: PageResponse | undefined;
 }
 
-export interface QueryAllianceDelegationsResponse {
-  delegations: Delegation[];
-}
-
+/** AllianceDelegation */
 export interface QueryAllianceDelegationRequest {
+  delegatorAddr: string;
+  validatorAddr: string;
   denom: string;
-  delegatorAddress: string;
-  pagination: PageResponse | undefined;
+  pagination: PageRequest | undefined;
 }
 
 export interface QueryAllianceDelegationResponse {
-  delegations: Delegation | undefined;
+  delegation: DelegationResponse | undefined;
 }
 
 const baseQueryParamsRequest: object = {};
@@ -219,7 +233,7 @@ export const QueryAlliancesResponse = {
     message: QueryAlliancesResponse,
     writer: Writer = Writer.create()
   ): Writer {
-    for (const v of message.assets) {
+    for (const v of message.alliances) {
       AllianceAsset.encode(v!, writer.uint32(10).fork()).ldelim();
     }
     if (message.pagination !== undefined) {
@@ -235,12 +249,12 @@ export const QueryAlliancesResponse = {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseQueryAlliancesResponse } as QueryAlliancesResponse;
-    message.assets = [];
+    message.alliances = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.assets.push(AllianceAsset.decode(reader, reader.uint32()));
+          message.alliances.push(AllianceAsset.decode(reader, reader.uint32()));
           break;
         case 2:
           message.pagination = PageResponse.decode(reader, reader.uint32());
@@ -255,10 +269,10 @@ export const QueryAlliancesResponse = {
 
   fromJSON(object: any): QueryAlliancesResponse {
     const message = { ...baseQueryAlliancesResponse } as QueryAlliancesResponse;
-    message.assets = [];
-    if (object.assets !== undefined && object.assets !== null) {
-      for (const e of object.assets) {
-        message.assets.push(AllianceAsset.fromJSON(e));
+    message.alliances = [];
+    if (object.alliances !== undefined && object.alliances !== null) {
+      for (const e of object.alliances) {
+        message.alliances.push(AllianceAsset.fromJSON(e));
       }
     }
     if (object.pagination !== undefined && object.pagination !== null) {
@@ -271,12 +285,12 @@ export const QueryAlliancesResponse = {
 
   toJSON(message: QueryAlliancesResponse): unknown {
     const obj: any = {};
-    if (message.assets) {
-      obj.assets = message.assets.map((e) =>
+    if (message.alliances) {
+      obj.alliances = message.alliances.map((e) =>
         e ? AllianceAsset.toJSON(e) : undefined
       );
     } else {
-      obj.assets = [];
+      obj.alliances = [];
     }
     message.pagination !== undefined &&
       (obj.pagination = message.pagination
@@ -289,10 +303,10 @@ export const QueryAlliancesResponse = {
     object: DeepPartial<QueryAlliancesResponse>
   ): QueryAlliancesResponse {
     const message = { ...baseQueryAlliancesResponse } as QueryAlliancesResponse;
-    message.assets = [];
-    if (object.assets !== undefined && object.assets !== null) {
-      for (const e of object.assets) {
-        message.assets.push(AllianceAsset.fromPartial(e));
+    message.alliances = [];
+    if (object.alliances !== undefined && object.alliances !== null) {
+      for (const e of object.alliances) {
+        message.alliances.push(AllianceAsset.fromPartial(e));
       }
     }
     if (object.pagination !== undefined && object.pagination !== null) {
@@ -425,15 +439,216 @@ export const QueryAllianceResponse = {
   },
 };
 
-const baseQueryAllianceDelegationsRequest: object = { denom: "" };
+const baseQueryAlliancesDelegationsRequest: object = { delegatorAddr: "" };
 
-export const QueryAllianceDelegationsRequest = {
+export const QueryAlliancesDelegationsRequest = {
   encode(
-    message: QueryAllianceDelegationsRequest,
+    message: QueryAlliancesDelegationsRequest,
     writer: Writer = Writer.create()
   ): Writer {
-    if (message.denom !== "") {
-      writer.uint32(10).string(message.denom);
+    if (message.delegatorAddr !== "") {
+      writer.uint32(10).string(message.delegatorAddr);
+    }
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryAlliancesDelegationsRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryAlliancesDelegationsRequest,
+    } as QueryAlliancesDelegationsRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.delegatorAddr = reader.string();
+          break;
+        case 2:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryAlliancesDelegationsRequest {
+    const message = {
+      ...baseQueryAlliancesDelegationsRequest,
+    } as QueryAlliancesDelegationsRequest;
+    if (object.delegatorAddr !== undefined && object.delegatorAddr !== null) {
+      message.delegatorAddr = String(object.delegatorAddr);
+    } else {
+      message.delegatorAddr = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryAlliancesDelegationsRequest): unknown {
+    const obj: any = {};
+    message.delegatorAddr !== undefined &&
+      (obj.delegatorAddr = message.delegatorAddr);
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryAlliancesDelegationsRequest>
+  ): QueryAlliancesDelegationsRequest {
+    const message = {
+      ...baseQueryAlliancesDelegationsRequest,
+    } as QueryAlliancesDelegationsRequest;
+    if (object.delegatorAddr !== undefined && object.delegatorAddr !== null) {
+      message.delegatorAddr = object.delegatorAddr;
+    } else {
+      message.delegatorAddr = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryAlliancesDelegationByValidatorRequest: object = {
+  delegatorAddr: "",
+  validatorAddr: "",
+};
+
+export const QueryAlliancesDelegationByValidatorRequest = {
+  encode(
+    message: QueryAlliancesDelegationByValidatorRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.delegatorAddr !== "") {
+      writer.uint32(10).string(message.delegatorAddr);
+    }
+    if (message.validatorAddr !== "") {
+      writer.uint32(18).string(message.validatorAddr);
+    }
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(26).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryAlliancesDelegationByValidatorRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryAlliancesDelegationByValidatorRequest,
+    } as QueryAlliancesDelegationByValidatorRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.delegatorAddr = reader.string();
+          break;
+        case 2:
+          message.validatorAddr = reader.string();
+          break;
+        case 3:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryAlliancesDelegationByValidatorRequest {
+    const message = {
+      ...baseQueryAlliancesDelegationByValidatorRequest,
+    } as QueryAlliancesDelegationByValidatorRequest;
+    if (object.delegatorAddr !== undefined && object.delegatorAddr !== null) {
+      message.delegatorAddr = String(object.delegatorAddr);
+    } else {
+      message.delegatorAddr = "";
+    }
+    if (object.validatorAddr !== undefined && object.validatorAddr !== null) {
+      message.validatorAddr = String(object.validatorAddr);
+    } else {
+      message.validatorAddr = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryAlliancesDelegationByValidatorRequest): unknown {
+    const obj: any = {};
+    message.delegatorAddr !== undefined &&
+      (obj.delegatorAddr = message.delegatorAddr);
+    message.validatorAddr !== undefined &&
+      (obj.validatorAddr = message.validatorAddr);
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryAlliancesDelegationByValidatorRequest>
+  ): QueryAlliancesDelegationByValidatorRequest {
+    const message = {
+      ...baseQueryAlliancesDelegationByValidatorRequest,
+    } as QueryAlliancesDelegationByValidatorRequest;
+    if (object.delegatorAddr !== undefined && object.delegatorAddr !== null) {
+      message.delegatorAddr = object.delegatorAddr;
+    } else {
+      message.delegatorAddr = "";
+    }
+    if (object.validatorAddr !== undefined && object.validatorAddr !== null) {
+      message.validatorAddr = object.validatorAddr;
+    } else {
+      message.validatorAddr = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryAlliancesDelegationsResponse: object = {};
+
+export const QueryAlliancesDelegationsResponse = {
+  encode(
+    message: QueryAlliancesDelegationsResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.delegations) {
+      DelegationResponse.encode(v!, writer.uint32(10).fork()).ldelim();
     }
     if (message.pagination !== undefined) {
       PageResponse.encode(
@@ -447,17 +662,20 @@ export const QueryAllianceDelegationsRequest = {
   decode(
     input: Reader | Uint8Array,
     length?: number
-  ): QueryAllianceDelegationsRequest {
+  ): QueryAlliancesDelegationsResponse {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = {
-      ...baseQueryAllianceDelegationsRequest,
-    } as QueryAllianceDelegationsRequest;
+      ...baseQueryAlliancesDelegationsResponse,
+    } as QueryAlliancesDelegationsResponse;
+    message.delegations = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.denom = reader.string();
+          message.delegations.push(
+            DelegationResponse.decode(reader, reader.uint32())
+          );
           break;
         case 2:
           message.pagination = PageResponse.decode(reader, reader.uint32());
@@ -470,14 +688,15 @@ export const QueryAllianceDelegationsRequest = {
     return message;
   },
 
-  fromJSON(object: any): QueryAllianceDelegationsRequest {
+  fromJSON(object: any): QueryAlliancesDelegationsResponse {
     const message = {
-      ...baseQueryAllianceDelegationsRequest,
-    } as QueryAllianceDelegationsRequest;
-    if (object.denom !== undefined && object.denom !== null) {
-      message.denom = String(object.denom);
-    } else {
-      message.denom = "";
+      ...baseQueryAlliancesDelegationsResponse,
+    } as QueryAlliancesDelegationsResponse;
+    message.delegations = [];
+    if (object.delegations !== undefined && object.delegations !== null) {
+      for (const e of object.delegations) {
+        message.delegations.push(DelegationResponse.fromJSON(e));
+      }
     }
     if (object.pagination !== undefined && object.pagination !== null) {
       message.pagination = PageResponse.fromJSON(object.pagination);
@@ -487,9 +706,15 @@ export const QueryAllianceDelegationsRequest = {
     return message;
   },
 
-  toJSON(message: QueryAllianceDelegationsRequest): unknown {
+  toJSON(message: QueryAlliancesDelegationsResponse): unknown {
     const obj: any = {};
-    message.denom !== undefined && (obj.denom = message.denom);
+    if (message.delegations) {
+      obj.delegations = message.delegations.map((e) =>
+        e ? DelegationResponse.toJSON(e) : undefined
+      );
+    } else {
+      obj.delegations = [];
+    }
     message.pagination !== undefined &&
       (obj.pagination = message.pagination
         ? PageResponse.toJSON(message.pagination)
@@ -498,15 +723,16 @@ export const QueryAllianceDelegationsRequest = {
   },
 
   fromPartial(
-    object: DeepPartial<QueryAllianceDelegationsRequest>
-  ): QueryAllianceDelegationsRequest {
+    object: DeepPartial<QueryAlliancesDelegationsResponse>
+  ): QueryAlliancesDelegationsResponse {
     const message = {
-      ...baseQueryAllianceDelegationsRequest,
-    } as QueryAllianceDelegationsRequest;
-    if (object.denom !== undefined && object.denom !== null) {
-      message.denom = object.denom;
-    } else {
-      message.denom = "";
+      ...baseQueryAlliancesDelegationsResponse,
+    } as QueryAlliancesDelegationsResponse;
+    message.delegations = [];
+    if (object.delegations !== undefined && object.delegations !== null) {
+      for (const e of object.delegations) {
+        message.delegations.push(DelegationResponse.fromPartial(e));
+      }
     }
     if (object.pagination !== undefined && object.pagination !== null) {
       message.pagination = PageResponse.fromPartial(object.pagination);
@@ -517,87 +743,10 @@ export const QueryAllianceDelegationsRequest = {
   },
 };
 
-const baseQueryAllianceDelegationsResponse: object = {};
-
-export const QueryAllianceDelegationsResponse = {
-  encode(
-    message: QueryAllianceDelegationsResponse,
-    writer: Writer = Writer.create()
-  ): Writer {
-    for (const v of message.delegations) {
-      Delegation.encode(v!, writer.uint32(10).fork()).ldelim();
-    }
-    return writer;
-  },
-
-  decode(
-    input: Reader | Uint8Array,
-    length?: number
-  ): QueryAllianceDelegationsResponse {
-    const reader = input instanceof Uint8Array ? new Reader(input) : input;
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = {
-      ...baseQueryAllianceDelegationsResponse,
-    } as QueryAllianceDelegationsResponse;
-    message.delegations = [];
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.delegations.push(Delegation.decode(reader, reader.uint32()));
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): QueryAllianceDelegationsResponse {
-    const message = {
-      ...baseQueryAllianceDelegationsResponse,
-    } as QueryAllianceDelegationsResponse;
-    message.delegations = [];
-    if (object.delegations !== undefined && object.delegations !== null) {
-      for (const e of object.delegations) {
-        message.delegations.push(Delegation.fromJSON(e));
-      }
-    }
-    return message;
-  },
-
-  toJSON(message: QueryAllianceDelegationsResponse): unknown {
-    const obj: any = {};
-    if (message.delegations) {
-      obj.delegations = message.delegations.map((e) =>
-        e ? Delegation.toJSON(e) : undefined
-      );
-    } else {
-      obj.delegations = [];
-    }
-    return obj;
-  },
-
-  fromPartial(
-    object: DeepPartial<QueryAllianceDelegationsResponse>
-  ): QueryAllianceDelegationsResponse {
-    const message = {
-      ...baseQueryAllianceDelegationsResponse,
-    } as QueryAllianceDelegationsResponse;
-    message.delegations = [];
-    if (object.delegations !== undefined && object.delegations !== null) {
-      for (const e of object.delegations) {
-        message.delegations.push(Delegation.fromPartial(e));
-      }
-    }
-    return message;
-  },
-};
-
 const baseQueryAllianceDelegationRequest: object = {
+  delegatorAddr: "",
+  validatorAddr: "",
   denom: "",
-  delegatorAddress: "",
 };
 
 export const QueryAllianceDelegationRequest = {
@@ -605,17 +754,17 @@ export const QueryAllianceDelegationRequest = {
     message: QueryAllianceDelegationRequest,
     writer: Writer = Writer.create()
   ): Writer {
-    if (message.denom !== "") {
-      writer.uint32(10).string(message.denom);
+    if (message.delegatorAddr !== "") {
+      writer.uint32(10).string(message.delegatorAddr);
     }
-    if (message.delegatorAddress !== "") {
-      writer.uint32(18).string(message.delegatorAddress);
+    if (message.validatorAddr !== "") {
+      writer.uint32(18).string(message.validatorAddr);
+    }
+    if (message.denom !== "") {
+      writer.uint32(26).string(message.denom);
     }
     if (message.pagination !== undefined) {
-      PageResponse.encode(
-        message.pagination,
-        writer.uint32(26).fork()
-      ).ldelim();
+      PageRequest.encode(message.pagination, writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -633,13 +782,16 @@ export const QueryAllianceDelegationRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.denom = reader.string();
+          message.delegatorAddr = reader.string();
           break;
         case 2:
-          message.delegatorAddress = reader.string();
+          message.validatorAddr = reader.string();
           break;
         case 3:
-          message.pagination = PageResponse.decode(reader, reader.uint32());
+          message.denom = reader.string();
+          break;
+        case 4:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
           break;
         default:
           reader.skipType(tag & 7);
@@ -653,21 +805,23 @@ export const QueryAllianceDelegationRequest = {
     const message = {
       ...baseQueryAllianceDelegationRequest,
     } as QueryAllianceDelegationRequest;
+    if (object.delegatorAddr !== undefined && object.delegatorAddr !== null) {
+      message.delegatorAddr = String(object.delegatorAddr);
+    } else {
+      message.delegatorAddr = "";
+    }
+    if (object.validatorAddr !== undefined && object.validatorAddr !== null) {
+      message.validatorAddr = String(object.validatorAddr);
+    } else {
+      message.validatorAddr = "";
+    }
     if (object.denom !== undefined && object.denom !== null) {
       message.denom = String(object.denom);
     } else {
       message.denom = "";
     }
-    if (
-      object.delegatorAddress !== undefined &&
-      object.delegatorAddress !== null
-    ) {
-      message.delegatorAddress = String(object.delegatorAddress);
-    } else {
-      message.delegatorAddress = "";
-    }
     if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageResponse.fromJSON(object.pagination);
+      message.pagination = PageRequest.fromJSON(object.pagination);
     } else {
       message.pagination = undefined;
     }
@@ -676,12 +830,14 @@ export const QueryAllianceDelegationRequest = {
 
   toJSON(message: QueryAllianceDelegationRequest): unknown {
     const obj: any = {};
+    message.delegatorAddr !== undefined &&
+      (obj.delegatorAddr = message.delegatorAddr);
+    message.validatorAddr !== undefined &&
+      (obj.validatorAddr = message.validatorAddr);
     message.denom !== undefined && (obj.denom = message.denom);
-    message.delegatorAddress !== undefined &&
-      (obj.delegatorAddress = message.delegatorAddress);
     message.pagination !== undefined &&
       (obj.pagination = message.pagination
-        ? PageResponse.toJSON(message.pagination)
+        ? PageRequest.toJSON(message.pagination)
         : undefined);
     return obj;
   },
@@ -692,21 +848,23 @@ export const QueryAllianceDelegationRequest = {
     const message = {
       ...baseQueryAllianceDelegationRequest,
     } as QueryAllianceDelegationRequest;
+    if (object.delegatorAddr !== undefined && object.delegatorAddr !== null) {
+      message.delegatorAddr = object.delegatorAddr;
+    } else {
+      message.delegatorAddr = "";
+    }
+    if (object.validatorAddr !== undefined && object.validatorAddr !== null) {
+      message.validatorAddr = object.validatorAddr;
+    } else {
+      message.validatorAddr = "";
+    }
     if (object.denom !== undefined && object.denom !== null) {
       message.denom = object.denom;
     } else {
       message.denom = "";
     }
-    if (
-      object.delegatorAddress !== undefined &&
-      object.delegatorAddress !== null
-    ) {
-      message.delegatorAddress = object.delegatorAddress;
-    } else {
-      message.delegatorAddress = "";
-    }
     if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageResponse.fromPartial(object.pagination);
+      message.pagination = PageRequest.fromPartial(object.pagination);
     } else {
       message.pagination = undefined;
     }
@@ -721,8 +879,11 @@ export const QueryAllianceDelegationResponse = {
     message: QueryAllianceDelegationResponse,
     writer: Writer = Writer.create()
   ): Writer {
-    if (message.delegations !== undefined) {
-      Delegation.encode(message.delegations, writer.uint32(10).fork()).ldelim();
+    if (message.delegation !== undefined) {
+      DelegationResponse.encode(
+        message.delegation,
+        writer.uint32(10).fork()
+      ).ldelim();
     }
     return writer;
   },
@@ -740,7 +901,10 @@ export const QueryAllianceDelegationResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.delegations = Delegation.decode(reader, reader.uint32());
+          message.delegation = DelegationResponse.decode(
+            reader,
+            reader.uint32()
+          );
           break;
         default:
           reader.skipType(tag & 7);
@@ -754,19 +918,19 @@ export const QueryAllianceDelegationResponse = {
     const message = {
       ...baseQueryAllianceDelegationResponse,
     } as QueryAllianceDelegationResponse;
-    if (object.delegations !== undefined && object.delegations !== null) {
-      message.delegations = Delegation.fromJSON(object.delegations);
+    if (object.delegation !== undefined && object.delegation !== null) {
+      message.delegation = DelegationResponse.fromJSON(object.delegation);
     } else {
-      message.delegations = undefined;
+      message.delegation = undefined;
     }
     return message;
   },
 
   toJSON(message: QueryAllianceDelegationResponse): unknown {
     const obj: any = {};
-    message.delegations !== undefined &&
-      (obj.delegations = message.delegations
-        ? Delegation.toJSON(message.delegations)
+    message.delegation !== undefined &&
+      (obj.delegation = message.delegation
+        ? DelegationResponse.toJSON(message.delegation)
         : undefined);
     return obj;
   },
@@ -777,27 +941,30 @@ export const QueryAllianceDelegationResponse = {
     const message = {
       ...baseQueryAllianceDelegationResponse,
     } as QueryAllianceDelegationResponse;
-    if (object.delegations !== undefined && object.delegations !== null) {
-      message.delegations = Delegation.fromPartial(object.delegations);
+    if (object.delegation !== undefined && object.delegation !== null) {
+      message.delegation = DelegationResponse.fromPartial(object.delegation);
     } else {
-      message.delegations = undefined;
+      message.delegation = undefined;
     }
     return message;
   },
 };
 
-/** Query defines the gRPC querier service. */
 export interface Query {
   Params(request: QueryParamsRequest): Promise<QueryParamsResponse>;
-  /** Query all alliances paginated */
+  /** Query paginated alliances */
   Alliances(request: QueryAlliancesRequest): Promise<QueryAlliancesResponse>;
-  /** Query the overall delegations of an aliance */
+  /** Query alliance */
   Alliance(request: QueryAllianceRequest): Promise<QueryAllianceResponse>;
-  /** Query the overall delegations of an aliance groupped by delegators */
-  AllianceDelegations(
-    request: QueryAllianceDelegationsRequest
-  ): Promise<QueryAllianceDelegationsResponse>;
-  /** Query the overall delegations of an aliance for a single delegator */
+  /** Query all paginated alliance delegations for a delegator addr */
+  AlliancesDelegation(
+    request: QueryAlliancesDelegationsRequest
+  ): Promise<QueryAlliancesDelegationsResponse>;
+  /** Query all paginated alliance delegations for a delegator addr and validator_addr */
+  AlliancesDelegationByValidator(
+    request: QueryAlliancesDelegationByValidatorRequest
+  ): Promise<QueryAlliancesDelegationsResponse>;
+  /** Query a delegation for a delegator addr and validator_addr */
   AllianceDelegation(
     request: QueryAllianceDelegationRequest
   ): Promise<QueryAllianceDelegationResponse>;
@@ -838,17 +1005,33 @@ export class QueryClientImpl implements Query {
     );
   }
 
-  AllianceDelegations(
-    request: QueryAllianceDelegationsRequest
-  ): Promise<QueryAllianceDelegationsResponse> {
-    const data = QueryAllianceDelegationsRequest.encode(request).finish();
+  AlliancesDelegation(
+    request: QueryAlliancesDelegationsRequest
+  ): Promise<QueryAlliancesDelegationsResponse> {
+    const data = QueryAlliancesDelegationsRequest.encode(request).finish();
     const promise = this.rpc.request(
       "alliance.alliance.Query",
-      "AllianceDelegations",
+      "AlliancesDelegation",
       data
     );
     return promise.then((data) =>
-      QueryAllianceDelegationsResponse.decode(new Reader(data))
+      QueryAlliancesDelegationsResponse.decode(new Reader(data))
+    );
+  }
+
+  AlliancesDelegationByValidator(
+    request: QueryAlliancesDelegationByValidatorRequest
+  ): Promise<QueryAlliancesDelegationsResponse> {
+    const data = QueryAlliancesDelegationByValidatorRequest.encode(
+      request
+    ).finish();
+    const promise = this.rpc.request(
+      "alliance.alliance.Query",
+      "AlliancesDelegationByValidator",
+      data
+    );
+    return promise.then((data) =>
+      QueryAlliancesDelegationsResponse.decode(new Reader(data))
     );
   }
 

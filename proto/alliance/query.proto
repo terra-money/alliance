@@ -10,52 +10,56 @@ import "alliance/delegations.proto";
 
 option go_package = "alliance/x/alliance/types";
 
-// Query defines the gRPC querier service.
 service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/terra/alliances/params";
   }
 
-  // Query all alliances paginated
+  // Query paginated alliances
   rpc Alliances(QueryAlliancesRequest) returns (QueryAlliancesResponse) {
     option (google.api.http).get = "/terra/alliances";
   }
 
-  // Query the overall delegations of an aliance
+  // Query a specific alliance by denom
   rpc Alliance(QueryAllianceRequest) returns (QueryAllianceResponse) {
     option (google.api.http).get = "/terra/alliances/{denom}";
   }
 
-  // Query the overall delegations of an aliance groupped by delegators
-  rpc AllianceDelegations(QueryAllianceDelegationsRequest) returns (QueryAllianceDelegationsResponse) {
-    option (google.api.http).get = "/terra/alliances/{denom}/delegations";
+  // Query all paginated alliance delegations for a delegator addr
+  rpc AlliancesDelegation(QueryAlliancesDelegationsRequest) returns (QueryAlliancesDelegationsResponse) {
+    option (google.api.http).get = "/terra/alliances/{delegator_addr}";
   }
 
-  // Query the overall delegations of an aliance for a single delegator
+  // Query all paginated alliance delegations for a delegator addr and validator_addr
+  rpc AlliancesDelegationByValidator(QueryAlliancesDelegationByValidatorRequest) returns (QueryAlliancesDelegationsResponse) {
+    option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}";
+  }
+
+  // Query a delegation for a delegator addr and validator_addr
   rpc AllianceDelegation(QueryAllianceDelegationRequest) returns (QueryAllianceDelegationResponse) {
-    option (google.api.http).get = "/terra/alliances/{denom}/delegations/{delegator_address}";
+    option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}/{denom}";
   }
 }
 
-message QueryParamsRequest {}
+// Params
+message QueryParamsRequest { }
 
 message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-message QueryAlliancesRequest{
+// Alliances
+message QueryAlliancesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 
 }
 message QueryAlliancesResponse {
-  repeated AllianceAsset assets = 1;
+  repeated AllianceAsset alliances = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
+// Alliance
 message QueryAllianceRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
   string denom = 1;
 }
 
@@ -63,27 +67,41 @@ message QueryAllianceResponse {
   AllianceAsset alliance = 1;
 }
 
-message QueryAllianceDelegationsRequest {
+// AlliancesDelegation
+message QueryAlliancesDelegationsRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string denom = 1;
+  string delegator_addr = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// AlliancesDelegationByValidator
+message QueryAlliancesDelegationByValidatorRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_addr  = 1;
+  string validator_addr  = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryAlliancesDelegationsResponse {
+  repeated DelegationResponse delegations = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryAllianceDelegationsResponse {
-  repeated Delegation delegations = 1;
-}
-
+// AllianceDelegation
 message QueryAllianceDelegationRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string denom = 1;
-  string delegator_address = 2;
-  cosmos.base.query.v1beta1.PageResponse pagination = 3;
+  string delegator_addr  = 1;
+  string validator_addr  = 2;
+  string denom              = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }
 
 message QueryAllianceDelegationResponse {
-  Delegation delegations = 1;
+  DelegationResponse delegation = 1 [(gogoproto.nullable) = false];
 }

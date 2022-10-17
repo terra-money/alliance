@@ -3,6 +3,7 @@ package keeper
 import (
 	"alliance/x/alliance/types"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -68,10 +69,9 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, validator
 	key := types.GetDelegationWithDenomKey(delAddr, validator.GetOperator(), denom)
 	b := k.cdc.MustMarshal(&del)
 	ctx.KVStore(k.storeKey).Set(key, b)
-	return
 }
 
-func convertNewTokenToShares(totalTokens sdk.Int, totalShares sdk.Dec, newTokens sdk.Int) (shares sdk.Dec) {
+func convertNewTokenToShares(totalTokens math.Int, totalShares sdk.Dec, newTokens math.Int) (shares sdk.Dec) {
 	if totalShares.IsZero() {
 		return sdk.NewDecFromInt(newTokens)
 	}

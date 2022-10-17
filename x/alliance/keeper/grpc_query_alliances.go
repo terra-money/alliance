@@ -11,33 +11,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type Querier struct {
-	Keeper
-}
-
-var _ types.QueryServer = Querier{}
-
-func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	// Define a variable that will store the params
-	var params types.Params
-
-	// Get context with the information about the environment
-	ctx := sdk.UnwrapSDKContext(c)
-
-	k.paramstore.GetParamSet(ctx, &params)
-
-	return &types.QueryParamsResponse{
-		Params: params,
-	}, nil
-}
-
 func (k Keeper) Alliances(c context.Context, req *types.QueryAlliancesRequest) (*types.QueryAlliancesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	// Define a variable that will store a list of assets
-	var assets []*types.AllianceAsset
+	var alliances []types.AllianceAsset
 
 	// Get context with the information about the environment
 	ctx := sdk.UnwrapSDKContext(c)
@@ -55,7 +35,7 @@ func (k Keeper) Alliances(c context.Context, req *types.QueryAlliancesRequest) (
 			return err
 		}
 
-		assets = append(assets, &asset)
+		alliances = append(alliances, asset)
 
 		return nil
 	})
@@ -67,13 +47,12 @@ func (k Keeper) Alliances(c context.Context, req *types.QueryAlliancesRequest) (
 
 	// Return a struct containing a list of assets and pagination info
 	return &types.QueryAlliancesResponse{
-		Assets:     assets,
+		Alliances:  alliances,
 		Pagination: pageRes,
 	}, nil
 }
 
 func (k Keeper) Alliance(c context.Context, req *types.QueryAllianceRequest) (*types.QueryAllianceResponse, error) {
-	// Define a variable that will store a list of assets
 	var asset types.AllianceAsset
 
 	// Get context with the information about the environment
@@ -85,27 +64,5 @@ func (k Keeper) Alliance(c context.Context, req *types.QueryAllianceRequest) (*t
 	// Return parsed asset, true since the asset exists
 	return &types.QueryAllianceResponse{
 		Alliance: &asset,
-	}, nil
-}
-
-func (k Keeper) AllianceDelegations(c context.Context, req *types.QueryAllianceDelegationsRequest) (*types.QueryAllianceDelegationsResponse, error) {
-	var delegations []*types.Delegation
-
-	// ctx := sdk.UnwrapSDKContext(c)
-	// asset, error = k.GetDelegation(ctx, sdk.AccAddress(req.Denom))
-
-	return &types.QueryAllianceDelegationsResponse{
-		Delegations: delegations,
-	}, nil
-}
-
-func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) {
-	var delegations *types.Delegation
-
-	// ctx := sdk.UnwrapSDKContext(c)
-	// asset, error = k.GetDelegation(ctx, sdk.AccAddress(req.Denom))
-
-	return &types.QueryAllianceDelegationResponse{
-		Delegations: delegations,
 	}, nil
 }
