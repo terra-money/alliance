@@ -19,12 +19,14 @@ var _ types.QueryServer = Querier{}
 
 func (k Keeper) AlliancesDelegation(c context.Context, req *types.QueryAlliancesDelegationsRequest) (*types.QueryAlliancesDelegationsResponse, error) {
 	var delegationsRes []types.DelegationResponse
+
+	// Get context with the information about the environment
 	ctx := sdk.UnwrapSDKContext(c)
 
-	// Get the key-value module store using the store key (in our case store key is "chain")
+	// Get the key-value module store using the store key
 	store := ctx.KVStore(k.storeKey)
 
-	// Get the part of the store that keeps assets (using asset key, which is "asset-value-")
+	// Get the part of the store that keeps assets
 	delegationsStore := prefix.NewStore(store, types.GetDelegationsKey(sdk.AccAddress(req.DelegatorAddr)))
 
 	// Paginate the assets store based on PageRequest
@@ -34,11 +36,13 @@ func (k Keeper) AlliancesDelegation(c context.Context, req *types.QueryAlliances
 			return err
 		}
 
+		asset := k.GetAssetByDenom(ctx, delegation.Denom)
+
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
 			Balance: sdk.Coin{
-				Denom: delegation.Denom,
-				// TODO QUERY AMOUNT
+				Denom:  delegation.Denom,
+				Amount: convertNewShareToToken(asset.TotalTokens, asset.TotalShares, delegation.Shares),
 			},
 		}
 
@@ -66,10 +70,10 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 		return nil, err
 	}
 
-	// Get the key-value module store using the store key (in our case store key is "chain")
+	// Get the key-value module store using the store key
 	store := ctx.KVStore(k.storeKey)
 
-	// Get the part of the store that keeps assets (using asset key, which is "asset-value-")
+	// Get the part of the store that keeps assets
 	delegationStore := prefix.NewStore(store, types.GetDelegationKey(sdk.AccAddress(req.DelegatorAddr), valAddr))
 
 	// Paginate the assets store based on PageRequest
@@ -79,11 +83,13 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 			return err
 		}
 
+		asset := k.GetAssetByDenom(ctx, delegation.Denom)
+
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
 			Balance: sdk.Coin{
-				Denom: delegation.Denom,
-				// TODO QUERY AMOUNT
+				Denom:  delegation.Denom,
+				Amount: convertNewShareToToken(asset.TotalTokens, asset.TotalShares, delegation.Shares),
 			},
 		}
 
@@ -115,6 +121,8 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 		return nil, status.Errorf(codes.NotFound, "Cannot recover the validator %s", req.ValidatorAddr)
 	}
 
+	asset := k.GetAssetByDenom(ctx, req.Denom)
+
 	delegation, success := k.GetDelegation(ctx, sdk.AccAddress(req.DelegatorAddr), validator, req.Denom)
 	if !success {
 		return nil, status.Errorf(
@@ -128,8 +136,8 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 		Delegation: types.DelegationResponse{
 			Delegation: delegation,
 			Balance: sdk.Coin{
-				Denom: delegation.Denom,
-				// TODO QUERY AMOUNT
+				Denom:  delegation.Denom,
+				Amount: convertNewShareToToken(asset.TotalTokens, asset.TotalShares, delegation.Shares),
 			},
 		},
 	}, nil

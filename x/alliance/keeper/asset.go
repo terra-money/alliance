@@ -7,7 +7,7 @@ import (
 )
 
 // setAsset Does not check if the asset already exists and overwrites it
-func (k Keeper) setAsset(ctx sdk.Context, asset types.AllianceAsset) {
+func (k Keeper) SetAsset(ctx sdk.Context, asset types.AllianceAsset) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&asset)
 	store.Set(types.GetAssetKey(asset.Denom), b)

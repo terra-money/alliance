@@ -28,7 +28,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stak
 		return nil, err
 	}
 	asset.TotalTokens = asset.TotalTokens.Add(coin.Amount)
-	k.setAsset(ctx, asset)
+	k.SetAsset(ctx, asset)
 	delegation := k.upsertDelegationWithNewShares(ctx, delAddr, validator, coin, asset)
 	return &delegation, nil
 }
@@ -79,4 +79,8 @@ func convertNewTokenToShares(totalTokens math.Int, totalShares sdk.Dec, newToken
 		return sdk.NewDecFromInt(newTokens)
 	}
 	return totalShares.MulInt(newTokens).QuoInt(totalTokens)
+}
+
+func convertNewShareToToken(totalTokens math.Int, totalShares sdk.Dec, shares sdk.Dec) (token math.Int) {
+	return shares.MulInt(totalTokens).Quo(totalShares).TruncateInt()
 }

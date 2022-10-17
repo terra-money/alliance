@@ -599,13 +599,13 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Query paginated alliances
 	Alliances(ctx context.Context, in *QueryAlliancesRequest, opts ...grpc.CallOption) (*QueryAlliancesResponse, error)
-	// Query alliance
+	// Query a specific alliance by denom
 	Alliance(ctx context.Context, in *QueryAllianceRequest, opts ...grpc.CallOption) (*QueryAllianceResponse, error)
 	// Query all paginated alliance delegations for a delegator addr
 	AlliancesDelegation(ctx context.Context, in *QueryAlliancesDelegationsRequest, opts ...grpc.CallOption) (*QueryAlliancesDelegationsResponse, error)
 	// Query all paginated alliance delegations for a delegator addr and validator_addr
 	AlliancesDelegationByValidator(ctx context.Context, in *QueryAlliancesDelegationByValidatorRequest, opts ...grpc.CallOption) (*QueryAlliancesDelegationsResponse, error)
-	// Query a delegation for a delegator addr and validator_addr
+	// Query a delegation to an alliance by delegator addr, validator_addr and denom
 	AllianceDelegation(ctx context.Context, in *QueryAllianceDelegationRequest, opts ...grpc.CallOption) (*QueryAllianceDelegationResponse, error)
 }
 
@@ -676,13 +676,13 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Query paginated alliances
 	Alliances(context.Context, *QueryAlliancesRequest) (*QueryAlliancesResponse, error)
-	// Query alliance
+	// Query a specific alliance by denom
 	Alliance(context.Context, *QueryAllianceRequest) (*QueryAllianceResponse, error)
 	// Query all paginated alliance delegations for a delegator addr
 	AlliancesDelegation(context.Context, *QueryAlliancesDelegationsRequest) (*QueryAlliancesDelegationsResponse, error)
 	// Query all paginated alliance delegations for a delegator addr and validator_addr
 	AlliancesDelegationByValidator(context.Context, *QueryAlliancesDelegationByValidatorRequest) (*QueryAlliancesDelegationsResponse, error)
-	// Query a delegation for a delegator addr and validator_addr
+	// Query a delegation to an alliance by delegator addr, validator_addr and denom
 	AllianceDelegation(context.Context, *QueryAllianceDelegationRequest) (*QueryAllianceDelegationResponse, error)
 }
 

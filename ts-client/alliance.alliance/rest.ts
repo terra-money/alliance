@@ -494,7 +494,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    *
    * @tags Query
    * @name QueryAllianceDelegation
-   * @summary Query a delegation for a delegator addr and validator_addr
+   * @summary Query a delegation to an alliance by delegator addr, validator_addr and denom
    * @request GET:/terra/alliances/{delegator_addr}/{validator_addr}/{denom}
    */
   queryAllianceDelegation = (
@@ -523,7 +523,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    *
    * @tags Query
    * @name QueryAlliance
-   * @summary Query alliance
+   * @summary Query a specific alliance by denom
    * @request GET:/terra/alliances/{denom}
    */
   queryAlliance = (denom: string, params: RequestParams = {}) =>

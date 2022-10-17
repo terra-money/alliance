@@ -17,6 +17,9 @@ const (
 
 	// RouterKey is the msg router key for the staking module
 	RouterKey = ModuleName
+
+	// MemStoreKey defines the in-memory store key
+	MemStoreKey = "mem_signletimemodule"
 )
 
 var (

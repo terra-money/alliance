@@ -954,7 +954,7 @@ export interface Query {
   Params(request: QueryParamsRequest): Promise<QueryParamsResponse>;
   /** Query paginated alliances */
   Alliances(request: QueryAlliancesRequest): Promise<QueryAlliancesResponse>;
-  /** Query alliance */
+  /** Query a specific alliance by denom */
   Alliance(request: QueryAllianceRequest): Promise<QueryAllianceResponse>;
   /** Query all paginated alliance delegations for a delegator addr */
   AlliancesDelegation(
@@ -964,7 +964,7 @@ export interface Query {
   AlliancesDelegationByValidator(
     request: QueryAlliancesDelegationByValidatorRequest
   ): Promise<QueryAlliancesDelegationsResponse>;
-  /** Query a delegation for a delegator addr and validator_addr */
+  /** Query a delegation to an alliance by delegator addr, validator_addr and denom */
   AllianceDelegation(
     request: QueryAllianceDelegationRequest
   ): Promise<QueryAllianceDelegationResponse>;

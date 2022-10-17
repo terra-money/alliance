@@ -2,8 +2,9 @@ package types
 
 import (
 	"fmt"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"time"
+
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var (
@@ -21,10 +22,22 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 func validatePositiveDuration(i interface{}) error {
 	v, ok := i.(time.Duration)
 	if !ok {
-		return fmt.Errorf("invalid paramter type: %T", i)
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	if v <= 0 {
-		return fmt.Errorf("unbonding time must be positive: &d", v)
+		return fmt.Errorf("unbonding time must be positive: %d", v)
 	}
 	return nil
+}
+
+// NewParams creates a new Params instance
+func NewParams() Params {
+	return Params{
+		RewardDelayTime: time.Hour,
+	}
+}
+
+// DefaultParams returns a default set of parameters
+func DefaultParams() Params {
+	return NewParams()
 }

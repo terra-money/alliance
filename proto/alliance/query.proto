@@ -35,7 +35,7 @@ service Query {
     option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}";
   }
 
-  // Query a delegation for a delegator addr and validator_addr
+  // Query a delegation to an alliance by delegator addr, validator_addr and denom
   rpc AllianceDelegation(QueryAllianceDelegationRequest) returns (QueryAllianceDelegationResponse) {
     option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}/{denom}";
   }

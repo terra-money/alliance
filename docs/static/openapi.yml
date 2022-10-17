@@ -521,7 +521,9 @@ paths:
         - Query
   '/terra/alliances/{delegator_addr}/{validator_addr}/{denom}':
     get:
-      summary: Query a delegation for a delegator addr and validator_addr
+      summary: >-
+        Query a delegation to an alliance by delegator addr, validator_addr and
+        denom
       operationId: AllianceAllianceAllianceDelegation
       responses:
         '200':
@@ -663,7 +665,7 @@ paths:
         - Query
   '/terra/alliances/{denom}':
     get:
-      summary: Query alliance
+      summary: Query a specific alliance by denom
       operationId: AllianceAllianceAlliance
       responses:
         '200':

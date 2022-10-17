@@ -22,10 +22,10 @@ func (k Keeper) Alliances(c context.Context, req *types.QueryAlliancesRequest) (
 	// Get context with the information about the environment
 	ctx := sdk.UnwrapSDKContext(c)
 
-	// Get the key-value module store using the store key (in our case store key is "chain")
+	// Get the key-value module store using the store key
 	store := ctx.KVStore(k.storeKey)
 
-	// Get the part of the store that keeps assets (using asset key, which is "asset-value-")
+	// Get the part of the store that keeps assets
 	assetsStore := prefix.NewStore(store, []byte(types.AssetKey))
 
 	// Paginate the assets store based on PageRequest
@@ -58,7 +58,7 @@ func (k Keeper) Alliance(c context.Context, req *types.QueryAllianceRequest) (*t
 	// Get context with the information about the environment
 	ctx := sdk.UnwrapSDKContext(c)
 
-	// Get the part of the store that keeps assets (using asset key, which is "asset-value-")
+	// Get the part of the store that keeps assets
 	asset = k.GetAssetByDenom(ctx, req.Denom)
 
 	// Return parsed asset, true since the asset exists
