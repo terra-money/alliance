@@ -11,9 +11,12 @@ import (
 func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin) (*types.Delegation, error) {
 	asset := k.GetAssetByDenom(ctx, coin.Denom)
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	k.bankKeeper.SendCoinsFromAccountToModule(ctx, delAddr, types.ModuleName, sdk.NewCoins(coin))
+	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, delAddr, types.ModuleName, sdk.NewCoins(coin))
+	if err != nil {
+		return nil, err
+	}
 	tokensToMint := asset.RewardWeight.MulInt(coin.Amount).TruncateInt()
-	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.Coin{
+	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.Coin{
 		Denom:  k.stakingKeeper.BondDenom(ctx),
 		Amount: tokensToMint,
 	}))
