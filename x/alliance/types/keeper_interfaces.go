@@ -9,6 +9,7 @@ import (
 )
 
 type StakingKeeper interface {
+	UnbondingTime(ctx sdk.Context) (res time.Duration)
 	Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt math.Int, tokenSrc types.BondStatus,
 		validator types.Validator, subtractAccount bool) (newShares sdk.Dec, err error)
 	BeginRedelegation(
@@ -20,12 +21,16 @@ type StakingKeeper interface {
 		ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt math.Int,
 	) (shares sdk.Dec, err error)
 	RemoveRedelegation(ctx sdk.Context, red types.Redelegation)
+	Unbond(
+		ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
+	) (amount math.Int, err error)
 }
 
 type BankKeeper interface {
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)

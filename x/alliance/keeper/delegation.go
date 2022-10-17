@@ -151,8 +151,59 @@ func (k Keeper) CompleteRedelegations(ctx sdk.Context) int {
 	return deleted
 }
 
-func (k Keeper) Undelegate() {
-	panic("implement me")
+// CompleteUndelegations Go through all queued undelegations and send the tokens to the delegators
+func (k Keeper) CompleteUndelegations(ctx sdk.Context) int {
+	store := ctx.KVStore(k.storeKey)
+	iter := store.Iterator(types.UndelegationQueueKey, types.GetUndelegationQueueKey(ctx.BlockTime()))
+	processed := 0
+	for ; iter.Valid(); iter.Next() {
+		var queued types.QueuedUndelegation
+		k.cdc.MustUnmarshal(iter.Value(), &queued)
+		for _, undel := range queued.Entries {
+			delArr, _ := sdk.AccAddressFromBech32(undel.DelegatorAddress)
+			k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, delArr, sdk.NewCoins(undel.Balance))
+			processed++
+		}
+		store.Delete(iter.Key())
+	}
+	return processed
+}
+
+func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin) error {
+	// Query for things needed for undelegation
+	asset := k.GetAssetByDenom(ctx, coin.Denom)
+	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	delegation, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
+	if !ok {
+		return stakingtypes.ErrNoDelegatorForAddress
+	}
+
+	// Calculate how much shares to be undelegated
+	sharesToUndelegate, err := k.ValidateDelegatedAmount(delegation, coin, asset)
+	if err != nil {
+		return err
+	}
+
+	// Update assuming everything works
+	asset.TotalTokens = asset.TotalTokens.Sub(coin.Amount)
+	asset.TotalShares = asset.TotalShares.Sub(sharesToUndelegate)
+	k.setAsset(ctx, asset)
+	k.reduceDelegationShares(ctx, delAddr, validator, coin, sharesToUndelegate, delegation)
+
+	// Unbond from x/staking module
+	stakeTokens := asset.ConvertToStake(coin.Amount)
+	stakeShares, err := k.stakingKeeper.ValidateUnbondAmount(ctx, moduleAddr, validator.GetOperator(), stakeTokens)
+	if err != nil {
+		return err
+	}
+	_, err = k.stakingKeeper.Unbond(ctx, moduleAddr, validator.GetOperator(), stakeShares)
+	if err != nil {
+		return err
+	}
+
+	// Queue undelegation messages to distribute tokens after undelegation completes in the future
+	k.queueUndelegation(ctx, delAddr, validator.GetOperator(), coin)
+	return nil
 }
 
 func (k Keeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, denom string) (d types.Delegation, found bool) {
@@ -257,5 +308,33 @@ func (k Keeper) queueRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, srcVa
 		})
 	}
 	b = k.cdc.MustMarshal(&queuedDelegations)
+	store.Set(queueKey, b)
+}
+
+func (k Keeper) queueUndelegation(ctx sdk.Context, delAddr sdk.AccAddress, val sdk.ValAddress, coin sdk.Coin) {
+	store := ctx.KVStore(k.storeKey)
+	completionTime := ctx.BlockTime().Add(k.stakingKeeper.UnbondingTime(ctx))
+	queueKey := types.GetUndelegationQueueKey(completionTime)
+	b := store.Get(queueKey)
+	var queue types.QueuedUndelegation
+	if b == nil {
+		queue = types.QueuedUndelegation{
+			Entries: []*types.Undelegation{
+				{
+					DelegatorAddress: delAddr.String(),
+					ValidatorAddress: val.String(),
+					Balance:          coin,
+				},
+			},
+		}
+	} else {
+		k.cdc.MustUnmarshal(b, &queue)
+		queue.Entries = append(queue.Entries, &types.Undelegation{
+			DelegatorAddress: delAddr.String(),
+			ValidatorAddress: val.String(),
+			Balance:          coin,
+		})
+	}
+	b = k.cdc.MustMarshal(&queue)
 	store.Set(queueKey, b)
 }
