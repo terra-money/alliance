@@ -195,6 +195,18 @@ func TestRedelegation(t *testing.T) {
 		}, redelegation)
 	}
 
+	// Check if the delegation objects are correct
+	_, found = app.AllianceKeeper.GetDelegation(ctx, delAddr1, val1, ALLIANCE_TOKEN_DENOM)
+	require.False(t, found)
+	dstDelegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr1, val2, ALLIANCE_TOKEN_DENOM)
+	require.Equal(t, types.Delegation{
+		DelegatorAddress: delAddr1.String(),
+		ValidatorAddress: val2.GetOperator().String(),
+		Denom:            ALLIANCE_TOKEN_DENOM,
+		Shares:           sdk.NewDec(500_000),
+	}, dstDelegation)
+	require.True(t, found)
+
 	// Should fail when re-delegating back to validator1
 	// Same user who re-delegated to from 1 -> 2 cannot re-re-delegate from 2 -> X
 	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr1, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))

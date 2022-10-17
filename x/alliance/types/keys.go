@@ -37,12 +37,13 @@ func GetAssetKey(denom string) []byte {
 	return append(AssetKey, address.MustLengthPrefix([]byte(denom))...)
 }
 
-func GetDelegationWithDenomKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string) []byte {
-	return append(GetDelegationKey(delAddr, valAddr), address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
+// GetDelegationKey key is in the format of delegator|validator|denom
+func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string) []byte {
+	return append(GetDelegationsKeyForAllDenoms(delAddr, valAddr), address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
 }
 
 // GetDelegationKey creates the key for delegator bond with validator for all denoms
-func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+func GetDelegationsKeyForAllDenoms(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetDelegationsKey(delAddr), address.MustLengthPrefix(valAddr)...)
 }
 
