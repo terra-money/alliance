@@ -73,10 +73,36 @@ func GetRedelegationQueueKey(completion time.Time) []byte {
 	return append(RedelegationQueueKey, bz...)
 }
 
+func ParseRedelegationQueueKey(key []byte) time.Time {
+	offset := 0
+	offset += len(RedelegationQueueKey)
+	b := key[offset:]
+	time, err := sdk.ParseTimeBytes(b)
+	if err != nil {
+		panic(err)
+	}
+	return time
+}
+
 func CreateDenomAddressPrefix(denom string) []byte {
 	// we add a "zero" byte at the end - null byte terminator, to allow prefix denom prefix
 	// scan. Setting it is not needed (key[last] = 0) - because this is the default.
 	key := make([]byte, len(denom)+1)
 	copy(key, denom)
 	return key
+}
+
+// Redelegation key is in the format of RedelegationKey|delegator|denom|destination|timestamp
+func ParseRedelegationKeyForCompletionTIme(key []byte) time.Time {
+	offset := 0
+	offset += len(RedelegationKey)
+	offset += int(key[offset]) + 1
+	offset += int(key[offset]) + 1
+	offset += int(key[offset]) + 1
+	b := key[offset:]
+	time, err := sdk.ParseTimeBytes(b)
+	if err != nil {
+		panic(err)
+	}
+	return time
 }

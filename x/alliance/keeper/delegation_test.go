@@ -209,4 +209,19 @@ func TestRedelegation(t *testing.T) {
 
 	// Should pass since we removed the re-delegate attempt on x/staking that prevents this
 	require.NoError(t, err)
+
+	// Immediately calling complete re-delegation should do nothing
+	deleted := app.AllianceKeeper.CompleteRedelegations(ctx)
+	require.Equal(t, 0, deleted)
+
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(app.StakingKeeper.UnbondingTime(ctx)).Add(time.Minute))
+	// Calling after re-delegation has matured will delete it from the store
+	deleted = app.AllianceKeeper.CompleteRedelegations(ctx)
+	require.Equal(t, 2, deleted)
+
+	// There shouldn't be any more delegations in the store
+	iter = app.AllianceKeeper.IterateRedelegationsByDelegator(ctx, delAddr1)
+	require.False(t, iter.Valid())
+	iter = app.AllianceKeeper.IterateRedelegationsByDelegator(ctx, delAddr2)
+	require.False(t, iter.Valid())
 }
