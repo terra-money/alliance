@@ -200,13 +200,20 @@ func TestRedelegation(t *testing.T) {
 	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr1, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
 	require.Error(t, err)
 
-	// Another user first delegates to validator2
+	// Another user tries to re-delegate without having an initial delegation but fails
+	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr2, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+	require.Error(t, err)
+
+	// User then delegates to validator2
 	_, err = app.AllianceKeeper.Delegate(ctx, delAddr2, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
 	require.NoError(t, err)
 
-	// Then redelegate to validator1
-	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr2, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+	// Then redelegate to validator1 with more than what was delegated but fails
+	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr2, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
+	require.Error(t, err)
 
+	// Then redelegate to validator1 correctly
+	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr2, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
 	// Should pass since we removed the re-delegate attempt on x/staking that prevents this
 	require.NoError(t, err)
 
