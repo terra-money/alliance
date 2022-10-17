@@ -92,6 +92,24 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal staki
 	return &types.MsgRedelegateResponse{}, nil
 }
 
+// CompleteRedelegations Go through the re-delegations queue and remove all that have passed the completion time
+func (k Keeper) CompleteRedelegations(ctx sdk.Context) int {
+	store := ctx.KVStore(k.storeKey)
+	iter := store.Iterator(types.RedelegationQueueKey, types.GetRedelegationQueueKey(ctx.BlockTime()))
+	deleted := 0
+	for ; iter.Valid(); iter.Next() {
+		completion := types.ParseRedelegationQueueKey(iter.Key())
+		var queued types.QueuedRedelegation
+		k.cdc.MustUnmarshal(iter.Value(), &queued)
+		for _, redel := range queued.Entries {
+			k.DeleteRedelegation(ctx, *redel, completion)
+			deleted++
+		}
+		store.Delete(iter.Key())
+	}
+	return deleted
+}
+
 func (k Keeper) Undelegate() {
 	panic("implement me")
 }
@@ -143,6 +161,20 @@ func (k Keeper) addRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, srcVal 
 	store.Set(key, b)
 }
 
+func (k Keeper) DeleteRedelegation(ctx sdk.Context, redel types.Redelegation, completion time.Time) {
+	delAddr, err := sdk.AccAddressFromBech32(redel.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	dstValAddr, err := sdk.ValAddressFromBech32(redel.DstValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetRedelegationKey(delAddr, redel.Balance.Denom, dstValAddr, completion)
+	store.Delete(key)
+}
+
 func (k Keeper) IterateRedelegations(ctx sdk.Context, delAddr sdk.AccAddress, dstVal sdk.ValAddress, denom string) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRedelegationsKey(delAddr, denom, dstVal)
@@ -177,6 +209,7 @@ func (k Keeper) queueRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, srcVa
 	} else {
 		k.cdc.MustUnmarshal(b, &queuedDelegations)
 		queuedDelegations.Entries = append(queuedDelegations.Entries, &types.Redelegation{
+			DelegatorAddress:    delAddr.String(),
 			SrcValidatorAddress: srcVal.String(),
 			DstValidatorAddress: dstVal.String(),
 			Balance:             coin,
