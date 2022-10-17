@@ -29,7 +29,11 @@ func (m msgServer) Delegate(ctx context.Context, delegate *types.MsgDelegate) (*
 		return nil, stakingtypes.ErrNoValidatorFound
 	}
 
-	return m.Keeper.Delegate(sdkCtx, delAddr, validator, delegate.Amount)
+	_, err = m.Keeper.Delegate(sdkCtx, delAddr, validator, delegate.Amount)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgDelegateResponse{}, nil
 }
 
 func (m msgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelegate) (*types.MsgRedelegateResponse, error) {

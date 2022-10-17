@@ -7,7 +7,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin) (*types.MsgDelegateResponse, error) {
+func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin) (*types.Delegation, error) {
 	asset := k.GetAssetByDenom(ctx, coin.Denom)
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	k.bankKeeper.SendCoinsFromAccountToModule(ctx, delAddr, types.ModuleName, sdk.NewCoins(coin))
@@ -25,11 +25,11 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stak
 	}
 	asset.TotalTokens = asset.TotalTokens.Add(coin.Amount)
 	k.setAsset(ctx, asset)
-	k.upsertDelegationWithNewShares(ctx, delAddr, validator, coin, asset)
-	return &types.MsgDelegateResponse{}, nil
+	delegation := k.upsertDelegationWithNewShares(ctx, delAddr, validator, coin, asset)
+	return &delegation, nil
 }
 
-func (k Keeper) upsertDelegationWithNewShares(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, asset types.AllianceAsset) {
+func (k Keeper) upsertDelegationWithNewShares(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, asset types.AllianceAsset) types.Delegation {
 	newShares := convertNewTokenToShares(asset.TotalTokens, asset.TotalShares, coin.Amount)
 	delegation, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 	if !ok {
@@ -43,6 +43,7 @@ func (k Keeper) upsertDelegationWithNewShares(ctx sdk.Context, delAddr sdk.AccAd
 		delegation.Shares = delegation.Shares.Add(newShares)
 	}
 	k.SetDelegation(ctx, delAddr, validator, coin.Denom, delegation)
+	return delegation
 }
 
 func (k Keeper) Undelegate() {
