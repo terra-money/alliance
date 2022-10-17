@@ -251,4 +251,14 @@ func TestRedelegation(t *testing.T) {
 	require.False(t, iter.Valid())
 	iter = app.AllianceKeeper.IterateRedelegationsByDelegator(ctx, delAddr2)
 	require.False(t, iter.Valid())
+
+	// Another user first delegates to validator2
+	_, err = app.AllianceKeeper.Delegate(ctx, delAddr2, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+	require.NoError(t, err)
+
+	// Then redelegate to validator1
+	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr2, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+
+	// Should pass since we removed the re-delegate attempt on x/staking that prevents this
+	require.NoError(t, err)
 }
