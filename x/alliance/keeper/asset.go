@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"alliance/x/alliance/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
