@@ -14,6 +14,7 @@ func TestRewardPool(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.Params{
 			RewardDelayTime: time.Duration(1000000),
+			GlobalIndex:     sdk.NewDec(0),
 		},
 		Assets: []types.AllianceAsset{
 			{
@@ -34,13 +35,18 @@ func TestRewardPool(t *testing.T) {
 	})
 	// Accounts
 	rewardsPoolAddr := app.AccountKeeper.GetModuleAddress(types.RewardsPoolName)
+	mintPoolAddr := app.AccountKeeper.GetModuleAddress(minttypes.ModuleName)
 
 	// Mint tokens
 	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
 	require.NoError(t, err)
 
+	// Transfer to rewards pool will fail
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
+	require.Error(t, err)
+
 	// Transfer to rewards pool
-	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.RewardsPoolName, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
 	require.NoError(t, err)
 
 	// Expect rewards pool to have something
