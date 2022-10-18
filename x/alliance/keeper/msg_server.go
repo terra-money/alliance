@@ -115,13 +115,14 @@ func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAllia
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	asset := m.Keeper.GetAssetByDenom(sdkCtx, req.Denom)
+	asset, found := m.Keeper.GetAssetByDenom(sdkCtx, req.Denom)
 
-	if asset.Denom == "" {
+	if !found {
 		return nil, status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", req.Denom)
 	}
 
 	asset.RewardWeight = req.RewardWeight
+	asset.TakeRate = req.TakeRate
 
 	m.Keeper.SetAsset(sdkCtx, asset)
 
@@ -135,9 +136,9 @@ func (m MsgServer) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAllia
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	asset := m.Keeper.GetAssetByDenom(sdkCtx, req.Denom)
+	_, found := m.Keeper.GetAssetByDenom(sdkCtx, req.Denom)
 
-	if asset.Denom == "" {
+	if !found {
 		return nil, status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", req.Denom)
 	}
 

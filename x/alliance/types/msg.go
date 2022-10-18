@@ -30,7 +30,7 @@ func (m MsgDelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{signer}
 }
 func (m MsgRedelegate) ValidateBasic() error {
-	if !m.Amount.Amount.GT(sdk.ZeroInt()) {
+	if !m.Amount.Amount.GTE(sdk.ZeroInt()) {
 		return fmt.Errorf("redelegation amount must be more than zero")
 	}
 	return nil
@@ -45,7 +45,7 @@ func (m MsgRedelegate) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgUndelegate) ValidateBasic() error {
-	if !m.Amount.Amount.GT(sdk.ZeroInt()) {
+	if !m.Amount.Amount.GTE(sdk.ZeroInt()) {
 		return fmt.Errorf("redelegation amount must be more than zero")
 	}
 	return nil
@@ -64,11 +64,11 @@ func (m MsgCreateAlliance) ValidateBasic() error {
 		return fmt.Errorf("denom must not be empty")
 	}
 
-	if m.Alliance.RewardWeight.GT(sdk.ZeroDec()) {
+	if m.Alliance.RewardWeight.GTE(sdk.ZeroDec()) {
 		return fmt.Errorf("rewardWeight must be positive")
 	}
 
-	if m.Alliance.TakeRate.GT(sdk.ZeroDec()) {
+	if m.Alliance.TakeRate.GTE(sdk.ZeroDec()) {
 		return fmt.Errorf("takeRate must be positive")
 	}
 
@@ -88,8 +88,12 @@ func (m MsgUpdateAlliance) ValidateBasic() error {
 		return fmt.Errorf("denom must not be empty")
 	}
 
-	if m.RewardWeight.GT(sdk.ZeroDec()) {
+	if m.RewardWeight.GTE(sdk.ZeroDec()) {
 		return fmt.Errorf("rewardWeight must be positive")
+	}
+
+	if m.TakeRate.GTE(sdk.ZeroDec()) {
+		return fmt.Errorf("takeRate must be positive")
 	}
 
 	return nil

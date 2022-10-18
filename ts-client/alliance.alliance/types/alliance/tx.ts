@@ -50,6 +50,7 @@ export interface MsgUpdateAlliance {
    * Native asset is always assumed to have a weight of 1.
    */
   rewardWeight: string;
+  takeRate: string;
 }
 
 export interface MsgUpdateAllianceResponse {}
@@ -650,6 +651,7 @@ const baseMsgUpdateAlliance: object = {
   authority: "",
   denom: "",
   rewardWeight: "",
+  takeRate: "",
 };
 
 export const MsgUpdateAlliance = {
@@ -662,6 +664,9 @@ export const MsgUpdateAlliance = {
     }
     if (message.rewardWeight !== "") {
       writer.uint32(26).string(message.rewardWeight);
+    }
+    if (message.takeRate !== "") {
+      writer.uint32(34).string(message.takeRate);
     }
     return writer;
   },
@@ -681,6 +686,9 @@ export const MsgUpdateAlliance = {
           break;
         case 3:
           message.rewardWeight = reader.string();
+          break;
+        case 4:
+          message.takeRate = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -707,6 +715,11 @@ export const MsgUpdateAlliance = {
     } else {
       message.rewardWeight = "";
     }
+    if (object.takeRate !== undefined && object.takeRate !== null) {
+      message.takeRate = String(object.takeRate);
+    } else {
+      message.takeRate = "";
+    }
     return message;
   },
 
@@ -716,6 +729,7 @@ export const MsgUpdateAlliance = {
     message.denom !== undefined && (obj.denom = message.denom);
     message.rewardWeight !== undefined &&
       (obj.rewardWeight = message.rewardWeight);
+    message.takeRate !== undefined && (obj.takeRate = message.takeRate);
     return obj;
   },
 
@@ -735,6 +749,11 @@ export const MsgUpdateAlliance = {
       message.rewardWeight = object.rewardWeight;
     } else {
       message.rewardWeight = "";
+    }
+    if (object.takeRate !== undefined && object.takeRate !== null) {
+      message.takeRate = object.takeRate;
+    } else {
+      message.takeRate = "";
     }
     return message;
   },
