@@ -10,7 +10,7 @@ import (
 func (k Keeper) InitGenesis(ctx sdk.Context, g *types.GenesisState) []abci.ValidatorUpdate {
 	k.SetParams(ctx, g.Params)
 	for _, asset := range g.Assets {
-		k.setAsset(ctx, asset)
+		k.SetAsset(ctx, asset)
 	}
 	return []abci.ValidatorUpdate{}
 }

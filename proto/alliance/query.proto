@@ -5,25 +5,103 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "alliance/params.proto";
+import "alliance/alliance.proto";
+import "alliance/delegations.proto";
 
 option go_package = "alliance/x/alliance/types";
 
-// Query defines the gRPC querier service.
 service Query {
-  // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/alliance/params";
+    option (google.api.http).get = "/terra/alliances/params";
   }
-  // this line is used by starport scaffolding # 2
+
+  // Query paginated alliances
+  rpc Alliances(QueryAlliancesRequest) returns (QueryAlliancesResponse) {
+    option (google.api.http).get = "/terra/alliances";
+  }
+
+  // Query a specific alliance by denom
+  rpc Alliance(QueryAllianceRequest) returns (QueryAllianceResponse) {
+    option (google.api.http).get = "/terra/alliances/{denom}";
+  }
+
+  // Query all paginated alliance delegations for a delegator addr
+  rpc AlliancesDelegation(QueryAlliancesDelegationsRequest) returns (QueryAlliancesDelegationsResponse) {
+    option (google.api.http).get = "/terra/alliances/{delegator_addr}";
+  }
+
+  // Query all paginated alliance delegations for a delegator addr and validator_addr
+  rpc AlliancesDelegationByValidator(QueryAlliancesDelegationByValidatorRequest) returns (QueryAlliancesDelegationsResponse) {
+    option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}";
+  }
+
+  // Query a delegation to an alliance by delegator addr, validator_addr and denom
+  rpc AllianceDelegation(QueryAllianceDelegationRequest) returns (QueryAllianceDelegationResponse) {
+    option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}/{denom}";
+  }
 }
 
-// QueryParamsRequest is request type for the Query/Params RPC method.
-message QueryParamsRequest {}
+// Params
+message QueryParamsRequest { }
 
-// QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
-  // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-// this line is used by starport scaffolding # 3
+// Alliances
+message QueryAlliancesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+
+}
+message QueryAlliancesResponse {
+  repeated AllianceAsset alliances = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// Alliance
+message QueryAllianceRequest {
+  string denom = 1;
+}
+
+message QueryAllianceResponse {
+  AllianceAsset alliance = 1;
+}
+
+// AlliancesDelegation
+message QueryAlliancesDelegationsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_addr = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// AlliancesDelegationByValidator
+message QueryAlliancesDelegationByValidatorRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_addr  = 1;
+  string validator_addr  = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryAlliancesDelegationsResponse {
+  repeated DelegationResponse delegations = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// AllianceDelegation
+message QueryAllianceDelegationRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_addr  = 1;
+  string validator_addr  = 2;
+  string denom              = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+message QueryAllianceDelegationResponse {
+  DelegationResponse delegation = 1 [(gogoproto.nullable) = false];
+}

@@ -1,6 +1,9 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 var (
 	_ sdk.Msg = &MsgDelegate{}
@@ -9,13 +12,18 @@ var (
 )
 
 func (m MsgDelegate) ValidateBasic() error {
-	//TODO implement me
-	panic("implement me")
+	if !m.Amount.Amount.GT(sdk.NewInt(0)) {
+		return fmt.Errorf("Delegation amount must be more than zero")
+	}
+	return nil
 }
 
 func (m MsgDelegate) GetSigners() []sdk.AccAddress {
-	//TODO implement me
-	panic("implement me")
+	signer, err := sdk.AccAddressFromBech32(m.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }
 func (m MsgRedelegate) ValidateBasic() error {
 	//TODO implement me

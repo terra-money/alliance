@@ -7,12 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type Querier struct {
-	Keeper
-}
-
-var _ types.QueryServer = Querier{}
-
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	// Define a variable that will store the params
 	var params types.Params

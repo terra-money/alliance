@@ -21,9 +21,15 @@ init:
 genesis:
   app_state:
     alliance:
-      assets: 
+      assets:
         - denom: 'uluna'
           reward_weight: "0.5"
           take_rate: "0.5"
+        - denom: 'bluna'
+          reward_weight: "0.9"
+          take_rate: "0.9"
+        - denom: 'token'
+          reward_weight: "5"
+          take_rate: "0"
       params: 
         reward_delay_time: "60s"
