@@ -3,6 +3,7 @@ package keeper
 import (
 	"alliance/x/alliance/types"
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -42,6 +43,21 @@ func (m msgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelega
 }
 
 func (m msgServer) Undelegate(ctx context.Context, undelegate *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m msgServer) CreateAlliance(ctx context.Context, undelegate *types.MsgCreateAlliance) (*types.MsgCreateAllianceResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m msgServer) UpdateAlliance(ctx context.Context, undelegate *types.MsgUpdateAlliance) (*types.MsgUpdateAllianceResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m msgServer) DeleteAlliance(ctx context.Context, undelegate *types.MsgDeleteAlliance) (*types.MsgDeleteAllianceResponse, error) {
 	//TODO implement me
 	panic("implement me")
 }

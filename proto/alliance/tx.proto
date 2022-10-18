@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "alliance/alliance.proto";
 
 option go_package = "alliance/x/alliance/types";
 
@@ -12,6 +13,10 @@ service Msg {
   rpc Delegate(MsgDelegate) returns (MsgDelegateResponse);
   rpc Redelegate(MsgRedelegate) returns(MsgRedelegateResponse);
   rpc Undelegate(MsgUndelegate) returns(MsgUndelegateResponse);
+  
+  rpc CreateAlliance(MsgCreateAlliance) returns (MsgCreateAllianceResponse);
+  
+  rpc DeleteAlliance(MsgDeleteAlliance) returns (MsgDeleteAllianceResponse);
 }
 
 message MsgDelegate {
@@ -61,3 +66,47 @@ message MsgRedelegate {
 }
 
 message MsgRedelegateResponse {}
+
+
+message MsgCreateAlliance {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the governance account.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // plan is the upgrade plan.
+  AllianceAsset alliance = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgCreateAllianceResponse {}
+
+
+message MsgUpdateAlliance {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the governance account.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // Denom of the asset. It could either be a native token or an IBC token
+  string denom      = 2 [(gogoproto.moretags) = "yaml:\"denom\""];
+  
+  // The reward weight specifies the ratio of rewards that will be given to each alliance asset
+  // It does not need to sum to 1. rate = weight / total_weight
+  // Native asset is always assumed to have a weight of 1.
+  string reward_weight = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+message MsgUpdateAllianceResponse {}
+
+message MsgDeleteAlliance {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  
+  string denom = 2;
+}
+
+message MsgDeleteAllianceResponse {}
