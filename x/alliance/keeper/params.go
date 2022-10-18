@@ -21,3 +21,18 @@ func (k Keeper) SetGlobalRewardIndex(ctx sdk.Context, index types.RewardIndices)
 	k.paramstore.Set(ctx, types.GlobalRewardIndices, &index)
 	return
 }
+
+func (k Keeper) RewardClaimInterval(ctx sdk.Context) (res time.Duration) {
+	k.paramstore.Get(ctx, types.RewardClaimInterval, &res)
+	return
+}
+
+func (k Keeper) LastRewardClaimTime(ctx sdk.Context) (res time.Time) {
+	k.paramstore.Get(ctx, types.LastRewardClaimTime, &res)
+	return
+}
+
+func (k Keeper) SetLastRewardClaimTime(ctx sdk.Context, lastTime time.Time) {
+	k.paramstore.Set(ctx, types.LastRewardClaimTime, &lastTime)
+	return
+}

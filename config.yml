@@ -1,6 +1,6 @@
 accounts:
   - name: alice
-    coins: ["20000token", "200000000stake"]
+    coins: ["2000000000token", "200000000stake"]
     mnemonic: "wine rich chunk that swim afford found auction travel dentist razor furnace fluid hidden happy enroll pilot dragon market broom bus merry salad assume"
   - name: bob
     coins: ["10000token", "100000000stake"]
@@ -32,6 +32,7 @@ genesis:
           take_rate: "0.9"
         - denom: 'token'
           reward_weight: "5"
-          take_rate: "0"
+          take_rate: "0.9"
       params: 
         reward_delay_time: "60s"
+        reward_claim_interval: "10s"

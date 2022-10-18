@@ -11,6 +11,8 @@ import (
 
 var (
 	RewardDelayTime     = []byte("RewardDelayTime")
+	RewardClaimInterval = []byte("RewardClaimInterval")
+	LastRewardClaimTime = []byte("LastRewardClaimTime")
 	GlobalRewardIndices = []byte("GlobalRewardIndices")
 )
 
@@ -20,6 +22,8 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	idxs := NewRewardIndices(p.GlobalRewardIndices)
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(RewardDelayTime, &p.RewardDelayTime, validatePositiveDuration),
+		paramtypes.NewParamSetPair(RewardClaimInterval, &p.RewardClaimInterval, validatePositiveDuration),
+		paramtypes.NewParamSetPair(LastRewardClaimTime, &p.LastRewardClaimTime, validateTime),
 		paramtypes.NewParamSetPair(GlobalRewardIndices, &idxs, validatePositiveRewardIndices),
 	}
 }
@@ -30,7 +34,15 @@ func validatePositiveDuration(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	if v <= 0 {
-		return fmt.Errorf("unbonding time must be positive: %d", v)
+		return fmt.Errorf("duration must be positive: %d", v)
+	}
+	return nil
+}
+
+func validateTime(i interface{}) error {
+	_, ok := i.(time.Time)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	return nil
 }
@@ -53,6 +65,8 @@ func NewParams() Params {
 	return Params{
 		RewardDelayTime:     time.Hour,
 		GlobalRewardIndices: make([]RewardIndex, 0),
+		RewardClaimInterval: time.Minute * 5,
+		LastRewardClaimTime: time.Now(),
 	}
 }
 

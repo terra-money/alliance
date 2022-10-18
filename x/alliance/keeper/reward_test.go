@@ -120,10 +120,7 @@ func TestRewardPoolAndGlobalIndex(t *testing.T) {
 func TestClaimRewards(t *testing.T) {
 	app, ctx := createTestContext(t)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.Params{
-			RewardDelayTime:     time.Duration(1000000),
-			GlobalRewardIndices: types.RewardIndices{},
-		},
+		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
 				Denom:        ALLIANCE_TOKEN_DENOM,
@@ -221,4 +218,75 @@ func TestClaimRewards(t *testing.T) {
 	delegation, found = app.AllianceKeeper.GetDelegation(ctx, user2, val1, ALLIANCE_2_TOKEN_DENOM)
 	require.True(t, found)
 	require.Equal(t, indices, types.NewRewardIndices(delegation.RewardIndices))
+}
+
+func TestClaimTakeRate(t *testing.T) {
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.Params{
+			RewardDelayTime:     time.Minute * 60,
+			RewardClaimInterval: time.Minute * 5,
+			LastRewardClaimTime: startTime,
+			GlobalRewardIndices: types.NewRewardIndices(nil),
+		},
+		Assets: []types.AllianceAsset{
+			{
+				Denom:        ALLIANCE_TOKEN_DENOM,
+				RewardWeight: sdk.NewDec(2),
+				TakeRate:     sdk.MustNewDecFromStr("0.5"),
+				TotalShares:  sdk.NewDec(0),
+				TotalTokens:  sdk.ZeroInt(),
+			},
+			{
+				Denom:        ALLIANCE_2_TOKEN_DENOM,
+				RewardWeight: sdk.NewDec(10),
+				TakeRate:     sdk.NewDec(0),
+				TotalShares:  sdk.NewDec(0),
+				TotalTokens:  sdk.ZeroInt(),
+			},
+		},
+	})
+
+	// Accounts
+	//mintPoolAddr := app.AccountKeeper.GetModuleAddress(minttypes.ModuleName)
+	rewardsPoolAddr := app.AccountKeeper.GetModuleAddress(types.RewardsPoolName)
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	valAddr1, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val1, found := app.StakingKeeper.GetValidator(ctx, valAddr1)
+	require.True(t, found)
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 1, sdk.NewCoins(
+		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000)),
+		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)),
+	))
+	user1 := addrs[0]
+
+	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
+	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
+
+	// Calling it immediately will not update anything
+	coins, err := app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
+	require.Nil(t, coins)
+	require.Nil(t, err)
+
+	// Advance block time
+	timePassed := time.Minute*5 + time.Second
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(timePassed))
+	coinsClaimed, err := app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
+	coins = app.BankKeeper.GetAllBalances(ctx, rewardsPoolAddr)
+	require.Equal(t, coinsClaimed, coins)
+
+	expectedAmount := sdk.MustNewDecFromStr("0.5").Mul(sdk.NewDec(timePassed.Nanoseconds()).Quo(sdk.NewDec(31_557_000_000_000_000))).MulInt(sdk.NewInt(1000_000_000))
+	require.Equal(t, expectedAmount.TruncateInt(), coins.AmountOf(ALLIANCE_TOKEN_DENOM))
+
+	lastUpdate := app.AllianceKeeper.LastRewardClaimTime(ctx)
+	require.Equal(t, ctx.BlockTime(), lastUpdate)
+
+	asset, found := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	require.True(t, found)
+	expectedRewardRate := sdk.MustNewDecFromStr("2").Mul(sdk.OneDec().Add(sdk.MustNewDecFromStr("0.5").Mul(sdk.NewDec(timePassed.Nanoseconds()).Quo(sdk.NewDec(31_557_000_000_000_000)))))
+	require.Equal(t, expectedRewardRate, asset.RewardWeight)
+
 }
