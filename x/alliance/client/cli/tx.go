@@ -21,7 +21,7 @@ func NewTxCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	txCmd.AddCommand(NewDelegateCmd(), NewRedelegateCmd())
+	txCmd.AddCommand(NewDelegateCmd(), NewRedelegateCmd(), NewUndelegateCmd())
 	return txCmd
 }
 
@@ -115,6 +115,53 @@ $ %s tx alliance redelegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm %ss1l2rsak
 				ValidatorSrcAddress: srcValAddr.String(),
 				ValidatorDstAddress: dstValAddr.String(),
 				Amount:              amount,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewUndelegateCmd() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "undelegate validator-addr amount",
+		Args:  cobra.ExactArgs(2),
+		Short: "Undelegate alliance enabled tokens to a validator",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Undelegate an amount of liquid alliance enabled coins from a validator to your wallet (after the unbonding period has passed).
+
+Example:
+$ %s tx alliance undelegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
+`,
+				version.AppName, bech32PrefixValAddr,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			amount, err := sdk.ParseCoinNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			delAddr := clientCtx.GetFromAddress()
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgUndelegate{
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: valAddr.String(),
+				Amount:           amount,
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

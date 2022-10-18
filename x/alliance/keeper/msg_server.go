@@ -69,8 +69,26 @@ func (m msgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelega
 }
 
 func (m msgServer) Undelegate(ctx context.Context, undelegate *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	delAddr, err := sdk.AccAddressFromBech32(undelegate.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	valAddr, err := sdk.ValAddressFromBech32(undelegate.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	validator, ok := m.Keeper.stakingKeeper.GetValidator(sdkCtx, valAddr)
+	if !ok {
+		return nil, stakingtypes.ErrNoValidatorFound
+	}
+
+	err = m.Keeper.Undelegate(sdkCtx, delAddr, validator, undelegate.Amount)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgUndelegateResponse{}, nil
 }
 
 // NewMsgServerImpl returns an implementation of the bank MsgServer interface

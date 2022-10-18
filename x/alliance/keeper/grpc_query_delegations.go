@@ -74,7 +74,7 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 	store := ctx.KVStore(k.storeKey)
 
 	// Get the part of the store that keeps assets
-	delegationStore := prefix.NewStore(store, types.GetDelegationKey(sdk.AccAddress(req.DelegatorAddr), valAddr))
+	delegationStore := prefix.NewStore(store, types.GetDelegationsKeyForAllDenoms(sdk.AccAddress(req.DelegatorAddr), valAddr))
 
 	// Paginate the assets store based on PageRequest
 	pageRes, err := query.Paginate(delegationStore, req.Pagination, func(key []byte, value []byte) error {

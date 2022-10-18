@@ -41,11 +41,16 @@ func (m MsgRedelegate) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgUndelegate) ValidateBasic() error {
-	//TODO implement me
-	panic("implement me")
+	if !m.Amount.Amount.GT(sdk.ZeroInt()) {
+		return fmt.Errorf("redelegation amount must be more than zero")
+	}
+	return nil
 }
 
 func (m MsgUndelegate) GetSigners() []sdk.AccAddress {
-	//TODO implement me
-	panic("implement me")
+	signer, err := sdk.AccAddressFromBech32(m.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
 }

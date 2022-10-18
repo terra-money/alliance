@@ -31,6 +31,7 @@ var (
 	DelegationKey        = []byte{0x21}
 	RedelegationKey      = []byte{0x22}
 	RedelegationQueueKey = []byte{0x23}
+	UndelegationQueueKey = []byte{0x24}
 )
 
 func GetAssetKey(denom string) []byte {
@@ -93,8 +94,8 @@ func CreateDenomAddressPrefix(denom string) []byte {
 	return key
 }
 
-// Redelegation key is in the format of RedelegationKey|delegator|denom|destination|timestamp
-func ParseRedelegationKeyForCompletionTIme(key []byte) time.Time {
+// ParseRedelegationKeyForCompletionTime key is in the format of RedelegationKey|delegator|denom|destination|timestamp
+func ParseRedelegationKeyForCompletionTime(key []byte) time.Time {
 	offset := 0
 	offset += len(RedelegationKey)
 	offset += int(key[offset]) + 1
@@ -106,4 +107,9 @@ func ParseRedelegationKeyForCompletionTIme(key []byte) time.Time {
 		panic(err)
 	}
 	return time
+}
+
+func GetUndelegationQueueKey(completion time.Time) []byte {
+	bz := sdk.FormatTimeBytes(completion)
+	return append(UndelegationQueueKey, bz...)
 }

@@ -15,7 +15,7 @@ func TestRedelegationKey(t *testing.T) {
 	require.NoError(t, err)
 	completion := time.Now().UTC()
 	key := types.GetRedelegationKey(delAddr, "denom", valAddr, completion)
-	parsedCompletion := types.ParseRedelegationKeyForCompletionTIme(key)
+	parsedCompletion := types.ParseRedelegationKeyForCompletionTime(key)
 	require.Equal(t, completion, parsedCompletion)
 }
 

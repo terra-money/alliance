@@ -251,4 +251,103 @@ func TestRedelegation(t *testing.T) {
 	require.False(t, iter.Valid())
 	iter = app.AllianceKeeper.IterateRedelegationsByDelegator(ctx, delAddr2)
 	require.False(t, iter.Valid())
+
+	// Calling again should not process anymore redelegations
+	deleted = app.AllianceKeeper.CompleteRedelegations(ctx)
+	require.Equal(t, 0, deleted)
+}
+
+func TestUndelegation(t *testing.T) {
+	app, ctx := createTestContext(t)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.Params{
+			RewardDelayTime: time.Duration(1000000),
+		},
+		Assets: []types.AllianceAsset{
+			{
+				Denom:        ALLIANCE_TOKEN_DENOM,
+				RewardWeight: sdk.NewDec(2),
+				TakeRate:     sdk.NewDec(0),
+				TotalShares:  sdk.NewDec(0),
+				TotalTokens:  sdk.ZeroInt(),
+			},
+			{
+				Denom:        ALLIANCE_2_TOKEN_DENOM,
+				RewardWeight: sdk.NewDec(10),
+				TakeRate:     sdk.NewDec(0),
+				TotalShares:  sdk.NewDec(0),
+				TotalTokens:  sdk.ZeroInt(),
+			},
+		},
+	})
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Len(t, delegations, 1)
+
+	// All the addresses needed
+	delAddr, err := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
+	require.NoError(t, err)
+	valAddr, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val, _ := app.StakingKeeper.GetValidator(ctx, valAddr)
+	moduleAddr := app.AccountKeeper.GetModuleAddress(types.ModuleName)
+
+	// Mint alliance tokens
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	// Undelegating without a delegation will fail
+	err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
+	require.Error(t, err)
+
+	// Delegate to a validator
+	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
+	require.NoError(t, err)
+
+	// Check that balance dropped
+	coin := app.BankKeeper.GetBalance(ctx, delAddr, ALLIANCE_TOKEN_DENOM)
+	require.Equal(t, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)), coin)
+
+	// Check that staked balance increased
+	d, _ := app.StakingKeeper.GetDelegation(ctx, moduleAddr, valAddr)
+	require.Equal(t, stakingtypes.Delegation{
+		DelegatorAddress: moduleAddr.String(),
+		ValidatorAddress: valAddr.String(),
+		Shares:           sdk.NewDec(2),
+	}, d)
+
+	// Immediately undelegate from the validator
+	err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+	require.NoError(t, err)
+
+	// Check that staked balance decreased
+	d, _ = app.StakingKeeper.GetDelegation(ctx, moduleAddr, valAddr)
+	require.Equal(t, stakingtypes.Delegation{
+		DelegatorAddress: moduleAddr.String(),
+		ValidatorAddress: valAddr.String(),
+		Shares:           sdk.NewDec(1),
+	}, d)
+
+	// Immediately try to complete undelegation
+	processed := app.AllianceKeeper.CompleteUndelegations(ctx)
+	require.Equal(t, 0, processed)
+
+	// Check that balance stayed the same
+	coin = app.BankKeeper.GetBalance(ctx, delAddr, ALLIANCE_TOKEN_DENOM)
+	require.Equal(t, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)), coin)
+
+	// Advance time to after unbonding period
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(app.StakingKeeper.UnbondingTime(ctx)).Add(time.Minute))
+
+	processed = app.AllianceKeeper.CompleteUndelegations(ctx)
+	require.Equal(t, 1, processed)
+
+	// Check that balance increased
+	coin = app.BankKeeper.GetBalance(ctx, delAddr, ALLIANCE_TOKEN_DENOM)
+	require.Equal(t, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1500_000)), coin)
+
+	// Completing again should not process anymore undelegations
+	processed = app.AllianceKeeper.CompleteUndelegations(ctx)
+	require.Equal(t, 0, processed)
 }
