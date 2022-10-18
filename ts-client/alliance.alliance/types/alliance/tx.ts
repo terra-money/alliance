@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { Reader, Writer } from "protobufjs/minimal";
 import { Coin } from "../cosmos/base/v1beta1/coin";
+import { AllianceAsset } from "../alliance/alliance";
 
 export const protobufPackage = "alliance.alliance";
 
@@ -28,6 +29,38 @@ export interface MsgRedelegate {
 }
 
 export interface MsgRedelegateResponse {}
+
+export interface MsgCreateAlliance {
+  /** authority is the address of the governance account. */
+  authority: string;
+  /** plan is the upgrade plan. */
+  alliance: AllianceAsset | undefined;
+}
+
+export interface MsgCreateAllianceResponse {}
+
+export interface MsgUpdateAlliance {
+  /** authority is the address of the governance account. */
+  authority: string;
+  /** Denom of the asset. It could either be a native token or an IBC token */
+  denom: string;
+  /**
+   * The reward weight specifies the ratio of rewards that will be given to each alliance asset
+   * It does not need to sum to 1. rate = weight / total_weight
+   * Native asset is always assumed to have a weight of 1.
+   */
+  rewardWeight: string;
+}
+
+export interface MsgUpdateAllianceResponse {}
+
+export interface MsgDeleteAlliance {
+  /** authority is the address of the governance account. */
+  authority: string;
+  denom: string;
+}
+
+export interface MsgDeleteAllianceResponse {}
 
 const baseMsgDelegate: object = { delegatorAddress: "", validatorAddress: "" };
 
@@ -486,10 +519,416 @@ export const MsgRedelegateResponse = {
   },
 };
 
+const baseMsgCreateAlliance: object = { authority: "" };
+
+export const MsgCreateAlliance = {
+  encode(message: MsgCreateAlliance, writer: Writer = Writer.create()): Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+    if (message.alliance !== undefined) {
+      AllianceAsset.encode(message.alliance, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgCreateAlliance {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgCreateAlliance } as MsgCreateAlliance;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+        case 2:
+          message.alliance = AllianceAsset.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgCreateAlliance {
+    const message = { ...baseMsgCreateAlliance } as MsgCreateAlliance;
+    if (object.authority !== undefined && object.authority !== null) {
+      message.authority = String(object.authority);
+    } else {
+      message.authority = "";
+    }
+    if (object.alliance !== undefined && object.alliance !== null) {
+      message.alliance = AllianceAsset.fromJSON(object.alliance);
+    } else {
+      message.alliance = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: MsgCreateAlliance): unknown {
+    const obj: any = {};
+    message.authority !== undefined && (obj.authority = message.authority);
+    message.alliance !== undefined &&
+      (obj.alliance = message.alliance
+        ? AllianceAsset.toJSON(message.alliance)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<MsgCreateAlliance>): MsgCreateAlliance {
+    const message = { ...baseMsgCreateAlliance } as MsgCreateAlliance;
+    if (object.authority !== undefined && object.authority !== null) {
+      message.authority = object.authority;
+    } else {
+      message.authority = "";
+    }
+    if (object.alliance !== undefined && object.alliance !== null) {
+      message.alliance = AllianceAsset.fromPartial(object.alliance);
+    } else {
+      message.alliance = undefined;
+    }
+    return message;
+  },
+};
+
+const baseMsgCreateAllianceResponse: object = {};
+
+export const MsgCreateAllianceResponse = {
+  encode(
+    _: MsgCreateAllianceResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): MsgCreateAllianceResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseMsgCreateAllianceResponse,
+    } as MsgCreateAllianceResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): MsgCreateAllianceResponse {
+    const message = {
+      ...baseMsgCreateAllianceResponse,
+    } as MsgCreateAllianceResponse;
+    return message;
+  },
+
+  toJSON(_: MsgCreateAllianceResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(
+    _: DeepPartial<MsgCreateAllianceResponse>
+  ): MsgCreateAllianceResponse {
+    const message = {
+      ...baseMsgCreateAllianceResponse,
+    } as MsgCreateAllianceResponse;
+    return message;
+  },
+};
+
+const baseMsgUpdateAlliance: object = {
+  authority: "",
+  denom: "",
+  rewardWeight: "",
+};
+
+export const MsgUpdateAlliance = {
+  encode(message: MsgUpdateAlliance, writer: Writer = Writer.create()): Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+    if (message.denom !== "") {
+      writer.uint32(18).string(message.denom);
+    }
+    if (message.rewardWeight !== "") {
+      writer.uint32(26).string(message.rewardWeight);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgUpdateAlliance {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgUpdateAlliance } as MsgUpdateAlliance;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+        case 2:
+          message.denom = reader.string();
+          break;
+        case 3:
+          message.rewardWeight = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgUpdateAlliance {
+    const message = { ...baseMsgUpdateAlliance } as MsgUpdateAlliance;
+    if (object.authority !== undefined && object.authority !== null) {
+      message.authority = String(object.authority);
+    } else {
+      message.authority = "";
+    }
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = String(object.denom);
+    } else {
+      message.denom = "";
+    }
+    if (object.rewardWeight !== undefined && object.rewardWeight !== null) {
+      message.rewardWeight = String(object.rewardWeight);
+    } else {
+      message.rewardWeight = "";
+    }
+    return message;
+  },
+
+  toJSON(message: MsgUpdateAlliance): unknown {
+    const obj: any = {};
+    message.authority !== undefined && (obj.authority = message.authority);
+    message.denom !== undefined && (obj.denom = message.denom);
+    message.rewardWeight !== undefined &&
+      (obj.rewardWeight = message.rewardWeight);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateAlliance>): MsgUpdateAlliance {
+    const message = { ...baseMsgUpdateAlliance } as MsgUpdateAlliance;
+    if (object.authority !== undefined && object.authority !== null) {
+      message.authority = object.authority;
+    } else {
+      message.authority = "";
+    }
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = object.denom;
+    } else {
+      message.denom = "";
+    }
+    if (object.rewardWeight !== undefined && object.rewardWeight !== null) {
+      message.rewardWeight = object.rewardWeight;
+    } else {
+      message.rewardWeight = "";
+    }
+    return message;
+  },
+};
+
+const baseMsgUpdateAllianceResponse: object = {};
+
+export const MsgUpdateAllianceResponse = {
+  encode(
+    _: MsgUpdateAllianceResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): MsgUpdateAllianceResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseMsgUpdateAllianceResponse,
+    } as MsgUpdateAllianceResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): MsgUpdateAllianceResponse {
+    const message = {
+      ...baseMsgUpdateAllianceResponse,
+    } as MsgUpdateAllianceResponse;
+    return message;
+  },
+
+  toJSON(_: MsgUpdateAllianceResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(
+    _: DeepPartial<MsgUpdateAllianceResponse>
+  ): MsgUpdateAllianceResponse {
+    const message = {
+      ...baseMsgUpdateAllianceResponse,
+    } as MsgUpdateAllianceResponse;
+    return message;
+  },
+};
+
+const baseMsgDeleteAlliance: object = { authority: "", denom: "" };
+
+export const MsgDeleteAlliance = {
+  encode(message: MsgDeleteAlliance, writer: Writer = Writer.create()): Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+    if (message.denom !== "") {
+      writer.uint32(18).string(message.denom);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgDeleteAlliance {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgDeleteAlliance } as MsgDeleteAlliance;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+        case 2:
+          message.denom = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgDeleteAlliance {
+    const message = { ...baseMsgDeleteAlliance } as MsgDeleteAlliance;
+    if (object.authority !== undefined && object.authority !== null) {
+      message.authority = String(object.authority);
+    } else {
+      message.authority = "";
+    }
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = String(object.denom);
+    } else {
+      message.denom = "";
+    }
+    return message;
+  },
+
+  toJSON(message: MsgDeleteAlliance): unknown {
+    const obj: any = {};
+    message.authority !== undefined && (obj.authority = message.authority);
+    message.denom !== undefined && (obj.denom = message.denom);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<MsgDeleteAlliance>): MsgDeleteAlliance {
+    const message = { ...baseMsgDeleteAlliance } as MsgDeleteAlliance;
+    if (object.authority !== undefined && object.authority !== null) {
+      message.authority = object.authority;
+    } else {
+      message.authority = "";
+    }
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = object.denom;
+    } else {
+      message.denom = "";
+    }
+    return message;
+  },
+};
+
+const baseMsgDeleteAllianceResponse: object = {};
+
+export const MsgDeleteAllianceResponse = {
+  encode(
+    _: MsgDeleteAllianceResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): MsgDeleteAllianceResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseMsgDeleteAllianceResponse,
+    } as MsgDeleteAllianceResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): MsgDeleteAllianceResponse {
+    const message = {
+      ...baseMsgDeleteAllianceResponse,
+    } as MsgDeleteAllianceResponse;
+    return message;
+  },
+
+  toJSON(_: MsgDeleteAllianceResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(
+    _: DeepPartial<MsgDeleteAllianceResponse>
+  ): MsgDeleteAllianceResponse {
+    const message = {
+      ...baseMsgDeleteAllianceResponse,
+    } as MsgDeleteAllianceResponse;
+    return message;
+  },
+};
+
 export interface Msg {
   Delegate(request: MsgDelegate): Promise<MsgDelegateResponse>;
   Redelegate(request: MsgRedelegate): Promise<MsgRedelegateResponse>;
   Undelegate(request: MsgUndelegate): Promise<MsgUndelegateResponse>;
+  CreateAlliance(
+    request: MsgCreateAlliance
+  ): Promise<MsgCreateAllianceResponse>;
+  UpdateAlliance(
+    request: MsgUpdateAlliance
+  ): Promise<MsgUpdateAllianceResponse>;
+  DeleteAlliance(
+    request: MsgDeleteAlliance
+  ): Promise<MsgDeleteAllianceResponse>;
 }
 
 export class MsgClientImpl implements Msg {
@@ -524,6 +963,48 @@ export class MsgClientImpl implements Msg {
     );
     return promise.then((data) =>
       MsgUndelegateResponse.decode(new Reader(data))
+    );
+  }
+
+  CreateAlliance(
+    request: MsgCreateAlliance
+  ): Promise<MsgCreateAllianceResponse> {
+    const data = MsgCreateAlliance.encode(request).finish();
+    const promise = this.rpc.request(
+      "alliance.alliance.Msg",
+      "CreateAlliance",
+      data
+    );
+    return promise.then((data) =>
+      MsgCreateAllianceResponse.decode(new Reader(data))
+    );
+  }
+
+  UpdateAlliance(
+    request: MsgUpdateAlliance
+  ): Promise<MsgUpdateAllianceResponse> {
+    const data = MsgUpdateAlliance.encode(request).finish();
+    const promise = this.rpc.request(
+      "alliance.alliance.Msg",
+      "UpdateAlliance",
+      data
+    );
+    return promise.then((data) =>
+      MsgUpdateAllianceResponse.decode(new Reader(data))
+    );
+  }
+
+  DeleteAlliance(
+    request: MsgDeleteAlliance
+  ): Promise<MsgDeleteAllianceResponse> {
+    const data = MsgDeleteAlliance.encode(request).finish();
+    const promise = this.rpc.request(
+      "alliance.alliance.Msg",
+      "DeleteAlliance",
+      data
+    );
+    return promise.then((data) =>
+      MsgDeleteAllianceResponse.decode(new Reader(data))
     );
   }
 }

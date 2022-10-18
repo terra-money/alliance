@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"alliance/x/alliance/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -39,8 +40,10 @@ func (k Keeper) AddAsset() {
 	panic("implement me")
 }
 
-func (k Keeper) RemoveAsset() {
-	panic("implement me")
+func (k Keeper) DeleteAsset(ctx sdk.Context, denom string) {
+	store := ctx.KVStore(k.storeKey)
+	assetKey := types.GetAssetKey(denom)
+	store.Delete(assetKey)
 }
 
 func (k Keeper) UpdateAsset() {

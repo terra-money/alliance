@@ -51,6 +51,7 @@ func AllianceKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 		NewMockAccountKeeper(ctrl),
 		NewMockBankKeeper(ctrl),
 		NewMockStakingKeeper(ctrl),
+		"cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())

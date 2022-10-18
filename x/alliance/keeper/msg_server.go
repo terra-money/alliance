@@ -4,17 +4,21 @@ import (
 	"alliance/x/alliance/types"
 	"context"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-type msgServer struct {
+type MsgServer struct {
 	Keeper
 }
 
-var _ types.MsgServer = msgServer{}
+var _ types.MsgServer = MsgServer{}
 
-func (m msgServer) Delegate(ctx context.Context, delegate *types.MsgDelegate) (*types.MsgDelegateResponse, error) {
+func (m MsgServer) Delegate(ctx context.Context, delegate *types.MsgDelegate) (*types.MsgDelegateResponse, error) {
 	delAddr, err := sdk.AccAddressFromBech32(delegate.DelegatorAddress)
 	if err != nil {
 		return nil, err
@@ -37,7 +41,7 @@ func (m msgServer) Delegate(ctx context.Context, delegate *types.MsgDelegate) (*
 	return &types.MsgDelegateResponse{}, nil
 }
 
-func (m msgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelegate) (*types.MsgRedelegateResponse, error) {
+func (m MsgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelegate) (*types.MsgRedelegateResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	delAddr, err := sdk.AccAddressFromBech32(redelegate.DelegatorAddress)
 	if err != nil {
@@ -69,7 +73,7 @@ func (m msgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelega
 	return &types.MsgRedelegateResponse{}, nil
 }
 
-func (m msgServer) Undelegate(ctx context.Context, undelegate *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
+func (m MsgServer) Undelegate(ctx context.Context, undelegate *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	delAddr, err := sdk.AccAddressFromBech32(undelegate.DelegatorAddress)
 	if err != nil {
@@ -92,23 +96,58 @@ func (m msgServer) Undelegate(ctx context.Context, undelegate *types.MsgUndelega
 	return &types.MsgUndelegateResponse{}, nil
 }
 
-func (m msgServer) CreateAlliance(ctx context.Context, undelegate *types.MsgCreateAlliance) (*types.MsgCreateAllianceResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (m MsgServer) CreateAlliance(ctx context.Context, req *types.MsgCreateAlliance) (*types.MsgCreateAllianceResponse, error) {
+	if m.Keeper.authority != req.Authority {
+		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", m.Keeper.authority, req.Authority)
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	m.Keeper.SetAsset(sdkCtx, req.Alliance)
+
+	return &types.MsgCreateAllianceResponse{}, nil
 }
 
-func (m msgServer) UpdateAlliance(ctx context.Context, undelegate *types.MsgUpdateAlliance) (*types.MsgUpdateAllianceResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAlliance) (*types.MsgUpdateAllianceResponse, error) {
+	if m.Keeper.authority != req.Authority {
+		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", m.Keeper.authority, req.Authority)
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	asset := m.Keeper.GetAssetByDenom(sdkCtx, req.Denom)
+
+	if asset.Denom == "" {
+		return nil, status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", req.Denom)
+	}
+
+	asset.RewardWeight = req.RewardWeight
+
+	m.Keeper.SetAsset(sdkCtx, asset)
+
+	return &types.MsgUpdateAllianceResponse{}, nil
 }
 
-func (m msgServer) DeleteAlliance(ctx context.Context, undelegate *types.MsgDeleteAlliance) (*types.MsgDeleteAllianceResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (m MsgServer) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAlliance) (*types.MsgDeleteAllianceResponse, error) {
+	if m.Keeper.authority != req.Authority {
+		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", m.Keeper.authority, req.Authority)
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	asset := m.Keeper.GetAssetByDenom(sdkCtx, req.Denom)
+
+	if asset.Denom == "" {
+		return nil, status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", req.Denom)
+	}
+
+	m.Keeper.DeleteAsset(sdkCtx, req.Denom)
+
+	return &types.MsgDeleteAllianceResponse{}, nil
 }
 
 // NewMsgServerImpl returns an implementation of the bank MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
-	return &msgServer{Keeper: keeper}
+	return &MsgServer{Keeper: keeper}
 }

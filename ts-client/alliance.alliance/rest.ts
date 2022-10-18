@@ -51,11 +51,17 @@ export interface AllianceDelegationResponse {
   balance?: V1Beta1Coin;
 }
 
+export type AllianceMsgCreateAllianceResponse = object;
+
 export type AllianceMsgDelegateResponse = object;
+
+export type AllianceMsgDeleteAllianceResponse = object;
 
 export type AllianceMsgRedelegateResponse = object;
 
 export type AllianceMsgUndelegateResponse = object;
+
+export type AllianceMsgUpdateAllianceResponse = object;
 
 export interface AllianceParams {
   reward_delay_time?: string;

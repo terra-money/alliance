@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -9,6 +10,9 @@ var (
 	_ sdk.Msg = &MsgDelegate{}
 	_ sdk.Msg = &MsgRedelegate{}
 	_ sdk.Msg = &MsgUndelegate{}
+	_ sdk.Msg = &MsgCreateAlliance{}
+	_ sdk.Msg = &MsgUpdateAlliance{}
+	_ sdk.Msg = &MsgDeleteAlliance{}
 )
 
 func (m MsgDelegate) ValidateBasic() error {
@@ -49,6 +53,66 @@ func (m MsgUndelegate) ValidateBasic() error {
 
 func (m MsgUndelegate) GetSigners() []sdk.AccAddress {
 	signer, err := sdk.AccAddressFromBech32(m.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
+}
+
+func (m MsgCreateAlliance) ValidateBasic() error {
+	if m.Alliance.Denom != "" {
+		return fmt.Errorf("denom must not be empty")
+	}
+
+	if m.Alliance.RewardWeight.GT(sdk.ZeroDec()) {
+		return fmt.Errorf("rewardWeight must be positive")
+	}
+
+	if m.Alliance.TakeRate.GT(sdk.ZeroDec()) {
+		return fmt.Errorf("takeRate must be positive")
+	}
+
+	return nil
+}
+
+func (m MsgCreateAlliance) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
+}
+
+func (m MsgUpdateAlliance) ValidateBasic() error {
+	if m.Denom != "" {
+		return fmt.Errorf("denom must not be empty")
+	}
+
+	if m.RewardWeight.GT(sdk.ZeroDec()) {
+		return fmt.Errorf("rewardWeight must be positive")
+	}
+
+	return nil
+}
+
+func (m MsgUpdateAlliance) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
+}
+
+func (m MsgDeleteAlliance) ValidateBasic() error {
+	if m.Denom != "" {
+		return fmt.Errorf("denom must not be empty")
+	}
+
+	return nil
+}
+
+func (m MsgDeleteAlliance) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(m.Authority)
 	if err != nil {
 		panic(err)
 	}
