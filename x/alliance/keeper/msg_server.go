@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -136,10 +137,14 @@ func (m MsgServer) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAllia
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	_, found := m.Keeper.GetAssetByDenom(sdkCtx, req.Denom)
+	asset, found := m.Keeper.GetAssetByDenom(sdkCtx, req.Denom)
 
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", req.Denom)
+	}
+
+	if asset.TotalTokens.GT(math.ZeroInt()) {
+		return nil, status.Errorf(codes.Internal, "Asset cannot be deleted because there are still %s delegations associated with it", asset.TotalTokens)
 	}
 
 	m.Keeper.DeleteAsset(sdkCtx, req.Denom)
