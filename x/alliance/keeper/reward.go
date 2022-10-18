@@ -18,7 +18,10 @@ var (
 )
 
 func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, val stakingtypes.Validator, denom string) (sdk.Coins, error) {
-	asset := k.GetAssetByDenom(ctx, denom)
+	asset, found := k.GetAssetByDenom(ctx, denom)
+	if !found {
+		return sdk.Coins{}, types.ErrUnknownAsset
+	}
 	delegation, found := k.GetDelegation(ctx, delAddr, val, denom)
 	if !found {
 		return sdk.Coins{}, stakingtypes.ErrNoDelegatorForAddress
@@ -48,7 +51,10 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Del
 		idx := slices.IndexFunc(delegation.RewardIndices, func(r types.RewardIndex) bool {
 			return r.Denom == index.Denom
 		})
-		if idx >= 0 && delegation.RewardIndices[idx].Index == index.Index {
+
+		// If local index == global index, it means that user has already claimed
+		// Index should never be more than global unless some rewards are withdrawn from the pool
+		if idx >= 0 && delegation.RewardIndices[idx].Index.GTE(index.Index) {
 			continue
 		}
 		var localIndex sdk.Dec

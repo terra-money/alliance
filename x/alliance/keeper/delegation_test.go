@@ -88,7 +88,7 @@ func TestDelegation(t *testing.T) {
 	}, allianceDelegation)
 
 	// Check asset
-	asset := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, types.AllianceAsset{
 		Denom:        ALLIANCE_TOKEN_DENOM,
 		RewardWeight: sdk.NewDec(2),
@@ -112,7 +112,7 @@ func TestDelegation(t *testing.T) {
 	}, allianceDelegation)
 
 	// Check asset again
-	asset = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, types.AllianceAsset{
 		Denom:        ALLIANCE_TOKEN_DENOM,
 		RewardWeight: sdk.NewDec(2),
