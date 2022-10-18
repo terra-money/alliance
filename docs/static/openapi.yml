@@ -44920,11 +44920,17 @@ definitions:
       total_shares:
         type: string
     title: 'key: denom value: AllianceAsset'
+  alliance.alliance.MsgCreateAllianceResponse:
+    type: object
   alliance.alliance.MsgDelegateResponse:
+    type: object
+  alliance.alliance.MsgDeleteAllianceResponse:
     type: object
   alliance.alliance.MsgRedelegateResponse:
     type: object
   alliance.alliance.MsgUndelegateResponse:
+    type: object
+  alliance.alliance.MsgUpdateAllianceResponse:
     type: object
   alliance.alliance.Params:
     type: object

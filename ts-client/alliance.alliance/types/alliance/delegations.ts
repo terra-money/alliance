@@ -24,6 +24,27 @@ export interface DelegationResponse {
   balance: Coin | undefined;
 }
 
+export interface Redelegation {
+  delegatorAddress: string;
+  srcValidatorAddress: string;
+  dstValidatorAddress: string;
+  balance: Coin | undefined;
+}
+
+export interface QueuedRedelegation {
+  entries: Redelegation[];
+}
+
+export interface Undelegation {
+  delegatorAddress: string;
+  validatorAddress: string;
+  balance: Coin | undefined;
+}
+
+export interface QueuedUndelegation {
+  entries: Undelegation[];
+}
+
 const baseDelegation: object = {
   delegatorAddress: "",
   validatorAddress: "",
@@ -225,6 +246,380 @@ export const DelegationResponse = {
       message.balance = Coin.fromPartial(object.balance);
     } else {
       message.balance = undefined;
+    }
+    return message;
+  },
+};
+
+const baseRedelegation: object = {
+  delegatorAddress: "",
+  srcValidatorAddress: "",
+  dstValidatorAddress: "",
+};
+
+export const Redelegation = {
+  encode(message: Redelegation, writer: Writer = Writer.create()): Writer {
+    if (message.delegatorAddress !== "") {
+      writer.uint32(10).string(message.delegatorAddress);
+    }
+    if (message.srcValidatorAddress !== "") {
+      writer.uint32(18).string(message.srcValidatorAddress);
+    }
+    if (message.dstValidatorAddress !== "") {
+      writer.uint32(26).string(message.dstValidatorAddress);
+    }
+    if (message.balance !== undefined) {
+      Coin.encode(message.balance, writer.uint32(34).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): Redelegation {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseRedelegation } as Redelegation;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.delegatorAddress = reader.string();
+          break;
+        case 2:
+          message.srcValidatorAddress = reader.string();
+          break;
+        case 3:
+          message.dstValidatorAddress = reader.string();
+          break;
+        case 4:
+          message.balance = Coin.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Redelegation {
+    const message = { ...baseRedelegation } as Redelegation;
+    if (
+      object.delegatorAddress !== undefined &&
+      object.delegatorAddress !== null
+    ) {
+      message.delegatorAddress = String(object.delegatorAddress);
+    } else {
+      message.delegatorAddress = "";
+    }
+    if (
+      object.srcValidatorAddress !== undefined &&
+      object.srcValidatorAddress !== null
+    ) {
+      message.srcValidatorAddress = String(object.srcValidatorAddress);
+    } else {
+      message.srcValidatorAddress = "";
+    }
+    if (
+      object.dstValidatorAddress !== undefined &&
+      object.dstValidatorAddress !== null
+    ) {
+      message.dstValidatorAddress = String(object.dstValidatorAddress);
+    } else {
+      message.dstValidatorAddress = "";
+    }
+    if (object.balance !== undefined && object.balance !== null) {
+      message.balance = Coin.fromJSON(object.balance);
+    } else {
+      message.balance = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: Redelegation): unknown {
+    const obj: any = {};
+    message.delegatorAddress !== undefined &&
+      (obj.delegatorAddress = message.delegatorAddress);
+    message.srcValidatorAddress !== undefined &&
+      (obj.srcValidatorAddress = message.srcValidatorAddress);
+    message.dstValidatorAddress !== undefined &&
+      (obj.dstValidatorAddress = message.dstValidatorAddress);
+    message.balance !== undefined &&
+      (obj.balance = message.balance
+        ? Coin.toJSON(message.balance)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<Redelegation>): Redelegation {
+    const message = { ...baseRedelegation } as Redelegation;
+    if (
+      object.delegatorAddress !== undefined &&
+      object.delegatorAddress !== null
+    ) {
+      message.delegatorAddress = object.delegatorAddress;
+    } else {
+      message.delegatorAddress = "";
+    }
+    if (
+      object.srcValidatorAddress !== undefined &&
+      object.srcValidatorAddress !== null
+    ) {
+      message.srcValidatorAddress = object.srcValidatorAddress;
+    } else {
+      message.srcValidatorAddress = "";
+    }
+    if (
+      object.dstValidatorAddress !== undefined &&
+      object.dstValidatorAddress !== null
+    ) {
+      message.dstValidatorAddress = object.dstValidatorAddress;
+    } else {
+      message.dstValidatorAddress = "";
+    }
+    if (object.balance !== undefined && object.balance !== null) {
+      message.balance = Coin.fromPartial(object.balance);
+    } else {
+      message.balance = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueuedRedelegation: object = {};
+
+export const QueuedRedelegation = {
+  encode(
+    message: QueuedRedelegation,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.entries) {
+      Redelegation.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueuedRedelegation {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseQueuedRedelegation } as QueuedRedelegation;
+    message.entries = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.entries.push(Redelegation.decode(reader, reader.uint32()));
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueuedRedelegation {
+    const message = { ...baseQueuedRedelegation } as QueuedRedelegation;
+    message.entries = [];
+    if (object.entries !== undefined && object.entries !== null) {
+      for (const e of object.entries) {
+        message.entries.push(Redelegation.fromJSON(e));
+      }
+    }
+    return message;
+  },
+
+  toJSON(message: QueuedRedelegation): unknown {
+    const obj: any = {};
+    if (message.entries) {
+      obj.entries = message.entries.map((e) =>
+        e ? Redelegation.toJSON(e) : undefined
+      );
+    } else {
+      obj.entries = [];
+    }
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<QueuedRedelegation>): QueuedRedelegation {
+    const message = { ...baseQueuedRedelegation } as QueuedRedelegation;
+    message.entries = [];
+    if (object.entries !== undefined && object.entries !== null) {
+      for (const e of object.entries) {
+        message.entries.push(Redelegation.fromPartial(e));
+      }
+    }
+    return message;
+  },
+};
+
+const baseUndelegation: object = { delegatorAddress: "", validatorAddress: "" };
+
+export const Undelegation = {
+  encode(message: Undelegation, writer: Writer = Writer.create()): Writer {
+    if (message.delegatorAddress !== "") {
+      writer.uint32(10).string(message.delegatorAddress);
+    }
+    if (message.validatorAddress !== "") {
+      writer.uint32(18).string(message.validatorAddress);
+    }
+    if (message.balance !== undefined) {
+      Coin.encode(message.balance, writer.uint32(26).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): Undelegation {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseUndelegation } as Undelegation;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.delegatorAddress = reader.string();
+          break;
+        case 2:
+          message.validatorAddress = reader.string();
+          break;
+        case 3:
+          message.balance = Coin.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Undelegation {
+    const message = { ...baseUndelegation } as Undelegation;
+    if (
+      object.delegatorAddress !== undefined &&
+      object.delegatorAddress !== null
+    ) {
+      message.delegatorAddress = String(object.delegatorAddress);
+    } else {
+      message.delegatorAddress = "";
+    }
+    if (
+      object.validatorAddress !== undefined &&
+      object.validatorAddress !== null
+    ) {
+      message.validatorAddress = String(object.validatorAddress);
+    } else {
+      message.validatorAddress = "";
+    }
+    if (object.balance !== undefined && object.balance !== null) {
+      message.balance = Coin.fromJSON(object.balance);
+    } else {
+      message.balance = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: Undelegation): unknown {
+    const obj: any = {};
+    message.delegatorAddress !== undefined &&
+      (obj.delegatorAddress = message.delegatorAddress);
+    message.validatorAddress !== undefined &&
+      (obj.validatorAddress = message.validatorAddress);
+    message.balance !== undefined &&
+      (obj.balance = message.balance
+        ? Coin.toJSON(message.balance)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<Undelegation>): Undelegation {
+    const message = { ...baseUndelegation } as Undelegation;
+    if (
+      object.delegatorAddress !== undefined &&
+      object.delegatorAddress !== null
+    ) {
+      message.delegatorAddress = object.delegatorAddress;
+    } else {
+      message.delegatorAddress = "";
+    }
+    if (
+      object.validatorAddress !== undefined &&
+      object.validatorAddress !== null
+    ) {
+      message.validatorAddress = object.validatorAddress;
+    } else {
+      message.validatorAddress = "";
+    }
+    if (object.balance !== undefined && object.balance !== null) {
+      message.balance = Coin.fromPartial(object.balance);
+    } else {
+      message.balance = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueuedUndelegation: object = {};
+
+export const QueuedUndelegation = {
+  encode(
+    message: QueuedUndelegation,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.entries) {
+      Undelegation.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueuedUndelegation {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseQueuedUndelegation } as QueuedUndelegation;
+    message.entries = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.entries.push(Undelegation.decode(reader, reader.uint32()));
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueuedUndelegation {
+    const message = { ...baseQueuedUndelegation } as QueuedUndelegation;
+    message.entries = [];
+    if (object.entries !== undefined && object.entries !== null) {
+      for (const e of object.entries) {
+        message.entries.push(Undelegation.fromJSON(e));
+      }
+    }
+    return message;
+  },
+
+  toJSON(message: QueuedUndelegation): unknown {
+    const obj: any = {};
+    if (message.entries) {
+      obj.entries = message.entries.map((e) =>
+        e ? Undelegation.toJSON(e) : undefined
+      );
+    } else {
+      obj.entries = [];
+    }
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<QueuedUndelegation>): QueuedUndelegation {
+    const message = { ...baseQueuedUndelegation } as QueuedUndelegation;
+    message.entries = [];
+    if (object.entries !== undefined && object.entries !== null) {
+      for (const e of object.entries) {
+        message.entries.push(Undelegation.fromPartial(e));
+      }
     }
     return message;
   },

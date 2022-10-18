@@ -36,7 +36,7 @@ func (k Keeper) AlliancesDelegation(c context.Context, req *types.QueryAlliances
 			return err
 		}
 
-		asset := k.GetAssetByDenom(ctx, delegation.Denom)
+		asset, _ := k.GetAssetByDenom(ctx, delegation.Denom)
 
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
@@ -83,7 +83,7 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 			return err
 		}
 
-		asset := k.GetAssetByDenom(ctx, delegation.Denom)
+		asset, _ := k.GetAssetByDenom(ctx, delegation.Denom)
 
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
@@ -121,7 +121,7 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 		return nil, status.Errorf(codes.NotFound, "Cannot recover the validator %s", req.ValidatorAddr)
 	}
 
-	asset := k.GetAssetByDenom(ctx, req.Denom)
+	asset, _ := k.GetAssetByDenom(ctx, req.Denom)
 
 	delegation, success := k.GetDelegation(ctx, sdk.AccAddress(req.DelegatorAddr), validator, req.Denom)
 	if !success {

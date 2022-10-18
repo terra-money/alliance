@@ -3,14 +3,22 @@ package keeper
 import (
 	"alliance/x/alliance/types"
 
+	"time"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"time"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin) (*types.Delegation, error) {
-	asset := k.GetAssetByDenom(ctx, coin.Denom)
+	asset, found := k.GetAssetByDenom(ctx, coin.Denom)
+
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", coin.Denom)
+	}
+
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, delAddr, types.ModuleName, sdk.NewCoins(coin))
 	if err != nil {
@@ -73,7 +81,11 @@ func (k Keeper) reduceDelegationShares(ctx sdk.Context, delAddr sdk.AccAddress, 
 // Redelegate from one validator to another
 // Method assumes that all tokens are owned by delegator and has delegations staked with srcVal
 func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal stakingtypes.Validator, dstVal stakingtypes.Validator, coin sdk.Coin) (*types.MsgRedelegateResponse, error) {
-	asset := k.GetAssetByDenom(ctx, coin.Denom)
+	asset, found := k.GetAssetByDenom(ctx, coin.Denom)
+
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", coin.Denom)
+	}
 
 	srcDelegation, ok := k.GetDelegation(ctx, delAddr, srcVal, coin.Denom)
 	if !ok {
@@ -171,7 +183,12 @@ func (k Keeper) CompleteUndelegations(ctx sdk.Context) int {
 
 func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin) error {
 	// Query for things needed for undelegation
-	asset := k.GetAssetByDenom(ctx, coin.Denom)
+	asset, found := k.GetAssetByDenom(ctx, coin.Denom)
+
+	if !found {
+		return status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", coin.Denom)
+	}
+
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	delegation, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 	if !ok {

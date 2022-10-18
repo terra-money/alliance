@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"alliance/x/alliance/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -27,22 +28,21 @@ func (k Keeper) GetAllAssets(ctx sdk.Context) (assets []types.AllianceAsset) {
 	return assets
 }
 
-func (k Keeper) GetAssetByDenom(ctx sdk.Context, denom string) (asset types.AllianceAsset) {
+func (k Keeper) GetAssetByDenom(ctx sdk.Context, denom string) (asset types.AllianceAsset, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	assetKey := types.GetAssetKey(denom)
 	b := store.Get(assetKey)
+
+	if b == nil {
+		return asset, false
+	}
+
 	k.cdc.MustUnmarshal(b, &asset)
-	return
+	return asset, true
 }
 
-func (k Keeper) AddAsset() {
-	panic("implement me")
-}
-
-func (k Keeper) RemoveAsset() {
-	panic("implement me")
-}
-
-func (k Keeper) UpdateAsset() {
-	panic("implement me")
+func (k Keeper) DeleteAsset(ctx sdk.Context, denom string) {
+	store := ctx.KVStore(k.storeKey)
+	assetKey := types.GetAssetKey(denom)
+	store.Delete(assetKey)
 }
