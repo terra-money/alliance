@@ -1,8 +1,9 @@
 /* eslint-disable */
+import { RewardIndex } from "../alliance/params";
 import { Coin } from "../cosmos/base/v1beta1/coin";
 import { Writer, Reader } from "protobufjs/minimal";
 
-export const protobufPackage = "alliance";
+export const protobufPackage = "alliance.alliance";
 
 export interface Delegation {
   /** delegator_address is the bech32-encoded address of the delegator. */
@@ -13,6 +14,7 @@ export interface Delegation {
   denom: string;
   /** shares define the delegation shares received. */
   shares: string;
+  rewardIndices: RewardIndex[];
 }
 
 /**
@@ -66,6 +68,9 @@ export const Delegation = {
     if (message.shares !== "") {
       writer.uint32(34).string(message.shares);
     }
+    for (const v of message.rewardIndices) {
+      RewardIndex.encode(v!, writer.uint32(42).fork()).ldelim();
+    }
     return writer;
   },
 
@@ -73,6 +78,7 @@ export const Delegation = {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseDelegation } as Delegation;
+    message.rewardIndices = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -88,6 +94,11 @@ export const Delegation = {
         case 4:
           message.shares = reader.string();
           break;
+        case 5:
+          message.rewardIndices.push(
+            RewardIndex.decode(reader, reader.uint32())
+          );
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -98,6 +109,7 @@ export const Delegation = {
 
   fromJSON(object: any): Delegation {
     const message = { ...baseDelegation } as Delegation;
+    message.rewardIndices = [];
     if (
       object.delegatorAddress !== undefined &&
       object.delegatorAddress !== null
@@ -124,6 +136,11 @@ export const Delegation = {
     } else {
       message.shares = "";
     }
+    if (object.rewardIndices !== undefined && object.rewardIndices !== null) {
+      for (const e of object.rewardIndices) {
+        message.rewardIndices.push(RewardIndex.fromJSON(e));
+      }
+    }
     return message;
   },
 
@@ -135,11 +152,19 @@ export const Delegation = {
       (obj.validatorAddress = message.validatorAddress);
     message.denom !== undefined && (obj.denom = message.denom);
     message.shares !== undefined && (obj.shares = message.shares);
+    if (message.rewardIndices) {
+      obj.rewardIndices = message.rewardIndices.map((e) =>
+        e ? RewardIndex.toJSON(e) : undefined
+      );
+    } else {
+      obj.rewardIndices = [];
+    }
     return obj;
   },
 
   fromPartial(object: DeepPartial<Delegation>): Delegation {
     const message = { ...baseDelegation } as Delegation;
+    message.rewardIndices = [];
     if (
       object.delegatorAddress !== undefined &&
       object.delegatorAddress !== null
@@ -165,6 +190,11 @@ export const Delegation = {
       message.shares = object.shares;
     } else {
       message.shares = "";
+    }
+    if (object.rewardIndices !== undefined && object.rewardIndices !== null) {
+      for (const e of object.rewardIndices) {
+        message.rewardIndices.push(RewardIndex.fromPartial(e));
+      }
     }
     return message;
   },

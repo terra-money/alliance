@@ -33,6 +33,7 @@ export interface AllianceDelegation {
 
   /** shares define the delegation shares received. */
   shares?: string;
+  reward_indices?: AllianceRewardIndex[];
 }
 
 /**
@@ -51,6 +52,8 @@ export interface AllianceDelegationResponse {
   balance?: V1Beta1Coin;
 }
 
+export type AllianceMsgClaimDelegationRewardsResponse = object;
+
 export type AllianceMsgCreateAllianceResponse = object;
 
 export type AllianceMsgDelegateResponse = object;
@@ -65,6 +68,11 @@ export type AllianceMsgUpdateAllianceResponse = object;
 
 export interface AllianceParams {
   reward_delay_time?: string;
+  reward_claim_interval?: string;
+
+  /** @format date-time */
+  last_reward_claim_time?: string;
+  global_reward_indices?: AllianceRewardIndex[];
 }
 
 export interface AllianceQueryAllianceDelegationResponse {
@@ -111,6 +119,11 @@ export interface AllianceQueryAlliancesResponse {
 
 export interface AllianceQueryParamsResponse {
   params?: AllianceParams;
+}
+
+export interface AllianceRewardIndex {
+  denom?: string;
+  index?: string;
 }
 
 export interface ProtobufAny {

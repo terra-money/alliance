@@ -63,6 +63,14 @@ export interface MsgDeleteAlliance {
 
 export interface MsgDeleteAllianceResponse {}
 
+export interface MsgClaimDelegationRewards {
+  delegatorAddress: string;
+  validatorAddress: string;
+  denom: string;
+}
+
+export interface MsgClaimDelegationRewardsResponse {}
+
 const baseMsgDelegate: object = { delegatorAddress: "", validatorAddress: "" };
 
 export const MsgDelegate = {
@@ -935,6 +943,179 @@ export const MsgDeleteAllianceResponse = {
   },
 };
 
+const baseMsgClaimDelegationRewards: object = {
+  delegatorAddress: "",
+  validatorAddress: "",
+  denom: "",
+};
+
+export const MsgClaimDelegationRewards = {
+  encode(
+    message: MsgClaimDelegationRewards,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.delegatorAddress !== "") {
+      writer.uint32(10).string(message.delegatorAddress);
+    }
+    if (message.validatorAddress !== "") {
+      writer.uint32(18).string(message.validatorAddress);
+    }
+    if (message.denom !== "") {
+      writer.uint32(26).string(message.denom);
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): MsgClaimDelegationRewards {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseMsgClaimDelegationRewards,
+    } as MsgClaimDelegationRewards;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.delegatorAddress = reader.string();
+          break;
+        case 2:
+          message.validatorAddress = reader.string();
+          break;
+        case 3:
+          message.denom = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgClaimDelegationRewards {
+    const message = {
+      ...baseMsgClaimDelegationRewards,
+    } as MsgClaimDelegationRewards;
+    if (
+      object.delegatorAddress !== undefined &&
+      object.delegatorAddress !== null
+    ) {
+      message.delegatorAddress = String(object.delegatorAddress);
+    } else {
+      message.delegatorAddress = "";
+    }
+    if (
+      object.validatorAddress !== undefined &&
+      object.validatorAddress !== null
+    ) {
+      message.validatorAddress = String(object.validatorAddress);
+    } else {
+      message.validatorAddress = "";
+    }
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = String(object.denom);
+    } else {
+      message.denom = "";
+    }
+    return message;
+  },
+
+  toJSON(message: MsgClaimDelegationRewards): unknown {
+    const obj: any = {};
+    message.delegatorAddress !== undefined &&
+      (obj.delegatorAddress = message.delegatorAddress);
+    message.validatorAddress !== undefined &&
+      (obj.validatorAddress = message.validatorAddress);
+    message.denom !== undefined && (obj.denom = message.denom);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<MsgClaimDelegationRewards>
+  ): MsgClaimDelegationRewards {
+    const message = {
+      ...baseMsgClaimDelegationRewards,
+    } as MsgClaimDelegationRewards;
+    if (
+      object.delegatorAddress !== undefined &&
+      object.delegatorAddress !== null
+    ) {
+      message.delegatorAddress = object.delegatorAddress;
+    } else {
+      message.delegatorAddress = "";
+    }
+    if (
+      object.validatorAddress !== undefined &&
+      object.validatorAddress !== null
+    ) {
+      message.validatorAddress = object.validatorAddress;
+    } else {
+      message.validatorAddress = "";
+    }
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = object.denom;
+    } else {
+      message.denom = "";
+    }
+    return message;
+  },
+};
+
+const baseMsgClaimDelegationRewardsResponse: object = {};
+
+export const MsgClaimDelegationRewardsResponse = {
+  encode(
+    _: MsgClaimDelegationRewardsResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): MsgClaimDelegationRewardsResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseMsgClaimDelegationRewardsResponse,
+    } as MsgClaimDelegationRewardsResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): MsgClaimDelegationRewardsResponse {
+    const message = {
+      ...baseMsgClaimDelegationRewardsResponse,
+    } as MsgClaimDelegationRewardsResponse;
+    return message;
+  },
+
+  toJSON(_: MsgClaimDelegationRewardsResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(
+    _: DeepPartial<MsgClaimDelegationRewardsResponse>
+  ): MsgClaimDelegationRewardsResponse {
+    const message = {
+      ...baseMsgClaimDelegationRewardsResponse,
+    } as MsgClaimDelegationRewardsResponse;
+    return message;
+  },
+};
+
 export interface Msg {
   Delegate(request: MsgDelegate): Promise<MsgDelegateResponse>;
   Redelegate(request: MsgRedelegate): Promise<MsgRedelegateResponse>;
@@ -948,6 +1129,9 @@ export interface Msg {
   DeleteAlliance(
     request: MsgDeleteAlliance
   ): Promise<MsgDeleteAllianceResponse>;
+  ClaimDelegationRewards(
+    request: MsgClaimDelegationRewards
+  ): Promise<MsgClaimDelegationRewardsResponse>;
 }
 
 export class MsgClientImpl implements Msg {
@@ -1024,6 +1208,20 @@ export class MsgClientImpl implements Msg {
     );
     return promise.then((data) =>
       MsgDeleteAllianceResponse.decode(new Reader(data))
+    );
+  }
+
+  ClaimDelegationRewards(
+    request: MsgClaimDelegationRewards
+  ): Promise<MsgClaimDelegationRewardsResponse> {
+    const data = MsgClaimDelegationRewards.encode(request).finish();
+    const promise = this.rpc.request(
+      "alliance.alliance.Msg",
+      "ClaimDelegationRewards",
+      data
+    );
+    return promise.then((data) =>
+      MsgClaimDelegationRewardsResponse.decode(new Reader(data))
     );
   }
 }

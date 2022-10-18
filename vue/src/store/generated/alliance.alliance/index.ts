@@ -4,10 +4,18 @@ import { AllianceAsset } from "alliance-client-ts/alliance.alliance/types"
 import { AddAssetProposal } from "alliance-client-ts/alliance.alliance/types"
 import { RemoveAssetProposal } from "alliance-client-ts/alliance.alliance/types"
 import { UpdateAssetProposal } from "alliance-client-ts/alliance.alliance/types"
+import { RewardRateChangeSnapshot } from "alliance-client-ts/alliance.alliance/types"
+import { Delegation } from "alliance-client-ts/alliance.alliance/types"
+import { DelegationResponse } from "alliance-client-ts/alliance.alliance/types"
+import { Redelegation } from "alliance-client-ts/alliance.alliance/types"
+import { QueuedRedelegation } from "alliance-client-ts/alliance.alliance/types"
+import { Undelegation } from "alliance-client-ts/alliance.alliance/types"
+import { QueuedUndelegation } from "alliance-client-ts/alliance.alliance/types"
 import { Params } from "alliance-client-ts/alliance.alliance/types"
+import { RewardIndex } from "alliance-client-ts/alliance.alliance/types"
 
 
-export { AllianceAsset, AddAssetProposal, RemoveAssetProposal, UpdateAssetProposal, Params };
+export { AllianceAsset, AddAssetProposal, RemoveAssetProposal, UpdateAssetProposal, RewardRateChangeSnapshot, Delegation, DelegationResponse, Redelegation, QueuedRedelegation, Undelegation, QueuedUndelegation, Params, RewardIndex };
 
 function initClient(vuexGetters) {
 	return new Client(vuexGetters['common/env/getEnv'], vuexGetters['common/wallet/signer'])
@@ -50,7 +58,15 @@ const getDefaultState = () => {
 						AddAssetProposal: getStructure(AddAssetProposal.fromPartial({})),
 						RemoveAssetProposal: getStructure(RemoveAssetProposal.fromPartial({})),
 						UpdateAssetProposal: getStructure(UpdateAssetProposal.fromPartial({})),
+						RewardRateChangeSnapshot: getStructure(RewardRateChangeSnapshot.fromPartial({})),
+						Delegation: getStructure(Delegation.fromPartial({})),
+						DelegationResponse: getStructure(DelegationResponse.fromPartial({})),
+						Redelegation: getStructure(Redelegation.fromPartial({})),
+						QueuedRedelegation: getStructure(QueuedRedelegation.fromPartial({})),
+						Undelegation: getStructure(Undelegation.fromPartial({})),
+						QueuedUndelegation: getStructure(QueuedUndelegation.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
+						RewardIndex: getStructure(RewardIndex.fromPartial({})),
 						
 		},
 		_Registry: registry,
