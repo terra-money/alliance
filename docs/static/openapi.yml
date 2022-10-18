@@ -165,6 +165,15 @@ paths:
                 properties:
                   reward_delay_time:
                     type: string
+                  reward_claim_interval:
+                    type: string
+                    title: >-
+                      Time interval between consecutive applications of
+                      `take_rate`
+                  last_reward_claim_time:
+                    type: string
+                    format: date-time
+                    title: Last application of `take_rate` on assets
                   global_reward_indices:
                     type: array
                     items:
@@ -44993,6 +45002,13 @@ definitions:
     properties:
       reward_delay_time:
         type: string
+      reward_claim_interval:
+        type: string
+        title: Time interval between consecutive applications of `take_rate`
+      last_reward_claim_time:
+        type: string
+        format: date-time
+        title: Last application of `take_rate` on assets
       global_reward_indices:
         type: array
         items:
@@ -45240,6 +45256,13 @@ definitions:
         properties:
           reward_delay_time:
             type: string
+          reward_claim_interval:
+            type: string
+            title: Time interval between consecutive applications of `take_rate`
+          last_reward_claim_time:
+            type: string
+            format: date-time
+            title: Last application of `take_rate` on assets
           global_reward_indices:
             type: array
             items:

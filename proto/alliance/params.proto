@@ -4,6 +4,7 @@ package alliance.alliance;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "alliance/x/alliance/types";
 
@@ -13,7 +14,17 @@ message Params {
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true
   ];
-  repeated RewardIndex global_reward_indices = 2 [
+  // Time interval between consecutive applications of `take_rate`
+  google.protobuf.Duration reward_claim_interval = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true
+  ];
+  // Last application of `take_rate` on assets
+  google.protobuf.Timestamp last_reward_claim_time = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
+  repeated RewardIndex global_reward_indices = 4 [
     (gogoproto.nullable)   = false
   ];
 }
