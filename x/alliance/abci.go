@@ -21,9 +21,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	k.CompleteRedelegations(ctx)
 	k.CompleteUndelegations(ctx)
-	_, err := k.ClaimAssetsWithTakeRateRateLimited(ctx)
-	if err != nil {
-		panic(err)
-	}
+	k.ClaimAssetsWithTakeRateRateLimited(ctx)
 	return []abci.ValidatorUpdate{}
 }
