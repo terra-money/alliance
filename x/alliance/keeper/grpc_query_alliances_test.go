@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
 
-	keeper "alliance/testutil/keeper"
+	"alliance/testutil/keeper"
 	"alliance/testutil/nullify"
 	"alliance/x/alliance/types"
 )

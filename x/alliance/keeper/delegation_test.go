@@ -251,6 +251,10 @@ func TestRedelegation(t *testing.T) {
 	require.False(t, iter.Valid())
 	iter = app.AllianceKeeper.IterateRedelegationsByDelegator(ctx, delAddr2)
 	require.False(t, iter.Valid())
+
+	// Calling again should not process anymore redelegations
+	deleted = app.AllianceKeeper.CompleteRedelegations(ctx)
+	require.Equal(t, 0, deleted)
 }
 
 func TestUndelegation(t *testing.T) {
@@ -342,4 +346,8 @@ func TestUndelegation(t *testing.T) {
 	// Check that balance increased
 	coin = app.BankKeeper.GetBalance(ctx, delAddr, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1500_000)), coin)
+
+	// Completing again should not process anymore undelegations
+	processed = app.AllianceKeeper.CompleteUndelegations(ctx)
+	require.Equal(t, 0, processed)
 }

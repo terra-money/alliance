@@ -187,7 +187,7 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator st
 	// Update assuming everything works
 	asset.TotalTokens = asset.TotalTokens.Sub(coin.Amount)
 	asset.TotalShares = asset.TotalShares.Sub(sharesToUndelegate)
-	k.setAsset(ctx, asset)
+	k.SetAsset(ctx, asset)
 	k.reduceDelegationShares(ctx, delAddr, validator, coin, sharesToUndelegate, delegation)
 
 	// Unbond from x/staking module
