@@ -20,9 +20,7 @@ var ALLIANCE_2_TOKEN_DENOM = "alliance2"
 func TestDelegation(t *testing.T) {
 	app, ctx := createTestContext(t)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.Params{
-			RewardDelayTime: time.Duration(1000000),
-		},
+		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
 				Denom:        ALLIANCE_TOKEN_DENOM,
@@ -86,6 +84,7 @@ func TestDelegation(t *testing.T) {
 		ValidatorAddress: val.OperatorAddress,
 		Denom:            ALLIANCE_TOKEN_DENOM,
 		Shares:           sdk.NewDec(1000_000),
+		RewardIndex:      sdk.NewDec(0),
 	}, allianceDelegation)
 
 	// Delegate with same denom again
@@ -99,6 +98,7 @@ func TestDelegation(t *testing.T) {
 		ValidatorAddress: val.OperatorAddress,
 		Denom:            ALLIANCE_TOKEN_DENOM,
 		Shares:           sdk.NewDec(2000_000),
+		RewardIndex:      sdk.NewDec(0),
 	}, allianceDelegation)
 
 	// Delegate with another denom
@@ -124,9 +124,7 @@ func TestDelegation(t *testing.T) {
 func TestRedelegation(t *testing.T) {
 	app, ctx := createTestContext(t)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.Params{
-			RewardDelayTime: time.Duration(1000000),
-		},
+		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
 				Denom:        ALLIANCE_TOKEN_DENOM,
@@ -212,6 +210,7 @@ func TestRedelegation(t *testing.T) {
 		ValidatorAddress: val2.GetOperator().String(),
 		Denom:            ALLIANCE_TOKEN_DENOM,
 		Shares:           sdk.NewDec(500_000),
+		RewardIndex:      sdk.NewDec(0),
 	}, dstDelegation)
 	require.True(t, found)
 
@@ -260,9 +259,7 @@ func TestRedelegation(t *testing.T) {
 func TestUndelegation(t *testing.T) {
 	app, ctx := createTestContext(t)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.Params{
-			RewardDelayTime: time.Duration(1000000),
-		},
+		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
 				Denom:        ALLIANCE_TOKEN_DENOM,

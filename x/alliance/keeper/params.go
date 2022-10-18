@@ -18,6 +18,6 @@ func (k Keeper) GlobalRewardIndex(ctx sdk.Context) (res sdk.Dec) {
 }
 
 func (k Keeper) SetGlobalRewardIndex(ctx sdk.Context, index sdk.Dec) {
-	k.paramstore.Set(ctx, types.GlobalRewardIndex, index)
+	k.paramstore.Set(ctx, types.GlobalRewardIndex, &index)
 	return
 }

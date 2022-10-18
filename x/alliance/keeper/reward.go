@@ -41,10 +41,6 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddre
 }
 
 func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, coins sdk.Coins) error {
-	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, from, types.RewardsPoolName, coins)
-	if err != nil {
-		return err
-	}
 	globalIndex := k.GlobalRewardIndex(ctx)
 	totalRewards := sdk.ZeroDec()
 	for _, c := range coins {
@@ -55,6 +51,11 @@ func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, coin
 	// We need some delegations before we can split rewards. Else rewards belong to no one
 	if totalAssetWeight.IsZero() {
 		return types.ErrZeroDelegations
+	}
+
+	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, from, types.RewardsPoolName, coins)
+	if err != nil {
+		return err
 	}
 
 	globalIndex = globalIndex.Add(totalRewards.Quo(totalAssetWeight))

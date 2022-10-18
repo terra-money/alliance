@@ -48,6 +48,7 @@ func validatePositiveDec(i interface{}) error {
 func NewParams() Params {
 	return Params{
 		RewardDelayTime: time.Hour,
+		GlobalIndex:     sdk.ZeroDec(),
 	}
 }
 
