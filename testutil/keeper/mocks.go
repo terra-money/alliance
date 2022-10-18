@@ -324,3 +324,41 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name interface{}) *gom
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAddress", reflect.TypeOf((*MockAccountKeeper)(nil).GetModuleAddress), name)
 }
+
+// MockDistributionKeeper is a mock of DistributionKeeper interface.
+type MockDistributionKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockDistributionKeeperMockRecorder
+}
+
+// MockDistributionKeeperMockRecorder is the mock recorder for MockDistributionKeeper.
+type MockDistributionKeeperMockRecorder struct {
+	mock *MockDistributionKeeper
+}
+
+// NewMockDistributionKeeper creates a new mock instance.
+func NewMockDistributionKeeper(ctrl *gomock.Controller) *MockDistributionKeeper {
+	mock := &MockDistributionKeeper{ctrl: ctrl}
+	mock.recorder = &MockDistributionKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDistributionKeeper) EXPECT() *MockDistributionKeeperMockRecorder {
+	return m.recorder
+}
+
+// WithdrawDelegationRewards mocks base method.
+func (m *MockDistributionKeeper) WithdrawDelegationRewards(ctx types.Context, delAddr types.AccAddress, valAddr types.ValAddress) (types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithdrawDelegationRewards", ctx, delAddr, valAddr)
+	ret0, _ := ret[0].(types.Coins)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WithdrawDelegationRewards indicates an expected call of WithdrawDelegationRewards.
+func (mr *MockDistributionKeeperMockRecorder) WithdrawDelegationRewards(ctx, delAddr, valAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithdrawDelegationRewards", reflect.TypeOf((*MockDistributionKeeper)(nil).WithdrawDelegationRewards), ctx, delAddr, valAddr)
+}

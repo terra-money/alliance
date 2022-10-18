@@ -494,6 +494,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
+		app.DistrKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	allianceModule := alliancemodule.NewAppModule(appCodec, app.AllianceKeeper, app.StakingKeeper, app.interfaceRegistry)

@@ -41,3 +41,7 @@ type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx sdk.Context, name string) authtypes.ModuleAccountI
 }
+
+type DistributionKeeper interface {
+	WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error)
+}

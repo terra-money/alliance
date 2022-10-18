@@ -12,13 +12,14 @@ import (
 )
 
 type Keeper struct {
-	storeKey      storetypes.StoreKey
-	paramstore    paramtypes.Subspace
-	cdc           codec.BinaryCodec
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	stakingKeeper types.StakingKeeper
-	authority     string
+	storeKey           storetypes.StoreKey
+	paramstore         paramtypes.Subspace
+	cdc                codec.BinaryCodec
+	accountKeeper      types.AccountKeeper
+	bankKeeper         types.BankKeeper
+	stakingKeeper      types.StakingKeeper
+	distributionKeeper types.DistributionKeeper
+	authority          string
 }
 
 func NewKeeper(
@@ -28,6 +29,7 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	stakingKeeper types.StakingKeeper,
+	distributionKeeper types.DistributionKeeper,
 	authority string,
 ) Keeper {
 	// set KeyTable if it has not already been set
@@ -37,13 +39,14 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:      storeKey,
-		paramstore:    ps,
-		cdc:           cdc,
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
-		stakingKeeper: stakingKeeper,
-		authority:     authority,
+		storeKey:           storeKey,
+		paramstore:         ps,
+		cdc:                cdc,
+		accountKeeper:      accountKeeper,
+		bankKeeper:         bankKeeper,
+		stakingKeeper:      stakingKeeper,
+		distributionKeeper: distributionKeeper,
+		authority:          authority,
 	}
 }
 

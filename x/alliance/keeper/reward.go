@@ -17,14 +17,34 @@ var (
 	_ RewardsKeeper = Keeper{}
 )
 
+// ClaimDistributionRewards to be called right before any reward claims so that we get
+// the latest rewards
+func (k Keeper) ClaimDistributionRewards(ctx sdk.Context, val stakingtypes.Validator) (sdk.Coins, error) {
+	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	coins, err := k.distributionKeeper.WithdrawDelegationRewards(ctx, moduleAddr, val.GetOperator())
+	if err != nil || coins.IsZero() {
+		return nil, err
+	}
+	err = k.AddAssetsToRewardPool(ctx, moduleAddr, coins)
+	if err != nil {
+		return nil, err
+	}
+	return coins, nil
+}
+
 func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, val stakingtypes.Validator, denom string) (sdk.Coins, error) {
 	asset, found := k.GetAssetByDenom(ctx, denom)
 	if !found {
-		return sdk.Coins{}, types.ErrUnknownAsset
+		return nil, types.ErrUnknownAsset
 	}
 	delegation, found := k.GetDelegation(ctx, delAddr, val, denom)
 	if !found {
 		return sdk.Coins{}, stakingtypes.ErrNoDelegatorForAddress
+	}
+
+	_, err := k.ClaimDistributionRewards(ctx, val)
+	if err != nil {
+		return nil, err
 	}
 
 	coins, newIndices, err := k.CalculateDelegationRewards(ctx, delegation, asset)
@@ -44,7 +64,7 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 }
 
 func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Delegation, asset types.AllianceAsset) (sdk.Coins, types.RewardIndices, error) {
-	// TODO: check if there is a rewards rate change
+	// TODO: check if there was a rewards rate change
 	var rewards sdk.Coins
 	globalIndices := k.GlobalRewardIndices(ctx)
 	for _, index := range globalIndices {
