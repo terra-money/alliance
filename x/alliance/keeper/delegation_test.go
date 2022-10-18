@@ -84,7 +84,7 @@ func TestDelegation(t *testing.T) {
 		ValidatorAddress: val.OperatorAddress,
 		Denom:            ALLIANCE_TOKEN_DENOM,
 		Shares:           sdk.NewDec(1000_000),
-		RewardIndex:      sdk.NewDec(0),
+		RewardIndices:    types.RewardIndices(nil),
 	}, allianceDelegation)
 
 	// Check asset
@@ -108,7 +108,7 @@ func TestDelegation(t *testing.T) {
 		ValidatorAddress: val.OperatorAddress,
 		Denom:            ALLIANCE_TOKEN_DENOM,
 		Shares:           sdk.NewDec(2000_000),
-		RewardIndex:      sdk.NewDec(0),
+		RewardIndices:    types.RewardIndices(nil),
 	}, allianceDelegation)
 
 	// Check asset again
@@ -230,7 +230,7 @@ func TestRedelegation(t *testing.T) {
 		ValidatorAddress: val2.GetOperator().String(),
 		Denom:            ALLIANCE_TOKEN_DENOM,
 		Shares:           sdk.NewDec(500_000),
-		RewardIndex:      sdk.NewDec(0),
+		RewardIndices:    types.RewardIndices(nil),
 	}, dstDelegation)
 	require.True(t, found)
 

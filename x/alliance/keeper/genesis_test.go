@@ -13,8 +13,8 @@ func TestGenesis(t *testing.T) {
 	app, ctx := createTestContext(t)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.Params{
-			RewardDelayTime: time.Duration(1000000),
-			GlobalIndex:     sdk.ZeroDec(),
+			RewardDelayTime:     time.Duration(1000000),
+			GlobalRewardIndices: types.RewardIndices{},
 		},
 		Assets: []types.AllianceAsset{
 			{
@@ -30,8 +30,8 @@ func TestGenesis(t *testing.T) {
 	delay := app.AllianceKeeper.RewardDelayTime(ctx)
 	require.Equal(t, time.Duration(1000000), delay)
 
-	index := app.AllianceKeeper.GlobalRewardIndex(ctx)
-	require.Equal(t, sdk.ZeroDec(), index)
+	index := app.AllianceKeeper.GlobalRewardIndices(ctx)
+	require.Equal(t, types.RewardIndices(nil), index)
 
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
 	require.Equal(t, 1, len(assets))

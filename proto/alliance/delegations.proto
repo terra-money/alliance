@@ -1,9 +1,10 @@
 syntax = "proto3";
-package alliance;
+package alliance.alliance;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
+import "alliance/params.proto";
 
 option go_package = "alliance/x/alliance/types";
 
@@ -23,9 +24,7 @@ message Delegation {
   (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
   (gogoproto.nullable)   = false
   ];
-  string reward_index = 5 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+  repeated RewardIndex reward_indices = 5 [
     (gogoproto.nullable)   = false
   ];
 }

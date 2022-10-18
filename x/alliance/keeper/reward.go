@@ -4,62 +4,93 @@ import (
 	"alliance/x/alliance/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"golang.org/x/exp/slices"
 )
 
 type RewardsKeeper interface {
-	CalculateDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, val stakingtypes.Validator, denom string) (sdk.Coins, error)
+	ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, val stakingtypes.Validator, denom string) (sdk.Coins, error)
+	CalculateDelegationRewards(ctx sdk.Context, delegation types.Delegation, asset types.AllianceAsset) (sdk.Coins, types.RewardIndices, error)
+	AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, coins sdk.Coins) error
 }
 
 var (
 	_ RewardsKeeper = Keeper{}
 )
 
-func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, val stakingtypes.Validator, denom string) (sdk.Coins, error) {
+func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, val stakingtypes.Validator, denom string) (sdk.Coins, error) {
+	asset := k.GetAssetByDenom(ctx, denom)
 	delegation, found := k.GetDelegation(ctx, delAddr, val, denom)
 	if !found {
 		return sdk.Coins{}, stakingtypes.ErrNoDelegatorForAddress
 	}
-	asset := k.GetAssetByDenom(ctx, denom)
 
-	// TODO check if there is a rewards rate change
-
-	globalIndex := k.GlobalRewardIndex(ctx)
-
-	// If index already == global index then there is nothing to claim
-	if globalIndex == delegation.RewardIndex {
-		return sdk.Coins{}, nil
+	coins, newIndices, err := k.CalculateDelegationRewards(ctx, delegation, asset)
+	if err != nil {
+		return nil, err
 	}
 
-	claimWeight := delegation.Shares.MulInt(asset.TotalTokens).Mul(asset.RewardWeight)
-	totalClaimable := (globalIndex.Sub(delegation.RewardIndex)).Mul(claimWeight)
-	rewards := k.prorataAssetsInRewardPool(ctx, totalClaimable)
-
-	delegation.RewardIndex = globalIndex
+	delegation.RewardIndices = newIndices
 	k.SetDelegation(ctx, delAddr, val, denom, delegation)
 
-	return rewards, nil
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.RewardsPoolName, delAddr, coins)
+	if err != nil {
+		return nil, err
+	}
+
+	return coins, nil
+}
+
+func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Delegation, asset types.AllianceAsset) (sdk.Coins, types.RewardIndices, error) {
+	// TODO: check if there is a rewards rate change
+	var rewards sdk.Coins
+	globalIndices := k.GlobalRewardIndices(ctx)
+	for _, index := range globalIndices {
+		idx := slices.IndexFunc(delegation.RewardIndices, func(r types.RewardIndex) bool {
+			return r.Denom == index.Denom
+		})
+		if idx >= 0 && delegation.RewardIndices[idx].Index == index.Index {
+			continue
+		}
+		var localIndex sdk.Dec
+		if idx < 0 {
+			localIndex = sdk.ZeroDec()
+		} else {
+			localIndex = delegation.RewardIndices[idx].Index
+		}
+
+		claimWeight := delegation.Shares.MulInt(asset.TotalTokens).Quo(asset.TotalShares).Mul(asset.RewardWeight)
+		totalClaimable := (index.Index.Sub(localIndex)).Mul(claimWeight)
+		rewards = append(rewards, sdk.NewCoin(index.Denom, totalClaimable.TruncateInt()))
+	}
+	return rewards, globalIndices, nil
 }
 
 func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, coins sdk.Coins) error {
-	globalIndex := k.GlobalRewardIndex(ctx)
-	totalRewards := sdk.ZeroDec()
-	for _, c := range coins {
-		totalRewards = totalRewards.Add(sdk.NewDecFromInt(c.Amount))
-	}
+	globalIndices := k.GlobalRewardIndices(ctx)
 	totalAssetWeight := k.totalAssetWeight(ctx)
-
 	// We need some delegations before we can split rewards. Else rewards belong to no one
 	if totalAssetWeight.IsZero() {
 		return types.ErrZeroDelegations
 	}
+
+	for _, c := range coins {
+		index, found := globalIndices.GetIndexByDenom(c.Denom)
+		if !found {
+			globalIndices = append(globalIndices, types.RewardIndex{
+				Denom: c.Denom,
+				Index: sdk.NewDecFromInt(c.Amount).Quo(totalAssetWeight),
+			})
+		} else {
+			index.Index = index.Index.Add(sdk.NewDecFromInt(c.Amount).Quo(totalAssetWeight))
+		}
+	}
+	k.SetGlobalRewardIndex(ctx, globalIndices)
 
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, from, types.RewardsPoolName, coins)
 	if err != nil {
 		return err
 	}
 
-	globalIndex = globalIndex.Add(totalRewards.Quo(totalAssetWeight))
-	k.SetGlobalRewardIndex(ctx, globalIndex)
 	return nil
 }
 
@@ -70,17 +101,4 @@ func (k Keeper) totalAssetWeight(ctx sdk.Context) sdk.Dec {
 		total = total.Add(asset.RewardWeight.MulInt(asset.TotalTokens))
 	}
 	return total
-}
-
-func (k Keeper) prorataAssetsInRewardPool(ctx sdk.Context, totalClaimable sdk.Dec) sdk.Coins {
-	rewardsPool := k.accountKeeper.GetModuleAddress(types.RewardsPoolName)
-	coins := k.bankKeeper.GetAllBalances(ctx, rewardsPool)
-	dCoins := sdk.NewDecCoinsFromCoins(coins...)
-	totalCoins := sdk.NewDec(0)
-	for _, c := range dCoins {
-		totalCoins = totalCoins.Add(c.Amount)
-	}
-	weightedCoins := dCoins.MulDec(totalClaimable.Quo(totalCoins))
-	rewards, _ := weightedCoins.TruncateDecimal()
-	return rewards
 }

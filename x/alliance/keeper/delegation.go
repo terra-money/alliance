@@ -12,6 +12,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func (k Keeper) NewDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string, shares sdk.Dec, rewardIndices []types.RewardIndex) types.Delegation {
+	return types.Delegation{
+		DelegatorAddress: delAddr.String(),
+		ValidatorAddress: valAddr.String(),
+		Denom:            denom,
+		Shares:           shares,
+		RewardIndices:    rewardIndices,
+	}
+}
+
 func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin) (*types.Delegation, error) {
 	asset, found := k.GetAssetByDenom(ctx, coin.Denom)
 
@@ -50,13 +60,9 @@ func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAd
 
 func (k Keeper) upsertDelegationWithNewShares(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, shares sdk.Dec) types.Delegation {
 	delegation, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
+	globalRewardIndices := k.GlobalRewardIndices(ctx)
 	if !ok {
-		delegation = types.Delegation{
-			DelegatorAddress: delAddr.String(),
-			ValidatorAddress: validator.GetOperator().String(),
-			Denom:            coin.Denom,
-			Shares:           shares,
-		}
+		delegation = k.NewDelegation(delAddr, validator.GetOperator(), coin.Denom, shares, globalRewardIndices)
 	} else {
 		delegation.AddShares(shares)
 	}
@@ -203,6 +209,7 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator st
 	}
 
 	// Update assuming everything works
+	// TODO: might want to check for overflows
 	asset.TotalTokens = asset.TotalTokens.Sub(coin.Amount)
 	asset.TotalShares = asset.TotalShares.Sub(sharesToUndelegate)
 	k.SetAsset(ctx, asset)

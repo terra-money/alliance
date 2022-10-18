@@ -12,12 +12,12 @@ func (k Keeper) RewardDelayTime(ctx sdk.Context) (res time.Duration) {
 	return
 }
 
-func (k Keeper) GlobalRewardIndex(ctx sdk.Context) (res sdk.Dec) {
-	k.paramstore.Get(ctx, types.GlobalRewardIndex, &res)
+func (k Keeper) GlobalRewardIndices(ctx sdk.Context) (res types.RewardIndices) {
+	k.paramstore.Get(ctx, types.GlobalRewardIndices, &res)
 	return
 }
 
-func (k Keeper) SetGlobalRewardIndex(ctx sdk.Context, index sdk.Dec) {
-	k.paramstore.Set(ctx, types.GlobalRewardIndex, &index)
+func (k Keeper) SetGlobalRewardIndex(ctx sdk.Context, index types.RewardIndices) {
+	k.paramstore.Set(ctx, types.GlobalRewardIndices, &index)
 	return
 }
