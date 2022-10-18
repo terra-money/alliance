@@ -10,6 +10,9 @@ const (
 	// ModuleName is the name of the staking module
 	ModuleName = "alliance"
 
+	// RewardsPoolName is the name of the module account for rewards
+	RewardsPoolName = "alliance_rewards"
+
 	// StoreKey is the string store representation
 	StoreKey = ModuleName
 
