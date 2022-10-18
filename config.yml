@@ -1,8 +1,10 @@
 accounts:
   - name: alice
     coins: ["20000token", "200000000stake"]
+    mnemonic: "wine rich chunk that swim afford found auction travel dentist razor furnace fluid hidden happy enroll pilot dragon market broom bus merry salad assume"
   - name: bob
     coins: ["10000token", "100000000stake"]
+    mnemonic: "major spatial spoil earn capable receive tourist bronze call coral mango betray demand size certain strike decline pluck baby eight maple pyramid cage cabbage"
 validator:
   name: alice
   staked: "100000000stake"

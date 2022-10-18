@@ -30,6 +30,7 @@ var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
+	_ module.EndBlockAppModule   = AppModule{}
 )
 
 type AppModuleBasic struct {
@@ -87,6 +88,10 @@ type AppModule struct {
 	AppModuleBasic
 	keeper        keeper.Keeper
 	stakingKeeper types.StakingKeeper
+}
+
+func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return EndBlocker(ctx, a.keeper)
 }
 
 func (a AppModule) InitGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {

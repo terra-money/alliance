@@ -38,13 +38,58 @@ func (m msgServer) Delegate(ctx context.Context, delegate *types.MsgDelegate) (*
 }
 
 func (m msgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelegate) (*types.MsgRedelegateResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	delAddr, err := sdk.AccAddressFromBech32(redelegate.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	srcValAddr, err := sdk.ValAddressFromBech32(redelegate.ValidatorSrcAddress)
+	if err != nil {
+		return nil, err
+	}
+	dstValAddr, err := sdk.ValAddressFromBech32(redelegate.ValidatorDstAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	srcValidator, ok := m.Keeper.stakingKeeper.GetValidator(sdkCtx, srcValAddr)
+	if !ok {
+		return nil, stakingtypes.ErrNoValidatorFound
+	}
+	dstValidator, ok := m.Keeper.stakingKeeper.GetValidator(sdkCtx, dstValAddr)
+	if !ok {
+		return nil, stakingtypes.ErrNoValidatorFound
+	}
+
+	_, err = m.Keeper.Redelegate(sdkCtx, delAddr, srcValidator, dstValidator, redelegate.Amount)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgRedelegateResponse{}, nil
 }
 
 func (m msgServer) Undelegate(ctx context.Context, undelegate *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
-	//TODO implement me
-	panic("implement me")
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	delAddr, err := sdk.AccAddressFromBech32(undelegate.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	valAddr, err := sdk.ValAddressFromBech32(undelegate.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	validator, ok := m.Keeper.stakingKeeper.GetValidator(sdkCtx, valAddr)
+	if !ok {
+		return nil, stakingtypes.ErrNoValidatorFound
+	}
+
+	err = m.Keeper.Undelegate(sdkCtx, delAddr, validator, undelegate.Amount)
+	if err != nil {
+		return nil, err
+	}
+	return &types.MsgUndelegateResponse{}, nil
 }
 
 func (m msgServer) CreateAlliance(ctx context.Context, undelegate *types.MsgCreateAlliance) (*types.MsgCreateAllianceResponse, error) {
