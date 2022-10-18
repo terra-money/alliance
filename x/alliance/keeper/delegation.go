@@ -12,6 +12,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func (k Keeper) NewDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string, shares sdk.Dec, rewardIndices []types.RewardIndex) types.Delegation {
+	return types.Delegation{
+		DelegatorAddress: delAddr.String(),
+		ValidatorAddress: valAddr.String(),
+		Denom:            denom,
+		Shares:           shares,
+		RewardIndices:    rewardIndices,
+	}
+}
+
 func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin) (*types.Delegation, error) {
 	asset, found := k.GetAssetByDenom(ctx, coin.Denom)
 
@@ -36,26 +46,23 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stak
 	if err != nil {
 		return nil, err
 	}
+	delegation, newShares := k.upsertDelegationWithNewTokens(ctx, delAddr, validator, coin, asset)
 	asset.TotalTokens = asset.TotalTokens.Add(coin.Amount)
+	asset.TotalShares = asset.TotalShares.Add(newShares)
 	k.SetAsset(ctx, asset)
-	delegation := k.upsertDelegationWithNewTokens(ctx, delAddr, validator, coin, asset)
 	return &delegation, nil
 }
 
-func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, asset types.AllianceAsset) types.Delegation {
+func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) {
 	newShares := convertNewTokenToShares(asset.TotalTokens, asset.TotalShares, coin.Amount)
-	return k.upsertDelegationWithNewShares(ctx, delAddr, validator, coin, newShares)
+	return k.upsertDelegationWithNewShares(ctx, delAddr, validator, coin, newShares), newShares
 }
 
 func (k Keeper) upsertDelegationWithNewShares(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, shares sdk.Dec) types.Delegation {
 	delegation, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
+	globalRewardIndices := k.GlobalRewardIndices(ctx)
 	if !ok {
-		delegation = types.Delegation{
-			DelegatorAddress: delAddr.String(),
-			ValidatorAddress: validator.GetOperator().String(),
-			Denom:            coin.Denom,
-			Shares:           shares,
-		}
+		delegation = k.NewDelegation(delAddr, validator.GetOperator(), coin.Denom, shares, globalRewardIndices)
 	} else {
 		delegation.AddShares(shares)
 	}
@@ -202,6 +209,7 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator st
 	}
 
 	// Update assuming everything works
+	// TODO: might want to check for overflows
 	asset.TotalTokens = asset.TotalTokens.Sub(coin.Amount)
 	asset.TotalShares = asset.TotalShares.Sub(sharesToUndelegate)
 	k.SetAsset(ctx, asset)

@@ -20,9 +20,7 @@ var ALLIANCE_2_TOKEN_DENOM = "alliance2"
 func TestDelegation(t *testing.T) {
 	app, ctx := createTestContext(t)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.Params{
-			RewardDelayTime: time.Duration(1000000),
-		},
+		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
 				Denom:        ALLIANCE_TOKEN_DENOM,
@@ -86,7 +84,18 @@ func TestDelegation(t *testing.T) {
 		ValidatorAddress: val.OperatorAddress,
 		Denom:            ALLIANCE_TOKEN_DENOM,
 		Shares:           sdk.NewDec(1000_000),
+		RewardIndices:    types.RewardIndices(nil),
 	}, allianceDelegation)
+
+	// Check asset
+	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	require.Equal(t, types.AllianceAsset{
+		Denom:        ALLIANCE_TOKEN_DENOM,
+		RewardWeight: sdk.NewDec(2),
+		TakeRate:     sdk.NewDec(0),
+		TotalTokens:  sdk.NewInt(1000_000),
+		TotalShares:  sdk.NewDec(1000_000),
+	}, asset)
 
 	// Delegate with same denom again
 	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
@@ -99,7 +108,18 @@ func TestDelegation(t *testing.T) {
 		ValidatorAddress: val.OperatorAddress,
 		Denom:            ALLIANCE_TOKEN_DENOM,
 		Shares:           sdk.NewDec(2000_000),
+		RewardIndices:    types.RewardIndices(nil),
 	}, allianceDelegation)
+
+	// Check asset again
+	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	require.Equal(t, types.AllianceAsset{
+		Denom:        ALLIANCE_TOKEN_DENOM,
+		RewardWeight: sdk.NewDec(2),
+		TakeRate:     sdk.NewDec(0),
+		TotalTokens:  sdk.NewInt(2000_000),
+		TotalShares:  sdk.NewDec(2000_000),
+	}, asset)
 
 	// Delegate with another denom
 	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
@@ -124,9 +144,7 @@ func TestDelegation(t *testing.T) {
 func TestRedelegation(t *testing.T) {
 	app, ctx := createTestContext(t)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.Params{
-			RewardDelayTime: time.Duration(1000000),
-		},
+		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
 				Denom:        ALLIANCE_TOKEN_DENOM,
@@ -212,6 +230,7 @@ func TestRedelegation(t *testing.T) {
 		ValidatorAddress: val2.GetOperator().String(),
 		Denom:            ALLIANCE_TOKEN_DENOM,
 		Shares:           sdk.NewDec(500_000),
+		RewardIndices:    types.RewardIndices(nil),
 	}, dstDelegation)
 	require.True(t, found)
 
@@ -260,9 +279,7 @@ func TestRedelegation(t *testing.T) {
 func TestUndelegation(t *testing.T) {
 	app, ctx := createTestContext(t)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.Params{
-			RewardDelayTime: time.Duration(1000000),
-		},
+		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
 				Denom:        ALLIANCE_TOKEN_DENOM,

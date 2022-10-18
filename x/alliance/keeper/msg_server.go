@@ -152,6 +152,24 @@ func (m MsgServer) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAllia
 	return &types.MsgDeleteAllianceResponse{}, nil
 }
 
+func (m MsgServer) ClaimDelegationRewards(ctx context.Context, request *types.MsgClaimDelegationRewards) (*types.MsgClaimDelegationRewardsResponse, error) {
+	delAddr, err := sdk.AccAddressFromBech32(request.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	valAddr, err := sdk.ValAddressFromBech32(request.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	val, found := m.Keeper.stakingKeeper.GetValidator(sdkCtx, valAddr)
+	if !found {
+		return nil, stakingtypes.ErrNoValidatorFound
+	}
+	_, err = m.Keeper.ClaimDelegationRewards(sdkCtx, delAddr, val, request.Denom)
+	return &types.MsgClaimDelegationRewardsResponse{}, err
+}
+
 // NewMsgServerImpl returns an implementation of the bank MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {

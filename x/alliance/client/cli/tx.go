@@ -21,7 +21,7 @@ func NewTxCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	txCmd.AddCommand(NewDelegateCmd(), NewRedelegateCmd(), NewUndelegateCmd())
+	txCmd.AddCommand(NewDelegateCmd(), NewRedelegateCmd(), NewUndelegateCmd(), NewClaimDelegationRewardsCmd())
 	return txCmd
 }
 
@@ -170,5 +170,48 @@ $ %s tx alliance undelegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake 
 
 	flags.AddTxFlagsToCmd(cmd)
 
+	return cmd
+}
+
+func NewClaimDelegationRewardsCmd() *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+	cmd := &cobra.Command{
+		Use:   "claim-rewards validator-addr denom",
+		Args:  cobra.ExactArgs(2),
+		Short: "claim rewards from a delegation by specifying a validator address and denom",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Claim all rewards from a delegation
+Example:
+$ %s tx alliance claim-rewards %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm stake --from mykey
+`,
+				version.AppName, bech32PrefixValAddr,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			delAddr := clientCtx.GetFromAddress()
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			denom := args[1]
+			if denom == "" {
+				return fmt.Errorf("denom is required")
+			}
+			msg := &types.MsgClaimDelegationRewards{
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: valAddr.String(),
+				Denom:            denom,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

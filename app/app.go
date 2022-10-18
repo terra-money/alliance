@@ -170,15 +170,16 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		icatypes.ModuleName:            nil,
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		alliancemoduletypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		authtypes.FeeCollectorName:          nil,
+		distrtypes.ModuleName:               nil,
+		icatypes.ModuleName:                 nil,
+		minttypes.ModuleName:                {authtypes.Minter},
+		stakingtypes.BondedPoolName:         {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:      {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                 {authtypes.Burner},
+		ibctransfertypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
+		alliancemoduletypes.ModuleName:      {authtypes.Minter, authtypes.Burner},
+		alliancemoduletypes.RewardsPoolName: nil,
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
@@ -493,6 +494,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
+		app.DistrKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	allianceModule := alliancemodule.NewAppModule(appCodec, app.AllianceKeeper, app.StakingKeeper, app.interfaceRegistry)

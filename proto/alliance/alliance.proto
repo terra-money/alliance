@@ -2,6 +2,7 @@ syntax = "proto3";
 package alliance.alliance;
 
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 
 option go_package = "alliance/x/alliance/types";
@@ -65,4 +66,19 @@ message UpdateAssetProposal {
   string   title                           = 1;
   string   description                     = 2;
   AllianceAsset asset = 3;
+}
+
+message RewardRateChangeSnapshot {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  string global_index = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  string reward_weight = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  repeated  cosmos.base.v1beta1.Coin balance = 3 [(gogoproto.nullable) = false];
 }

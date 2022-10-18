@@ -165,6 +165,15 @@ paths:
                 properties:
                   reward_delay_time:
                     type: string
+                  global_reward_indices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        index:
+                          type: string
         default:
           description: An unexpected error response.
           schema:
@@ -219,6 +228,15 @@ paths:
                         shares:
                           type: string
                           description: shares define the delegation shares received.
+                        reward_indices:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              index:
+                                type: string
                     balance:
                       type: object
                       properties:
@@ -385,6 +403,15 @@ paths:
                         shares:
                           type: string
                           description: shares define the delegation shares received.
+                        reward_indices:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              index:
+                                type: string
                     balance:
                       type: object
                       properties:
@@ -553,6 +580,15 @@ paths:
                       shares:
                         type: string
                         description: shares define the delegation shares received.
+                      reward_indices:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            index:
+                              type: string
                   balance:
                     type: object
                     properties:
@@ -44845,54 +44881,6 @@ paths:
       tags:
         - Query
 definitions:
-  alliance.Delegation:
-    type: object
-    properties:
-      delegator_address:
-        type: string
-        description: delegator_address is the bech32-encoded address of the delegator.
-      validator_address:
-        type: string
-        description: validator_address is the bech32-encoded address of the validator.
-      denom:
-        type: string
-        title: denom of token staked
-      shares:
-        type: string
-        description: shares define the delegation shares received.
-  alliance.DelegationResponse:
-    type: object
-    properties:
-      delegation:
-        type: object
-        properties:
-          delegator_address:
-            type: string
-            description: delegator_address is the bech32-encoded address of the delegator.
-          validator_address:
-            type: string
-            description: validator_address is the bech32-encoded address of the validator.
-          denom:
-            type: string
-            title: denom of token staked
-          shares:
-            type: string
-            description: shares define the delegation shares received.
-      balance:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-    description: |-
-      DelegationResponse is equivalent to Delegation except that it contains a
-      balance in addition to shares which is more suitable for client responses.
   alliance.alliance.AllianceAsset:
     type: object
     properties:
@@ -44920,6 +44908,74 @@ definitions:
       total_shares:
         type: string
     title: 'key: denom value: AllianceAsset'
+  alliance.alliance.Delegation:
+    type: object
+    properties:
+      delegator_address:
+        type: string
+        description: delegator_address is the bech32-encoded address of the delegator.
+      validator_address:
+        type: string
+        description: validator_address is the bech32-encoded address of the validator.
+      denom:
+        type: string
+        title: denom of token staked
+      shares:
+        type: string
+        description: shares define the delegation shares received.
+      reward_indices:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            index:
+              type: string
+  alliance.alliance.DelegationResponse:
+    type: object
+    properties:
+      delegation:
+        type: object
+        properties:
+          delegator_address:
+            type: string
+            description: delegator_address is the bech32-encoded address of the delegator.
+          validator_address:
+            type: string
+            description: validator_address is the bech32-encoded address of the validator.
+          denom:
+            type: string
+            title: denom of token staked
+          shares:
+            type: string
+            description: shares define the delegation shares received.
+          reward_indices:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                index:
+                  type: string
+      balance:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+    description: |-
+      DelegationResponse is equivalent to Delegation except that it contains a
+      balance in addition to shares which is more suitable for client responses.
+  alliance.alliance.MsgClaimDelegationRewardsResponse:
+    type: object
   alliance.alliance.MsgCreateAllianceResponse:
     type: object
   alliance.alliance.MsgDelegateResponse:
@@ -44937,6 +44993,15 @@ definitions:
     properties:
       reward_delay_time:
         type: string
+      global_reward_indices:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            index:
+              type: string
   alliance.alliance.QueryAllianceDelegationResponse:
     type: object
     properties:
@@ -44962,6 +45027,15 @@ definitions:
               shares:
                 type: string
                 description: shares define the delegation shares received.
+              reward_indices:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    index:
+                      type: string
           balance:
             type: object
             properties:
@@ -45042,6 +45116,15 @@ definitions:
                 shares:
                   type: string
                   description: shares define the delegation shares received.
+                reward_indices:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      index:
+                        type: string
             balance:
               type: object
               properties:
@@ -45157,6 +45240,22 @@ definitions:
         properties:
           reward_delay_time:
             type: string
+          global_reward_indices:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                index:
+                  type: string
+  alliance.alliance.RewardIndex:
+    type: object
+    properties:
+      denom:
+        type: string
+      index:
+        type: string
   cosmos.base.query.v1beta1.PageRequest:
     type: object
     properties:

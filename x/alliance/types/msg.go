@@ -13,6 +13,7 @@ var (
 	_ sdk.Msg = &MsgCreateAlliance{}
 	_ sdk.Msg = &MsgUpdateAlliance{}
 	_ sdk.Msg = &MsgDeleteAlliance{}
+	_ sdk.Msg = &MsgClaimDelegationRewards{}
 )
 
 func (m MsgDelegate) ValidateBasic() error {
@@ -117,6 +118,21 @@ func (m MsgDeleteAlliance) ValidateBasic() error {
 
 func (m MsgDeleteAlliance) GetSigners() []sdk.AccAddress {
 	signer, err := sdk.AccAddressFromBech32(m.Authority)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{signer}
+}
+
+func (m *MsgClaimDelegationRewards) ValidateBasic() error {
+	if m.Denom != "" {
+		return fmt.Errorf("denom must not be empty")
+	}
+	return nil
+}
+
+func (m *MsgClaimDelegationRewards) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(m.DelegatorAddress)
 	if err != nil {
 		panic(err)
 	}
