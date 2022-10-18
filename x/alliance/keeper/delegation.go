@@ -36,15 +36,16 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stak
 	if err != nil {
 		return nil, err
 	}
+	delegation, newShares := k.upsertDelegationWithNewTokens(ctx, delAddr, validator, coin, asset)
 	asset.TotalTokens = asset.TotalTokens.Add(coin.Amount)
+	asset.TotalShares = asset.TotalShares.Add(newShares)
 	k.SetAsset(ctx, asset)
-	delegation := k.upsertDelegationWithNewTokens(ctx, delAddr, validator, coin, asset)
 	return &delegation, nil
 }
 
-func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, asset types.AllianceAsset) types.Delegation {
+func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) {
 	newShares := convertNewTokenToShares(asset.TotalTokens, asset.TotalShares, coin.Amount)
-	return k.upsertDelegationWithNewShares(ctx, delAddr, validator, coin, newShares)
+	return k.upsertDelegationWithNewShares(ctx, delAddr, validator, coin, newShares), newShares
 }
 
 func (k Keeper) upsertDelegationWithNewShares(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, shares sdk.Dec) types.Delegation {

@@ -87,6 +87,16 @@ func TestDelegation(t *testing.T) {
 		RewardIndex:      sdk.NewDec(0),
 	}, allianceDelegation)
 
+	// Check asset
+	asset := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	require.Equal(t, types.AllianceAsset{
+		Denom:        ALLIANCE_TOKEN_DENOM,
+		RewardWeight: sdk.NewDec(2),
+		TakeRate:     sdk.NewDec(0),
+		TotalTokens:  sdk.NewInt(1000_000),
+		TotalShares:  sdk.NewDec(1000_000),
+	}, asset)
+
 	// Delegate with same denom again
 	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
@@ -100,6 +110,16 @@ func TestDelegation(t *testing.T) {
 		Shares:           sdk.NewDec(2000_000),
 		RewardIndex:      sdk.NewDec(0),
 	}, allianceDelegation)
+
+	// Check asset again
+	asset = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	require.Equal(t, types.AllianceAsset{
+		Denom:        ALLIANCE_TOKEN_DENOM,
+		RewardWeight: sdk.NewDec(2),
+		TakeRate:     sdk.NewDec(0),
+		TotalTokens:  sdk.NewInt(2000_000),
+		TotalShares:  sdk.NewDec(2000_000),
+	}, asset)
 
 	// Delegate with another denom
 	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
