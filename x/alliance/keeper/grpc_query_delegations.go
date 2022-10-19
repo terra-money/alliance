@@ -40,12 +40,14 @@ func (k Keeper) AlliancesDelegation(c context.Context, req *types.QueryAlliances
 		}
 
 		asset, _ := k.GetAssetByDenom(ctx, delegation.Denom)
+		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		aVal := k.GetOrCreateValidator(ctx, valAddr)
 
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
 			Balance: sdk.Coin{
 				Denom:  delegation.Denom,
-				Amount: convertNewShareToToken(asset.TotalTokens, asset.TotalShares, delegation.Shares),
+				Amount: convertNewShareToToken(asset.TotalTokens, aVal.TotalSharesWithDenom(delegation.Denom), delegation.Shares),
 			},
 		}
 
@@ -90,12 +92,14 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 		}
 
 		asset, _ := k.GetAssetByDenom(ctx, delegation.Denom)
+		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		aVal := k.GetOrCreateValidator(ctx, valAddr)
 
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
 			Balance: sdk.Coin{
 				Denom:  delegation.Denom,
-				Amount: convertNewShareToToken(asset.TotalTokens, asset.TotalShares, delegation.Shares),
+				Amount: convertNewShareToToken(asset.TotalTokens, aVal.TotalSharesWithDenom(delegation.Denom), delegation.Shares),
 			},
 		}
 
@@ -117,28 +121,29 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
 
 	validator, found := k.stakingKeeper.GetValidator(ctx, valAddr)
-	// fmt.Printf("\nVALIDATOR: %s FOUND: %s\n", validator, found)
 
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "Validator not found with the address %s", req.ValidatorAddr)
 	}
 
 	asset, found := k.GetAssetByDenom(ctx, req.Denom)
-	// fmt.Printf("\nASSET: %s FOUND: %s\n", asset, found)
 
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "Asset not found for denom %s", req.Denom)
 	}
 
-	delegation, found := k.GetDelegation(ctx, sdk.AccAddress(req.DelegatorAddr), validator, req.Denom)
-	// fmt.Printf("\nDELEGATION: %s FOUND: %s\n", delegation, found)
-
+	delegation, found := k.GetDelegation(ctx, delAddr, validator, req.Denom)
 	if !found {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -147,12 +152,13 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 		)
 	}
 
+	aVal := k.GetOrCreateValidator(ctx, valAddr)
 	return &types.QueryAllianceDelegationResponse{
 		Delegation: types.DelegationResponse{
 			Delegation: delegation,
 			Balance: sdk.Coin{
 				Denom:  delegation.Denom,
-				Amount: convertNewShareToToken(asset.TotalTokens, asset.TotalShares, delegation.Shares),
+				Amount: convertNewShareToToken(asset.TotalTokens, aVal.TotalSharesWithDenom(delegation.Denom), delegation.Shares),
 			},
 		},
 	}, nil

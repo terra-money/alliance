@@ -11,11 +11,12 @@ import { Redelegation } from "alliance-client-ts/alliance.alliance/types"
 import { QueuedRedelegation } from "alliance-client-ts/alliance.alliance/types"
 import { Undelegation } from "alliance-client-ts/alliance.alliance/types"
 import { QueuedUndelegation } from "alliance-client-ts/alliance.alliance/types"
+import { Validator } from "alliance-client-ts/alliance.alliance/types"
 import { Params } from "alliance-client-ts/alliance.alliance/types"
 import { RewardIndex } from "alliance-client-ts/alliance.alliance/types"
 
 
-export { AllianceAsset, AddAssetProposal, RemoveAssetProposal, UpdateAssetProposal, RewardRateChangeSnapshot, Delegation, DelegationResponse, Redelegation, QueuedRedelegation, Undelegation, QueuedUndelegation, Params, RewardIndex };
+export { AllianceAsset, AddAssetProposal, RemoveAssetProposal, UpdateAssetProposal, RewardRateChangeSnapshot, Delegation, DelegationResponse, Redelegation, QueuedRedelegation, Undelegation, QueuedUndelegation, Validator, Params, RewardIndex };
 
 function initClient(vuexGetters) {
 	return new Client(vuexGetters['common/env/getEnv'], vuexGetters['common/wallet/signer'])
@@ -52,6 +53,7 @@ const getDefaultState = () => {
 				AlliancesDelegation: {},
 				AlliancesDelegationByValidator: {},
 				AllianceDelegation: {},
+				AllianceDelegationRewards: {},
 				
 				_Structure: {
 						AllianceAsset: getStructure(AllianceAsset.fromPartial({})),
@@ -65,6 +67,7 @@ const getDefaultState = () => {
 						QueuedRedelegation: getStructure(QueuedRedelegation.fromPartial({})),
 						Undelegation: getStructure(Undelegation.fromPartial({})),
 						QueuedUndelegation: getStructure(QueuedUndelegation.fromPartial({})),
+						Validator: getStructure(Validator.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						RewardIndex: getStructure(RewardIndex.fromPartial({})),
 						
@@ -130,6 +133,12 @@ export default {
 						(<any> params).query=null
 					}
 			return state.AllianceDelegation[JSON.stringify(params)] ?? {}
+		},
+				getAllianceDelegationRewards: (state) => (params = { params: {}}) => {
+					if (!(<any> params).query) {
+						(<any> params).query=null
+					}
+			return state.AllianceDelegationRewards[JSON.stringify(params)] ?? {}
 		},
 				
 		getTypeStructure: (state) => (type) => {
@@ -308,6 +317,32 @@ export default {
 				return getters['getAllianceDelegation']( { params: {...key}, query}) ?? {}
 			} catch (e) {
 				throw new Error('QueryClient:QueryAllianceDelegation API Node Unavailable. Could not perform query: ' + e.message)
+				
+			}
+		},
+		
+		
+		
+		
+		 		
+		
+		
+		async QueryAllianceDelegationRewards({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
+			try {
+				const key = params ?? {};
+				const client = initClient(rootGetters);
+				let value= (await client.AllianceAlliance.query.queryAllianceDelegationRewards( key.delegator_addr,  key.validator_addr,  key.denom, query ?? undefined)).data
+				
+					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await client.AllianceAlliance.query.queryAllianceDelegationRewards( key.delegator_addr,  key.validator_addr,  key.denom, {...query ?? {}, 'pagination.key':(<any> value).pagination.next_key} as any)).data
+					value = mergeResults(value, next_values);
+				}
+				commit('QUERY', { query: 'AllianceDelegationRewards', key: { params: {...key}, query}, value })
+				if (subscribe) commit('SUBSCRIBE', { action: 'QueryAllianceDelegationRewards', payload: { options: { all }, params: {...key},query }})
+				return getters['getAllianceDelegationRewards']( { params: {...key}, query}) ?? {}
+			} catch (e) {
+				throw new Error('QueryClient:QueryAllianceDelegationRewards API Node Unavailable. Could not perform query: ' + e.message)
 				
 			}
 		},

@@ -9,6 +9,7 @@ import { Redelegation } from "./types/alliance/delegations"
 import { QueuedRedelegation } from "./types/alliance/delegations"
 import { Undelegation } from "./types/alliance/delegations"
 import { QueuedUndelegation } from "./types/alliance/delegations"
+import { Validator } from "./types/alliance/delegations"
 import { Params } from "./types/alliance/params"
 import { RewardIndex } from "./types/alliance/params"
 
@@ -25,6 +26,7 @@ export {
     QueuedRedelegation,
     Undelegation,
     QueuedUndelegation,
+    Validator,
     Params,
     RewardIndex,
     

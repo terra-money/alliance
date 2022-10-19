@@ -20,7 +20,10 @@ export interface AllianceAllianceAsset {
   reward_weight?: string;
   take_rate?: string;
   total_tokens?: string;
-  total_shares?: string;
+}
+
+export interface AllianceAllianceDelegationRewardsResponse {
+  rewards?: V1Beta1Coin[];
 }
 
 export interface AllianceDelegation {
@@ -72,7 +75,6 @@ export interface AllianceParams {
 
   /** @format date-time */
   last_reward_claim_time?: string;
-  global_reward_indices?: AllianceRewardIndex[];
 }
 
 export interface AllianceQueryAllianceDelegationResponse {
@@ -449,6 +451,35 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     this.request<AllianceQueryParamsResponse, RpcStatus>({
       path: `/terra/alliances/params`,
       method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryAllianceDelegationRewards
+   * @summary Query for rewards by delegator addr, validator_addr and denom
+   * @request GET:/terra/alliances/{delegator_addr_1}/{validator_addr}/{denom}
+   */
+  queryAllianceDelegationRewards = (
+    delegator_addr_1: string,
+    validator_addr: string,
+    denom: string,
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<AllianceAllianceDelegationRewardsResponse, RpcStatus>({
+      path: `/terra/alliances/${delegator_addr_1}/${validator_addr}/${denom}`,
+      method: "GET",
+      query: query,
       format: "json",
       ...params,
     });

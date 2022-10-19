@@ -11,7 +11,6 @@ export interface Params {
   rewardClaimInterval: Duration | undefined;
   /** Last application of `take_rate` on assets */
   lastRewardClaimTime: Date | undefined;
-  globalRewardIndices: RewardIndex[];
 }
 
 export interface RewardIndex {
@@ -41,9 +40,6 @@ export const Params = {
         writer.uint32(26).fork()
       ).ldelim();
     }
-    for (const v of message.globalRewardIndices) {
-      RewardIndex.encode(v!, writer.uint32(34).fork()).ldelim();
-    }
     return writer;
   },
 
@@ -51,7 +47,6 @@ export const Params = {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseParams } as Params;
-    message.globalRewardIndices = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -69,11 +64,6 @@ export const Params = {
             Timestamp.decode(reader, reader.uint32())
           );
           break;
-        case 4:
-          message.globalRewardIndices.push(
-            RewardIndex.decode(reader, reader.uint32())
-          );
-          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -84,7 +74,6 @@ export const Params = {
 
   fromJSON(object: any): Params {
     const message = { ...baseParams } as Params;
-    message.globalRewardIndices = [];
     if (
       object.rewardDelayTime !== undefined &&
       object.rewardDelayTime !== null
@@ -113,14 +102,6 @@ export const Params = {
     } else {
       message.lastRewardClaimTime = undefined;
     }
-    if (
-      object.globalRewardIndices !== undefined &&
-      object.globalRewardIndices !== null
-    ) {
-      for (const e of object.globalRewardIndices) {
-        message.globalRewardIndices.push(RewardIndex.fromJSON(e));
-      }
-    }
     return message;
   },
 
@@ -139,19 +120,11 @@ export const Params = {
         message.lastRewardClaimTime !== undefined
           ? message.lastRewardClaimTime.toISOString()
           : null);
-    if (message.globalRewardIndices) {
-      obj.globalRewardIndices = message.globalRewardIndices.map((e) =>
-        e ? RewardIndex.toJSON(e) : undefined
-      );
-    } else {
-      obj.globalRewardIndices = [];
-    }
     return obj;
   },
 
   fromPartial(object: DeepPartial<Params>): Params {
     const message = { ...baseParams } as Params;
-    message.globalRewardIndices = [];
     if (
       object.rewardDelayTime !== undefined &&
       object.rewardDelayTime !== null
@@ -177,14 +150,6 @@ export const Params = {
       message.lastRewardClaimTime = object.lastRewardClaimTime;
     } else {
       message.lastRewardClaimTime = undefined;
-    }
-    if (
-      object.globalRewardIndices !== undefined &&
-      object.globalRewardIndices !== null
-    ) {
-      for (const e of object.globalRewardIndices) {
-        message.globalRewardIndices.push(RewardIndex.fromPartial(e));
-      }
     }
     return message;
   },

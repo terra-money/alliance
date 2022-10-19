@@ -20,7 +20,6 @@ export interface AllianceAsset {
    */
   takeRate: string;
   totalTokens: string;
-  totalShares: string;
 }
 
 export interface AddAssetProposal {
@@ -52,7 +51,6 @@ const baseAllianceAsset: object = {
   rewardWeight: "",
   takeRate: "",
   totalTokens: "",
-  totalShares: "",
 };
 
 export const AllianceAsset = {
@@ -68,9 +66,6 @@ export const AllianceAsset = {
     }
     if (message.totalTokens !== "") {
       writer.uint32(34).string(message.totalTokens);
-    }
-    if (message.totalShares !== "") {
-      writer.uint32(42).string(message.totalShares);
     }
     return writer;
   },
@@ -93,9 +88,6 @@ export const AllianceAsset = {
           break;
         case 4:
           message.totalTokens = reader.string();
-          break;
-        case 5:
-          message.totalShares = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -127,11 +119,6 @@ export const AllianceAsset = {
     } else {
       message.totalTokens = "";
     }
-    if (object.totalShares !== undefined && object.totalShares !== null) {
-      message.totalShares = String(object.totalShares);
-    } else {
-      message.totalShares = "";
-    }
     return message;
   },
 
@@ -143,8 +130,6 @@ export const AllianceAsset = {
     message.takeRate !== undefined && (obj.takeRate = message.takeRate);
     message.totalTokens !== undefined &&
       (obj.totalTokens = message.totalTokens);
-    message.totalShares !== undefined &&
-      (obj.totalShares = message.totalShares);
     return obj;
   },
 
@@ -169,11 +154,6 @@ export const AllianceAsset = {
       message.totalTokens = object.totalTokens;
     } else {
       message.totalTokens = "";
-    }
-    if (object.totalShares !== undefined && object.totalShares !== null) {
-      message.totalShares = object.totalShares;
-    } else {
-      message.totalShares = "";
     }
     return message;
   },

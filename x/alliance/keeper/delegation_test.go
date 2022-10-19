@@ -26,14 +26,12 @@ func TestDelegation(t *testing.T) {
 				Denom:        ALLIANCE_TOKEN_DENOM,
 				RewardWeight: sdk.NewDec(2),
 				TakeRate:     sdk.NewDec(0),
-				TotalShares:  sdk.NewDec(0),
 				TotalTokens:  sdk.ZeroInt(),
 			},
 			{
 				Denom:        ALLIANCE_2_TOKEN_DENOM,
 				RewardWeight: sdk.NewDec(10),
 				TakeRate:     sdk.NewDec(0),
-				TotalShares:  sdk.NewDec(0),
 				TotalTokens:  sdk.ZeroInt(),
 			},
 		},
@@ -94,7 +92,6 @@ func TestDelegation(t *testing.T) {
 		RewardWeight: sdk.NewDec(2),
 		TakeRate:     sdk.NewDec(0),
 		TotalTokens:  sdk.NewInt(1000_000),
-		TotalShares:  sdk.NewDec(1000_000),
 	}, asset)
 
 	// Delegate with same denom again
@@ -118,7 +115,6 @@ func TestDelegation(t *testing.T) {
 		RewardWeight: sdk.NewDec(2),
 		TakeRate:     sdk.NewDec(0),
 		TotalTokens:  sdk.NewInt(2000_000),
-		TotalShares:  sdk.NewDec(2000_000),
 	}, asset)
 
 	// Delegate with another denom
@@ -150,14 +146,12 @@ func TestRedelegation(t *testing.T) {
 				Denom:        ALLIANCE_TOKEN_DENOM,
 				RewardWeight: sdk.NewDec(2),
 				TakeRate:     sdk.NewDec(0),
-				TotalShares:  sdk.NewDec(0),
 				TotalTokens:  sdk.ZeroInt(),
 			},
 			{
 				Denom:        ALLIANCE_2_TOKEN_DENOM,
 				RewardWeight: sdk.NewDec(10),
 				TakeRate:     sdk.NewDec(0),
-				TotalShares:  sdk.NewDec(0),
 				TotalTokens:  sdk.ZeroInt(),
 			},
 		},
@@ -285,14 +279,12 @@ func TestUndelegation(t *testing.T) {
 				Denom:        ALLIANCE_TOKEN_DENOM,
 				RewardWeight: sdk.NewDec(2),
 				TakeRate:     sdk.NewDec(0),
-				TotalShares:  sdk.NewDec(0),
 				TotalTokens:  sdk.ZeroInt(),
 			},
 			{
 				Denom:        ALLIANCE_2_TOKEN_DENOM,
 				RewardWeight: sdk.NewDec(10),
 				TakeRate:     sdk.NewDec(0),
-				TotalShares:  sdk.NewDec(0),
 				TotalTokens:  sdk.ZeroInt(),
 			},
 		},
