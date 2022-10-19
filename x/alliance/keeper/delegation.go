@@ -12,16 +12,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) NewDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string, shares sdk.Dec, rewardIndices []types.RewardIndex) types.Delegation {
-	return types.Delegation{
-		DelegatorAddress: delAddr.String(),
-		ValidatorAddress: valAddr.String(),
-		Denom:            denom,
-		Shares:           shares,
-		RewardIndices:    rewardIndices,
-	}
-}
-
 func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin) (*types.Delegation, error) {
 	// Check if asset is whitelisted as an alliance asset
 	asset, found := k.GetAssetByDenom(ctx, coin.Denom)
@@ -150,52 +140,6 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal staki
 	return &types.MsgRedelegateResponse{}, nil
 }
 
-func (k Keeper) ValidateDelegatedAmount(delegation types.Delegation, coin sdk.Coin, aVal types.Validator) (shares sdk.Dec, err error) {
-	totalTokens := aVal.TotalTokensWithDenom(coin.Denom)
-	totalShares := aVal.TotalSharesWithDenom(coin.Denom)
-	shares = convertNewTokenToShares(totalTokens, totalShares, coin.Amount)
-	if delegation.Shares.LT(shares.TruncateDec()) {
-		return sdk.Dec{}, stakingtypes.ErrInsufficientShares
-	}
-	return shares, nil
-}
-
-// CompleteRedelegations Go through the re-delegations queue and remove all that have passed the completion time
-func (k Keeper) CompleteRedelegations(ctx sdk.Context) int {
-	store := ctx.KVStore(k.storeKey)
-	iter := store.Iterator(types.RedelegationQueueKey, types.GetRedelegationQueueKey(ctx.BlockTime()))
-	deleted := 0
-	for ; iter.Valid(); iter.Next() {
-		completion := types.ParseRedelegationQueueKey(iter.Key())
-		var queued types.QueuedRedelegation
-		k.cdc.MustUnmarshal(iter.Value(), &queued)
-		for _, redel := range queued.Entries {
-			k.DeleteRedelegation(ctx, *redel, completion)
-			deleted++
-		}
-		store.Delete(iter.Key())
-	}
-	return deleted
-}
-
-// CompleteUndelegations Go through all queued undelegations and send the tokens to the delegators
-func (k Keeper) CompleteUndelegations(ctx sdk.Context) int {
-	store := ctx.KVStore(k.storeKey)
-	iter := store.Iterator(types.UndelegationQueueKey, types.GetUndelegationQueueKey(ctx.BlockTime()))
-	processed := 0
-	for ; iter.Valid(); iter.Next() {
-		var queued types.QueuedUndelegation
-		k.cdc.MustUnmarshal(iter.Value(), &queued)
-		for _, undel := range queued.Entries {
-			delArr, _ := sdk.AccAddressFromBech32(undel.DelegatorAddress)
-			k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, delArr, sdk.NewCoins(undel.Balance))
-			processed++
-		}
-		store.Delete(iter.Key())
-	}
-	return processed
-}
-
 func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin) error {
 	// Query for things needed for undelegation
 	asset, found := k.GetAssetByDenom(ctx, coin.Denom)
@@ -249,6 +193,42 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator st
 	return nil
 }
 
+// CompleteRedelegations Go through the re-delegations queue and remove all that have passed the completion time
+func (k Keeper) CompleteRedelegations(ctx sdk.Context) int {
+	store := ctx.KVStore(k.storeKey)
+	iter := store.Iterator(types.RedelegationQueueKey, types.GetRedelegationQueueKey(ctx.BlockTime()))
+	deleted := 0
+	for ; iter.Valid(); iter.Next() {
+		completion := types.ParseRedelegationQueueKey(iter.Key())
+		var queued types.QueuedRedelegation
+		k.cdc.MustUnmarshal(iter.Value(), &queued)
+		for _, redel := range queued.Entries {
+			k.DeleteRedelegation(ctx, *redel, completion)
+			deleted++
+		}
+		store.Delete(iter.Key())
+	}
+	return deleted
+}
+
+// CompleteUndelegations Go through all queued undelegations and send the tokens to the delegators
+func (k Keeper) CompleteUndelegations(ctx sdk.Context) int {
+	store := ctx.KVStore(k.storeKey)
+	iter := store.Iterator(types.UndelegationQueueKey, types.GetUndelegationQueueKey(ctx.BlockTime()))
+	processed := 0
+	for ; iter.Valid(); iter.Next() {
+		var queued types.QueuedUndelegation
+		k.cdc.MustUnmarshal(iter.Value(), &queued)
+		for _, undel := range queued.Entries {
+			delArr, _ := sdk.AccAddressFromBech32(undel.DelegatorAddress)
+			k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, delArr, sdk.NewCoins(undel.Balance))
+			processed++
+		}
+		store.Delete(iter.Key())
+	}
+	return processed
+}
+
 func (k Keeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, denom string) (d types.Delegation, found bool) {
 	key := types.GetDelegationKey(delAddr, validator.GetOperator(), denom)
 	b := ctx.KVStore(k.storeKey).Get(key)
@@ -263,37 +243,6 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, validator
 	key := types.GetDelegationKey(delAddr, validator.GetOperator(), denom)
 	b := k.cdc.MustMarshal(&del)
 	ctx.KVStore(k.storeKey).Set(key, b)
-}
-
-func convertNewTokenToShares(totalTokens math.Int, totalShares sdk.Dec, newTokens math.Int) (shares sdk.Dec) {
-	if totalShares.IsZero() {
-		return sdk.NewDecFromInt(newTokens)
-	}
-	return totalShares.MulInt(newTokens).QuoInt(totalTokens)
-}
-
-func convertNewShareToToken(totalTokens math.Int, totalShares sdk.Dec, shares sdk.Dec) (token math.Int) {
-	return shares.MulInt(totalTokens).Quo(totalShares).TruncateInt()
-}
-
-func (k Keeper) addRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, srcVal sdk.ValAddress, dstVal sdk.ValAddress, coin sdk.Coin, completionTime time.Time) {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetRedelegationKey(delAddr, coin.Denom, dstVal, completionTime)
-	b := store.Get(key)
-	var redelegation types.Redelegation
-	if b == nil {
-		redelegation = types.Redelegation{
-			DelegatorAddress:    delAddr.String(),
-			SrcValidatorAddress: srcVal.String(),
-			DstValidatorAddress: dstVal.String(),
-			Balance:             coin,
-		}
-	} else {
-		k.cdc.MustUnmarshal(b, &redelegation)
-		redelegation.Balance = redelegation.Balance.Add(coin)
-	}
-	b = k.cdc.MustMarshal(&redelegation)
-	store.Set(key, b)
 }
 
 func (k Keeper) DeleteRedelegation(ctx sdk.Context, redel types.Redelegation, completion time.Time) {
@@ -343,9 +292,38 @@ func (k Keeper) SetValidator(ctx sdk.Context, valAddr sdk.ValAddress, val types.
 	store.Set(key, vb)
 }
 
+func (k Keeper) ValidateDelegatedAmount(delegation types.Delegation, coin sdk.Coin, aVal types.Validator) (shares sdk.Dec, err error) {
+	totalTokens := aVal.TotalTokensWithDenom(coin.Denom)
+	totalShares := aVal.TotalSharesWithDenom(coin.Denom)
+	shares = convertNewTokenToShares(totalTokens, totalShares, coin.Amount)
+	if delegation.Shares.LT(shares.TruncateDec()) {
+		return sdk.Dec{}, stakingtypes.ErrInsufficientShares
+	}
+	return shares, nil
+}
+
 // queueRedelegation Adds a redelegation to a queue to be processed at a later timestamp
 // TODO: Handle a max number of entries per timestamp
-// TODO: Logic in end block to dequeue and remove redelegations
+func (k Keeper) addRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, srcVal sdk.ValAddress, dstVal sdk.ValAddress, coin sdk.Coin, completionTime time.Time) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetRedelegationKey(delAddr, coin.Denom, dstVal, completionTime)
+	b := store.Get(key)
+	var redelegation types.Redelegation
+	if b == nil {
+		redelegation = types.Redelegation{
+			DelegatorAddress:    delAddr.String(),
+			SrcValidatorAddress: srcVal.String(),
+			DstValidatorAddress: dstVal.String(),
+			Balance:             coin,
+		}
+	} else {
+		k.cdc.MustUnmarshal(b, &redelegation)
+		redelegation.Balance = redelegation.Balance.Add(coin)
+	}
+	b = k.cdc.MustMarshal(&redelegation)
+	store.Set(key, b)
+}
+
 func (k Keeper) queueRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, srcVal sdk.ValAddress, dstVal sdk.ValAddress, coin sdk.Coin, completionTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	queueKey := types.GetRedelegationQueueKey(completionTime)
@@ -416,7 +394,7 @@ func (k Keeper) upsertDelegationWithNewShares(ctx sdk.Context, delAddr sdk.AccAd
 	aVal := k.GetOrCreateValidator(ctx, validator.GetOperator())
 	globalRewardIndices := aVal.RewardIndices
 	if !ok {
-		delegation = k.NewDelegation(delAddr, validator.GetOperator(), coin.Denom, shares, globalRewardIndices)
+		delegation = types.NewDelegation(delAddr, validator.GetOperator(), coin.Denom, shares, globalRewardIndices)
 	} else {
 		delegation.AddShares(shares)
 	}
@@ -449,4 +427,15 @@ func (k Keeper) updateValidatorTokensAndShares(ctx sdk.Context, valAddr sdk.ValA
 		aVal.ReduceShares(shares)
 	}
 	k.SetValidator(ctx, valAddr, aVal)
+}
+
+func convertNewTokenToShares(totalTokens math.Int, totalShares sdk.Dec, newTokens math.Int) (shares sdk.Dec) {
+	if totalShares.IsZero() {
+		return sdk.NewDecFromInt(newTokens)
+	}
+	return totalShares.MulInt(newTokens).QuoInt(totalTokens)
+}
+
+func convertNewShareToToken(totalTokens math.Int, totalShares sdk.Dec, shares sdk.Dec) (token math.Int) {
+	return shares.MulInt(totalTokens).Quo(totalShares).TruncateInt()
 }

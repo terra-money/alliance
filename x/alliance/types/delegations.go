@@ -1,6 +1,18 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+func NewDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string, shares sdk.Dec, rewardIndices []RewardIndex) Delegation {
+	return Delegation{
+		DelegatorAddress: delAddr.String(),
+		ValidatorAddress: valAddr.String(),
+		Denom:            denom,
+		Shares:           shares,
+		RewardIndices:    rewardIndices,
+	}
+}
 
 // ReduceShares
 func (d *Delegation) ReduceShares(shares sdk.Dec) {
