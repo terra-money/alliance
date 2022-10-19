@@ -24,6 +24,7 @@ type StakingKeeper interface {
 	Unbond(
 		ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
 	) (amount math.Int, err error)
+	GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation types.Delegation, found bool)
 }
 
 type BankKeeper interface {
