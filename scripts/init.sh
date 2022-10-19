@@ -15,7 +15,7 @@ STAKEDENOM=${STAKEDENOM:-stake}
 UNBONDING_TIME="5s"
 GOV_PERIOD="5s"
 INFLATION="0.999999999999999999"
-ALLIANCE_CLAIM="5s"
+ALLIANCE_CLAIM_REWARDS="10s"
 
 
 # Stop if it is already running 
@@ -43,11 +43,11 @@ echo $DEMO_MNEMONIC_2 | allianced keys add demowallet2 --home $CHAIN_DIR/$CHAINI
 echo $DEMO_MNEMONIC_3 | allianced keys add demowallet3 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
 echo $DEMO_MNEMONIC_4 | allianced keys add demowallet4 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
 
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show val1 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000token  --home $CHAIN_DIR/$CHAINID
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet1 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000token  --home $CHAIN_DIR/$CHAINID
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet2 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000token  --home $CHAIN_DIR/$CHAINID
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet3 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000token  --home $CHAIN_DIR/$CHAINID
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet4 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000token  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show val1 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000ulunax  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet1 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000ulunax  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet2 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000ulunax  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet3 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000ulunax  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet4 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000ulunax  --home $CHAIN_DIR/$CHAINID
 
 echo "Creating and collecting gentx..."
 allianced gentx val1 7000000000${STAKEDENOM} --home $CHAIN_DIR/$CHAINID --chain-id $CHAINID --keyring-backend test
@@ -81,4 +81,4 @@ sed -i -e "s/\"max_deposit_period\": \"172800s\"/\"max_deposit_period\": \"$GOV_
 sed -i -e "s/\"voting_period\": \"172800s\"/\"voting_period\": \"$GOV_PERIOD\"/g" $CHAIN_DIR/$CHAINID/config/genesis.json
 
 ## ALLIANCE
-sed -i -e "s/\"reward_claim_interval\": \"300s\"/\"reward_claim_interval\": \"$ALLIANCE_CLAIM\"/g" $CHAIN_DIR/$CHAINID/config/genesis.json
+sed -i -e "s/\"reward_claim_interval\": \"300s\"/\"reward_claim_interval\": \"$ALLIANCE_CLAIM_REWARDS\"/g" $CHAIN_DIR/$CHAINID/config/genesis.json
