@@ -26,8 +26,11 @@ func (k Keeper) AlliancesDelegation(c context.Context, req *types.QueryAlliances
 	// Get the key-value module store using the store key
 	store := ctx.KVStore(k.storeKey)
 
+	// Get the specific delegations key
+	key := types.GetDelegationsKey(sdk.AccAddress(req.DelegatorAddr))
+
 	// Get the part of the store that keeps assets
-	delegationsStore := prefix.NewStore(store, types.GetDelegationsKey(sdk.AccAddress(req.DelegatorAddr)))
+	delegationsStore := prefix.NewStore(store, key)
 
 	// Paginate the assets store based on PageRequest
 	pageRes, err := query.Paginate(delegationsStore, req.Pagination, func(key []byte, value []byte) error {
@@ -73,8 +76,11 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 	// Get the key-value module store using the store key
 	store := ctx.KVStore(k.storeKey)
 
+	// Get the specific delegations key
+	key := types.GetDelegationsKeyForAllDenoms(sdk.AccAddress(req.DelegatorAddr), valAddr)
+
 	// Get the part of the store that keeps assets
-	delegationStore := prefix.NewStore(store, types.GetDelegationsKeyForAllDenoms(sdk.AccAddress(req.DelegatorAddr), valAddr))
+	delegationStore := prefix.NewStore(store, key)
 
 	// Paginate the assets store based on PageRequest
 	pageRes, err := query.Paginate(delegationStore, req.Pagination, func(key []byte, value []byte) error {
@@ -116,18 +122,27 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 		return nil, err
 	}
 
-	validator, ok := k.stakingKeeper.GetValidator(ctx, valAddr)
-	if !ok {
-		return nil, status.Errorf(codes.NotFound, "Cannot recover the validator %s", req.ValidatorAddr)
+	validator, found := k.stakingKeeper.GetValidator(ctx, valAddr)
+	// fmt.Printf("\nVALIDATOR: %s FOUND: %s\n", validator, found)
+
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "Validator not found with the address %s", req.ValidatorAddr)
 	}
 
-	asset, _ := k.GetAssetByDenom(ctx, req.Denom)
+	asset, found := k.GetAssetByDenom(ctx, req.Denom)
+	// fmt.Printf("\nASSET: %s FOUND: %s\n", asset, found)
 
-	delegation, success := k.GetDelegation(ctx, sdk.AccAddress(req.DelegatorAddr), validator, req.Denom)
-	if !success {
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "Asset not found for denom %s", req.Denom)
+	}
+
+	delegation, found := k.GetDelegation(ctx, sdk.AccAddress(req.DelegatorAddr), validator, req.Denom)
+	// fmt.Printf("\nDELEGATION: %s FOUND: %s\n", delegation, found)
+
+	if !found {
 		return nil, status.Errorf(
-			codes.Unknown,
-			"Could not find delegation with combination %s %s %s",
+			codes.NotFound,
+			"Alliance does not have a delegation with the combination %s %s %s",
 			req.DelegatorAddr, req.ValidatorAddr, req.Denom,
 		)
 	}
