@@ -15,6 +15,8 @@ STAKEDENOM=${STAKEDENOM:-stake}
 UNBONDING_TIME="5s"
 GOV_PERIOD="5s"
 INFLATION="0.999999999999999999"
+ALLIANCE_CLAIM="5s"
+
 
 # Stop if it is already running 
 if pgrep -x "allianced" >/dev/null; then
@@ -77,3 +79,6 @@ sed -i -e "s/\"unbonding_time\": \"1814400s\"/\"unbonding_time\": \"$UNBONDING_T
 ## GOV
 sed -i -e "s/\"max_deposit_period\": \"172800s\"/\"max_deposit_period\": \"$GOV_PERIOD\"/g" $CHAIN_DIR/$CHAINID/config/genesis.json
 sed -i -e "s/\"voting_period\": \"172800s\"/\"voting_period\": \"$GOV_PERIOD\"/g" $CHAIN_DIR/$CHAINID/config/genesis.json
+
+## ALLIANCE
+sed -i -e "s/\"reward_claim_interval\": \"300s\"/\"reward_claim_interval\": \"$ALLIANCE_CLAIM\"/g" $CHAIN_DIR/$CHAINID/config/genesis.json

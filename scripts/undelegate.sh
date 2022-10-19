@@ -6,8 +6,8 @@ ALL_TOKENS=$(allianced query alliance delegation $VAL_WALLET_ADDRESS $VAL_ADDR t
 TOKEN=token
 TOKENS=$ALL_TOKENS$TOKEN
 
-printf "#1)Undelegate thru x/alliance...\n\n"
-allianced tx alliance undelegate $VAL_ADDR $TOKENS --from=val1 --home ./data/alliance --keyring-backend=test --broadcast-mode=block --gas 1000000 -y
+printf "#1)Undelegate from x/alliance...\n\n"
+allianced tx alliance undelegate $VAL_ADDR $TOKENS --from=val1 --home ./data/alliance --keyring-backend=test --broadcast-mode=block --gas 1000000 -y > /dev/null 2>&1
 
 printf "\n#2)Query delegations from x/alliance by alliance token...\n\n"
 allianced query alliance alliance token
