@@ -20,6 +20,11 @@ const (
 	YEAR_IN_NANOS int64 = 31_557_000_000_000_000
 )
 
+// TODO: Check how to replicate
+// > allianced query alliance rewards alliance128lcqkpvenvgtpxhne7a4ezrlwgqs9f8uluy27 alliancevaloper128lcqkpvenvgtpxhne7a4ezrlwgqs9f82pjcsz token
+// Error: rpc error: code = Unknown desc = 215stake,0token: invalid coins: unknown request
+// Likely due to 0token amounts being passed somewhere
+
 // ClaimDistributionRewards to be called right before any reward claims so that we get
 // the latest rewards
 func (k Keeper) ClaimDistributionRewards(ctx sdk.Context, val stakingtypes.Validator) (sdk.Coins, error) {
@@ -164,8 +169,10 @@ func (k Keeper) ClaimAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time) (s
 		if err != nil {
 			return nil, err
 		}
+		// Only update if there was a token transfer to prevent < 1 amounts to be totally ignored
+		// TODO: Look into how to deal with rounding issues if claim interval is too short
+		k.SetLastRewardClaimTime(ctx, ctx.BlockTime())
 	}
-	k.SetLastRewardClaimTime(ctx, ctx.BlockTime())
 	return coins, nil
 }
 
