@@ -115,6 +115,11 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
@@ -125,10 +130,13 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 		return nil, status.Errorf(codes.NotFound, "Cannot recover the validator %s", req.ValidatorAddr)
 	}
 
-	asset, _ := k.GetAssetByDenom(ctx, req.Denom)
+	asset, found := k.GetAssetByDenom(ctx, req.Denom)
+	if !found {
+		return nil, types.ErrUnknownAsset
+	}
 
-	delegation, success := k.GetDelegation(ctx, sdk.AccAddress(req.DelegatorAddr), validator, req.Denom)
-	if !success {
+	delegation, found := k.GetDelegation(ctx, delAddr, validator, req.Denom)
+	if !found {
 		return nil, status.Errorf(
 			codes.Unknown,
 			"Could not find delegation with combination %s %s %s",
