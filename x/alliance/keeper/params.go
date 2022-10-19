@@ -24,5 +24,4 @@ func (k Keeper) LastRewardClaimTime(ctx sdk.Context) (res time.Time) {
 
 func (k Keeper) SetLastRewardClaimTime(ctx sdk.Context, lastTime time.Time) {
 	k.paramstore.Set(ctx, types.LastRewardClaimTime, &lastTime)
-	return
 }

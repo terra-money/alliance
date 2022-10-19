@@ -1,0 +1,14 @@
+{
+    "messages": [
+        {
+            "@type": "/alliance.alliance.MsgCreateAlliance",
+            "alliance" : {
+                "denom"  : "stake",
+                "rewardWeight"  : "0.25",
+                "takeRate"  : "0.75"
+            },
+            "authority" : "alliance10d07y265gmmuvt4z0w9aw880jnsr700j8hf8cu"
+        }
+    ],
+    "metadata": "Alliance with our own 'stake' denomination"
+}

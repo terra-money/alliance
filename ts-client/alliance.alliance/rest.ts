@@ -20,7 +20,10 @@ export interface AllianceAllianceAsset {
   reward_weight?: string;
   take_rate?: string;
   total_tokens?: string;
-  total_shares?: string;
+}
+
+export interface AllianceAllianceDelegationRewardsResponse {
+  rewards?: V1Beta1Coin[];
 }
 
 export interface AllianceDelegation {
@@ -33,6 +36,7 @@ export interface AllianceDelegation {
 
   /** shares define the delegation shares received. */
   shares?: string;
+  reward_indices?: AllianceRewardIndex[];
 }
 
 /**
@@ -51,6 +55,8 @@ export interface AllianceDelegationResponse {
   balance?: V1Beta1Coin;
 }
 
+export type AllianceMsgClaimDelegationRewardsResponse = object;
+
 export type AllianceMsgCreateAllianceResponse = object;
 
 export type AllianceMsgDelegateResponse = object;
@@ -65,6 +71,10 @@ export type AllianceMsgUpdateAllianceResponse = object;
 
 export interface AllianceParams {
   reward_delay_time?: string;
+  reward_claim_interval?: string;
+
+  /** @format date-time */
+  last_reward_claim_time?: string;
 }
 
 export interface AllianceQueryAllianceDelegationResponse {
@@ -111,6 +121,11 @@ export interface AllianceQueryAlliancesResponse {
 
 export interface AllianceQueryParamsResponse {
   params?: AllianceParams;
+}
+
+export interface AllianceRewardIndex {
+  denom?: string;
+  index?: string;
 }
 
 export interface ProtobufAny {
@@ -436,6 +451,35 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     this.request<AllianceQueryParamsResponse, RpcStatus>({
       path: `/terra/alliances/params`,
       method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryAllianceDelegationRewards
+   * @summary Query for rewards by delegator addr, validator_addr and denom
+   * @request GET:/terra/alliances/{delegator_addr_1}/{validator_addr}/{denom}
+   */
+  queryAllianceDelegationRewards = (
+    delegator_addr_1: string,
+    validator_addr: string,
+    denom: string,
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<AllianceAllianceDelegationRewardsResponse, RpcStatus>({
+      path: `/terra/alliances/${delegator_addr_1}/${validator_addr}/${denom}`,
+      method: "GET",
+      query: query,
       format: "json",
       ...params,
     });

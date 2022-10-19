@@ -7,6 +7,7 @@ import {
 } from "../cosmos/base/query/v1beta1/pagination";
 import { AllianceAsset } from "../alliance/alliance";
 import { DelegationResponse } from "../alliance/delegations";
+import { Coin } from "../cosmos/base/v1beta1/coin";
 
 export const protobufPackage = "alliance.alliance";
 
@@ -64,6 +65,18 @@ export interface QueryAllianceDelegationRequest {
 
 export interface QueryAllianceDelegationResponse {
   delegation: DelegationResponse | undefined;
+}
+
+/** AllianceDelegation */
+export interface AllianceDelegationRewardsRequest {
+  delegatorAddr: string;
+  validatorAddr: string;
+  denom: string;
+  pagination: PageRequest | undefined;
+}
+
+export interface AllianceDelegationRewardsResponse {
+  rewards: Coin[];
 }
 
 const baseQueryParamsRequest: object = {};
@@ -950,6 +963,213 @@ export const QueryAllianceDelegationResponse = {
   },
 };
 
+const baseAllianceDelegationRewardsRequest: object = {
+  delegatorAddr: "",
+  validatorAddr: "",
+  denom: "",
+};
+
+export const AllianceDelegationRewardsRequest = {
+  encode(
+    message: AllianceDelegationRewardsRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.delegatorAddr !== "") {
+      writer.uint32(10).string(message.delegatorAddr);
+    }
+    if (message.validatorAddr !== "") {
+      writer.uint32(18).string(message.validatorAddr);
+    }
+    if (message.denom !== "") {
+      writer.uint32(26).string(message.denom);
+    }
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(34).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): AllianceDelegationRewardsRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseAllianceDelegationRewardsRequest,
+    } as AllianceDelegationRewardsRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.delegatorAddr = reader.string();
+          break;
+        case 2:
+          message.validatorAddr = reader.string();
+          break;
+        case 3:
+          message.denom = reader.string();
+          break;
+        case 4:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): AllianceDelegationRewardsRequest {
+    const message = {
+      ...baseAllianceDelegationRewardsRequest,
+    } as AllianceDelegationRewardsRequest;
+    if (object.delegatorAddr !== undefined && object.delegatorAddr !== null) {
+      message.delegatorAddr = String(object.delegatorAddr);
+    } else {
+      message.delegatorAddr = "";
+    }
+    if (object.validatorAddr !== undefined && object.validatorAddr !== null) {
+      message.validatorAddr = String(object.validatorAddr);
+    } else {
+      message.validatorAddr = "";
+    }
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = String(object.denom);
+    } else {
+      message.denom = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: AllianceDelegationRewardsRequest): unknown {
+    const obj: any = {};
+    message.delegatorAddr !== undefined &&
+      (obj.delegatorAddr = message.delegatorAddr);
+    message.validatorAddr !== undefined &&
+      (obj.validatorAddr = message.validatorAddr);
+    message.denom !== undefined && (obj.denom = message.denom);
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<AllianceDelegationRewardsRequest>
+  ): AllianceDelegationRewardsRequest {
+    const message = {
+      ...baseAllianceDelegationRewardsRequest,
+    } as AllianceDelegationRewardsRequest;
+    if (object.delegatorAddr !== undefined && object.delegatorAddr !== null) {
+      message.delegatorAddr = object.delegatorAddr;
+    } else {
+      message.delegatorAddr = "";
+    }
+    if (object.validatorAddr !== undefined && object.validatorAddr !== null) {
+      message.validatorAddr = object.validatorAddr;
+    } else {
+      message.validatorAddr = "";
+    }
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = object.denom;
+    } else {
+      message.denom = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseAllianceDelegationRewardsResponse: object = {};
+
+export const AllianceDelegationRewardsResponse = {
+  encode(
+    message: AllianceDelegationRewardsResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.rewards) {
+      Coin.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): AllianceDelegationRewardsResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseAllianceDelegationRewardsResponse,
+    } as AllianceDelegationRewardsResponse;
+    message.rewards = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.rewards.push(Coin.decode(reader, reader.uint32()));
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): AllianceDelegationRewardsResponse {
+    const message = {
+      ...baseAllianceDelegationRewardsResponse,
+    } as AllianceDelegationRewardsResponse;
+    message.rewards = [];
+    if (object.rewards !== undefined && object.rewards !== null) {
+      for (const e of object.rewards) {
+        message.rewards.push(Coin.fromJSON(e));
+      }
+    }
+    return message;
+  },
+
+  toJSON(message: AllianceDelegationRewardsResponse): unknown {
+    const obj: any = {};
+    if (message.rewards) {
+      obj.rewards = message.rewards.map((e) =>
+        e ? Coin.toJSON(e) : undefined
+      );
+    } else {
+      obj.rewards = [];
+    }
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<AllianceDelegationRewardsResponse>
+  ): AllianceDelegationRewardsResponse {
+    const message = {
+      ...baseAllianceDelegationRewardsResponse,
+    } as AllianceDelegationRewardsResponse;
+    message.rewards = [];
+    if (object.rewards !== undefined && object.rewards !== null) {
+      for (const e of object.rewards) {
+        message.rewards.push(Coin.fromPartial(e));
+      }
+    }
+    return message;
+  },
+};
+
 export interface Query {
   Params(request: QueryParamsRequest): Promise<QueryParamsResponse>;
   /** Query paginated alliances */
@@ -968,6 +1188,10 @@ export interface Query {
   AllianceDelegation(
     request: QueryAllianceDelegationRequest
   ): Promise<QueryAllianceDelegationResponse>;
+  /** Query for rewards by delegator addr, validator_addr and denom */
+  AllianceDelegationRewards(
+    request: AllianceDelegationRewardsRequest
+  ): Promise<AllianceDelegationRewardsResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -1046,6 +1270,20 @@ export class QueryClientImpl implements Query {
     );
     return promise.then((data) =>
       QueryAllianceDelegationResponse.decode(new Reader(data))
+    );
+  }
+
+  AllianceDelegationRewards(
+    request: AllianceDelegationRewardsRequest
+  ): Promise<AllianceDelegationRewardsResponse> {
+    const data = AllianceDelegationRewardsRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "alliance.alliance.Query",
+      "AllianceDelegationRewards",
+      data
+    );
+    return promise.then((data) =>
+      AllianceDelegationRewardsResponse.decode(new Reader(data))
     );
   }
 }

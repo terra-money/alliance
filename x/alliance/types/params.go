@@ -2,9 +2,10 @@ package types
 
 import (
 	"fmt"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"golang.org/x/exp/slices"
-	"time"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -51,7 +52,7 @@ func validatePositiveRewardIndices(i interface{}) error {
 	}
 	for _, i := range v {
 		if i.Index.LT(sdk.ZeroDec()) {
-			return fmt.Errorf("unbonding time must be positive: %d", v)
+			return fmt.Errorf("unbonding time must be positive: %s", v)
 		}
 	}
 	return nil
