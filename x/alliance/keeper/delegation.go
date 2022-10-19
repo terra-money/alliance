@@ -226,6 +226,7 @@ func (k Keeper) CompleteUndelegations(ctx sdk.Context) int {
 		}
 		store.Delete(iter.Key())
 	}
+	// TODO: Burn stake tokens that got unbonded
 	return processed
 }
 
