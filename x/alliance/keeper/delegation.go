@@ -46,24 +46,18 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stak
 		return nil, err
 	}
 
-	// Delegate stake tokens to validators
-	// Delegate would automatically claim rewards into the module address
-	coinsBeforeClaiming := k.bankKeeper.GetAllBalances(ctx, moduleAddr).Sub(tokensToMint)
-	_, err = k.stakingKeeper.Delegate(ctx, moduleAddr, tokensToMint.Amount, stakingtypes.Unbonded, validator, true)
-	if err != nil {
-		return nil, err
-	}
-
-	// We will use the difference to determine what the rewards are
-	coinsAfterClaiming := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
-	rewards := coinsAfterClaiming.Sub(coinsBeforeClaiming...)
-
-	// If there are rewards, send them to the rewards pool
-	if !rewards.Empty() && !rewards.IsZero() {
-		err = k.AddAssetsToRewardPool(ctx, moduleAddr, validator.GetOperator(), rewards)
+	_, found = k.GetDelegation(ctx, delAddr, validator, coin.Denom)
+	if found {
+		_, err = k.ClaimDelegationRewards(ctx, delAddr, validator, coin.Denom)
 		if err != nil {
 			return nil, err
 		}
+	}
+	// Delegate stake tokens to validators
+	// Delegate would automatically claim rewards into the module address
+	_, err = k.stakingKeeper.Delegate(ctx, moduleAddr, tokensToMint.Amount, stakingtypes.Unbonded, validator, true)
+	if err != nil {
+		return nil, err
 	}
 
 	delegation, newShares := k.upsertDelegationWithNewTokens(ctx, delAddr, validator, coin, asset)
@@ -74,54 +68,6 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator stak
 	k.updateValidatorTokensAndShares(ctx, validator.GetOperator(), sdk.NewCoins(coin), sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, newShares)), true)
 
 	return &delegation, nil
-}
-
-func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) {
-	aVal := k.GetOrCreateValidator(ctx, validator.GetOperator())
-	totalTokens := aVal.TotalTokensWithDenom(asset.Denom)
-	totalShares := aVal.TotalSharesWithDenom(asset.Denom)
-	newShares := convertNewTokenToShares(totalTokens, totalShares, coin.Amount)
-	return k.upsertDelegationWithNewShares(ctx, delAddr, validator, coin, newShares), newShares
-}
-
-func (k Keeper) upsertDelegationWithNewShares(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, shares sdk.Dec) types.Delegation {
-	delegation, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
-	aVal := k.GetOrCreateValidator(ctx, validator.GetOperator())
-	globalRewardIndices := aVal.RewardIndices
-	if !ok {
-		delegation = k.NewDelegation(delAddr, validator.GetOperator(), coin.Denom, shares, globalRewardIndices)
-	} else {
-		delegation.AddShares(shares)
-	}
-	k.SetDelegation(ctx, delAddr, validator, coin.Denom, delegation)
-	return delegation
-}
-
-// reduceDelegationShares
-// If shares after reduction = 0, delegation will be deleted
-func (k Keeper) reduceDelegationShares(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, shares sdk.Dec, delegation types.Delegation) {
-	delegation.ReduceShares(shares)
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetDelegationKey(delAddr, validator.GetOperator(), coin.Denom)
-	if delegation.Shares.IsZero() {
-		store.Delete(key)
-	} else {
-		b := k.cdc.MustMarshal(&delegation)
-		ctx.KVStore(k.storeKey).Set(key, b)
-		store.Set(key, b)
-	}
-}
-
-func (k Keeper) updateValidatorTokensAndShares(ctx sdk.Context, valAddr sdk.ValAddress, coins sdk.Coins, shares sdk.DecCoins, isAdd bool) {
-	aVal := k.GetOrCreateValidator(ctx, valAddr)
-	if isAdd {
-		aVal.AddTokens(coins)
-		aVal.AddShares(shares)
-	} else {
-		aVal.ReduceTokens(coins)
-		aVal.ReduceShares(shares)
-	}
-	k.SetValidator(ctx, valAddr, aVal)
 }
 
 // Redelegate from one validator to another
@@ -160,12 +106,25 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal staki
 		return nil, stakingtypes.ErrTransitiveRedelegation
 	}
 
+	_, found = k.GetDelegation(ctx, delAddr, srcVal, coin.Denom)
+	if found {
+		_, err = k.ClaimDelegationRewards(ctx, delAddr, srcVal, coin.Denom)
+		if err != nil {
+			return nil, err
+		}
+	}
+	_, found = k.GetDelegation(ctx, delAddr, dstVal, coin.Denom)
+	if found {
+		_, err = k.ClaimDelegationRewards(ctx, delAddr, dstVal, coin.Denom)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	completionTime, err := k.stakingKeeper.BeginRedelegation(ctx, moduleAddr, srcVal.GetOperator(), dstVal.GetOperator(), shares)
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: Update rewards before updating validator tokens
 
 	// Since all delegations are owned by the module account,
 	// we remove redelegation from x/staling here and re-record it in x/alliance to allow transitive re-delegation in x/staking
@@ -264,14 +223,19 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator st
 	k.SetAsset(ctx, asset)
 	k.reduceDelegationShares(ctx, delAddr, validator, coin, sharesToUndelegate, delegation)
 
-	// TODO: should claim rewards before starting to unbond
-
 	// Unbond from x/staking module
 	stakeTokens := asset.ConvertToStake(coin.Amount)
 	stakeShares, err := k.stakingKeeper.ValidateUnbondAmount(ctx, moduleAddr, validator.GetOperator(), stakeTokens)
 	if err != nil {
 		return err
 	}
+
+	// Claim delegation rewards first
+	_, err = k.ClaimDelegationRewards(ctx, delAddr, validator, coin.Denom)
+	if err != nil {
+		return err
+	}
+
 	_, err = k.stakingKeeper.Unbond(ctx, moduleAddr, validator.GetOperator(), stakeShares)
 	if err != nil {
 		return err
@@ -437,4 +401,52 @@ func (k Keeper) queueUndelegation(ctx sdk.Context, delAddr sdk.AccAddress, val s
 	}
 	b = k.cdc.MustMarshal(&queue)
 	store.Set(queueKey, b)
+}
+
+func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) {
+	aVal := k.GetOrCreateValidator(ctx, validator.GetOperator())
+	totalTokens := aVal.TotalTokensWithDenom(asset.Denom)
+	totalShares := aVal.TotalSharesWithDenom(asset.Denom)
+	newShares := convertNewTokenToShares(totalTokens, totalShares, coin.Amount)
+	return k.upsertDelegationWithNewShares(ctx, delAddr, validator, coin, newShares), newShares
+}
+
+func (k Keeper) upsertDelegationWithNewShares(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, shares sdk.Dec) types.Delegation {
+	delegation, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
+	aVal := k.GetOrCreateValidator(ctx, validator.GetOperator())
+	globalRewardIndices := aVal.RewardIndices
+	if !ok {
+		delegation = k.NewDelegation(delAddr, validator.GetOperator(), coin.Denom, shares, globalRewardIndices)
+	} else {
+		delegation.AddShares(shares)
+	}
+	k.SetDelegation(ctx, delAddr, validator, coin.Denom, delegation)
+	return delegation
+}
+
+// reduceDelegationShares
+// If shares after reduction = 0, delegation will be deleted
+func (k Keeper) reduceDelegationShares(ctx sdk.Context, delAddr sdk.AccAddress, validator stakingtypes.Validator, coin sdk.Coin, shares sdk.Dec, delegation types.Delegation) {
+	delegation.ReduceShares(shares)
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetDelegationKey(delAddr, validator.GetOperator(), coin.Denom)
+	if delegation.Shares.IsZero() {
+		store.Delete(key)
+	} else {
+		b := k.cdc.MustMarshal(&delegation)
+		ctx.KVStore(k.storeKey).Set(key, b)
+		store.Set(key, b)
+	}
+}
+
+func (k Keeper) updateValidatorTokensAndShares(ctx sdk.Context, valAddr sdk.ValAddress, coins sdk.Coins, shares sdk.DecCoins, isAdd bool) {
+	aVal := k.GetOrCreateValidator(ctx, valAddr)
+	if isAdd {
+		aVal.AddTokens(coins)
+		aVal.AddShares(shares)
+	} else {
+		aVal.ReduceTokens(coins)
+		aVal.ReduceShares(shares)
+	}
+	k.SetValidator(ctx, valAddr, aVal)
 }
