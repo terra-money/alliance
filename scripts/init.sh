@@ -41,11 +41,11 @@ echo $DEMO_MNEMONIC_2 | allianced keys add demowallet2 --home $CHAIN_DIR/$CHAINI
 echo $DEMO_MNEMONIC_3 | allianced keys add demowallet3 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
 echo $DEMO_MNEMONIC_4 | allianced keys add demowallet4 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
 
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show val1 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet1 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet2 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet3 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet4 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show val1 --keyring-backend test -a) 10000000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet1 --keyring-backend test -a) 10000000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet2 --keyring-backend test -a) 10000000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet3 --keyring-backend test -a) 10000000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet4 --keyring-backend test -a) 10000000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
 
 echo "Creating and collecting gentx..."
 allianced gentx val1 7000000000${STAKEDENOM} --home $CHAIN_DIR/$CHAINID --chain-id $CHAINID --keyring-backend test
