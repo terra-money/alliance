@@ -125,7 +125,7 @@ func (m MsgDeleteAlliance) GetSigners() []sdk.AccAddress {
 }
 
 func (m *MsgClaimDelegationRewards) ValidateBasic() error {
-	if m.Denom != "" {
+	if m.Denom == "" {
 		return fmt.Errorf("denom must not be empty")
 	}
 	return nil

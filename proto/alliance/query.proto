@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "alliance/params.proto";
 import "alliance/alliance.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "alliance/delegations.proto";
 
 option go_package = "alliance/x/alliance/types";
@@ -37,6 +38,11 @@ service Query {
 
   // Query a delegation to an alliance by delegator addr, validator_addr and denom
   rpc AllianceDelegation(QueryAllianceDelegationRequest) returns (QueryAllianceDelegationResponse) {
+    option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}/{denom}";
+  }
+
+  // Query for rewards by delegator addr, validator_addr and denom
+  rpc AllianceDelegationRewards(AllianceDelegationRewardsRequest) returns (AllianceDelegationRewardsResponse) {
     option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}/{denom}";
   }
 }
@@ -104,4 +110,25 @@ message QueryAllianceDelegationRequest {
 
 message QueryAllianceDelegationResponse {
   DelegationResponse delegation = 1 [(gogoproto.nullable) = false];
+}
+
+// AllianceDelegation
+message AllianceDelegationRewardsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_addr  = 1;
+  string validator_addr  = 2;
+  string denom              = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+message AllianceDelegationRewardsResponse {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  repeated cosmos.base.v1beta1.Coin rewards = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
 }

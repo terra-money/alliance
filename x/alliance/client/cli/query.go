@@ -26,6 +26,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd.AddCommand(CmdQueryAlliancesDelegation())
 	cmd.AddCommand(CmdQueryAlliancesDelegationByValidator())
 	cmd.AddCommand(CmdQueryAllianceDelegation())
+	cmd.AddCommand(CmdQueryRewards())
 
 	return cmd
 }
