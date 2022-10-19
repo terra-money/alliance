@@ -31,7 +31,7 @@ func (m MsgDelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{signer}
 }
 func (m MsgRedelegate) ValidateBasic() error {
-	if !m.Amount.Amount.LTE(sdk.ZeroInt()) {
+	if m.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return fmt.Errorf("redelegation amount must be more than zero")
 	}
 	return nil
@@ -46,8 +46,8 @@ func (m MsgRedelegate) GetSigners() []sdk.AccAddress {
 }
 
 func (m MsgUndelegate) ValidateBasic() error {
-	if !m.Amount.Amount.LTE(sdk.ZeroInt()) {
-		return fmt.Errorf("redelegation amount must be more than zero")
+	if m.Amount.Amount.LTE(sdk.ZeroInt()) {
+		return fmt.Errorf("undelegate amount must be more than zero")
 	}
 	return nil
 }

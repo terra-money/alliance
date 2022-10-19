@@ -12,8 +12,8 @@ DEMO_MNEMONIC_3="symbol force gallery make bulk round subway violin worry mixtur
 DEMO_MNEMONIC_4="bounce success option birth apple portion aunt rural episode solution hockey pencil lend session cause hedgehog slender journey system canvas decorate razor catch empty"
 
 STAKEDENOM=${STAKEDENOM:-stake}
-UNBONDING_TIME="10s"
-GOV_PERIOD="10s"
+UNBONDING_TIME="5s"
+GOV_PERIOD="5s"
 INFLATION="0.999999999999999999"
 
 # Stop if it is already running 
@@ -41,11 +41,11 @@ echo $DEMO_MNEMONIC_2 | allianced keys add demowallet2 --home $CHAIN_DIR/$CHAINI
 echo $DEMO_MNEMONIC_3 | allianced keys add demowallet3 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
 echo $DEMO_MNEMONIC_4 | allianced keys add demowallet4 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
 
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show val1 --keyring-backend test -a) 10000000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet1 --keyring-backend test -a) 10000000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet2 --keyring-backend test -a) 10000000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet3 --keyring-backend test -a) 10000000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
-allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet4 --keyring-backend test -a) 10000000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show val1 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000token  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet1 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000token  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet2 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000token  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet3 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000token  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet4 --keyring-backend test -a) 10000000000000${STAKEDENOM},10000000000000token  --home $CHAIN_DIR/$CHAINID
 
 echo "Creating and collecting gentx..."
 allianced gentx val1 7000000000${STAKEDENOM} --home $CHAIN_DIR/$CHAINID --chain-id $CHAINID --keyring-backend test
