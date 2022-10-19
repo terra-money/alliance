@@ -1,10 +1,8 @@
 #!/bin/bash
-
-BINARY=${BINARY:-allianced}
 CHAIN_DIR=./data
-CHAINID=${CHAINID:-test-1}
+CHAINID=${CHAINID:-alliance}
 
-# alliancevaloper1phaxpevm5wecex2jyaqty2a4v02qj7qmut9cku / alliance1phaxpevm5wecex2jyaqty2a4v02qj7qm24tyvq
+# alliance1phaxpevm5wecex2jyaqty2a4v02qj7qm24tyvq / alliancevaloper1phaxpevm5wecex2jyaqty2a4v02qj7qmut9cku
 VAL_MNEMONIC_1="satisfy adjust timber high purchase tuition stool faith fine install that you unaware feed domain license impose boss human eager hat rent enjoy dawn"
 
 # alliance1cyyzpxplxdzkeea7kwsydadg87357qnaznl0wd
@@ -14,14 +12,14 @@ DEMO_MNEMONIC_3="symbol force gallery make bulk round subway violin worry mixtur
 DEMO_MNEMONIC_4="bounce success option birth apple portion aunt rural episode solution hockey pencil lend session cause hedgehog slender journey system canvas decorate razor catch empty"
 
 STAKEDENOM=${STAKEDENOM:-stake}
-UNBONDING_TIME="60s"
-INFLATION="0.950000000000000000"
-GOV_PERIOD="60s"
+UNBONDING_TIME="10s"
+GOV_PERIOD="10s"
+INFLATION="0.999999999999999999"
 
 # Stop if it is already running 
-if pgrep -x "$BINARY" >/dev/null; then
-    echo "Terminating $BINARY..."
-    killall $BINARY
+if pgrep -x "allianced" >/dev/null; then
+    echo "Terminating allianced..."
+    killall allianced
 fi
 
 echo "Removing previous data..."
@@ -34,24 +32,24 @@ if ! mkdir -p $CHAIN_DIR/$CHAINID 2>/dev/null; then
 fi
 
 echo "Initializing $CHAINID..."
-$BINARY init test --home $CHAIN_DIR/$CHAINID --chain-id=$CHAINID
+allianced init test --home $CHAIN_DIR/$CHAINID --chain-id=$CHAINID
 
 echo "Adding genesis accounts..."
-echo $VAL_MNEMONIC_1 | $BINARY keys add val1 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
-echo $DEMO_MNEMONIC_1 | $BINARY keys add demowallet1 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
-echo $DEMO_MNEMONIC_2 | $BINARY keys add demowallet2 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
-echo $DEMO_MNEMONIC_3 | $BINARY keys add demowallet3 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
-echo $DEMO_MNEMONIC_4 | $BINARY keys add demowallet4 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
+echo $VAL_MNEMONIC_1 | allianced keys add val1 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
+echo $DEMO_MNEMONIC_1 | allianced keys add demowallet1 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
+echo $DEMO_MNEMONIC_2 | allianced keys add demowallet2 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
+echo $DEMO_MNEMONIC_3 | allianced keys add demowallet3 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
+echo $DEMO_MNEMONIC_4 | allianced keys add demowallet4 --home $CHAIN_DIR/$CHAINID --recover --keyring-backend=test
 
-$BINARY add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAINID keys show val1 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
-$BINARY add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAINID keys show demowallet1 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
-$BINARY add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAINID keys show demowallet2 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
-$BINARY add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAINID keys show demowallet3 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
-$BINARY add-genesis-account $($BINARY --home $CHAIN_DIR/$CHAINID keys show demowallet4 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show val1 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet1 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet2 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet3 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
+allianced add-genesis-account $(allianced --home $CHAIN_DIR/$CHAINID keys show demowallet4 --keyring-backend test -a) 100000000000${STAKEDENOM}  --home $CHAIN_DIR/$CHAINID
 
 echo "Creating and collecting gentx..."
-$BINARY gentx val1 7000000000${STAKEDENOM} --home $CHAIN_DIR/$CHAINID --chain-id $CHAINID --keyring-backend test
-$BINARY collect-gentxs --home $CHAIN_DIR/$CHAINID
+allianced gentx val1 7000000000${STAKEDENOM} --home $CHAIN_DIR/$CHAINID --chain-id $CHAINID --keyring-backend test
+allianced collect-gentxs --home $CHAIN_DIR/$CHAINID
 
 sed -i -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' $CHAIN_DIR/$CHAINID/config/config.toml
 sed -i -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' $CHAIN_DIR/$CHAINID/config/config.toml

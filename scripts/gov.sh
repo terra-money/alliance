@@ -1,16 +1,22 @@
 #!/bin/bash
-BINARY=${BINARY:-allianced}
-CHAINID=${CHAINID:-test-1}
-FROM_WALLET=${FROM_WALLET:-val1}
 
-printf "Submit proposal...\n"
-$BINARY tx gov submit-proposal gov.json --from=$FROM_WALLET --chain-id=$CHAINID -y
+printf "#1)Submit proposal...\n\n"
+allianced tx gov submit-proposal gov.json --from=val1 -y
 
-printf "\nDeposit the min funds...\n"
-$BINARY tx gov deposit 1 100000000stake --from=$FROM_WALLET --chain-id=$CHAINID -y
+printf "\n#2)Deposit the min funds...\n\n"
+allianced tx gov deposit 1 10000000stake --from=val1 -y
 
-printf "\nVote to pass the proposal ...\n"
-$BINARY tx gov vote 1 yes --from=$FROM_WALLET --chain-id=$CHAINID -y
+printf "\n#3)Vote to pass the proposal ...\n\n"
+allianced tx gov vote 1 yes --from=val1 -y
 
-printf "\nQuerying alliances...\n"
-$BINARY query alliance alliances
+printf "\n#4)Query proposals...\n\n"
+allianced query gov proposal 1
+
+printf "\n#5)Querying alliances...\n\n"
+allianced query alliance alliances
+
+printf "\n#6)Witing for gov proposal to pass...\n\n"
+sleep 11
+
+printf "\n#7)Querying alliances after gov passed...\n\n"
+allianced query alliance alliances

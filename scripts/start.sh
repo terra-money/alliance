@@ -2,7 +2,7 @@
 
 BINARY=${BINARY:-allianced}
 CHAIN_DIR=./data
-CHAINID=${CHAINID:-test-1}
+CHAINID=${CHAINID:-alliance}
 GRPCPORT=9090
 GRPCWEB=9091
 
