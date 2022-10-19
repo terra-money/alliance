@@ -68,7 +68,6 @@ func CreateNewAllianceAsset(Keeper *keeper.Keeper, ctx sdk.Context, n int64) typ
 		RewardWeight: sdk.NewDec(1),
 		TakeRate:     sdk.NewDec(1),
 		TotalTokens:  math.NewInt(10 * n),
-		TotalShares:  sdk.NewDec(10).Mul(sdk.NewDec(n)),
 	}
 }
 

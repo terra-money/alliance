@@ -43,8 +43,6 @@ paths:
                         will be redirected to the distribution rewards pool
                     total_tokens:
                       type: string
-                    total_shares:
-                      type: string
                   title: 'key: denom value: AllianceAsset'
               pagination:
                 type: object
@@ -174,15 +172,6 @@ paths:
                     type: string
                     format: date-time
                     title: Last application of `take_rate` on assets
-                  global_reward_indices:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        index:
-                          type: string
         default:
           description: An unexpected error response.
           schema:
@@ -201,6 +190,122 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
+      tags:
+        - Query
+  '/terra/alliances/{delegator_addr_1}/{validator_addr}/{denom}':
+    get:
+      summary: 'Query for rewards by delegator addr, validator_addr and denom'
+      operationId: AllianceAllianceAllianceDelegationRewards
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              rewards:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: delegator_addr_1
+          in: path
+          required: true
+          type: string
+        - name: validator_addr
+          in: path
+          required: true
+          type: string
+        - name: denom
+          in: path
+          required: true
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
       tags:
         - Query
   '/terra/alliances/{delegator_addr}':
@@ -743,8 +848,6 @@ paths:
 
                       will be redirected to the distribution rewards pool
                   total_tokens:
-                    type: string
-                  total_shares:
                     type: string
                 title: 'key: denom value: AllianceAsset'
         default:
@@ -44914,9 +45017,24 @@ definitions:
           will be redirected to the distribution rewards pool
       total_tokens:
         type: string
-      total_shares:
-        type: string
     title: 'key: denom value: AllianceAsset'
+  alliance.alliance.AllianceDelegationRewardsResponse:
+    type: object
+    properties:
+      rewards:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
   alliance.alliance.Delegation:
     type: object
     properties:
@@ -45009,15 +45127,6 @@ definitions:
         type: string
         format: date-time
         title: Last application of `take_rate` on assets
-      global_reward_indices:
-        type: array
-        items:
-          type: object
-          properties:
-            denom:
-              type: string
-            index:
-              type: string
   alliance.alliance.QueryAllianceDelegationResponse:
     type: object
     properties:
@@ -45101,8 +45210,6 @@ definitions:
 
               will be redirected to the distribution rewards pool
           total_tokens:
-            type: string
-          total_shares:
             type: string
         title: 'key: denom value: AllianceAsset'
   alliance.alliance.QueryAlliancesDelegationsResponse:
@@ -45219,8 +45326,6 @@ definitions:
                 will be redirected to the distribution rewards pool
             total_tokens:
               type: string
-            total_shares:
-              type: string
           title: 'key: denom value: AllianceAsset'
       pagination:
         type: object
@@ -45263,15 +45368,6 @@ definitions:
             type: string
             format: date-time
             title: Last application of `take_rate` on assets
-          global_reward_indices:
-            type: array
-            items:
-              type: object
-              properties:
-                denom:
-                  type: string
-                index:
-                  type: string
   alliance.alliance.RewardIndex:
     type: object
     properties:

@@ -13,18 +13,15 @@ var (
 	RewardDelayTime     = []byte("RewardDelayTime")
 	RewardClaimInterval = []byte("RewardClaimInterval")
 	LastRewardClaimTime = []byte("LastRewardClaimTime")
-	GlobalRewardIndices = []byte("GlobalRewardIndices")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
 
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
-	idxs := NewRewardIndices(p.GlobalRewardIndices)
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(RewardDelayTime, &p.RewardDelayTime, validatePositiveDuration),
 		paramtypes.NewParamSetPair(RewardClaimInterval, &p.RewardClaimInterval, validatePositiveDuration),
 		paramtypes.NewParamSetPair(LastRewardClaimTime, &p.LastRewardClaimTime, validateTime),
-		paramtypes.NewParamSetPair(GlobalRewardIndices, &idxs, validatePositiveRewardIndices),
 	}
 }
 
@@ -64,7 +61,6 @@ func validatePositiveRewardIndices(i interface{}) error {
 func NewParams() Params {
 	return Params{
 		RewardDelayTime:     time.Hour,
-		GlobalRewardIndices: make([]RewardIndex, 0),
 		RewardClaimInterval: time.Minute * 5,
 		LastRewardClaimTime: time.Now(),
 	}
