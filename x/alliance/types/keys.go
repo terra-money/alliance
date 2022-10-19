@@ -29,7 +29,8 @@ const (
 var (
 	ModuleAccKey = []byte{0x01}
 
-	AssetKey = []byte{0x11}
+	AssetKey     = []byte{0x11}
+	ValidatorKey = []byte{0x12}
 
 	DelegationKey        = []byte{0x21}
 	RedelegationKey      = []byte{0x22}
@@ -115,4 +116,8 @@ func ParseRedelegationKeyForCompletionTime(key []byte) time.Time {
 func GetUndelegationQueueKey(completion time.Time) []byte {
 	bz := sdk.FormatTimeBytes(completion)
 	return append(UndelegationQueueKey, bz...)
+}
+
+func GetValidatorKey(valAddr sdk.ValAddress) []byte {
+	return append(ValidatorKey, address.MustLengthPrefix(valAddr)...)
 }

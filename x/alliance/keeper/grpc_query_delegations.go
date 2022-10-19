@@ -37,12 +37,14 @@ func (k Keeper) AlliancesDelegation(c context.Context, req *types.QueryAlliances
 		}
 
 		asset, _ := k.GetAssetByDenom(ctx, delegation.Denom)
+		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		aVal := k.GetOrCreateValidator(ctx, valAddr)
 
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
 			Balance: sdk.Coin{
 				Denom:  delegation.Denom,
-				Amount: convertNewShareToToken(asset.TotalTokens, asset.TotalShares, delegation.Shares),
+				Amount: convertNewShareToToken(asset.TotalTokens, aVal.TotalSharesWithDenom(delegation.Denom), delegation.Shares),
 			},
 		}
 
@@ -84,12 +86,14 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 		}
 
 		asset, _ := k.GetAssetByDenom(ctx, delegation.Denom)
+		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		aVal := k.GetOrCreateValidator(ctx, valAddr)
 
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
 			Balance: sdk.Coin{
 				Denom:  delegation.Denom,
-				Amount: convertNewShareToToken(asset.TotalTokens, asset.TotalShares, delegation.Shares),
+				Amount: convertNewShareToToken(asset.TotalTokens, aVal.TotalSharesWithDenom(delegation.Denom), delegation.Shares),
 			},
 		}
 
@@ -132,12 +136,13 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 		)
 	}
 
+	aVal := k.GetOrCreateValidator(ctx, valAddr)
 	return &types.QueryAllianceDelegationResponse{
 		Delegation: types.DelegationResponse{
 			Delegation: delegation,
 			Balance: sdk.Coin{
 				Denom:  delegation.Denom,
-				Amount: convertNewShareToToken(asset.TotalTokens, asset.TotalShares, delegation.Shares),
+				Amount: convertNewShareToToken(asset.TotalTokens, aVal.TotalSharesWithDenom(delegation.Denom), delegation.Shares),
 			},
 		},
 	}, nil
