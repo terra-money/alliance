@@ -23,11 +23,16 @@ func (k Keeper) AlliancesDelegation(c context.Context, req *types.QueryAlliances
 	// Get context with the information about the environment
 	ctx := sdk.UnwrapSDKContext(c)
 
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	// Get the key-value module store using the store key
 	store := ctx.KVStore(k.storeKey)
 
 	// Get the specific delegations key
-	key := types.GetDelegationsKey(sdk.AccAddress(req.DelegatorAddr))
+	key := types.GetDelegationsKey(delAddr)
 
 	// Get the part of the store that keeps assets
 	delegationsStore := prefix.NewStore(store, key)
@@ -70,6 +75,11 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 	var delegationsRes []types.DelegationResponse
 	ctx := sdk.UnwrapSDKContext(c)
 
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
@@ -79,7 +89,7 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 	store := ctx.KVStore(k.storeKey)
 
 	// Get the specific delegations key
-	key := types.GetDelegationsKeyForAllDenoms(sdk.AccAddress(req.DelegatorAddr), valAddr)
+	key := types.GetDelegationsKeyForAllDenoms(delAddr, valAddr)
 
 	// Get the part of the store that keeps assets
 	delegationStore := prefix.NewStore(store, key)
