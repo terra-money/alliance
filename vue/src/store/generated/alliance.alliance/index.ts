@@ -4,6 +4,7 @@ import { AllianceAsset } from "alliance-client-ts/alliance.alliance/types"
 import { AddAssetProposal } from "alliance-client-ts/alliance.alliance/types"
 import { RemoveAssetProposal } from "alliance-client-ts/alliance.alliance/types"
 import { UpdateAssetProposal } from "alliance-client-ts/alliance.alliance/types"
+import { QueuedRewardRateChange } from "alliance-client-ts/alliance.alliance/types"
 import { RewardRateChangeSnapshot } from "alliance-client-ts/alliance.alliance/types"
 import { Delegation } from "alliance-client-ts/alliance.alliance/types"
 import { DelegationResponse } from "alliance-client-ts/alliance.alliance/types"
@@ -16,7 +17,7 @@ import { Params } from "alliance-client-ts/alliance.alliance/types"
 import { RewardIndex } from "alliance-client-ts/alliance.alliance/types"
 
 
-export { AllianceAsset, AddAssetProposal, RemoveAssetProposal, UpdateAssetProposal, RewardRateChangeSnapshot, Delegation, DelegationResponse, Redelegation, QueuedRedelegation, Undelegation, QueuedUndelegation, Validator, Params, RewardIndex };
+export { AllianceAsset, AddAssetProposal, RemoveAssetProposal, UpdateAssetProposal, QueuedRewardRateChange, RewardRateChangeSnapshot, Delegation, DelegationResponse, Redelegation, QueuedRedelegation, Undelegation, QueuedUndelegation, Validator, Params, RewardIndex };
 
 function initClient(vuexGetters) {
 	return new Client(vuexGetters['common/env/getEnv'], vuexGetters['common/wallet/signer'])
@@ -60,6 +61,7 @@ const getDefaultState = () => {
 						AddAssetProposal: getStructure(AddAssetProposal.fromPartial({})),
 						RemoveAssetProposal: getStructure(RemoveAssetProposal.fromPartial({})),
 						UpdateAssetProposal: getStructure(UpdateAssetProposal.fromPartial({})),
+						QueuedRewardRateChange: getStructure(QueuedRewardRateChange.fromPartial({})),
 						RewardRateChangeSnapshot: getStructure(RewardRateChangeSnapshot.fromPartial({})),
 						Delegation: getStructure(Delegation.fromPartial({})),
 						DelegationResponse: getStructure(DelegationResponse.fromPartial({})),

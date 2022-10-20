@@ -50,8 +50,8 @@ export interface QueuedUndelegation {
 export interface Validator {
   validatorAddress: string;
   rewardIndices: RewardIndex[];
-  totalTokens: Coin[];
   totalShares: DecCoin[];
+  validatorShares: DecCoin[];
 }
 
 const baseDelegation: object = {
@@ -672,11 +672,11 @@ export const Validator = {
     for (const v of message.rewardIndices) {
       RewardIndex.encode(v!, writer.uint32(18).fork()).ldelim();
     }
-    for (const v of message.totalTokens) {
-      Coin.encode(v!, writer.uint32(26).fork()).ldelim();
-    }
     for (const v of message.totalShares) {
       DecCoin.encode(v!, writer.uint32(34).fork()).ldelim();
+    }
+    for (const v of message.validatorShares) {
+      DecCoin.encode(v!, writer.uint32(42).fork()).ldelim();
     }
     return writer;
   },
@@ -686,8 +686,8 @@ export const Validator = {
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseValidator } as Validator;
     message.rewardIndices = [];
-    message.totalTokens = [];
     message.totalShares = [];
+    message.validatorShares = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -699,11 +699,11 @@ export const Validator = {
             RewardIndex.decode(reader, reader.uint32())
           );
           break;
-        case 3:
-          message.totalTokens.push(Coin.decode(reader, reader.uint32()));
-          break;
         case 4:
           message.totalShares.push(DecCoin.decode(reader, reader.uint32()));
+          break;
+        case 5:
+          message.validatorShares.push(DecCoin.decode(reader, reader.uint32()));
           break;
         default:
           reader.skipType(tag & 7);
@@ -716,8 +716,8 @@ export const Validator = {
   fromJSON(object: any): Validator {
     const message = { ...baseValidator } as Validator;
     message.rewardIndices = [];
-    message.totalTokens = [];
     message.totalShares = [];
+    message.validatorShares = [];
     if (
       object.validatorAddress !== undefined &&
       object.validatorAddress !== null
@@ -731,14 +731,17 @@ export const Validator = {
         message.rewardIndices.push(RewardIndex.fromJSON(e));
       }
     }
-    if (object.totalTokens !== undefined && object.totalTokens !== null) {
-      for (const e of object.totalTokens) {
-        message.totalTokens.push(Coin.fromJSON(e));
-      }
-    }
     if (object.totalShares !== undefined && object.totalShares !== null) {
       for (const e of object.totalShares) {
         message.totalShares.push(DecCoin.fromJSON(e));
+      }
+    }
+    if (
+      object.validatorShares !== undefined &&
+      object.validatorShares !== null
+    ) {
+      for (const e of object.validatorShares) {
+        message.validatorShares.push(DecCoin.fromJSON(e));
       }
     }
     return message;
@@ -755,13 +758,6 @@ export const Validator = {
     } else {
       obj.rewardIndices = [];
     }
-    if (message.totalTokens) {
-      obj.totalTokens = message.totalTokens.map((e) =>
-        e ? Coin.toJSON(e) : undefined
-      );
-    } else {
-      obj.totalTokens = [];
-    }
     if (message.totalShares) {
       obj.totalShares = message.totalShares.map((e) =>
         e ? DecCoin.toJSON(e) : undefined
@@ -769,14 +765,21 @@ export const Validator = {
     } else {
       obj.totalShares = [];
     }
+    if (message.validatorShares) {
+      obj.validatorShares = message.validatorShares.map((e) =>
+        e ? DecCoin.toJSON(e) : undefined
+      );
+    } else {
+      obj.validatorShares = [];
+    }
     return obj;
   },
 
   fromPartial(object: DeepPartial<Validator>): Validator {
     const message = { ...baseValidator } as Validator;
     message.rewardIndices = [];
-    message.totalTokens = [];
     message.totalShares = [];
+    message.validatorShares = [];
     if (
       object.validatorAddress !== undefined &&
       object.validatorAddress !== null
@@ -790,14 +793,17 @@ export const Validator = {
         message.rewardIndices.push(RewardIndex.fromPartial(e));
       }
     }
-    if (object.totalTokens !== undefined && object.totalTokens !== null) {
-      for (const e of object.totalTokens) {
-        message.totalTokens.push(Coin.fromPartial(e));
-      }
-    }
     if (object.totalShares !== undefined && object.totalShares !== null) {
       for (const e of object.totalShares) {
         message.totalShares.push(DecCoin.fromPartial(e));
+      }
+    }
+    if (
+      object.validatorShares !== undefined &&
+      object.validatorShares !== null
+    ) {
+      for (const e of object.validatorShares) {
+        message.validatorShares.push(DecCoin.fromPartial(e));
       }
     }
     return message;

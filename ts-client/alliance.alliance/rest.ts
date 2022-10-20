@@ -20,6 +20,7 @@ export interface AllianceAllianceAsset {
   reward_weight?: string;
   take_rate?: string;
   total_tokens?: string;
+  total_validator_shares?: string;
 }
 
 export interface AllianceAllianceDelegationRewardsResponse {
