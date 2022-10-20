@@ -2,91 +2,104 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
 
-	"alliance/testutil/keeper"
-	"alliance/testutil/nullify"
 	"alliance/x/alliance/types"
 )
 
 func TestQueryAlliances(t *testing.T) {
-	k, ctx := keeper.AllianceKeeper(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	asset := keeper.CreateNewAllianceAsset(&k, ctx, 2)
-
-	k.SetAsset(ctx, asset)
-
-	for _, tc := range []struct {
-		desc     string
-		request  *types.QueryAlliancesRequest
-		response *types.QueryAlliancesResponse
-		err      error
-	}{
-		{
-			desc:    "First",
-			request: &types.QueryAlliancesRequest{},
-			response: &types.QueryAlliancesResponse{
-				Alliances: []types.AllianceAsset{asset},
-				Pagination: &query.PageResponse{
-					Total: 1,
-				},
+	// GIVEN: THE BLOCKCHAIN WITH ALLIANCES ON GENESIS
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			{
+				Denom:        ALLIANCE_TOKEN_DENOM,
+				RewardWeight: sdk.NewDec(2),
+				TakeRate:     sdk.NewDec(0),
+				TotalTokens:  sdk.ZeroInt(),
+			},
+			{
+				Denom:        ALLIANCE_2_TOKEN_DENOM,
+				RewardWeight: sdk.NewDec(10),
+				TakeRate:     sdk.MustNewDecFromStr("0.14159265359"),
+				TotalTokens:  sdk.ZeroInt(),
 			},
 		},
-	} {
-		t.Run(tc.desc, func(t *testing.T) {
-			response, err := k.Alliances(wctx, tc.request)
+	})
 
-			if tc.err != nil {
-				require.ErrorIs(t, err, tc.err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t,
-					nullify.Fill(tc.response),
-					nullify.Fill(response),
-				)
-			}
-		})
-	}
+	// WHEN: QUERYING THE ALLIANCES LIST
+	alliances, err := app.AllianceKeeper.Alliances(ctx, &types.QueryAlliancesRequest{})
+
+	// THEN: VALIDATE THAT BOTH ALLIANCES HAVE THE CORRECT MODEL WHEN QUERYING
+	require.Nil(t, err)
+	require.Equal(t, &types.QueryAlliancesResponse{
+		Alliances: []types.AllianceAsset{
+			{
+				Denom:                "alliance",
+				RewardWeight:         sdk.NewDec(2),
+				TakeRate:             sdk.NewDec(0),
+				TotalTokens:          sdk.ZeroInt(),
+				TotalValidatorShares: sdk.NewDec(0),
+			},
+			{
+				Denom:                "alliance2",
+				RewardWeight:         sdk.NewDec(10),
+				TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
+				TotalTokens:          sdk.ZeroInt(),
+				TotalValidatorShares: sdk.NewDec(0),
+			},
+		},
+		Pagination: &query.PageResponse{
+			NextKey: nil,
+			Total:   2,
+		},
+	}, alliances)
 }
 
-func TestQueryAlliance(t *testing.T) {
-	k, ctx := keeper.AllianceKeeper(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	asset := keeper.CreateNewAllianceAsset(&k, ctx, 1)
-
-	k.SetAsset(ctx, asset)
-
-	for _, tc := range []struct {
-		desc     string
-		request  *types.QueryAllianceRequest
-		response *types.QueryAllianceResponse
-		err      error
-	}{
-		{
-			desc: "First",
-			request: &types.QueryAllianceRequest{
-				Denom: "uluna",
+func TestQueryAnUniqueAlliance(t *testing.T) {
+	// GIVEN: THE BLOCKCHAIN WITH ALLIANCES ON GENESIS
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			{
+				Denom:        ALLIANCE_TOKEN_DENOM,
+				RewardWeight: sdk.NewDec(2),
+				TakeRate:     sdk.NewDec(0),
+				TotalTokens:  sdk.ZeroInt(),
 			},
-			response: &types.QueryAllianceResponse{
-				Alliance: &asset,
+			{
+				Denom:        ALLIANCE_2_TOKEN_DENOM,
+				RewardWeight: sdk.NewDec(10),
+				TakeRate:     sdk.MustNewDecFromStr("0.14159265359"),
+				TotalTokens:  sdk.ZeroInt(),
 			},
 		},
-	} {
-		t.Run(tc.desc, func(t *testing.T) {
-			response, err := k.Alliance(wctx, tc.request)
+	})
 
-			if tc.err != nil {
-				require.ErrorIs(t, err, tc.err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t,
-					nullify.Fill(tc.response),
-					nullify.Fill(response),
-				)
-			}
-		})
-	}
+	// WHEN: QUERYING THE ALLIANCES LIST
+	alliances, err := app.AllianceKeeper.Alliance(ctx, &types.QueryAllianceRequest{
+		Denom: "alliance2",
+	})
+
+	// THEN: VALIDATE THAT BOTH ALLIANCES HAVE THE CORRECT MODEL WHEN QUERYING
+	require.Nil(t, err)
+	require.Equal(t, &types.QueryAllianceResponse{
+		Alliance: &types.AllianceAsset{
+			Denom:                "alliance2",
+			RewardWeight:         sdk.NewDec(10),
+			TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
+			TotalTokens:          sdk.ZeroInt(),
+			TotalValidatorShares: sdk.NewDec(0),
+		},
+	}, alliances)
 }
