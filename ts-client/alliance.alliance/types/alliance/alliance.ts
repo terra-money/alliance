@@ -20,6 +20,7 @@ export interface AllianceAsset {
    */
   takeRate: string;
   totalTokens: string;
+  totalValidatorShares: string;
 }
 
 export interface AddAssetProposal {
@@ -40,6 +41,11 @@ export interface UpdateAssetProposal {
   asset: AllianceAsset | undefined;
 }
 
+export interface QueuedRewardRateChange {
+  denom: string;
+  prevRewardRate: string;
+}
+
 export interface RewardRateChangeSnapshot {
   globalIndex: string;
   rewardWeight: string;
@@ -51,6 +57,7 @@ const baseAllianceAsset: object = {
   rewardWeight: "",
   takeRate: "",
   totalTokens: "",
+  totalValidatorShares: "",
 };
 
 export const AllianceAsset = {
@@ -66,6 +73,9 @@ export const AllianceAsset = {
     }
     if (message.totalTokens !== "") {
       writer.uint32(34).string(message.totalTokens);
+    }
+    if (message.totalValidatorShares !== "") {
+      writer.uint32(42).string(message.totalValidatorShares);
     }
     return writer;
   },
@@ -88,6 +98,9 @@ export const AllianceAsset = {
           break;
         case 4:
           message.totalTokens = reader.string();
+          break;
+        case 5:
+          message.totalValidatorShares = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -119,6 +132,14 @@ export const AllianceAsset = {
     } else {
       message.totalTokens = "";
     }
+    if (
+      object.totalValidatorShares !== undefined &&
+      object.totalValidatorShares !== null
+    ) {
+      message.totalValidatorShares = String(object.totalValidatorShares);
+    } else {
+      message.totalValidatorShares = "";
+    }
     return message;
   },
 
@@ -130,6 +151,8 @@ export const AllianceAsset = {
     message.takeRate !== undefined && (obj.takeRate = message.takeRate);
     message.totalTokens !== undefined &&
       (obj.totalTokens = message.totalTokens);
+    message.totalValidatorShares !== undefined &&
+      (obj.totalValidatorShares = message.totalValidatorShares);
     return obj;
   },
 
@@ -154,6 +177,14 @@ export const AllianceAsset = {
       message.totalTokens = object.totalTokens;
     } else {
       message.totalTokens = "";
+    }
+    if (
+      object.totalValidatorShares !== undefined &&
+      object.totalValidatorShares !== null
+    ) {
+      message.totalValidatorShares = object.totalValidatorShares;
+    } else {
+      message.totalValidatorShares = "";
     }
     return message;
   },
@@ -440,6 +471,84 @@ export const UpdateAssetProposal = {
       message.asset = AllianceAsset.fromPartial(object.asset);
     } else {
       message.asset = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueuedRewardRateChange: object = { denom: "", prevRewardRate: "" };
+
+export const QueuedRewardRateChange = {
+  encode(
+    message: QueuedRewardRateChange,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.denom !== "") {
+      writer.uint32(10).string(message.denom);
+    }
+    if (message.prevRewardRate !== "") {
+      writer.uint32(18).string(message.prevRewardRate);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueuedRewardRateChange {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseQueuedRewardRateChange } as QueuedRewardRateChange;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.denom = reader.string();
+          break;
+        case 2:
+          message.prevRewardRate = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueuedRewardRateChange {
+    const message = { ...baseQueuedRewardRateChange } as QueuedRewardRateChange;
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = String(object.denom);
+    } else {
+      message.denom = "";
+    }
+    if (object.prevRewardRate !== undefined && object.prevRewardRate !== null) {
+      message.prevRewardRate = String(object.prevRewardRate);
+    } else {
+      message.prevRewardRate = "";
+    }
+    return message;
+  },
+
+  toJSON(message: QueuedRewardRateChange): unknown {
+    const obj: any = {};
+    message.denom !== undefined && (obj.denom = message.denom);
+    message.prevRewardRate !== undefined &&
+      (obj.prevRewardRate = message.prevRewardRate);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueuedRewardRateChange>
+  ): QueuedRewardRateChange {
+    const message = { ...baseQueuedRewardRateChange } as QueuedRewardRateChange;
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = object.denom;
+    } else {
+      message.denom = "";
+    }
+    if (object.prevRewardRate !== undefined && object.prevRewardRate !== null) {
+      message.prevRewardRate = object.prevRewardRate;
+    } else {
+      message.prevRewardRate = "";
     }
     return message;
   },

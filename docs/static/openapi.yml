@@ -43,6 +43,8 @@ paths:
                         will be redirected to the distribution rewards pool
                     total_tokens:
                       type: string
+                    total_validator_shares:
+                      type: string
                   title: 'key: denom value: AllianceAsset'
               pagination:
                 type: object
@@ -848,6 +850,8 @@ paths:
 
                       will be redirected to the distribution rewards pool
                   total_tokens:
+                    type: string
+                  total_validator_shares:
                     type: string
                 title: 'key: denom value: AllianceAsset'
         default:
@@ -45017,6 +45021,8 @@ definitions:
           will be redirected to the distribution rewards pool
       total_tokens:
         type: string
+      total_validator_shares:
+        type: string
     title: 'key: denom value: AllianceAsset'
   alliance.alliance.AllianceDelegationRewardsResponse:
     type: object
@@ -45211,6 +45217,8 @@ definitions:
               will be redirected to the distribution rewards pool
           total_tokens:
             type: string
+          total_validator_shares:
+            type: string
         title: 'key: denom value: AllianceAsset'
   alliance.alliance.QueryAlliancesDelegationsResponse:
     type: object
@@ -45325,6 +45333,8 @@ definitions:
 
                 will be redirected to the distribution rewards pool
             total_tokens:
+              type: string
+            total_validator_shares:
               type: string
           title: 'key: denom value: AllianceAsset'
       pagination:

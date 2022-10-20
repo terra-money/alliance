@@ -2,6 +2,7 @@ import { AllianceAsset } from "./types/alliance/alliance"
 import { AddAssetProposal } from "./types/alliance/alliance"
 import { RemoveAssetProposal } from "./types/alliance/alliance"
 import { UpdateAssetProposal } from "./types/alliance/alliance"
+import { QueuedRewardRateChange } from "./types/alliance/alliance"
 import { RewardRateChangeSnapshot } from "./types/alliance/alliance"
 import { Delegation } from "./types/alliance/delegations"
 import { DelegationResponse } from "./types/alliance/delegations"
@@ -19,6 +20,7 @@ export {
     AddAssetProposal,
     RemoveAssetProposal,
     UpdateAssetProposal,
+    QueuedRewardRateChange,
     RewardRateChangeSnapshot,
     Delegation,
     DelegationResponse,
