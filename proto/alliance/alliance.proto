@@ -32,6 +32,10 @@ message AllianceAsset {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
+  string total_validator_shares = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 message AddAssetProposal {
@@ -62,6 +66,14 @@ message UpdateAssetProposal {
   string   title                           = 1;
   string   description                     = 2;
   AllianceAsset asset = 3;
+}
+
+message QueuedRewardRateChange {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  string denom = 1;
+  string prev_reward_rate = 2;
 }
 
 message RewardRateChangeSnapshot {

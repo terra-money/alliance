@@ -77,10 +77,10 @@ message Validator {
   repeated RewardIndex reward_indices = 2 [
     (gogoproto.nullable)   = false
   ];
-  repeated cosmos.base.v1beta1.Coin total_tokens = 3 [
+  repeated cosmos.base.v1beta1.DecCoin total_shares = 4 [
     (gogoproto.nullable)   = false
   ];
-  repeated cosmos.base.v1beta1.DecCoin total_shares = 4 [
+  repeated cosmos.base.v1beta1.DecCoin validator_shares = 5 [
     (gogoproto.nullable)   = false
   ];
 }

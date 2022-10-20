@@ -44,16 +44,18 @@ func (k Keeper) AlliancesDelegation(c context.Context, req *types.QueryAlliances
 			return err
 		}
 
-		asset, _ := k.GetAssetByDenom(ctx, delegation.Denom)
+		asset, found := k.GetAssetByDenom(ctx, delegation.Denom)
+		if !found {
+			return types.ErrUnknownAsset
+		}
+
 		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 		aVal := k.GetOrCreateValidator(ctx, valAddr)
+		balance := types.GetDelegationTokens(delegation, aVal, asset)
 
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
-			Balance: sdk.Coin{
-				Denom:  delegation.Denom,
-				Amount: convertNewShareToToken(asset.TotalTokens, aVal.TotalSharesWithDenom(delegation.Denom), delegation.Shares),
-			},
+			Balance:    balance,
 		}
 
 		delegationsRes = append(delegationsRes, delegationRes)
@@ -101,16 +103,18 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 			return err
 		}
 
-		asset, _ := k.GetAssetByDenom(ctx, delegation.Denom)
+		asset, found := k.GetAssetByDenom(ctx, delegation.Denom)
+		if !found {
+			return types.ErrUnknownAsset
+		}
+
 		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 		aVal := k.GetOrCreateValidator(ctx, valAddr)
+		balance := types.GetDelegationTokens(delegation, aVal, asset)
 
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
-			Balance: sdk.Coin{
-				Denom:  delegation.Denom,
-				Amount: convertNewShareToToken(asset.TotalTokens, aVal.TotalSharesWithDenom(delegation.Denom), delegation.Shares),
-			},
+			Balance:    balance,
 		}
 
 		delegationsRes = append(delegationsRes, delegationRes)
@@ -155,21 +159,19 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 
 	delegation, found := k.GetDelegation(ctx, delAddr, validator, req.Denom)
 	if !found {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"Alliance does not have a delegation with the combination %s %s %s",
-			req.DelegatorAddr, req.ValidatorAddr, req.Denom,
-		)
+		return &types.QueryAllianceDelegationResponse{
+			Delegation: types.DelegationResponse{
+				Delegation: types.NewDelegation(delAddr, valAddr, req.Denom, sdk.ZeroDec(), []types.RewardIndex{}),
+				Balance:    sdk.NewCoin(req.Denom, sdk.ZeroInt()),
+			}}, nil
 	}
 
 	aVal := k.GetOrCreateValidator(ctx, valAddr)
+	balance := types.GetDelegationTokens(delegation, aVal, asset)
 	return &types.QueryAllianceDelegationResponse{
 		Delegation: types.DelegationResponse{
 			Delegation: delegation,
-			Balance: sdk.Coin{
-				Denom:  delegation.Denom,
-				Amount: convertNewShareToToken(asset.TotalTokens, aVal.TotalSharesWithDenom(delegation.Denom), delegation.Shares),
-			},
+			Balance:    balance,
 		},
 	}, nil
 }
