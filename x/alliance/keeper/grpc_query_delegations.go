@@ -159,11 +159,11 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 
 	delegation, found := k.GetDelegation(ctx, delAddr, validator, req.Denom)
 	if !found {
-		return nil, status.Errorf(
-			codes.NotFound,
-			"Alliance does not have a delegation with the combination %s %s %s",
-			req.DelegatorAddr, req.ValidatorAddr, req.Denom,
-		)
+		return &types.QueryAllianceDelegationResponse{
+			Delegation: types.DelegationResponse{
+				Delegation: types.NewDelegation(delAddr, valAddr, req.Denom, sdk.ZeroDec(), []types.RewardIndex{}),
+				Balance:    sdk.NewCoin(req.Denom, sdk.ZeroInt()),
+			}}, nil
 	}
 
 	aVal := k.GetOrCreateValidator(ctx, valAddr)

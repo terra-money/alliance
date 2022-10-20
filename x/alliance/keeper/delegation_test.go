@@ -406,7 +406,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	//rewardsPoolAddr := app.AccountKeeper.GetModuleAddress(types.RewardsPoolName)
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
 		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000)),
-		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)),
+		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(2000_000_000)),
 	))
 	pks := test_helpers.CreateTestPubKeys(2)
 
@@ -439,8 +439,10 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	user2 := addrs[3]
 
 	// Delegate token with non-zero take_rate
-	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
-	app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
+	require.NoError(t, err)
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 6)).WithBlockHeight(2)
 	coins, err := app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
@@ -467,4 +469,49 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	// User should have everything withdrawn
 	_, found := app.AllianceKeeper.GetDelegation(ctx, user1, val1, ALLIANCE_2_TOKEN_DENOM)
 	require.False(t, found)
+
+	// Delegate again
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(500_000_000)))
+	require.NoError(t, err)
+
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Minute * 1)).WithBlockHeight(2)
+
+	// We need to retrieve an updated validator object again since stakingKeeper.Delegate does not update the validator object
+	// in place.
+	val1 = app.StakingKeeper.Validator(ctx, valAddr1).(stakingtypes.Validator)
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(400_000_000)))
+	require.NoError(t, err)
+
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Minute * 5)).WithBlockHeight(3)
+	coins, err = app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
+	require.NoError(t, err)
+	require.False(t, coins.IsZero())
+
+	res, err = app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
+		DelegatorAddr: user1.String(),
+		ValidatorAddr: val1.GetOperator().String(),
+		Denom:         ALLIANCE_2_TOKEN_DENOM,
+		Pagination:    nil,
+	})
+	require.NoError(t, err)
+	del = res.GetDelegation()
+	require.True(t, del.GetBalance().Amount.LT(sdk.NewInt(900_000_000)), "%s should be less than %s", del.GetBalance().Amount, sdk.NewInt(1000_000_000))
+
+	// Undelegate token with current amount should pass
+	err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, del.Balance.Amount))
+	require.NoError(t, err)
+
+	// User should have everything withdrawn
+	_, found = app.AllianceKeeper.GetDelegation(ctx, user1, val1, ALLIANCE_2_TOKEN_DENOM)
+	// require.False(t, found)
+
+	res, err = app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
+		DelegatorAddr: user1.String(),
+		ValidatorAddr: val1.GetOperator().String(),
+		Denom:         ALLIANCE_2_TOKEN_DENOM,
+		Pagination:    nil,
+	})
+	require.NoError(t, err)
+	del = res.GetDelegation()
+	require.True(t, del.Balance.Amount.IsZero())
 }

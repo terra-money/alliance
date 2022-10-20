@@ -21,7 +21,8 @@ func (asset AllianceAsset) ConvertToStake(amount cosmosmath.Int) (token cosmosma
 }
 
 func ConvertNewTokenToShares(totalTokens cosmosmath.Int, totalShares sdk.Dec, newTokens cosmosmath.Int) (shares sdk.Dec) {
-	if totalShares.IsZero() {
+	// TODO: Verify this logic when totalShares != 0 or totalTotals != 0
+	if totalShares.IsZero() || totalTokens.IsZero() {
 		return sdk.NewDecFromInt(newTokens)
 	}
 	return totalShares.MulInt(newTokens).QuoInt(totalTokens)
