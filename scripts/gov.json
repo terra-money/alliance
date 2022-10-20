@@ -3,12 +3,12 @@
         {
             "@type": "/alliance.alliance.MsgCreateAlliance",
             "alliance" : {
-                "denom"  : "stake",
+                "denom"  : "ulunax",
                 "rewardWeight"  : "0.25",
                 "takeRate"  : "0.75"
             },
             "authority" : "alliance10d07y265gmmuvt4z0w9aw880jnsr700j8hf8cu"
         }
     ],
-    "metadata": "Alliance with our own 'stake' denomination"
+    "metadata": "Create Alliance with our own 'ulunax' denomination"
 }
