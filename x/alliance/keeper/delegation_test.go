@@ -88,10 +88,11 @@ func TestDelegation(t *testing.T) {
 	// Check asset
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, types.AllianceAsset{
-		Denom:        ALLIANCE_TOKEN_DENOM,
-		RewardWeight: sdk.NewDec(2),
-		TakeRate:     sdk.NewDec(0),
-		TotalTokens:  sdk.NewInt(1000_000),
+		Denom:                ALLIANCE_TOKEN_DENOM,
+		RewardWeight:         sdk.NewDec(2),
+		TakeRate:             sdk.NewDec(0),
+		TotalTokens:          sdk.NewInt(1000_000),
+		TotalValidatorShares: sdk.NewDec(1000_000),
 	}, asset)
 
 	// Delegate with same denom again
@@ -111,10 +112,11 @@ func TestDelegation(t *testing.T) {
 	// Check asset again
 	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, types.AllianceAsset{
-		Denom:        ALLIANCE_TOKEN_DENOM,
-		RewardWeight: sdk.NewDec(2),
-		TakeRate:     sdk.NewDec(0),
-		TotalTokens:  sdk.NewInt(2000_000),
+		Denom:                ALLIANCE_TOKEN_DENOM,
+		RewardWeight:         sdk.NewDec(2),
+		TakeRate:             sdk.NewDec(0),
+		TotalTokens:          sdk.NewInt(2000_000),
+		TotalValidatorShares: sdk.NewDec(2000_000),
 	}, asset)
 
 	// Delegate with another denom
@@ -359,4 +361,110 @@ func TestUndelegation(t *testing.T) {
 	// Completing again should not process anymore undelegations
 	processed = app.AllianceKeeper.CompleteUndelegations(ctx)
 	require.Equal(t, 0, processed)
+}
+
+func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			{
+				Denom:        ALLIANCE_TOKEN_DENOM,
+				RewardWeight: sdk.NewDec(2),
+				TakeRate:     sdk.NewDec(0),
+				TotalTokens:  sdk.ZeroInt(),
+			},
+			{
+				Denom:        ALLIANCE_2_TOKEN_DENOM,
+				RewardWeight: sdk.NewDec(10),
+				TakeRate:     sdk.MustNewDecFromStr("0.5"),
+				TotalTokens:  sdk.ZeroInt(),
+			},
+		},
+	})
+
+	// remove genesis validator delegations
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Len(t, delegations, 1)
+	err := app.StakingKeeper.RemoveDelegation(ctx, stakingtypes.Delegation{
+		ValidatorAddress: delegations[0].ValidatorAddress,
+		DelegatorAddress: delegations[0].DelegatorAddress,
+	})
+	require.NoError(t, err)
+
+	// Set tax and rewards to be zero for easier calculation
+	distParams := app.DistrKeeper.GetParams(ctx)
+	distParams.CommunityTax = sdk.ZeroDec()
+	distParams.BaseProposerReward = sdk.ZeroDec()
+	distParams.BonusProposerReward = sdk.ZeroDec()
+	app.DistrKeeper.SetParams(ctx, distParams)
+
+	// Accounts
+	//mintPoolAddr := app.AccountKeeper.GetModuleAddress(minttypes.ModuleName)
+	//rewardsPoolAddr := app.AccountKeeper.GetModuleAddress(types.RewardsPoolName)
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
+		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000)),
+		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)),
+	))
+	pks := test_helpers.CreateTestPubKeys(2)
+
+	// Creating two validators: 1 with 0% commission, 1 with 100% commission
+	valAddr1 := sdk.ValAddress(addrs[0])
+	val1 := teststaking.NewValidator(t, valAddr1, pks[0])
+	val1.Commission = stakingtypes.Commission{
+		CommissionRates: stakingtypes.CommissionRates{
+			Rate:          sdk.NewDec(0),
+			MaxRate:       sdk.NewDec(0),
+			MaxChangeRate: sdk.NewDec(0),
+		},
+		UpdateTime: time.Now(),
+	}
+	test_helpers.RegisterNewValidator(t, app, ctx, val1)
+
+	valAddr2 := sdk.ValAddress(addrs[1])
+	val2 := teststaking.NewValidator(t, valAddr2, pks[1])
+	val2.Commission = stakingtypes.Commission{
+		CommissionRates: stakingtypes.CommissionRates{
+			Rate:          sdk.NewDec(1),
+			MaxRate:       sdk.NewDec(1),
+			MaxChangeRate: sdk.NewDec(0),
+		},
+		UpdateTime: time.Now(),
+	}
+	test_helpers.RegisterNewValidator(t, app, ctx, val2)
+
+	user1 := addrs[2]
+	user2 := addrs[3]
+
+	// Delegate token with non-zero take_rate
+	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
+	app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
+
+	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 6)).WithBlockHeight(2)
+	coins, err := app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
+	require.NoError(t, err)
+	require.False(t, coins.IsZero())
+
+	res, err := app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
+		DelegatorAddr: user1.String(),
+		ValidatorAddr: val1.GetOperator().String(),
+		Denom:         ALLIANCE_2_TOKEN_DENOM,
+		Pagination:    nil,
+	})
+	require.NoError(t, err)
+	del := res.GetDelegation()
+	require.True(t, del.GetBalance().Amount.LT(sdk.NewInt(1000_000_000)), "%s should be less than %s", del.GetBalance().Amount, sdk.NewInt(1000_000_000))
+	// Undelegate token with initial amount should fail
+	err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
+	require.Error(t, err)
+
+	// Undelegate token with current amount should pass
+	err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, del.Balance.Amount))
+	require.NoError(t, err)
+
+	// User should have everything withdrawn
+	_, found := app.AllianceKeeper.GetDelegation(ctx, user1, val1, ALLIANCE_2_TOKEN_DENOM)
+	require.False(t, found)
 }

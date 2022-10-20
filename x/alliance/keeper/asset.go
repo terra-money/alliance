@@ -15,13 +15,12 @@ func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsse
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
 	if prevAsset.RewardWeight != newAsset.RewardWeight {
-		store := ctx.KVStore(k.storeKey)
-		iter := sdk.KVStorePrefixIterator(store, types.ValidatorKey)
+		iter := k.GetAllValidators(ctx)
 		for ; iter.Valid(); iter.Next() {
 			b := iter.Value()
 			var aVal types.Validator
 			k.cdc.MustUnmarshal(b, &aVal)
-			if !aVal.TotalTokensWithDenom(prevAsset.Denom).IsPositive() {
+			if !aVal.TotalTokensWithAsset(prevAsset).IsPositive() {
 				continue
 			}
 			valAddr, _ := sdk.ValAddressFromBech32(aVal.ValidatorAddress)
@@ -30,7 +29,7 @@ func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsse
 			if !found {
 				return types.ErrZeroDelegations
 			}
-			currentTokens := convertNewShareToToken(val.Tokens, val.DelegatorShares, delegation.Shares)
+			currentTokens := types.ConvertNewShareToToken(val.Tokens, val.DelegatorShares, delegation.Shares)
 			expectedTokens := newAsset.RewardWeight.MulInt(prevAsset.TotalTokens).TruncateInt()
 			if currentTokens.GT(expectedTokens) {
 				tokensToRemove := currentTokens.Sub(expectedTokens)

@@ -177,9 +177,15 @@ func TestClaimRewards(t *testing.T) {
 	require.NoError(t, err)
 
 	aVal1 := app.AllianceKeeper.GetOrCreateValidator(ctx, valAddr1)
+	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t,
-		sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)), sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000))),
-		sdk.NewCoins(aVal1.TotalTokens...),
+		sdk.NewInt(1000_000),
+		aVal1.TotalTokensWithAsset(asset),
+	)
+	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
+	require.Equal(t,
+		sdk.NewInt(1000_000),
+		aVal1.TotalTokensWithAsset(asset),
 	)
 
 	// Transfer another token to reward pool
