@@ -82,6 +82,21 @@ func (mr *MockStakingKeeperMockRecorder) Delegate(ctx, delAddr, bondAmt, tokenSr
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delegate", reflect.TypeOf((*MockStakingKeeper)(nil).Delegate), ctx, delAddr, bondAmt, tokenSrc, validator, subtractAccount)
 }
 
+// GetDelegation mocks base method.
+func (m *MockStakingKeeper) GetDelegation(ctx types.Context, delAddr types.AccAddress, valAddr types.ValAddress) (types1.Delegation, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDelegation", ctx, delAddr, valAddr)
+	ret0, _ := ret[0].(types1.Delegation)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetDelegation indicates an expected call of GetDelegation.
+func (mr *MockStakingKeeperMockRecorder) GetDelegation(ctx, delAddr, valAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDelegation", reflect.TypeOf((*MockStakingKeeper)(nil).GetDelegation), ctx, delAddr, valAddr)
+}
+
 // GetValidator mocks base method.
 func (m *MockStakingKeeper) GetValidator(ctx types.Context, addr types.ValAddress) (types1.Validator, bool) {
 	m.ctrl.T.Helper()

@@ -32,31 +32,30 @@ func NewValidator(valAddr sdk.ValAddress) Validator {
 	return Validator{
 		ValidatorAddress: valAddr.String(),
 		RewardIndices:    RewardIndices{},
-		TotalTokens:      sdk.NewCoins(),
 		TotalShares:      sdk.NewDecCoins(),
+		ValidatorShares:  sdk.NewDecCoins(),
 	}
 }
 
-func (v *Validator) AddTokens(coins sdk.Coins) {
-	v.TotalTokens = coins.Add(v.TotalTokens...)
+func (v *Validator) AddShares(delegationShares sdk.DecCoins, validatorShares sdk.DecCoins) {
+	v.TotalShares = delegationShares.Add(v.TotalShares...)
+	v.ValidatorShares = validatorShares.Add(v.ValidatorShares...)
 }
 
-func (v *Validator) ReduceTokens(coins sdk.Coins) {
-	v.TotalTokens = sdk.NewCoins(v.TotalTokens...).Sub(coins...)
-}
-
-func (v *Validator) AddShares(shares sdk.DecCoins) {
-	v.TotalShares = shares.Add(v.TotalShares...)
-}
-
-func (v *Validator) ReduceShares(shares sdk.DecCoins) {
-	v.TotalShares = sdk.NewDecCoins(v.TotalShares...).Sub(shares)
+func (v *Validator) ReduceShares(delegationShares sdk.DecCoins, validatorShares sdk.DecCoins) {
+	v.TotalShares = sdk.NewDecCoins(v.TotalShares...).Sub(delegationShares)
+	v.ValidatorShares = sdk.NewDecCoins(v.ValidatorShares...).Sub(validatorShares)
 }
 
 func (v Validator) TotalSharesWithDenom(denom string) sdk.Dec {
 	return sdk.NewDecCoins(v.TotalShares...).AmountOf(denom)
 }
 
-func (v Validator) TotalTokensWithDenom(denom string) sdk.Int {
-	return sdk.NewCoins(v.TotalTokens...).AmountOf(denom)
+func (v Validator) ValidatorSharesWithDenom(denom string) sdk.Dec {
+	return sdk.NewDecCoins(v.ValidatorShares...).AmountOf(denom)
+}
+
+func (v Validator) TotalTokensWithAsset(asset AllianceAsset) sdk.Int {
+	shares := v.ValidatorSharesWithDenom(asset.Denom)
+	return ConvertNewShareToToken(asset.TotalTokens, asset.TotalValidatorShares, shares)
 }

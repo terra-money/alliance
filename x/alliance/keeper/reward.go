@@ -93,10 +93,9 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Del
 		} else {
 			localIndex = delegation.RewardIndices[idx].Index
 		}
-		totalTokens := sdk.NewCoins(aVal.TotalTokens...).AmountOf(delegation.Denom)
-		totalShares := sdk.NewDecCoins(aVal.TotalShares...).AmountOf(delegation.Denom)
+		delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, aVal, asset).Amount)
 
-		claimWeight := delegation.Shares.MulInt(totalTokens).Quo(totalShares).Mul(asset.RewardWeight)
+		claimWeight := delegationTokens.Mul(asset.RewardWeight)
 		totalClaimable := (index.Index.Sub(localIndex)).Mul(claimWeight)
 		rewards = append(rewards, sdk.NewCoin(index.Denom, totalClaimable.TruncateInt()))
 	}
@@ -149,6 +148,7 @@ func (k Keeper) ClaimAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time) (s
 	assets := k.GetAllAssets(ctx)
 	durationSinceLastClaim := ctx.BlockTime().Sub(lastClaim)
 	prorate := sdk.NewDec(durationSinceLastClaim.Nanoseconds()).Quo(sdk.NewDec(YEAR_IN_NANOS))
+
 	var coins sdk.Coins
 	for _, asset := range assets {
 		if asset.TotalTokens.IsPositive() && asset.TakeRate.IsPositive() {
@@ -179,12 +179,13 @@ func (k Keeper) ClaimAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time) (s
 func (k Keeper) totalAssetWeight(ctx sdk.Context, valAddr sdk.ValAddress) sdk.Dec {
 	aVal := k.GetOrCreateValidator(ctx, valAddr)
 	total := sdk.ZeroDec()
-	for _, token := range aVal.TotalTokens {
+	for _, token := range aVal.TotalShares {
 		asset, found := k.GetAssetByDenom(ctx, token.Denom)
 		if !found {
 			continue
 		}
-		total = total.Add(asset.RewardWeight.MulInt(token.Amount))
+		totalValTokens := aVal.TotalTokensWithAsset(asset)
+		total = total.Add(asset.RewardWeight.MulInt(totalValTokens))
 	}
 	return total
 }

@@ -18,18 +18,8 @@ func TestUpdateRewardRates(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
-			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
+			types.NewAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.ZeroDec()),
+			types.NewAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.ZeroDec()),
 		},
 	})
 
