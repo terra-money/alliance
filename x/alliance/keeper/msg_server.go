@@ -103,6 +103,11 @@ func (m MsgServer) CreateAlliance(ctx context.Context, req *types.MsgCreateAllia
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	_, found := m.Keeper.GetAssetByDenom(sdkCtx, req.Alliance.Denom)
+
+	if found {
+		return nil, status.Errorf(codes.AlreadyExists, "Asset with denom: %s already exists", req.Alliance.Denom)
+	}
 
 	m.Keeper.SetAsset(sdkCtx, req.Alliance)
 

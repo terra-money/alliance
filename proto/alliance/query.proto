@@ -42,7 +42,7 @@ service Query {
   }
 
   // Query for rewards by delegator addr, validator_addr and denom
-  rpc AllianceDelegationRewards(AllianceDelegationRewardsRequest) returns (AllianceDelegationRewardsResponse) {
+  rpc AllianceDelegationRewards(QueryAllianceDelegationRewardsRequest) returns (QueryAllianceDelegationRewardsResponse) {
     option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}/{denom}";
   }
 }
@@ -113,7 +113,7 @@ message QueryAllianceDelegationResponse {
 }
 
 // AllianceDelegation
-message AllianceDelegationRewardsRequest {
+message QueryAllianceDelegationRewardsRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -123,7 +123,7 @@ message AllianceDelegationRewardsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }
 
-message AllianceDelegationRewardsResponse {
+message QueryAllianceDelegationRewardsResponse {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
