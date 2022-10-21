@@ -15,7 +15,7 @@ STAKEDENOM=${STAKEDENOM:-stake}
 UNBONDING_TIME="5s"
 GOV_PERIOD="5s"
 INFLATION="0.999999999999999999"
-ALLIANCE_CLAIM_REWARDS="10s"
+ALLIANCE_CLAIM_REWARDS="5s"
 
 
 # Stop if it is already running 
@@ -59,7 +59,7 @@ sed -i -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' $CHAIN_DIR/$CHAINI
 sed -i -e 's/index_all_keys = false/index_all_keys = true/g' $CHAIN_DIR/$CHAINID/config/config.toml
 sed -i -e 's/enable = false/enable = true/g' $CHAIN_DIR/$CHAINID/config/app.toml
 sed -i -e 's/swagger = false/swagger = true/g' $CHAIN_DIR/$CHAINID/config/app.toml
-sed -i -e "s/minimum-gas-prices = \"\"/minimum-gas-prices = \"0.0025$STAKEDENOM\"/g" $CHAIN_DIR/$CHAINID/config/app.toml
+sed -i -e "s/minimum-gas-prices = \"\"/minimum-gas-prices = \"0.25$STAKEDENOM\"/g" $CHAIN_DIR/$CHAINID/config/app.toml
 sed -i -e 's/enabled = false/enabled = true/g' $CHAIN_DIR/$CHAINID/config/app.toml
 sed -i -e 's/prometheus-retention-time = 0/prometheus-retention-time = 1000/g' $CHAIN_DIR/$CHAINID/config/app.toml
 
@@ -82,3 +82,7 @@ sed -i -e "s/\"voting_period\": \"172800s\"/\"voting_period\": \"$GOV_PERIOD\"/g
 
 ## ALLIANCE
 sed -i -e "s/\"reward_claim_interval\": \"300s\"/\"reward_claim_interval\": \"$ALLIANCE_CLAIM_REWARDS\"/g" $CHAIN_DIR/$CHAINID/config/genesis.json
+sed -i -e "s/\"reward_delay_time\": \"86400s\"/\"reward_delay_time\": \"$ALLIANCE_CLAIM_REWARDS\"/g" $CHAIN_DIR/$CHAINID/config/genesis.json
+
+
+echo "Genesis event created with $STAKEDENOM and ulunax"
