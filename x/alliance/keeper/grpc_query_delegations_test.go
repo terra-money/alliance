@@ -42,7 +42,7 @@ func TestQueryAllianceDelegation(t *testing.T) {
 	queryDelegation, queryErr := app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: delAddr.String(),
 		ValidatorAddr: val.OperatorAddress,
-		Denom:         "alliance",
+		Denom:         ALLIANCE_TOKEN_DENOM,
 	})
 
 	// THEN: VALIDATE THAT NO ERRORS HAVE BEEN PRODUCED AND BOTH OUTPUTS ARE AS WE EXPECT
@@ -53,12 +53,12 @@ func TestQueryAllianceDelegation(t *testing.T) {
 			Delegation: types.Delegation{
 				DelegatorAddress: delAddr.String(),
 				ValidatorAddress: val.OperatorAddress,
-				Denom:            "alliance",
+				Denom:            ALLIANCE_TOKEN_DENOM,
 				Shares:           sdk.NewDec(1000_000),
 				RewardIndices:    nil,
 			},
 			Balance: sdk.Coin{
-				Denom:  "alliance",
+				Denom:  ALLIANCE_TOKEN_DENOM,
 				Amount: sdk.NewInt(1000_000),
 			},
 		},
@@ -66,7 +66,7 @@ func TestQueryAllianceDelegation(t *testing.T) {
 	require.Equal(t, &types.Delegation{
 		DelegatorAddress: delAddr.String(),
 		ValidatorAddress: val.OperatorAddress,
-		Denom:            "alliance",
+		Denom:            ALLIANCE_TOKEN_DENOM,
 		Shares:           sdk.NewDec(1000_000),
 		RewardIndices:    []types.RewardIndex{},
 	}, delegationTxRes)
@@ -86,7 +86,7 @@ func TestQueryAllianceDelegationNotFound(t *testing.T) {
 	_, err := app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: delAddr.String(),
 		ValidatorAddr: val.OperatorAddress,
-		Denom:         "alliance",
+		Denom:         ALLIANCE_TOKEN_DENOM,
 	})
 
 	// THEN: VALIDATE THAT NO ERRORS HAVE BEEN PRODUCED AND BOTH OUTPUTS ARE AS WE EXPECT
@@ -105,7 +105,7 @@ func TestQueryAllianceValidatorNotFound(t *testing.T) {
 	_, err := app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: delAddr.String(),
 		ValidatorAddr: "cosmosvaloper19lss6zgdh5vvcpjhfftdghrpsw7a4434elpwpu",
-		Denom:         "alliance",
+		Denom:         ALLIANCE_TOKEN_DENOM,
 	})
 
 	// THEN: VALIDATE THAT NO ERRORS HAVE BEEN PRODUCED AND BOTH OUTPUTS ARE AS WE EXPECT
@@ -151,12 +151,12 @@ func TestQueryAlliancesDelegationByValidator(t *testing.T) {
 				Delegation: types.Delegation{
 					DelegatorAddress: delAddr.String(),
 					ValidatorAddress: val.OperatorAddress,
-					Denom:            "alliance",
+					Denom:            ALLIANCE_TOKEN_DENOM,
 					Shares:           sdk.NewDec(1000_000),
 					RewardIndices:    nil,
 				},
 				Balance: sdk.Coin{
-					Denom:  "alliance",
+					Denom:  ALLIANCE_TOKEN_DENOM,
 					Amount: sdk.NewInt(1000_000),
 				},
 			},
@@ -169,7 +169,7 @@ func TestQueryAlliancesDelegationByValidator(t *testing.T) {
 	require.Equal(t, &types.Delegation{
 		DelegatorAddress: delAddr.String(),
 		ValidatorAddress: val.OperatorAddress,
-		Denom:            "alliance",
+		Denom:            ALLIANCE_TOKEN_DENOM,
 		Shares:           sdk.NewDec(1000_000),
 		RewardIndices:    []types.RewardIndex{},
 	}, delegationTxRes)
@@ -219,14 +219,14 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
 	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	val, _ := app.StakingKeeper.GetValidator(ctx, valAddr)
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin("alliance", sdk.NewInt(2000_000))))
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin("alliance", sdk.NewInt(2000_000))))
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin("alliance2", sdk.NewInt(2000_000))))
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin("alliance2", sdk.NewInt(2000_000))))
+	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(2000_000))))
 
 	// WHEN: DELEGATING AND QUERYING ...
-	delegationTxRes, txErr := app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin("alliance", sdk.NewInt(1000_000)))
-	delegation2TxRes, tx2Err := app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin("alliance2", sdk.NewInt(1000_000)))
+	delegationTxRes, txErr := app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
+	delegation2TxRes, tx2Err := app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	queryDelegation, queryErr := app.AllianceKeeper.AlliancesDelegation(ctx, &types.QueryAlliancesDelegationsRequest{
 		DelegatorAddr: delAddr.String(),
 	})
@@ -241,12 +241,12 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 				Delegation: types.Delegation{
 					DelegatorAddress: delAddr.String(),
 					ValidatorAddress: val.OperatorAddress,
-					Denom:            "alliance",
+					Denom:            ALLIANCE_TOKEN_DENOM,
 					Shares:           sdk.NewDec(1000_000),
 					RewardIndices:    nil,
 				},
 				Balance: sdk.Coin{
-					Denom:  "alliance",
+					Denom:  ALLIANCE_TOKEN_DENOM,
 					Amount: sdk.NewInt(1000_000),
 				},
 			},
@@ -254,12 +254,12 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 				Delegation: types.Delegation{
 					DelegatorAddress: delAddr.String(),
 					ValidatorAddress: val.OperatorAddress,
-					Denom:            "alliance2",
+					Denom:            ALLIANCE_2_TOKEN_DENOM,
 					Shares:           sdk.NewDec(1000_000),
 					RewardIndices:    nil,
 				},
 				Balance: sdk.Coin{
-					Denom:  "alliance2",
+					Denom:  ALLIANCE_2_TOKEN_DENOM,
 					Amount: sdk.NewInt(1000_000),
 				},
 			},
@@ -272,14 +272,14 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 	require.Equal(t, &types.Delegation{
 		DelegatorAddress: delAddr.String(),
 		ValidatorAddress: val.OperatorAddress,
-		Denom:            "alliance",
+		Denom:            ALLIANCE_TOKEN_DENOM,
 		Shares:           sdk.NewDec(1000_000),
 		RewardIndices:    []types.RewardIndex{},
 	}, delegationTxRes)
 	require.Equal(t, &types.Delegation{
 		DelegatorAddress: delAddr.String(),
 		ValidatorAddress: val.OperatorAddress,
-		Denom:            "alliance2",
+		Denom:            ALLIANCE_2_TOKEN_DENOM,
 		Shares:           sdk.NewDec(1000_000),
 		RewardIndices:    nil,
 	}, delegation2TxRes)
