@@ -1,131 +1,225 @@
 package keeper_test
 
 import (
-	"testing"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-
-	keepertest "alliance/testutil/keeper"
-	"alliance/testutil/nullify"
 	"alliance/x/alliance/keeper"
 	"alliance/x/alliance/types"
+	"fmt"
+	"testing"
+	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestCreateAlliance(t *testing.T) {
-	k, ctx := keepertest.AllianceKeeper(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	msgServer := keeper.NewMsgServerImpl(k)
-	asset := keepertest.CreateNewAllianceAsset(&k, ctx, 2)
+	// GIVEN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	msgServer := keeper.NewMsgServerImpl(app.AllianceKeeper)
 
-	for _, tc := range []struct {
-		desc     string
-		request  *types.MsgCreateAlliance
-		response *types.MsgCreateAllianceResponse
-		err      error
-	}{
-		{
-			desc: "First",
-			request: &types.MsgCreateAlliance{
-				Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-				Alliance:  asset,
-			},
-			response: &types.MsgCreateAllianceResponse{},
+	// WHEN
+	createRes, createErr := msgServer.CreateAlliance(ctx, &types.MsgCreateAlliance{
+		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Alliance: types.AllianceAsset{
+			Denom:        "uluna",
+			RewardWeight: sdk.OneDec(),
+			TakeRate:     sdk.OneDec(),
 		},
-	} {
-		t.Run(tc.desc, func(t *testing.T) {
-			response, err := msgServer.CreateAlliance(wctx, tc.request)
+	})
+	alliancesRes, alliancesErr := app.AllianceKeeper.Alliances(ctx, &types.QueryAlliancesRequest{})
 
-			if tc.err != nil {
-				require.ErrorIs(t, err, tc.err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t,
-					nullify.Fill(tc.response),
-					nullify.Fill(response),
-				)
-			}
-		})
-	}
+	// THEN
+	require.Nil(t, createErr)
+	require.Equal(t, createRes, &types.MsgCreateAllianceResponse{})
+	require.Nil(t, alliancesErr)
+	require.Equal(t, alliancesRes, &types.QueryAlliancesResponse{
+		Alliances: []types.AllianceAsset{
+			{
+				Denom:                "uluna",
+				RewardWeight:         sdk.NewDec(1),
+				TakeRate:             sdk.NewDec(1),
+				TotalTokens:          sdk.ZeroInt(),
+				TotalValidatorShares: sdk.NewDec(0),
+			},
+		},
+		Pagination: &query.PageResponse{
+			NextKey: nil,
+			Total:   1,
+		},
+	})
+}
+
+func TestCreateAllianceWithNoDenom(t *testing.T) {
+	// GIVEN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	msgServer := keeper.NewMsgServerImpl(app.AllianceKeeper)
+
+	// WHEN
+	_, err := msgServer.CreateAlliance(ctx, &types.MsgCreateAlliance{
+		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Alliance:  types.AllianceAsset{},
+	})
+
+	// THEN
+	require.Equal(t, err, status.Errorf(codes.InvalidArgument, "Alliance denom must have a value"))
+}
+
+func TestCreateAllianceWithNoRewardWeight(t *testing.T) {
+	// GIVEN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	msgServer := keeper.NewMsgServerImpl(app.AllianceKeeper)
+
+	// WHEN
+	_, err := msgServer.CreateAlliance(ctx, &types.MsgCreateAlliance{
+		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Alliance: types.AllianceAsset{
+			Denom: "uluna",
+		},
+	})
+
+	// THEN
+	require.Equal(t, err, status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be a positive number"))
+}
+
+func TestCreateAllianceWithNoTakeRate(t *testing.T) {
+	// GIVEN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	msgServer := keeper.NewMsgServerImpl(app.AllianceKeeper)
+
+	// WHEN
+	_, err := msgServer.CreateAlliance(ctx, &types.MsgCreateAlliance{
+		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Alliance: types.AllianceAsset{
+			Denom:        "uluna",
+			RewardWeight: sdk.OneDec(),
+		},
+	})
+
+	// THEN
+	require.Equal(t, err, status.Errorf(codes.InvalidArgument, "Alliance takeRate must be a positive number"))
+}
+
+func TestCreateAllianceWithWrongAuthority(t *testing.T) {
+	// GIVEN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	msgServer := keeper.NewMsgServerImpl(app.AllianceKeeper)
+
+	// WHEN
+	_, err := msgServer.CreateAlliance(ctx, &types.MsgCreateAlliance{
+		Authority: "cosmosvaloper19lss6zgdh5vvcpjhfftdghrpsw7a4434elpwpu",
+		Alliance: types.AllianceAsset{
+			Denom:        "uluna",
+			RewardWeight: sdk.OneDec(),
+			TakeRate:     sdk.OneDec(),
+		},
+	})
+
+	// THEN
+	require.Equal(t,
+		err.Error(),
+		fmt.Sprintf(
+			"expected %s got cosmosvaloper19lss6zgdh5vvcpjhfftdghrpsw7a4434elpwpu: expected gov account as only signer for proposal message",
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		),
+	)
 }
 
 func TestUpdateAlliance(t *testing.T) {
-	k, ctx := keepertest.AllianceKeeper(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	msgServer := keeper.NewMsgServerImpl(k)
-	msgServer.CreateAlliance(wctx, &types.MsgCreateAlliance{
-		Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-		Alliance:  keepertest.CreateNewAllianceAsset(&k, ctx, 2),
-	})
-
-	for _, tc := range []struct {
-		desc     string
-		request  *types.MsgUpdateAlliance
-		response *types.MsgUpdateAllianceResponse
-		err      error
-	}{
-		{
-			desc: "First",
-			request: &types.MsgUpdateAlliance{
-				Authority:    "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
+	// GIVEN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			{
 				Denom:        "uluna",
 				RewardWeight: sdk.NewDec(2),
+				TakeRate:     sdk.OneDec(),
+				TotalTokens:  sdk.ZeroInt(),
 			},
-			response: &types.MsgUpdateAllianceResponse{},
 		},
-	} {
-		t.Run(tc.desc, func(t *testing.T) {
-			response, err := msgServer.UpdateAlliance(wctx, tc.request)
+	})
+	msgServer := keeper.NewMsgServerImpl(app.AllianceKeeper)
 
-			if tc.err != nil {
-				require.ErrorIs(t, err, tc.err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t,
-					nullify.Fill(tc.response),
-					nullify.Fill(response),
-				)
-			}
-		})
-	}
+	// WHEN
+	createRes, updateErr := msgServer.UpdateAlliance(ctx, &types.MsgUpdateAlliance{
+		Authority:    authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Denom:        "uluna",
+		RewardWeight: sdk.NewDec(6),
+		TakeRate:     sdk.NewDec(7),
+	})
+	alliancesRes, alliancesErr := app.AllianceKeeper.Alliances(ctx, &types.QueryAlliancesRequest{})
+
+	// THEN
+	require.Nil(t, updateErr)
+	require.Equal(t, createRes, &types.MsgUpdateAllianceResponse{})
+	require.Nil(t, alliancesErr)
+	require.Equal(t, alliancesRes, &types.QueryAlliancesResponse{
+		Alliances: []types.AllianceAsset{
+			{
+				Denom:                "uluna",
+				RewardWeight:         sdk.NewDec(6),
+				TakeRate:             sdk.NewDec(7),
+				TotalTokens:          sdk.ZeroInt(),
+				TotalValidatorShares: sdk.NewDec(0),
+			},
+		},
+		Pagination: &query.PageResponse{
+			NextKey: nil,
+			Total:   1,
+		},
+	})
 }
 
 func TestDeleteAlliance(t *testing.T) {
-	k, ctx := keepertest.AllianceKeeper(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	msgServer := keeper.NewMsgServerImpl(k)
-	msgServer.CreateAlliance(wctx, &types.MsgCreateAlliance{
-		Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-		Alliance:  keepertest.CreateNewAllianceAsset(&k, ctx, 2),
-	})
-
-	for _, tc := range []struct {
-		desc     string
-		request  *types.MsgDeleteAlliance
-		response *types.MsgDeleteAllianceResponse
-		err      error
-	}{
-		{
-			desc: "First",
-			request: &types.MsgDeleteAlliance{
-				Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
-				Denom:     "uluna",
+	// GIVEN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			{
+				Denom:        "uluna",
+				RewardWeight: sdk.NewDec(2),
+				TakeRate:     sdk.OneDec(),
+				TotalTokens:  sdk.ZeroInt(),
 			},
-			response: &types.MsgDeleteAllianceResponse{},
 		},
-	} {
-		t.Run(tc.desc, func(t *testing.T) {
-			response, err := msgServer.DeleteAlliance(wctx, tc.request)
+	})
+	msgServer := keeper.NewMsgServerImpl(app.AllianceKeeper)
 
-			if tc.err != nil {
-				require.ErrorIs(t, err, tc.err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t,
-					nullify.Fill(tc.response),
-					nullify.Fill(response),
-				)
-			}
-		})
-	}
+	// WHEN
+	createRes, updateErr := msgServer.DeleteAlliance(ctx, &types.MsgDeleteAlliance{
+		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Denom:     "uluna",
+	})
+	alliancesRes, alliancesErr := app.AllianceKeeper.Alliances(ctx, &types.QueryAlliancesRequest{})
+
+	// THEN
+	require.Nil(t, updateErr)
+	require.Equal(t, createRes, &types.MsgDeleteAllianceResponse{})
+	require.Nil(t, alliancesErr)
+	require.Equal(t, alliancesRes, &types.QueryAlliancesResponse{
+		Alliances: nil,
+		Pagination: &query.PageResponse{
+			NextKey: nil,
+			Total:   0,
+		},
+	})
 }

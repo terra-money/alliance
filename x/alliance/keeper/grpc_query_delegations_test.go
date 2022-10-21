@@ -8,6 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"alliance/x/alliance/types"
 )
@@ -29,7 +31,6 @@ func TestQueryAllianceDelegation(t *testing.T) {
 		},
 	})
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
-	require.Len(t, delegations, 1)
 	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
 	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	val, _ := app.StakingKeeper.GetValidator(ctx, valAddr)
@@ -71,6 +72,46 @@ func TestQueryAllianceDelegation(t *testing.T) {
 	}, delegationTxRes)
 }
 
+func TestQueryAllianceDelegationNotFound(t *testing.T) {
+	// GIVEN: THE BLOCKCHAIN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
+	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	val, _ := app.StakingKeeper.GetValidator(ctx, valAddr)
+
+	// WHEN: QUERYING ...
+	_, err := app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
+		DelegatorAddr: delAddr.String(),
+		ValidatorAddr: val.OperatorAddress,
+		Denom:         "alliance",
+	})
+
+	// THEN: VALIDATE THAT NO ERRORS HAVE BEEN PRODUCED AND BOTH OUTPUTS ARE AS WE EXPECT
+	require.Equal(t, err, status.Error(codes.NotFound, "AllianceAsset not found by denom alliance"))
+}
+
+func TestQueryAllianceValidatorNotFound(t *testing.T) {
+	// GIVEN: THE BLOCKCHAIN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
+
+	// WHEN: QUERYING ...
+	_, err := app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
+		DelegatorAddr: delAddr.String(),
+		ValidatorAddr: "cosmosvaloper19lss6zgdh5vvcpjhfftdghrpsw7a4434elpwpu",
+		Denom:         "alliance",
+	})
+
+	// THEN: VALIDATE THAT NO ERRORS HAVE BEEN PRODUCED AND BOTH OUTPUTS ARE AS WE EXPECT
+	require.Equal(t, err, status.Error(codes.NotFound, "Validator not found by address cosmosvaloper19lss6zgdh5vvcpjhfftdghrpsw7a4434elpwpu"))
+}
+
 func TestQueryAlliancesDelegationByValidator(t *testing.T) {
 	// GIVEN: THE BLOCKCHAIN WITH ALLIANCES ON GENESIS
 	app, ctx := createTestContext(t)
@@ -88,7 +129,6 @@ func TestQueryAlliancesDelegationByValidator(t *testing.T) {
 		},
 	})
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
-	require.Len(t, delegations, 1)
 	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
 	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	val, _ := app.StakingKeeper.GetValidator(ctx, valAddr)
@@ -135,6 +175,24 @@ func TestQueryAlliancesDelegationByValidator(t *testing.T) {
 	}, delegationTxRes)
 }
 
+func TestQueryAlliancesDelegationByValidatorNotFound(t *testing.T) {
+	// GIVEN: THE BLOCKCHAIN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
+
+	// WHEN: QUERYING ...
+	_, err := app.AllianceKeeper.AlliancesDelegationByValidator(ctx, &types.QueryAlliancesDelegationByValidatorRequest{
+		DelegatorAddr: delAddr.String(),
+		ValidatorAddr: "cosmosvaloper19lss6zgdh5vvcpjhfftdghrpsw7a4434elpwpu",
+	})
+
+	// THEN: VALIDATE THAT NO ERRORS HAVE BEEN PRODUCED AND BOTH OUTPUTS ARE AS WE EXPECT
+	require.Equal(t, err, status.Error(codes.NotFound, "Validator not found by address cosmosvaloper19lss6zgdh5vvcpjhfftdghrpsw7a4434elpwpu"))
+}
+
 func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 	// GIVEN: THE BLOCKCHAIN WITH ALLIANCES ON GENESIS
 	app, ctx := createTestContext(t)
@@ -158,7 +216,6 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 		},
 	})
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
-	require.Len(t, delegations, 1)
 	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
 	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	val, _ := app.StakingKeeper.GetValidator(ctx, valAddr)

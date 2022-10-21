@@ -103,3 +103,36 @@ func TestQueryAnUniqueAlliance(t *testing.T) {
 		},
 	}, alliances)
 }
+
+func TestQueryAllianceNotFound(t *testing.T) {
+	// GIVEN: THE BLOCKCHAIN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+
+	// WHEN: QUERYING THE ALLIANCE
+	_, err := app.AllianceKeeper.Alliance(ctx, &types.QueryAllianceRequest{
+		Denom: "alliance2",
+	})
+
+	// THEN: VALIDATE THE ERROR
+	require.Equal(t, err.Error(), "alliance asset is not whitelisted")
+}
+
+func TestQueryAllAlliances(t *testing.T) {
+	// GIVEN: THE BLOCKCHAIN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+
+	// WHEN: QUERYING THE ALLIANCE
+	res, err := app.AllianceKeeper.Alliances(ctx, &types.QueryAlliancesRequest{})
+
+	// THEN: VALIDATE THE ERROR
+	require.Nil(t, err)
+	require.Equal(t, len(res.Alliances), 0)
+	require.Equal(t, res.Pagination, &query.PageResponse{
+		NextKey: nil,
+		Total:   0,
+	})
+}
