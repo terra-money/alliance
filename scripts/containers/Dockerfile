@@ -9,7 +9,7 @@ RUN curl https://get.ignite.com/cli@v0.24.0! | bash
 RUN ignite chain build --output /work/
 
 FROM alpine AS run
-COPY ./scripts/build-wrapper.sh /usr/bin/build-wrapper.sh
+COPY ./scripts/containers/build-wrapper.sh /usr/bin/build-wrapper.sh
 
 VOLUME /allianced
 COPY --from=build /work/allianced /allianced/

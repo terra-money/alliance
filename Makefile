@@ -8,7 +8,7 @@ localnet-alliance-rmi:
 	docker rmi terra-money/localnet-allianced 2>/dev/null; true
 
 localnet-build-env: localnet-alliance-rmi
-	docker build --tag terra-money/localnet-allianced -f scripts/BuildDockerfile \
+	docker build --tag terra-money/localnet-allianced -f scripts/containers/Dockerfile \
     		$(shell git rev-parse --show-toplevel)
 	
 
