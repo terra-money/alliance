@@ -44,7 +44,7 @@ func CmdQueryAlliances() *cobra.Command {
 
 func CmdQueryAlliance() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "alliance [denom]",
+		Use:   "alliance denom",
 		Short: "Query a specific alliance by denom",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

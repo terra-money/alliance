@@ -16,16 +16,9 @@ func TestGenesis(t *testing.T) {
 			RewardDelayTime:     time.Duration(1000000),
 			RewardClaimInterval: time.Duration(1000000),
 			LastRewardClaimTime: time.Unix(0, 0).UTC(),
-			GlobalRewardIndices: types.RewardIndices{},
 		},
 		Assets: []types.AllianceAsset{
-			{
-				Denom:        "stake",
-				RewardWeight: sdk.NewDec(1.0),
-				TakeRate:     sdk.NewDec(0.0),
-				TotalShares:  sdk.NewDec(0.0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
+			types.NewAsset("stake", sdk.NewDec(1), sdk.ZeroDec()),
 		},
 	})
 
@@ -38,16 +31,13 @@ func TestGenesis(t *testing.T) {
 	lastClaimTime := app.AllianceKeeper.LastRewardClaimTime(ctx)
 	require.Equal(t, time.Unix(0, 0).UTC(), lastClaimTime)
 
-	index := app.AllianceKeeper.GlobalRewardIndices(ctx)
-	require.Equal(t, types.RewardIndices(nil), index)
-
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
 	require.Equal(t, 1, len(assets))
 	require.Equal(t, types.AllianceAsset{
-		Denom:        "stake",
-		RewardWeight: sdk.NewDec(1.0),
-		TakeRate:     sdk.NewDec(0.0),
-		TotalShares:  sdk.NewDec(0.0),
-		TotalTokens:  sdk.ZeroInt(),
+		Denom:                "stake",
+		RewardWeight:         sdk.NewDec(1.0),
+		TakeRate:             sdk.NewDec(0.0),
+		TotalTokens:          sdk.ZeroInt(),
+		TotalValidatorShares: sdk.ZeroDec(),
 	}, assets[0])
 }

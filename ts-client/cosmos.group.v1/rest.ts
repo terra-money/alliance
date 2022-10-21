@@ -187,7 +187,10 @@ export interface V1GroupMember {
    */
   group_id?: string;
 
-  /** member is the member data. */
+  /**
+   * Member represents a group member with an account address,
+   * non-zero weight, metadata and added_at timestamp.
+   */
   member?: V1Member;
 }
 
@@ -217,7 +220,90 @@ export interface V1GroupPolicyInfo {
    */
   version?: string;
 
-  /** decision_policy specifies the group policy's decision policy. */
+  /**
+   * `Any` contains an arbitrary serialized protocol buffer message along with a
+   * URL that describes the type of the serialized message.
+   *
+   * Protobuf library provides support to pack/unpack Any values in the form
+   * of utility functions or additional generated methods of the Any type.
+   *
+   * Example 1: Pack and unpack a message in C++.
+   *
+   *     Foo foo = ...;
+   *     Any any;
+   *     any.PackFrom(foo);
+   *     ...
+   *     if (any.UnpackTo(&foo)) {
+   *       ...
+   *     }
+   *
+   * Example 2: Pack and unpack a message in Java.
+   *
+   *     Foo foo = ...;
+   *     Any any = Any.pack(foo);
+   *     ...
+   *     if (any.is(Foo.class)) {
+   *       foo = any.unpack(Foo.class);
+   *     }
+   *
+   *  Example 3: Pack and unpack a message in Python.
+   *
+   *     foo = Foo(...)
+   *     any = Any()
+   *     any.Pack(foo)
+   *     ...
+   *     if any.Is(Foo.DESCRIPTOR):
+   *       any.Unpack(foo)
+   *       ...
+   *
+   *  Example 4: Pack and unpack a message in Go
+   *
+   *      foo := &pb.Foo{...}
+   *      any, err := anypb.New(foo)
+   *      if err != nil {
+   *        ...
+   *      }
+   *      ...
+   *      foo := &pb.Foo{}
+   *      if err := any.UnmarshalTo(foo); err != nil {
+   *        ...
+   *      }
+   *
+   * The pack methods provided by protobuf library will by default use
+   * 'type.googleapis.com/full.type.name' as the type URL and the unpack
+   * methods only use the fully qualified type name after the last '/'
+   * in the type URL, for example "foo.bar.com/x/y.z" will yield type
+   * name "y.z".
+   *
+   *
+   * JSON
+   * ====
+   * The JSON representation of an `Any` value uses the regular
+   * representation of the deserialized, embedded message, with an
+   * additional field `@type` which contains the type URL. Example:
+   *
+   *     package google.profile;
+   *     message Person {
+   *       string first_name = 1;
+   *       string last_name = 2;
+   *     }
+   *
+   *     {
+   *       "@type": "type.googleapis.com/google.profile.Person",
+   *       "firstName": <string>,
+   *       "lastName": <string>
+   *     }
+   *
+   * If the embedded message type is well-known and has a custom JSON
+   * representation, that representation will be embedded adding a field
+   * `value` which holds the custom JSON in addition to the `@type`
+   * field. Example (for message [google.protobuf.Duration][]):
+   *
+   *     {
+   *       "@type": "type.googleapis.com/google.protobuf.Duration",
+   *       "value": "1.212s"
+   *     }
+   */
   decision_policy?: ProtobufAny;
 
   /**
@@ -301,7 +387,14 @@ export interface V1MsgCreateGroupWithPolicyResponse {
  * MsgExecResponse is the Msg/Exec request type.
  */
 export interface V1MsgExecResponse {
-  /** result is the final result of the proposal execution. */
+  /**
+   * ProposalExecutorResult defines types of proposal executor results.
+   *
+   *  - PROPOSAL_EXECUTOR_RESULT_UNSPECIFIED: An empty value is not allowed.
+   *  - PROPOSAL_EXECUTOR_RESULT_NOT_RUN: We have not yet run the executor.
+   *  - PROPOSAL_EXECUTOR_RESULT_SUCCESS: The executor was successful and proposed action updated state.
+   *  - PROPOSAL_EXECUTOR_RESULT_FAILURE: The executor returned an error and proposed action didn't update state.
+   */
   result?: V1ProposalExecutorResult;
 }
 
@@ -405,15 +498,23 @@ export interface V1Proposal {
    */
   group_policy_version?: string;
 
-  /** status represents the high level position in the life cycle of the proposal. Initial value is Submitted. */
+  /**
+   * ProposalStatus defines proposal statuses.
+   *
+   *  - PROPOSAL_STATUS_UNSPECIFIED: An empty value is invalid and not allowed.
+   *  - PROPOSAL_STATUS_SUBMITTED: Initial status of a proposal when submitted.
+   *  - PROPOSAL_STATUS_ACCEPTED: Final status of a proposal when the final tally is done and the outcome
+   * passes the group policy's decision policy.
+   *  - PROPOSAL_STATUS_REJECTED: Final status of a proposal when the final tally is done and the outcome
+   * is rejected by the group policy's decision policy.
+   *  - PROPOSAL_STATUS_ABORTED: Final status of a proposal when the group policy is modified before the
+   * final tally.
+   *  - PROPOSAL_STATUS_WITHDRAWN: A proposal can be withdrawn before the voting start time by the owner.
+   * When this happens the final status is Withdrawn.
+   */
   status?: V1ProposalStatus;
 
-  /**
-   * final_tally_result contains the sums of all weighted votes for this
-   * proposal for each vote option. It is empty at submission, and only
-   * populated after tallying, at voting period end or at proposal execution,
-   * whichever happens first.
-   */
+  /** TallyResult represents the sum of weighted votes for each vote option. */
   final_tally_result?: V1TallyResult;
 
   /**
@@ -426,7 +527,14 @@ export interface V1Proposal {
    */
   voting_period_end?: string;
 
-  /** executor_result is the final result of the proposal execution. Initial value is NotRun. */
+  /**
+   * ProposalExecutorResult defines types of proposal executor results.
+   *
+   *  - PROPOSAL_EXECUTOR_RESULT_UNSPECIFIED: An empty value is not allowed.
+   *  - PROPOSAL_EXECUTOR_RESULT_NOT_RUN: We have not yet run the executor.
+   *  - PROPOSAL_EXECUTOR_RESULT_SUCCESS: The executor was successful and proposed action updated state.
+   *  - PROPOSAL_EXECUTOR_RESULT_FAILURE: The executor returned an error and proposed action didn't update state.
+   */
   executor_result?: V1ProposalExecutorResult;
 
   /** messages is a list of `sdk.Msg`s that will be executed if the proposal passes. */
@@ -475,7 +583,7 @@ export enum V1ProposalStatus {
  * QueryGroupInfoResponse is the Query/GroupInfo response type.
  */
 export interface V1QueryGroupInfoResponse {
-  /** info is the GroupInfo for the group. */
+  /** GroupInfo represents the high-level on-chain information for a group. */
   info?: V1GroupInfo;
 }
 
@@ -486,7 +594,15 @@ export interface V1QueryGroupMembersResponse {
   /** members are the members of the group with given group_id. */
   members?: V1GroupMember[];
 
-  /** pagination defines the pagination in the response. */
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
   pagination?: V1Beta1PageResponse;
 }
 
@@ -497,7 +613,15 @@ export interface V1QueryGroupPoliciesByAdminResponse {
   /** group_policies are the group policies info with provided admin. */
   group_policies?: V1GroupPolicyInfo[];
 
-  /** pagination defines the pagination in the response. */
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
   pagination?: V1Beta1PageResponse;
 }
 
@@ -508,7 +632,15 @@ export interface V1QueryGroupPoliciesByGroupResponse {
   /** group_policies are the group policies info associated with the provided group. */
   group_policies?: V1GroupPolicyInfo[];
 
-  /** pagination defines the pagination in the response. */
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
   pagination?: V1Beta1PageResponse;
 }
 
@@ -516,7 +648,7 @@ export interface V1QueryGroupPoliciesByGroupResponse {
  * QueryGroupPolicyInfoResponse is the Query/GroupPolicyInfo response type.
  */
 export interface V1QueryGroupPolicyInfoResponse {
-  /** info is the GroupPolicyInfo for the group policy. */
+  /** GroupPolicyInfo represents the high-level on-chain information for a group policy. */
   info?: V1GroupPolicyInfo;
 }
 
@@ -527,7 +659,15 @@ export interface V1QueryGroupsByAdminResponse {
   /** groups are the groups info with the provided admin. */
   groups?: V1GroupInfo[];
 
-  /** pagination defines the pagination in the response. */
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
   pagination?: V1Beta1PageResponse;
 }
 
@@ -538,7 +678,15 @@ export interface V1QueryGroupsByMemberResponse {
   /** groups are the groups info with the provided group member. */
   groups?: V1GroupInfo[];
 
-  /** pagination defines the pagination in the response. */
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
   pagination?: V1Beta1PageResponse;
 }
 
@@ -546,7 +694,12 @@ export interface V1QueryGroupsByMemberResponse {
  * QueryProposalResponse is the Query/Proposal response type.
  */
 export interface V1QueryProposalResponse {
-  /** proposal is the proposal info. */
+  /**
+   * Proposal defines a group proposal. Any member of a group can submit a proposal
+   * for a group policy to decide upon.
+   * A proposal consists of a set of `sdk.Msg`s that will be executed if the proposal
+   * passes as well as some optional metadata associated with the proposal.
+   */
   proposal?: V1Proposal;
 }
 
@@ -557,7 +710,15 @@ export interface V1QueryProposalsByGroupPolicyResponse {
   /** proposals are the proposals with given group policy. */
   proposals?: V1Proposal[];
 
-  /** pagination defines the pagination in the response. */
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
   pagination?: V1Beta1PageResponse;
 }
 
@@ -565,7 +726,7 @@ export interface V1QueryProposalsByGroupPolicyResponse {
  * QueryTallyResultResponse is the Query/TallyResult response type.
  */
 export interface V1QueryTallyResultResponse {
-  /** tally defines the requested tally. */
+  /** TallyResult represents the sum of weighted votes for each vote option. */
   tally?: V1TallyResult;
 }
 
@@ -573,7 +734,7 @@ export interface V1QueryTallyResultResponse {
  * QueryVoteByProposalVoterResponse is the Query/VoteByProposalVoter response type.
  */
 export interface V1QueryVoteByProposalVoterResponse {
-  /** vote is the vote with given proposal_id and voter. */
+  /** Vote represents a vote for a proposal. */
   vote?: V1Vote;
 }
 
@@ -584,7 +745,15 @@ export interface V1QueryVotesByProposalResponse {
   /** votes are the list of votes for given proposal_id. */
   votes?: V1Vote[];
 
-  /** pagination defines the pagination in the response. */
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
   pagination?: V1Beta1PageResponse;
 }
 
@@ -595,7 +764,15 @@ export interface V1QueryVotesByVoterResponse {
   /** votes are the list of votes by given voter. */
   votes?: V1Vote[];
 
-  /** pagination defines the pagination in the response. */
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
   pagination?: V1Beta1PageResponse;
 }
 
@@ -629,7 +806,16 @@ export interface V1Vote {
   /** voter is the account address of the voter. */
   voter?: string;
 
-  /** option is the voter's choice on the proposal. */
+  /**
+   * VoteOption enumerates the valid vote options for a given proposal.
+   *
+   *  - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines an unspecified vote option which will
+   * return an error.
+   *  - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
+   *  - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
+   *  - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
+   *  - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+   */
   option?: V1VoteOption;
 
   /** metadata is any arbitrary metadata to attached to the vote. */

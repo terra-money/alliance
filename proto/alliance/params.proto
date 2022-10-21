@@ -24,9 +24,6 @@ message Params {
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];
-  repeated RewardIndex global_reward_indices = 4 [
-    (gogoproto.nullable)   = false
-  ];
 }
 
 message RewardIndex {

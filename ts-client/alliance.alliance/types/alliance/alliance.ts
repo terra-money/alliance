@@ -1,4 +1,5 @@
 /* eslint-disable */
+import { Coin } from "../cosmos/base/v1beta1/coin";
 import { Writer, Reader } from "protobufjs/minimal";
 
 export const protobufPackage = "alliance.alliance";
@@ -19,7 +20,7 @@ export interface AllianceAsset {
    */
   takeRate: string;
   totalTokens: string;
-  totalShares: string;
+  totalValidatorShares: string;
 }
 
 export interface AddAssetProposal {
@@ -40,12 +41,23 @@ export interface UpdateAssetProposal {
   asset: AllianceAsset | undefined;
 }
 
+export interface QueuedRewardRateChange {
+  denom: string;
+  prevRewardRate: string;
+}
+
+export interface RewardRateChangeSnapshot {
+  globalIndex: string;
+  rewardWeight: string;
+  balance: Coin[];
+}
+
 const baseAllianceAsset: object = {
   denom: "",
   rewardWeight: "",
   takeRate: "",
   totalTokens: "",
-  totalShares: "",
+  totalValidatorShares: "",
 };
 
 export const AllianceAsset = {
@@ -62,8 +74,8 @@ export const AllianceAsset = {
     if (message.totalTokens !== "") {
       writer.uint32(34).string(message.totalTokens);
     }
-    if (message.totalShares !== "") {
-      writer.uint32(42).string(message.totalShares);
+    if (message.totalValidatorShares !== "") {
+      writer.uint32(42).string(message.totalValidatorShares);
     }
     return writer;
   },
@@ -88,7 +100,7 @@ export const AllianceAsset = {
           message.totalTokens = reader.string();
           break;
         case 5:
-          message.totalShares = reader.string();
+          message.totalValidatorShares = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -120,10 +132,13 @@ export const AllianceAsset = {
     } else {
       message.totalTokens = "";
     }
-    if (object.totalShares !== undefined && object.totalShares !== null) {
-      message.totalShares = String(object.totalShares);
+    if (
+      object.totalValidatorShares !== undefined &&
+      object.totalValidatorShares !== null
+    ) {
+      message.totalValidatorShares = String(object.totalValidatorShares);
     } else {
-      message.totalShares = "";
+      message.totalValidatorShares = "";
     }
     return message;
   },
@@ -136,8 +151,8 @@ export const AllianceAsset = {
     message.takeRate !== undefined && (obj.takeRate = message.takeRate);
     message.totalTokens !== undefined &&
       (obj.totalTokens = message.totalTokens);
-    message.totalShares !== undefined &&
-      (obj.totalShares = message.totalShares);
+    message.totalValidatorShares !== undefined &&
+      (obj.totalValidatorShares = message.totalValidatorShares);
     return obj;
   },
 
@@ -163,10 +178,13 @@ export const AllianceAsset = {
     } else {
       message.totalTokens = "";
     }
-    if (object.totalShares !== undefined && object.totalShares !== null) {
-      message.totalShares = object.totalShares;
+    if (
+      object.totalValidatorShares !== undefined &&
+      object.totalValidatorShares !== null
+    ) {
+      message.totalValidatorShares = object.totalValidatorShares;
     } else {
-      message.totalShares = "";
+      message.totalValidatorShares = "";
     }
     return message;
   },
@@ -453,6 +471,201 @@ export const UpdateAssetProposal = {
       message.asset = AllianceAsset.fromPartial(object.asset);
     } else {
       message.asset = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueuedRewardRateChange: object = { denom: "", prevRewardRate: "" };
+
+export const QueuedRewardRateChange = {
+  encode(
+    message: QueuedRewardRateChange,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.denom !== "") {
+      writer.uint32(10).string(message.denom);
+    }
+    if (message.prevRewardRate !== "") {
+      writer.uint32(18).string(message.prevRewardRate);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueuedRewardRateChange {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseQueuedRewardRateChange } as QueuedRewardRateChange;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.denom = reader.string();
+          break;
+        case 2:
+          message.prevRewardRate = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueuedRewardRateChange {
+    const message = { ...baseQueuedRewardRateChange } as QueuedRewardRateChange;
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = String(object.denom);
+    } else {
+      message.denom = "";
+    }
+    if (object.prevRewardRate !== undefined && object.prevRewardRate !== null) {
+      message.prevRewardRate = String(object.prevRewardRate);
+    } else {
+      message.prevRewardRate = "";
+    }
+    return message;
+  },
+
+  toJSON(message: QueuedRewardRateChange): unknown {
+    const obj: any = {};
+    message.denom !== undefined && (obj.denom = message.denom);
+    message.prevRewardRate !== undefined &&
+      (obj.prevRewardRate = message.prevRewardRate);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueuedRewardRateChange>
+  ): QueuedRewardRateChange {
+    const message = { ...baseQueuedRewardRateChange } as QueuedRewardRateChange;
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = object.denom;
+    } else {
+      message.denom = "";
+    }
+    if (object.prevRewardRate !== undefined && object.prevRewardRate !== null) {
+      message.prevRewardRate = object.prevRewardRate;
+    } else {
+      message.prevRewardRate = "";
+    }
+    return message;
+  },
+};
+
+const baseRewardRateChangeSnapshot: object = {
+  globalIndex: "",
+  rewardWeight: "",
+};
+
+export const RewardRateChangeSnapshot = {
+  encode(
+    message: RewardRateChangeSnapshot,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.globalIndex !== "") {
+      writer.uint32(10).string(message.globalIndex);
+    }
+    if (message.rewardWeight !== "") {
+      writer.uint32(18).string(message.rewardWeight);
+    }
+    for (const v of message.balance) {
+      Coin.encode(v!, writer.uint32(26).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): RewardRateChangeSnapshot {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseRewardRateChangeSnapshot,
+    } as RewardRateChangeSnapshot;
+    message.balance = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.globalIndex = reader.string();
+          break;
+        case 2:
+          message.rewardWeight = reader.string();
+          break;
+        case 3:
+          message.balance.push(Coin.decode(reader, reader.uint32()));
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RewardRateChangeSnapshot {
+    const message = {
+      ...baseRewardRateChangeSnapshot,
+    } as RewardRateChangeSnapshot;
+    message.balance = [];
+    if (object.globalIndex !== undefined && object.globalIndex !== null) {
+      message.globalIndex = String(object.globalIndex);
+    } else {
+      message.globalIndex = "";
+    }
+    if (object.rewardWeight !== undefined && object.rewardWeight !== null) {
+      message.rewardWeight = String(object.rewardWeight);
+    } else {
+      message.rewardWeight = "";
+    }
+    if (object.balance !== undefined && object.balance !== null) {
+      for (const e of object.balance) {
+        message.balance.push(Coin.fromJSON(e));
+      }
+    }
+    return message;
+  },
+
+  toJSON(message: RewardRateChangeSnapshot): unknown {
+    const obj: any = {};
+    message.globalIndex !== undefined &&
+      (obj.globalIndex = message.globalIndex);
+    message.rewardWeight !== undefined &&
+      (obj.rewardWeight = message.rewardWeight);
+    if (message.balance) {
+      obj.balance = message.balance.map((e) =>
+        e ? Coin.toJSON(e) : undefined
+      );
+    } else {
+      obj.balance = [];
+    }
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<RewardRateChangeSnapshot>
+  ): RewardRateChangeSnapshot {
+    const message = {
+      ...baseRewardRateChangeSnapshot,
+    } as RewardRateChangeSnapshot;
+    message.balance = [];
+    if (object.globalIndex !== undefined && object.globalIndex !== null) {
+      message.globalIndex = object.globalIndex;
+    } else {
+      message.globalIndex = "";
+    }
+    if (object.rewardWeight !== undefined && object.rewardWeight !== null) {
+      message.rewardWeight = object.rewardWeight;
+    } else {
+      message.rewardWeight = "";
+    }
+    if (object.balance !== undefined && object.balance !== null) {
+      for (const e of object.balance) {
+        message.balance.push(Coin.fromPartial(e));
+      }
     }
     return message;
   },

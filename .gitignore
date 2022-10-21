@@ -6,3 +6,5 @@ release/
 .DS_Store
 .testnet
 test
+
+scripts/data

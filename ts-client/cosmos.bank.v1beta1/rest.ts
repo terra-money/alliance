@@ -42,7 +42,12 @@ export interface V1Beta1DenomOwner {
   /** address defines the address that owns a particular denomination. */
   address?: string;
 
-  /** balance is the balance of the denominated coin for an account. */
+  /**
+   * Coin defines a token with a denomination and an amount.
+   *
+   * NOTE: The amount field is an Int which implements the custom method
+   * signatures required by gogoproto.
+   */
   balance?: V1Beta1Coin;
 }
 
@@ -220,7 +225,15 @@ export interface V1Beta1QueryAllBalancesResponse {
   /** balances is the balances of all the coins. */
   balances?: V1Beta1Coin[];
 
-  /** pagination defines the pagination in the response. */
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
   pagination?: V1Beta1PageResponse;
 }
 
@@ -228,7 +241,12 @@ export interface V1Beta1QueryAllBalancesResponse {
  * QueryBalanceResponse is the response type for the Query/Balance RPC method.
  */
 export interface V1Beta1QueryBalanceResponse {
-  /** balance is the balance of the coin. */
+  /**
+   * Coin defines a token with a denomination and an amount.
+   *
+   * NOTE: The amount field is an Int which implements the custom method
+   * signatures required by gogoproto.
+   */
   balance?: V1Beta1Coin;
 }
 
@@ -237,7 +255,10 @@ export interface V1Beta1QueryBalanceResponse {
 method.
 */
 export interface V1Beta1QueryDenomMetadataResponse {
-  /** metadata describes and provides all the client information for the requested token. */
+  /**
+   * Metadata represents a struct that describes
+   * a basic token.
+   */
   metadata?: V1Beta1Metadata;
 }
 
@@ -249,7 +270,15 @@ Since: cosmos-sdk 0.46
 export interface V1Beta1QueryDenomOwnersResponse {
   denom_owners?: V1Beta1DenomOwner[];
 
-  /** pagination defines the pagination in the response. */
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
   pagination?: V1Beta1PageResponse;
 }
 
@@ -261,7 +290,15 @@ export interface V1Beta1QueryDenomsMetadataResponse {
   /** metadata provides the client information for all the registered tokens. */
   metadatas?: V1Beta1Metadata[];
 
-  /** pagination defines the pagination in the response. */
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
   pagination?: V1Beta1PageResponse;
 }
 
@@ -283,7 +320,15 @@ export interface V1Beta1QuerySpendableBalancesResponse {
   /** balances is the spendable balances of all the coins. */
   balances?: V1Beta1Coin[];
 
-  /** pagination defines the pagination in the response. */
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
   pagination?: V1Beta1PageResponse;
 }
 
@@ -291,7 +336,12 @@ export interface V1Beta1QuerySpendableBalancesResponse {
  * QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
  */
 export interface V1Beta1QuerySupplyOfResponse {
-  /** amount is the supply of the coin. */
+  /**
+   * Coin defines a token with a denomination and an amount.
+   *
+   * NOTE: The amount field is an Int which implements the custom method
+   * signatures required by gogoproto.
+   */
   amount?: V1Beta1Coin;
 }
 
@@ -299,9 +349,13 @@ export interface V1Beta1QueryTotalSupplyResponse {
   supply?: V1Beta1Coin[];
 
   /**
-   * pagination defines the pagination in the response.
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
    *
-   * Since: cosmos-sdk 0.43
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
    */
   pagination?: V1Beta1PageResponse;
 }

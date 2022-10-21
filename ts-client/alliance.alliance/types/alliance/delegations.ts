@@ -1,8 +1,9 @@
 /* eslint-disable */
-import { Coin } from "../cosmos/base/v1beta1/coin";
+import { RewardIndex } from "../alliance/params";
+import { Coin, DecCoin } from "../cosmos/base/v1beta1/coin";
 import { Writer, Reader } from "protobufjs/minimal";
 
-export const protobufPackage = "alliance";
+export const protobufPackage = "alliance.alliance";
 
 export interface Delegation {
   /** delegator_address is the bech32-encoded address of the delegator. */
@@ -13,6 +14,7 @@ export interface Delegation {
   denom: string;
   /** shares define the delegation shares received. */
   shares: string;
+  rewardIndices: RewardIndex[];
 }
 
 /**
@@ -45,6 +47,13 @@ export interface QueuedUndelegation {
   entries: Undelegation[];
 }
 
+export interface Validator {
+  validatorAddress: string;
+  rewardIndices: RewardIndex[];
+  totalShares: DecCoin[];
+  validatorShares: DecCoin[];
+}
+
 const baseDelegation: object = {
   delegatorAddress: "",
   validatorAddress: "",
@@ -66,6 +75,9 @@ export const Delegation = {
     if (message.shares !== "") {
       writer.uint32(34).string(message.shares);
     }
+    for (const v of message.rewardIndices) {
+      RewardIndex.encode(v!, writer.uint32(42).fork()).ldelim();
+    }
     return writer;
   },
 
@@ -73,6 +85,7 @@ export const Delegation = {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseDelegation } as Delegation;
+    message.rewardIndices = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -88,6 +101,11 @@ export const Delegation = {
         case 4:
           message.shares = reader.string();
           break;
+        case 5:
+          message.rewardIndices.push(
+            RewardIndex.decode(reader, reader.uint32())
+          );
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -98,6 +116,7 @@ export const Delegation = {
 
   fromJSON(object: any): Delegation {
     const message = { ...baseDelegation } as Delegation;
+    message.rewardIndices = [];
     if (
       object.delegatorAddress !== undefined &&
       object.delegatorAddress !== null
@@ -124,6 +143,11 @@ export const Delegation = {
     } else {
       message.shares = "";
     }
+    if (object.rewardIndices !== undefined && object.rewardIndices !== null) {
+      for (const e of object.rewardIndices) {
+        message.rewardIndices.push(RewardIndex.fromJSON(e));
+      }
+    }
     return message;
   },
 
@@ -135,11 +159,19 @@ export const Delegation = {
       (obj.validatorAddress = message.validatorAddress);
     message.denom !== undefined && (obj.denom = message.denom);
     message.shares !== undefined && (obj.shares = message.shares);
+    if (message.rewardIndices) {
+      obj.rewardIndices = message.rewardIndices.map((e) =>
+        e ? RewardIndex.toJSON(e) : undefined
+      );
+    } else {
+      obj.rewardIndices = [];
+    }
     return obj;
   },
 
   fromPartial(object: DeepPartial<Delegation>): Delegation {
     const message = { ...baseDelegation } as Delegation;
+    message.rewardIndices = [];
     if (
       object.delegatorAddress !== undefined &&
       object.delegatorAddress !== null
@@ -165,6 +197,11 @@ export const Delegation = {
       message.shares = object.shares;
     } else {
       message.shares = "";
+    }
+    if (object.rewardIndices !== undefined && object.rewardIndices !== null) {
+      for (const e of object.rewardIndices) {
+        message.rewardIndices.push(RewardIndex.fromPartial(e));
+      }
     }
     return message;
   },
@@ -619,6 +656,154 @@ export const QueuedUndelegation = {
     if (object.entries !== undefined && object.entries !== null) {
       for (const e of object.entries) {
         message.entries.push(Undelegation.fromPartial(e));
+      }
+    }
+    return message;
+  },
+};
+
+const baseValidator: object = { validatorAddress: "" };
+
+export const Validator = {
+  encode(message: Validator, writer: Writer = Writer.create()): Writer {
+    if (message.validatorAddress !== "") {
+      writer.uint32(10).string(message.validatorAddress);
+    }
+    for (const v of message.rewardIndices) {
+      RewardIndex.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+    for (const v of message.totalShares) {
+      DecCoin.encode(v!, writer.uint32(34).fork()).ldelim();
+    }
+    for (const v of message.validatorShares) {
+      DecCoin.encode(v!, writer.uint32(42).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): Validator {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseValidator } as Validator;
+    message.rewardIndices = [];
+    message.totalShares = [];
+    message.validatorShares = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.validatorAddress = reader.string();
+          break;
+        case 2:
+          message.rewardIndices.push(
+            RewardIndex.decode(reader, reader.uint32())
+          );
+          break;
+        case 4:
+          message.totalShares.push(DecCoin.decode(reader, reader.uint32()));
+          break;
+        case 5:
+          message.validatorShares.push(DecCoin.decode(reader, reader.uint32()));
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Validator {
+    const message = { ...baseValidator } as Validator;
+    message.rewardIndices = [];
+    message.totalShares = [];
+    message.validatorShares = [];
+    if (
+      object.validatorAddress !== undefined &&
+      object.validatorAddress !== null
+    ) {
+      message.validatorAddress = String(object.validatorAddress);
+    } else {
+      message.validatorAddress = "";
+    }
+    if (object.rewardIndices !== undefined && object.rewardIndices !== null) {
+      for (const e of object.rewardIndices) {
+        message.rewardIndices.push(RewardIndex.fromJSON(e));
+      }
+    }
+    if (object.totalShares !== undefined && object.totalShares !== null) {
+      for (const e of object.totalShares) {
+        message.totalShares.push(DecCoin.fromJSON(e));
+      }
+    }
+    if (
+      object.validatorShares !== undefined &&
+      object.validatorShares !== null
+    ) {
+      for (const e of object.validatorShares) {
+        message.validatorShares.push(DecCoin.fromJSON(e));
+      }
+    }
+    return message;
+  },
+
+  toJSON(message: Validator): unknown {
+    const obj: any = {};
+    message.validatorAddress !== undefined &&
+      (obj.validatorAddress = message.validatorAddress);
+    if (message.rewardIndices) {
+      obj.rewardIndices = message.rewardIndices.map((e) =>
+        e ? RewardIndex.toJSON(e) : undefined
+      );
+    } else {
+      obj.rewardIndices = [];
+    }
+    if (message.totalShares) {
+      obj.totalShares = message.totalShares.map((e) =>
+        e ? DecCoin.toJSON(e) : undefined
+      );
+    } else {
+      obj.totalShares = [];
+    }
+    if (message.validatorShares) {
+      obj.validatorShares = message.validatorShares.map((e) =>
+        e ? DecCoin.toJSON(e) : undefined
+      );
+    } else {
+      obj.validatorShares = [];
+    }
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<Validator>): Validator {
+    const message = { ...baseValidator } as Validator;
+    message.rewardIndices = [];
+    message.totalShares = [];
+    message.validatorShares = [];
+    if (
+      object.validatorAddress !== undefined &&
+      object.validatorAddress !== null
+    ) {
+      message.validatorAddress = object.validatorAddress;
+    } else {
+      message.validatorAddress = "";
+    }
+    if (object.rewardIndices !== undefined && object.rewardIndices !== null) {
+      for (const e of object.rewardIndices) {
+        message.rewardIndices.push(RewardIndex.fromPartial(e));
+      }
+    }
+    if (object.totalShares !== undefined && object.totalShares !== null) {
+      for (const e of object.totalShares) {
+        message.totalShares.push(DecCoin.fromPartial(e));
+      }
+    }
+    if (
+      object.validatorShares !== undefined &&
+      object.validatorShares !== null
+    ) {
+      for (const e of object.validatorShares) {
+        message.validatorShares.push(DecCoin.fromPartial(e));
       }
     }
     return message;

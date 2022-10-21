@@ -15,8 +15,8 @@ var _ = strconv.Itoa(0)
 
 func CmdQueryAlliancesDelegation() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegations [delegator_addr]",
-		Short: "Query all paginated alliance delegations for a delegator_addr",
+		Use:   "delegations-by-delegator delegator_addr",
+		Short: "Query all paginated alliances delegations for a delegator_addr",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			delegator_addr := args[0]
@@ -50,7 +50,7 @@ func CmdQueryAlliancesDelegation() *cobra.Command {
 
 func CmdQueryAlliancesDelegationByValidator() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegations_validator [delegator_addr] [validator_addr]",
+		Use:   "delegations-by-delegator-and-validator delegator_addr validator_addr",
 		Short: "Query all paginated alliance delegations for a delegator_addr and validator_addr",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -86,7 +86,7 @@ func CmdQueryAlliancesDelegationByValidator() *cobra.Command {
 
 func CmdQueryAllianceDelegation() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegation [delegator_addr] [validator_addr] [denom]",
+		Use:   "delegation delegator_addr validator_addr denom",
 		Short: "Query a delegation to an alliance by delegator_addr, validator_addr and denom",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
