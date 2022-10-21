@@ -59,7 +59,11 @@ func (k Keeper) Alliance(c context.Context, req *types.QueryAllianceRequest) (*t
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// Get the part of the store that keeps assets
-	asset, _ = k.GetAssetByDenom(ctx, req.Denom)
+	asset, found := k.GetAssetByDenom(ctx, req.Denom)
+
+	if !found {
+		return nil, types.ErrUnknownAsset
+	}
 
 	// Return parsed asset, true since the asset exists
 	return &types.QueryAllianceResponse{

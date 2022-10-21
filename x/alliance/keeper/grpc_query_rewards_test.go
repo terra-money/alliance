@@ -36,6 +36,7 @@ func TestQueryRewards(t *testing.T) {
 
 	// WHEN: DELEGATING AND QUERYING ...
 	delegationTxRes, txErr := app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin("alliance", sdk.NewInt(1_900_000_000_000)))
+	ctx = ctx.WithBlockTime(startTime.Add(time.Minute)).WithBlockHeight(10)
 	queryDelegation, queryErr := app.AllianceKeeper.AllianceDelegationRewards(ctx, &types.QueryAllianceDelegationRewardsRequest{
 		DelegatorAddr: delAddr.String(),
 		ValidatorAddr: valAddr.String(),
