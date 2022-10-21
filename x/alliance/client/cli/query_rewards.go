@@ -21,7 +21,7 @@ func CmdQueryRewards() *cobra.Command {
 			denom := args[2]
 			ctx := client.GetClientContextFromCmd(cmd)
 			query := types.NewQueryClient(ctx)
-			params := &types.AllianceDelegationRewardsRequest{
+			params := &types.QueryAllianceDelegationRewardsRequest{
 				DelegatorAddr: delegatorAddr,
 				ValidatorAddr: validatorAddr,
 				Denom:         denom,

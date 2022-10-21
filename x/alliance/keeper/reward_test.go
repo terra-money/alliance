@@ -3,6 +3,9 @@ package keeper_test
 import (
 	test_helpers "alliance/app"
 	"alliance/x/alliance/types"
+	"testing"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -10,8 +13,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
-	"testing"
-	"time"
 )
 
 func TestRewardPoolAndGlobalIndex(t *testing.T) {
@@ -443,7 +444,7 @@ func TestClaimTakeRate(t *testing.T) {
 	timePassed := time.Minute*5 + time.Second
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(timePassed))
 	ctx = ctx.WithBlockHeight(2)
-	coinsClaimed, err := app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
+	coinsClaimed, _ := app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
 	coins = app.BankKeeper.GetAllBalances(ctx, feeCollectorAddr)
 	require.Equal(t, coinsClaimed, coins)
 
