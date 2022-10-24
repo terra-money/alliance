@@ -1,52 +1,42 @@
-# alliance
-**alliance** is a blockchain built using Cosmos SDK and Tendermint and created with [Ignite CLI](https://ignite.com/cli).
+# x/alliance interchain security
 
-## Get started
+Independent blockchain module compatible with [CosmosSDK v0.46.x](https://github.com/cosmos/cosmos-sdk) that allow blockchains to share security without  necessity of modifying the core Cosmos SDK modules nor share any hardware resources. By design, x/alliance use the following CosmosSDK modules to implement interchain security to a new or existing blockchain :
 
+- [x/auth](https://github.com/cosmos/cosmos-sdk/blob/main/x/auth/README.md),
+- [x/bank](https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/README.md),
+- [x/ibc](https://github.com/cosmos/ibc-go#ibc-go),
+- [x/staking](https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/README.md), 
+- [x/distribution](https://github.com/cosmos/cosmos-sdk/blob/main/x/distribution/README.md), 
+- [x/gov](https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/README.md).
+
+Since security on Delegated Proof of Stake Chains is directly related to the [voting power of the validators](https://docs.tendermint.com/v0.34/tendermint-core/validators.html#validators) x/alliance enable staking of native tokens to increase the chain security and users that stake will also earn staking rewards.
+
+# Development environment
+
+This project uses [Go v1.18](https://go.dev/dl/) and was bootstrapped with [Ignite CLI v0.24.0](https://docs.ignite.com/). 
+
+To run the local development environment use:
 ```
-ignite chain serve
-```
-
-`serve` command installs dependencies, builds, initializes, and starts your blockchain in development.
-
-### Configure
-
-Your blockchain in development can be configured with `config.yml`. To learn more, see the [Ignite CLI docs](https://docs.ignite.com).
-
-### Web Frontend
-
-Ignite CLI has scaffolded a Vue.js-based web app in the `vue` directory. Run the following commands to install dependencies and start the app:
-
-```
-cd vue
-npm install
-npm run serve
+$ ignite chain serve --verbose
 ```
 
-The frontend app is built using the `@starport/vue` and `@starport/vuex` packages. For details, see the [monorepo for Ignite front-end development](https://github.com/ignite/web).
-
-## Release
-To release a new version of your blockchain, create and push a new tag with `v` prefix. A new draft release with the configured targets will be created.
-
+If you want to build a binary ready to use:
 ```
-git tag v0.1
-git push origin v0.1
+$ ignite chain build
 ```
 
-After a draft release is created, make your final changes from the release page and publish it.
-
-### Install
-To install the latest version of your blockchain node's binary, execute the following command on your machine:
-
+To build the proto files:
 ```
-curl https://get.ignite.com/username/alliance@latest! | sudo bash
+$ ignite generate proto-go
 ```
-`username/alliance` should match the `username` and `repo_name` of the Github repository to which the source code was pushed. Learn more about [the install process](https://github.com/allinbits/starport-installer).
 
-## Learn more
 
-- [Ignite CLI](https://ignite.com/cli)
-- [Tutorials](https://docs.ignite.com/guide)
-- [Ignite CLI docs](https://docs.ignite.com)
-- [Cosmos SDK docs](https://docs.cosmos.network)
-- [Developer Chat](https://discord.gg/ignite)
+# Local Testnet 
+
+Docker orchestration to create a local testnet with 4 different docker images:
+
+- **localnet-start**: stop the testnet if running, build the terra-money/localnet-alliance image and start the nodes.
+- **localnet-alliance-rmi**: removes the previously created terra-money/localnet-alliance image.
+- **localnet-build-env**: delete and rebuild the terra-money/localnet-alliance
+- **localnet-build-nodes**: using the terra-money/localnet-alliance starts a 4 docker containers testnet.
+- **localnet-stop**: stop the testnet if running.
