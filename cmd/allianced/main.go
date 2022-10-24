@@ -6,6 +6,7 @@ import (
 	"alliance/app"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ignite/cli/ignite/pkg/cosmoscmd"
 	"github.com/ignite/cli/ignite/pkg/xstrings"
 )
@@ -20,6 +21,7 @@ func main() {
 		app.New,
 		// this line is used by starport scaffolding # root/arguments
 	)
+	rootCmd.AddCommand(NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}))
 	if err := svrcmd.Execute(rootCmd, "", app.DefaultNodeHome); err != nil {
 		os.Exit(1)
 	}

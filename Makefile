@@ -1,20 +1,15 @@
 #!/usr/bin/make -f
 
-###############################################################################
-###                                Localnet                                 ###
-###############################################################################
-
 localnet-alliance-rmi:
-	docker rmi terra-money/localnet-allianced 2>/dev/null; true
+	docker rmi terra-money/localnet-alliance 2>/dev/null; true
 
 localnet-build-env: localnet-alliance-rmi
-	docker build --tag terra-money/localnet-allianced -f scripts/containers/Dockerfile \
+	docker build --tag terra-money/localnet-alliance -f scripts/containers/Dockerfile \
     		$(shell git rev-parse --show-toplevel)
 	
-
-localnet-start-nodes:
-	docker run --rm -v $(CURDIR)/.testnet:/data terra-money/localnet-allianced \
-			  testnet init-files --v 4 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test
+localnet-build-nodes:
+	docker run --rm -v $(CURDIR)/.testnets:/alliance terra-money/localnet-alliance \
+		testnet init-files --v 4 -o /alliance --starting-ip-address 192.168.5.20 --keyring-backend=test
 	docker-compose up -d
 
 localnet-stop:

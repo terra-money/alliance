@@ -1,9 +1,9 @@
 version: "3"
 
 services:
-  alliance_node:
-    container_name: alliance_node
-    image: "terra-money/localnet-allianced"
+  allianced_node:
+    container_name: allianced_node
+    image: "terra-money/localnet-alliance"
     environment:
       - DEBUG=1
       - ID=0
@@ -18,14 +18,14 @@ services:
       - "9090:9090"
       - "2345:2345"
     volumes:
-      - ./.testnets:/data:Z
+      - ./.testnets:/allianced/data:Z
     networks:
       localnet:
         ipv4_address: 192.168.5.20
 
   alliance_node_1:
     container_name: alliance_node_1
-    image: "terra-money/localnet-allianced"
+    image: "terra-money/localnet-alliance"
     environment:
       - DEBUG=0
       - ID=1
@@ -40,14 +40,14 @@ services:
       - "9091:9090"
       - "2346:2345"
     volumes:
-      - ./.testnets:/data:Z
+      - ./.testnets:/allianced/data:Z
     networks:
       localnet:
         ipv4_address: 192.168.5.21
 
   alliance_node_2:
     container_name: alliance_node_2
-    image: "terra-money/localnet-allianced"
+    image: "terra-money/localnet-alliance"
     environment:
       - DEBUG=0
       - ID=2
@@ -62,14 +62,14 @@ services:
       - "9092:9090"
       - "2347:2345"
     volumes:
-      - ./.testnets:/data:Z
+      - ./.testnets:/allianced/data:Z
     networks:
       localnet:
         ipv4_address: 192.168.5.22
 
   alliance_node_3:
     container_name: alliance_node_3
-    image: "terra-money/localnet-allianced"
+    image: "terra-money/localnet-alliance"
     environment:
       - DEBUG=0
       - ID=3
@@ -84,7 +84,7 @@ services:
       - "9093:9090"
       - "2348:2345"
     volumes:
-      - ./.testnets:/data:Z
+      - ./.testnets:/allianced/data:Z
     networks:
       localnet:
         ipv4_address: 192.168.5.23
