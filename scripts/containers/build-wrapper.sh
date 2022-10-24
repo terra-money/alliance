@@ -7,7 +7,6 @@ ID=${ID:-0}
 LOG=${LOG:-allianced.log}
 
 if ! [ -f "${BINARY}" ]; then
-	pwd
 	echo "The binary $(basename "${BINARY}") cannot be found."
 	exit 1
 fi
