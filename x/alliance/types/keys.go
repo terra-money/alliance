@@ -123,10 +123,6 @@ func GetAllianceValidatorInfoKey(valAddr sdk.ValAddress) []byte {
 	return append(ValidatorInfoKey, address.MustLengthPrefix(valAddr)...)
 }
 
-func GetAssetRebalanceQueueKeyByDenom(denom string) []byte {
-	return append(AssetRebalanceQueueKey, address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
-}
-
 func ParseAllianceValidatorKey(key []byte) sdk.ValAddress {
 	b := key[2:]
 	return sdk.ValAddress(b)

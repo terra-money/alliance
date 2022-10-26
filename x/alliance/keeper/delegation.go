@@ -45,7 +45,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, newValidatorShares)),
 		true,
 	)
-
+	k.QueueAssetRebalanceEvent(ctx)
 	return &delegation, nil
 }
 
@@ -116,6 +116,8 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 
 	k.addRedelegation(ctx, delAddr, srcVal.GetOperator(), dstVal.GetOperator(), coin, completionTime)
 	k.queueRedelegation(ctx, delAddr, srcVal.GetOperator(), dstVal.GetOperator(), coin, completionTime)
+
+	k.QueueAssetRebalanceEvent(ctx)
 	return &types.MsgRedelegateResponse{}, nil
 }
 
@@ -161,6 +163,7 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 
 	// Queue undelegation messages to distribute tokens after undelegation completes in the future
 	k.queueUndelegation(ctx, delAddr, validator.GetOperator(), coin)
+	k.QueueAssetRebalanceEvent(ctx)
 	return nil
 }
 

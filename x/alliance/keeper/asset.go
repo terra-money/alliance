@@ -2,64 +2,25 @@ package keeper
 
 import (
 	"alliance/x/alliance/types"
-	cosmosmath "cosmossdk.io/math"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsset) error {
-	//prevAsset, found := k.GetAssetByDenom(ctx, newAsset.Denom)
-	//if !found {
-	//	return types.ErrUnknownAsset
-	//}
-	//moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	//
-	//if prevAsset.RewardWeight != newAsset.RewardWeight {
-	//	iter := k.IterateAllianceValidatorInfo(ctx)
-	//	for ; iter.Valid(); iter.Next() {
-	//		b := iter.Value()
-	//		var aVal types.Validator
-	//		k.cdc.MustUnmarshal(b, &aVal)
-	//		if !aVal.TotalTokensWithAsset(prevAsset).IsPositive() {
-	//			continue
-	//		}
-	//		valAddr, _ := sdk.ValAddressFromBech32(aVal.ValidatorAddress)
-	//		val, _ := k.stakingKeeper.GetValidator(ctx, valAddr)
-	//		delegation, found := k.stakingKeeper.GetDelegation(ctx, moduleAddr, valAddr)
-	//		if !found {
-	//			return types.ErrZeroDelegations
-	//		}
-	//		currentTokens := types.ConvertNewShareToToken(val.Tokens, val.DelegatorShares, delegation.Shares)
-	//		expectedTokens := newAsset.RewardWeight.MulInt(prevAsset.TotalTokens).TruncateInt()
-	//		if currentTokens.GT(expectedTokens) {
-	//			tokensToRemove := currentTokens.Sub(expectedTokens)
-	//			shares, err := k.stakingKeeper.ValidateUnbondAmount(ctx, moduleAddr, valAddr, tokensToRemove)
-	//			if err != nil {
-	//				return err
-	//			}
-	//			_, err = k.stakingKeeper.Unbond(ctx, moduleAddr, valAddr, shares)
-	//			if err != nil {
-	//				return err
-	//			}
-	//		} else {
-	//			tokensToAdd := expectedTokens.Sub(currentTokens)
-	//			err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), tokensToAdd)))
-	//			if err != nil {
-	//				return err
-	//			}
-	//			_, err = k.stakingKeeper.Delegate(ctx, moduleAddr, tokensToAdd, stakingtypes.Unbonded, val, true)
-	//		}
-	//	}
-	//}
-	//
-	//// Add a snapshot to help with rewards calculation
-	//
-	//// Only allow updating of certain values
-	//prevAsset.TakeRate = newAsset.TakeRate
-	//prevAsset.RewardWeight = newAsset.RewardWeight
-	//
-	//k.SetAsset(ctx, prevAsset)
+	asset, found := k.GetAssetByDenom(ctx, newAsset.Denom)
+	if !found {
+		return types.ErrUnknownAsset
+	}
+	asset.TakeRate = newAsset.TakeRate
+	asset.RewardWeight = newAsset.RewardWeight
+	k.SetAsset(ctx, asset)
+	return nil
+}
+
+func (k Keeper) RebalanceHook(ctx sdk.Context) error {
+	if k.ConsumeAssetRebalanceEvent(ctx) {
+		return k.RebalanceInternalStakeWeights(ctx)
+	}
 	return nil
 }
 
@@ -168,28 +129,19 @@ func (k Keeper) DeleteAsset(ctx sdk.Context, denom string) {
 	store.Delete(assetKey)
 }
 
-func (k Keeper) QueueAssetRebalanceEvent(ctx sdk.Context, denom string) {
+func (k Keeper) QueueAssetRebalanceEvent(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetAssetRebalanceQueueKeyByDenom(denom)
+	key := types.AssetRebalanceQueueKey
 	store.Set(key, []byte{0x00})
 }
 
-func (k Keeper) IterateAssetRebalanceQueue(ctx sdk.Context) storetypes.Iterator {
+func (k Keeper) ConsumeAssetRebalanceEvent(ctx sdk.Context) bool {
 	store := ctx.KVStore(k.storeKey)
-	return sdk.KVStorePrefixIterator(store, types.AssetRebalanceQueueKey)
-}
-
-func (k Keeper) DeleteAssetRebalanceEvent(ctx sdk.Context, denom string) {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetAssetRebalanceQueueKeyByDenom(denom)
-	store.Delete(key)
-}
-
-func (k Keeper) GetTotalStakedAmount(ctx sdk.Context) cosmosmath.Int {
-	assets := k.GetAllAssets(ctx)
-	amount := sdk.ZeroInt()
-	for _, asset := range assets {
-		amount = amount.Add(asset.TotalTokens)
+	key := types.AssetRebalanceQueueKey
+	b := store.Get(key)
+	if b == nil {
+		return false
 	}
-	return amount
+	store.Delete(key)
+	return true
 }
