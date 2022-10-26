@@ -18,7 +18,7 @@ func TestGenesis(t *testing.T) {
 			LastRewardClaimTime: time.Unix(0, 0).UTC(),
 		},
 		Assets: []types.AllianceAsset{
-			types.NewAsset("stake", sdk.NewDec(1), sdk.ZeroDec()),
+			types.NewAllianceAsset("stake", sdk.NewDec(1), sdk.ZeroDec()),
 		},
 	})
 

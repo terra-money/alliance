@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec) AllianceAsset {
+func NewAllianceAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec) AllianceAsset {
 	return AllianceAsset{
 		Denom:                denom,
 		RewardWeight:         rewardWeight,
@@ -14,11 +14,6 @@ func NewAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec) AllianceAsse
 		TotalValidatorShares: sdk.ZeroDec(),
 		TotalStakeTokens:     sdk.ZeroInt(),
 	}
-}
-
-func (asset AllianceAsset) ConvertToStake(amount cosmosmath.Int) (token cosmosmath.Int) {
-	token = asset.RewardWeight.MulInt(amount).TruncateInt()
-	return
 }
 
 func ConvertNewTokenToShares(totalTokens cosmosmath.Int, totalShares sdk.Dec, newTokens cosmosmath.Int) (shares sdk.Dec) {
