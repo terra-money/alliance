@@ -3,11 +3,12 @@ package keeper
 import (
 	"alliance/x/alliance/types"
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (k Keeper) AllianceDelegationRewards(context context.Context, request *types.AllianceDelegationRewardsRequest) (*types.AllianceDelegationRewardsResponse, error) {
+func (k Keeper) AllianceDelegationRewards(context context.Context, request *types.QueryAllianceDelegationRewardsRequest) (*types.QueryAllianceDelegationRewardsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(context)
 	delAddr, err := sdk.AccAddressFromBech32(request.DelegatorAddr)
 	if err != nil {
@@ -36,7 +37,7 @@ func (k Keeper) AllianceDelegationRewards(context context.Context, request *type
 	if err != nil {
 		return nil, err
 	}
-	return &types.AllianceDelegationRewardsResponse{
+	return &types.QueryAllianceDelegationRewardsResponse{
 		Rewards: rewards,
 	}, nil
 }

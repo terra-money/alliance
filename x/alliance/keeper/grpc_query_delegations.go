@@ -87,6 +87,12 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 		return nil, err
 	}
 
+	_, found := k.stakingKeeper.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "Validator not found by address %s", req.ValidatorAddr)
+	}
+	aVal := k.GetOrCreateValidator(ctx, valAddr)
+
 	// Get the key-value module store using the store key
 	store := ctx.KVStore(k.storeKey)
 
@@ -108,10 +114,7 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 			return types.ErrUnknownAsset
 		}
 
-		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
-		aVal := k.GetOrCreateValidator(ctx, valAddr)
 		balance := types.GetDelegationTokens(delegation, aVal, asset)
-
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
 			Balance:    balance,
@@ -148,13 +151,13 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 	validator, found := k.stakingKeeper.GetValidator(ctx, valAddr)
 
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "Validator not found with the address %s", req.ValidatorAddr)
+		return nil, status.Errorf(codes.NotFound, "Validator not found by address %s", req.ValidatorAddr)
 	}
 
 	asset, found := k.GetAssetByDenom(ctx, req.Denom)
 
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "Asset not found for denom %s", req.Denom)
+		return nil, status.Errorf(codes.NotFound, "AllianceAsset not found by denom %s", req.Denom)
 	}
 
 	delegation, found := k.GetDelegation(ctx, delAddr, validator, req.Denom)

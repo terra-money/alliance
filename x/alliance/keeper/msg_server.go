@@ -20,6 +20,11 @@ type MsgServer struct {
 var _ types.MsgServer = MsgServer{}
 
 func (m MsgServer) Delegate(ctx context.Context, delegate *types.MsgDelegate) (*types.MsgDelegateResponse, error) {
+	err := delegate.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+
 	delAddr, err := sdk.AccAddressFromBech32(delegate.DelegatorAddress)
 	if err != nil {
 		return nil, err
@@ -43,6 +48,11 @@ func (m MsgServer) Delegate(ctx context.Context, delegate *types.MsgDelegate) (*
 }
 
 func (m MsgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelegate) (*types.MsgRedelegateResponse, error) {
+	err := redelegate.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	delAddr, err := sdk.AccAddressFromBech32(redelegate.DelegatorAddress)
 	if err != nil {
@@ -75,6 +85,11 @@ func (m MsgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelega
 }
 
 func (m MsgServer) Undelegate(ctx context.Context, undelegate *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
+	err := undelegate.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	delAddr, err := sdk.AccAddressFromBech32(undelegate.DelegatorAddress)
 	if err != nil {
@@ -98,11 +113,21 @@ func (m MsgServer) Undelegate(ctx context.Context, undelegate *types.MsgUndelega
 }
 
 func (m MsgServer) CreateAlliance(ctx context.Context, req *types.MsgCreateAlliance) (*types.MsgCreateAllianceResponse, error) {
+	err := req.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+
 	if m.Keeper.authority != req.Authority {
 		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", m.Keeper.authority, req.Authority)
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	_, found := m.Keeper.GetAssetByDenom(sdkCtx, req.Alliance.Denom)
+
+	if found {
+		return nil, status.Errorf(codes.AlreadyExists, "Asset with denom: %s already exists", req.Alliance.Denom)
+	}
 
 	m.Keeper.SetAsset(sdkCtx, req.Alliance)
 
@@ -110,6 +135,11 @@ func (m MsgServer) CreateAlliance(ctx context.Context, req *types.MsgCreateAllia
 }
 
 func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAlliance) (*types.MsgUpdateAllianceResponse, error) {
+	err := req.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+
 	if m.Keeper.authority != req.Authority {
 		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", m.Keeper.authority, req.Authority)
 	}
@@ -130,6 +160,11 @@ func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAllia
 }
 
 func (m MsgServer) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAlliance) (*types.MsgDeleteAllianceResponse, error) {
+	err := req.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+
 	if m.Keeper.authority != req.Authority {
 		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", m.Keeper.authority, req.Authority)
 	}
@@ -152,6 +187,11 @@ func (m MsgServer) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAllia
 }
 
 func (m MsgServer) ClaimDelegationRewards(ctx context.Context, request *types.MsgClaimDelegationRewards) (*types.MsgClaimDelegationRewardsResponse, error) {
+	err := request.ValidateBasic()
+	if err != nil {
+		return nil, err
+	}
+
 	delAddr, err := sdk.AccAddressFromBech32(request.DelegatorAddress)
 	if err != nil {
 		return nil, err
