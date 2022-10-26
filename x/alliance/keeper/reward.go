@@ -151,11 +151,6 @@ func (k Keeper) ClaimAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time) (s
 		if asset.TotalTokens.IsPositive() && asset.TakeRate.IsPositive() {
 			reward := asset.TakeRate.Mul(prorate).MulInt(asset.TotalTokens).TruncateInt()
 			asset.TotalTokens = asset.TotalTokens.Sub(reward)
-
-			// We also scale reward rate for newly staked tokens but not voting weight,
-			// since we assume the take rate is the rate at which the assets appreciates.
-			// More value = more voting rights
-			asset.RewardWeight = asset.RewardWeight.Mul(sdk.OneDec().Add(asset.TakeRate.Mul(prorate)))
 			coins = append(coins, sdk.NewCoin(asset.Denom, reward))
 			k.SetAsset(ctx, *asset)
 		}
