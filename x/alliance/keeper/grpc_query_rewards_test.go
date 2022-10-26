@@ -29,10 +29,12 @@ func TestClaimQueryReward(t *testing.T) {
 		},
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        ULUNA_ALLIANCE,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.MustNewDecFromStr("0.5"),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:                ULUNA_ALLIANCE,
+				RewardWeight:         sdk.NewDec(2),
+				TakeRate:             sdk.MustNewDecFromStr("0.5"),
+				TotalTokens:          sdk.ZeroInt(),
+				TotalValidatorShares: sdk.NewDec(0),
+				TotalStakeTokens:     sdk.ZeroInt(),
 			},
 		},
 	})
@@ -52,6 +54,8 @@ func TestClaimQueryReward(t *testing.T) {
 		Shares:           sdk.NewDec(1000_000_000),
 		RewardHistory:    []types.RewardHistory{},
 	})
+	err := app.AllianceKeeper.RebalanceInternalStakeWeights(ctx)
+	require.NoError(t, err)
 
 	// ...and advance block...
 	timePassed := time.Minute*5 + time.Second
@@ -89,7 +93,7 @@ func TestClaimQueryReward(t *testing.T) {
 		Rewards: []sdk.Coin{
 			{
 				Denom:  ULUNA_ALLIANCE,
-				Amount: math.NewInt(4671),
+				Amount: math.NewInt(3114),
 			},
 		},
 	}, queryDelegation)

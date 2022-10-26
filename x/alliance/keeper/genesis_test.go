@@ -33,11 +33,12 @@ func TestGenesis(t *testing.T) {
 
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
 	require.Equal(t, 1, len(assets))
-	require.Equal(t, types.AllianceAsset{
+	require.Equal(t, &types.AllianceAsset{
 		Denom:                "stake",
 		RewardWeight:         sdk.NewDec(1.0),
 		TakeRate:             sdk.NewDec(0.0),
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
+		TotalStakeTokens:     sdk.ZeroInt(),
 	}, assets[0])
 }

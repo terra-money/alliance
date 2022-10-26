@@ -46,6 +46,7 @@ func TestCreateAlliance(t *testing.T) {
 				TakeRate:             sdk.NewDec(1),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
+				TotalStakeTokens:     sdk.ZeroInt(),
 			},
 		},
 		Pagination: &query.PageResponse{
@@ -147,10 +148,12 @@ func TestUpdateAlliance(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        "uluna",
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.OneDec(),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:                "uluna",
+				RewardWeight:         sdk.NewDec(2),
+				TakeRate:             sdk.OneDec(),
+				TotalTokens:          sdk.ZeroInt(),
+				TotalValidatorShares: sdk.NewDec(0),
+				TotalStakeTokens:     sdk.ZeroInt(),
 			},
 		},
 	})
@@ -177,6 +180,7 @@ func TestUpdateAlliance(t *testing.T) {
 				TakeRate:             sdk.NewDec(7),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
+				TotalStakeTokens:     sdk.ZeroInt(),
 			},
 		},
 		Pagination: &query.PageResponse{

@@ -202,16 +202,20 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:                ALLIANCE_TOKEN_DENOM,
+				RewardWeight:         sdk.NewDec(2),
+				TakeRate:             sdk.NewDec(0),
+				TotalTokens:          sdk.ZeroInt(),
+				TotalStakeTokens:     sdk.ZeroInt(),
+				TotalValidatorShares: sdk.NewDec(0),
 			},
 			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.MustNewDecFromStr("0.14159265359"),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:                ALLIANCE_2_TOKEN_DENOM,
+				RewardWeight:         sdk.NewDec(10),
+				TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
+				TotalTokens:          sdk.ZeroInt(),
+				TotalStakeTokens:     sdk.ZeroInt(),
+				TotalValidatorShares: sdk.NewDec(0),
 			},
 		},
 	})
@@ -281,6 +285,6 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 		ValidatorAddress: val.OperatorAddress,
 		Denom:            ALLIANCE_2_TOKEN_DENOM,
 		Shares:           sdk.NewDec(1000_000),
-		RewardHistory:    nil,
+		RewardHistory:    []types.RewardHistory{},
 	}, delegation2TxRes)
 }

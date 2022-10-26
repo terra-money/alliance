@@ -47,6 +47,7 @@ func TestQueryAlliances(t *testing.T) {
 				TakeRate:             sdk.NewDec(0),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
+				TotalStakeTokens:     sdk.ZeroInt(),
 			},
 			{
 				Denom:                "alliance2",
@@ -54,6 +55,7 @@ func TestQueryAlliances(t *testing.T) {
 				TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
+				TotalStakeTokens:     sdk.ZeroInt(),
 			},
 		},
 		Pagination: &query.PageResponse{
@@ -100,6 +102,7 @@ func TestQueryAnUniqueAlliance(t *testing.T) {
 			TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
 			TotalTokens:          sdk.ZeroInt(),
 			TotalValidatorShares: sdk.NewDec(0),
+			TotalStakeTokens:     sdk.ZeroInt(),
 		},
 	}, alliances)
 }
