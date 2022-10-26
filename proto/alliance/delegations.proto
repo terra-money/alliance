@@ -24,7 +24,7 @@ message Delegation {
   (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
   (gogoproto.nullable)   = false
   ];
-  repeated RewardIndex reward_indices = 5 [
+  repeated RewardHistory reward_history = 5 [
     (gogoproto.nullable)   = false
   ];
 }
@@ -70,17 +70,16 @@ message QueuedUndelegation {
   repeated Undelegation entries = 1;
 }
 
-message Validator {
+message AllianceValidatorInfo {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
-  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  repeated RewardIndex reward_indices = 2 [
+  repeated RewardHistory global_reward_history = 1 [
     (gogoproto.nullable)   = false
   ];
-  repeated cosmos.base.v1beta1.DecCoin total_shares = 4 [
+  repeated cosmos.base.v1beta1.DecCoin total_delegator_shares = 2 [
     (gogoproto.nullable)   = false
   ];
-  repeated cosmos.base.v1beta1.DecCoin validator_shares = 5 [
+  repeated cosmos.base.v1beta1.DecCoin validator_shares = 3 [
     (gogoproto.nullable)   = false
   ];
 }

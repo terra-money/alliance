@@ -4,6 +4,7 @@ import sdkerrors "cosmossdk.io/errors"
 
 var (
 	ErrEmptyValidatorAddr = sdkerrors.Register(ModuleName, 10, "empty validator address")
+	ErrValidatorNotFound  = sdkerrors.Register(ModuleName, 11, "validator not found")
 
 	ErrZeroDelegations = sdkerrors.Register(ModuleName, 20, "there are no delegations yet")
 

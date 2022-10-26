@@ -12,6 +12,7 @@ func NewAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec) AllianceAsse
 		TakeRate:             takeRate,
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
+		TotalStakeTokens:     sdk.ZeroInt(),
 	}
 }
 
@@ -35,14 +36,14 @@ func ConvertNewShareToToken(totalTokens cosmosmath.Int, totalShares sdk.Dec, sha
 	return shares.MulInt(totalTokens).Quo(totalShares).TruncateInt()
 }
 
-func GetDelegationTokens(del Delegation, val Validator, asset AllianceAsset) sdk.Coin {
+func GetDelegationTokens(del Delegation, val AllianceValidator, asset AllianceAsset) sdk.Coin {
 	valTokens := val.TotalTokensWithAsset(asset)
 	valShares := val.ValidatorSharesWithDenom(asset.Denom)
 	delTokens := ConvertNewShareToToken(valTokens, valShares, del.Shares)
 	return sdk.NewCoin(asset.Denom, delTokens)
 }
 
-func GetDelegationSharesFromTokens(val Validator, asset AllianceAsset, token cosmosmath.Int) sdk.Dec {
+func GetDelegationSharesFromTokens(val AllianceValidator, asset AllianceAsset, token cosmosmath.Int) sdk.Dec {
 	valTokens := val.TotalTokensWithAsset(asset)
 	valShares := val.ValidatorSharesWithDenom(asset.Denom)
 	return ConvertNewTokenToShares(valTokens, valShares, token)

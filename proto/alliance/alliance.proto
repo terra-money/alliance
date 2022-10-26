@@ -36,6 +36,11 @@ message AllianceAsset {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
+  string total_stake_tokens = 6 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 message AddAssetProposal {
@@ -74,19 +79,4 @@ message QueuedRewardRateChange {
 
   string denom = 1;
   string prev_reward_rate = 2;
-}
-
-message RewardRateChangeSnapshot {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
-
-  string global_index = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-  string reward_weight = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-  repeated  cosmos.base.v1beta1.Coin balance = 3 [(gogoproto.nullable) = false];
 }

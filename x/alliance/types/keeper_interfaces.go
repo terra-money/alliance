@@ -25,6 +25,14 @@ type StakingKeeper interface {
 		ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
 	) (amount math.Int, err error)
 	GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation types.Delegation, found bool)
+	TotalBondedTokens(ctx sdk.Context) math.Int
+	GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) math.Int
+	RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
+		sharesToRemove sdk.Dec,
+	) (valOut types.Validator, removedTokens math.Int)
+	RemoveValidatorTokens(ctx sdk.Context,
+		validator types.Validator, tokensToRemove math.Int,
+	) types.Validator
 }
 
 type BankKeeper interface {

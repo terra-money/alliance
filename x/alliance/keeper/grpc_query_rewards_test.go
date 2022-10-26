@@ -39,7 +39,7 @@ func TestClaimQueryReward(t *testing.T) {
 	feeCollectorAddr := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
-	val1, _ := app.StakingKeeper.GetValidator(ctx, valAddr)
+	val1, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 	delAddr := test_helpers.AddTestAddrsIncremental(app, ctx, 1, sdk.NewCoins(sdk.NewCoin(ULUNA_ALLIANCE, sdk.NewInt(1000_000_000))))[0]
 
 	// WHEN: DELEGATING ...
@@ -50,7 +50,7 @@ func TestClaimQueryReward(t *testing.T) {
 		ValidatorAddress: valAddr.String(),
 		Denom:            "uluna",
 		Shares:           sdk.NewDec(1000_000_000),
-		RewardIndices:    []types.RewardIndex{},
+		RewardHistory:    []types.RewardHistory{},
 	})
 
 	// ...and advance block...

@@ -45,8 +45,8 @@ func validateTime(i interface{}) error {
 	return nil
 }
 
-func validatePositiveRewardIndices(i interface{}) error {
-	v, ok := i.(RewardIndices)
+func validatePositiveRewardHistories(i interface{}) error {
+	v, ok := i.(RewardHistories)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -72,18 +72,18 @@ func DefaultParams() Params {
 	return NewParams()
 }
 
-type RewardIndices []RewardIndex
+type RewardHistories []RewardHistory
 
-func NewRewardIndices(r []RewardIndex) RewardIndices {
+func NewRewardHistories(r []RewardHistory) RewardHistories {
 	return r
 }
 
-func (r RewardIndices) GetIndexByDenom(denom string) (ri *RewardIndex, found bool) {
-	idx := slices.IndexFunc(r, func(e RewardIndex) bool {
+func (r RewardHistories) GetIndexByDenom(denom string) (ri *RewardHistory, found bool) {
+	idx := slices.IndexFunc(r, func(e RewardHistory) bool {
 		return e.Denom == denom
 	})
 	if idx < 0 {
-		return &RewardIndex{}, false
+		return &RewardHistory{}, false
 	} else {
 		return &r[idx], true
 	}
