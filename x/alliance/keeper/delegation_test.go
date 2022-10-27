@@ -526,7 +526,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	require.Equal(t, sdk.NewInt(11_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
 	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 6)).WithBlockHeight(2)
-	coins, err := app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
+	coins, err := app.AllianceKeeper.DeductAssetsHook(ctx)
 	require.NoError(t, err)
 	require.False(t, coins.IsZero())
 
@@ -561,7 +561,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Minute * 5)).WithBlockHeight(3)
-	coins, err = app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
+	coins, err = app.AllianceKeeper.DeductAssetsHook(ctx)
 	require.NoError(t, err)
 	require.False(t, coins.IsZero())
 

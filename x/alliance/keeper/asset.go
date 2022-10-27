@@ -22,7 +22,7 @@ func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsse
 		if err != nil {
 			return err
 		}
-		_, err = k.ClaimDistributionRewards(ctx, validator)
+		_, err = k.ClaimValidatorRewards(ctx, validator)
 		if err != nil {
 			return err
 		}

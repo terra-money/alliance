@@ -410,7 +410,7 @@ func TestClaimTakeRate(t *testing.T) {
 	require.Equal(t, sdk.NewInt(13_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
 	// Calling it immediately will not update anything
-	coins, err := app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
+	coins, err := app.AllianceKeeper.DeductAssetsHook(ctx)
 	require.Nil(t, coins)
 	require.Nil(t, err)
 
@@ -418,7 +418,7 @@ func TestClaimTakeRate(t *testing.T) {
 	timePassed := time.Minute*5 + time.Second
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(timePassed))
 	ctx = ctx.WithBlockHeight(2)
-	coinsClaimed, _ := app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
+	coinsClaimed, _ := app.AllianceKeeper.DeductAssetsHook(ctx)
 	coins = app.BankKeeper.GetAllBalances(ctx, feeCollectorAddr)
 	require.Equal(t, coinsClaimed, coins)
 
@@ -522,7 +522,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 	require.NoError(t, err)
 
 	// Accumulate rewards in pool and distribute it
-	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(20_000_000))))
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(40_000_000))))
 	require.NoError(t, err)
 	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(10_000_000))))
 	require.NoError(t, err)
@@ -609,4 +609,40 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(5_000_000+8_333_333), rewards2.AmountOf(bondDenom))
 
+	// Accumulate rewards in pool
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(10_000_000))))
+	require.NoError(t, err)
+
+	// Distribute in the next begin block
+	// At the next begin block, tokens will be distributed from the fee pool
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	power1 = val1.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
+
+	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	power2 = val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
+	app.DistrKeeper.AllocateTokens(ctx, power1+power2, power1+power2, cons1, []abcitypes.VoteInfo{
+		{
+			Validator: abcitypes.Validator{
+				Address: cons1,
+				Power:   power1,
+			},
+			SignedLastBlock: true,
+		},
+		{
+			Validator: abcitypes.Validator{
+				Address: cons2,
+				Power:   power2,
+			},
+			SignedLastBlock: true,
+		},
+	})
+
+	rewards1, err = app.AllianceKeeper.ClaimDelegationRewards(ctx, user1, val1, ALLIANCE_TOKEN_DENOM)
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewInt(5_000_000), rewards1.AmountOf(bondDenom))
+
+	rewards2, err = app.AllianceKeeper.ClaimDelegationRewards(ctx, user2, val2, ALLIANCE_2_TOKEN_DENOM)
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewInt(5_000_000), rewards2.AmountOf(bondDenom))
 }

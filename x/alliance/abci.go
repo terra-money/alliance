@@ -23,7 +23,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	if _, err := k.CompleteUndelegations(ctx); err != nil {
 		panic(err)
 	}
-	if _, err := k.ClaimAssetsWithTakeRateRateLimited(ctx); err != nil {
+	if _, err := k.DeductAssetsHook(ctx); err != nil {
 		panic(err)
 	}
 	if err := k.RebalanceHook(ctx); err != nil {

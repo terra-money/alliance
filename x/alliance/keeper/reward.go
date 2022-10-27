@@ -5,7 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"golang.org/x/exp/slices"
 	"time"
 )
 
@@ -17,12 +16,13 @@ var (
 )
 
 const (
+	// YEAR_IN_NANOS is used to calculate the pro-rated take rate when it is periodically applied with DeductAssetsHook
 	YEAR_IN_NANOS int64 = 31_557_000_000_000_000
 )
 
-// ClaimDistributionRewards to be called right before any reward claims so that we get
-// the latest rewards
-func (k Keeper) ClaimDistributionRewards(ctx sdk.Context, val types.AllianceValidator) (sdk.Coins, error) {
+// ClaimValidatorRewards claims the validator rewards (minus commission) from the distribution module
+// This should be called everytime validator delegation changes (e.g. [un/re]delegation) to update the reward claim history
+func (k Keeper) ClaimValidatorRewards(ctx sdk.Context, val types.AllianceValidator) (sdk.Coins, error) {
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
 	_, found := k.stakingKeeper.GetDelegation(ctx, moduleAddr, val.GetOperator())
@@ -41,6 +41,7 @@ func (k Keeper) ClaimDistributionRewards(ctx sdk.Context, val types.AllianceVali
 	return coins, nil
 }
 
+// ClaimDelegationRewards claims delegation rewards and transfers to the delegator account
 func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, val types.AllianceValidator, denom string) (sdk.Coins, error) {
 	asset, found := k.GetAssetByDenom(ctx, denom)
 	if !found {
@@ -51,7 +52,7 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 		return sdk.Coins{}, stakingtypes.ErrNoDelegatorForAddress
 	}
 
-	_, err := k.ClaimDistributionRewards(ctx, val)
+	_, err := k.ClaimValidatorRewards(ctx, val)
 	if err != nil {
 		return nil, err
 	}
@@ -73,69 +74,56 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 	return coins, nil
 }
 
+// CalculateDelegationRewards calculates the rewards that can be claimed for a delegation
+// It takes past reward_rate changes into account by using the RewardRateChangeSnapshot entry
 func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Delegation, val types.AllianceValidator, asset types.AllianceAsset) (sdk.Coins, types.RewardHistories, error) {
-	var rewards sdk.Coins
+	var totalRewards sdk.Coins
 	currentRewardHistory := types.NewRewardHistories(val.GlobalRewardHistory)
-	delegationRewardHistories := delegation.RewardHistory
-	// If there are reward rate changes between last and current claim, claim that first using the snapshots
+	delegationRewardHistories := types.NewRewardHistories(delegation.RewardHistory)
+	// If there are reward rate changes between last and current claim, sequentially claim with the help of the snapshots
 	snapshotIter := k.IterateRewardRatesChangeSnapshot(ctx, asset.Denom, val.GetOperator(), delegation.LastRewardClaimHeight)
 	for ; snapshotIter.Valid(); snapshotIter.Next() {
 		var snapshot types.RewardRateChangeSnapshot
 		b := snapshotIter.Value()
 		k.cdc.MustUnmarshal(b, &snapshot)
-		// Go through each reward denom and accumulate rewards
-		for _, history := range snapshot.RewardHistories {
-			idx := slices.IndexFunc(delegationRewardHistories, func(r types.RewardHistory) bool {
-				return r.Denom == history.Denom
-			})
-
-			// If local history == global history, it means that user has already claimed
-			// Index should never be more than global unless some rewards are withdrawn from the pool
-			if idx >= 0 && delegationRewardHistories[idx].Index.GTE(history.Index) {
-				continue
-			}
-			if idx < 0 {
-				idx = len(delegationRewardHistories)
-				delegationRewardHistories = append(delegationRewardHistories, types.RewardHistory{
-					Denom: history.Denom,
-					Index: sdk.ZeroDec(),
-				})
-			}
-			delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, val, asset).Amount)
-
-			claimWeight := delegationTokens.Mul(snapshot.PrevRewardWeight)
-			totalClaimable := (history.Index.Sub(delegationRewardHistories[idx].Index)).Mul(claimWeight)
-			delegationRewardHistories[idx].Index = history.Index
-			rewards = rewards.Add(sdk.NewCoin(history.Denom, totalClaimable.TruncateInt()))
-		}
+		var rewards sdk.Coins
+		rewards, delegationRewardHistories = accumulateRewards(types.NewRewardHistories(snapshot.RewardHistories), delegationRewardHistories, asset, snapshot.PrevRewardWeight, delegation, val)
+		totalRewards = totalRewards.Add(rewards...)
 	}
-
-	// Go through each reward denom and accumulate rewards
-	for _, history := range currentRewardHistory {
-		idx := slices.IndexFunc(delegationRewardHistories, func(r types.RewardHistory) bool {
-			return r.Denom == history.Denom
-		})
-
-		// If local history == global history, it means that user has already claimed
-		// Index should never be more than global unless some rewards are withdrawn from the pool
-		if idx >= 0 && delegationRewardHistories[idx].Index.GTE(history.Index) {
-			continue
-		}
-		var localRewardHistory sdk.Dec
-		if idx < 0 {
-			localRewardHistory = sdk.ZeroDec()
-		} else {
-			localRewardHistory = delegationRewardHistories[idx].Index
-		}
-		delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, val, asset).Amount)
-
-		claimWeight := delegationTokens.Mul(asset.RewardWeight)
-		totalClaimable := (history.Index.Sub(localRewardHistory)).Mul(claimWeight)
-		rewards = rewards.Add(sdk.NewCoin(history.Denom, totalClaimable.TruncateInt()))
-	}
-	return rewards, currentRewardHistory, nil
+	rewards, _ := accumulateRewards(currentRewardHistory, delegationRewardHistories, asset, asset.RewardWeight, delegation, val)
+	totalRewards = totalRewards.Add(rewards...)
+	return totalRewards, currentRewardHistory, nil
 }
 
+// accumulateRewards compares the latest reward history with the delegation's reward history
+// It takes the difference and calculates how much can be claimed
+func accumulateRewards(latestRewardHistories types.RewardHistories, delegationRewardHistories types.RewardHistories, asset types.AllianceAsset, rewardWeight sdk.Dec, delegation types.Delegation, validator types.AllianceValidator) (sdk.Coins, types.RewardHistories) {
+	// Go through each reward denom and accumulate rewards
+	var rewards sdk.Coins
+	for _, history := range latestRewardHistories {
+		delegationHistory, found := delegationRewardHistories.GetIndexByDenom(history.Denom)
+		if !found {
+			delegationHistory.Denom = history.Denom
+			delegationHistory.Index = sdk.ZeroDec()
+		}
+		if delegationHistory.Index.GTE(history.Index) {
+			continue
+		}
+		delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, validator, asset).Amount)
+
+		claimWeight := delegationTokens.Mul(rewardWeight)
+		totalClaimable := (history.Index.Sub(delegationHistory.Index)).Mul(claimWeight)
+		delegationHistory.Index = history.Index
+		rewards = rewards.Add(sdk.NewCoin(history.Denom, totalClaimable.TruncateInt()))
+		if !found {
+			delegationRewardHistories = append(delegationRewardHistories, *delegationHistory)
+		}
+	}
+	return rewards, delegationRewardHistories
+}
+
+// AddAssetsToRewardPool increments a reward history array. A reward history stores the average reward per token/reward_weight.
+// To calculate the number of rewards claimable, take reward_history * alliance_token_amount * reward_weight
 func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val types.AllianceValidator, coins sdk.Coins) error {
 	globalIndices := types.NewRewardHistories(val.GlobalRewardHistory)
 	totalAssetWeight := k.totalAssetWeight(ctx, val)
@@ -167,17 +155,21 @@ func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val 
 	return nil
 }
 
-func (k Keeper) ClaimAssetsWithTakeRateRateLimited(ctx sdk.Context) (sdk.Coins, error) {
+// DeductAssetsHook is called periodically to deduct from an alliance asset (calculated by take_rate).
+// The interval in which assets are deducted is set in module params
+func (k Keeper) DeductAssetsHook(ctx sdk.Context) (sdk.Coins, error) {
 	last := k.LastRewardClaimTime(ctx)
 	interval := k.RewardClaimInterval(ctx)
 	next := last.Add(interval)
 	if ctx.BlockTime().After(next) {
-		return k.ClaimAssetsWithTakeRate(ctx, last)
+		return k.DeductAssetsWithTakeRate(ctx, last)
 	}
 	return nil, nil
 }
 
-func (k Keeper) ClaimAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time) (sdk.Coins, error) {
+// DeductAssetsWithTakeRate Deducts an alliance asset using the take_rate
+// The deducted asset is distributed to the fee_collector module account to be redistributed to stakers
+func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time) (sdk.Coins, error) {
 	assets := k.GetAllAssets(ctx)
 	durationSinceLastClaim := ctx.BlockTime().Sub(lastClaim)
 	prorate := sdk.NewDec(durationSinceLastClaim.Nanoseconds()).Quo(sdk.NewDec(YEAR_IN_NANOS))

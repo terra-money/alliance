@@ -62,7 +62,7 @@ func TestClaimQueryReward(t *testing.T) {
 	timePassed := time.Minute*5 + time.Second
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(timePassed))
 	ctx = ctx.WithBlockHeight(2)
-	app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
+	app.AllianceKeeper.DeductAssetsHook(ctx)
 	app.BankKeeper.GetAllBalances(ctx, feeCollectorAddr)
 	sdk.MustNewDecFromStr("0.5").Mul(sdk.NewDec(timePassed.Nanoseconds()).Quo(sdk.NewDec(31_557_000_000_000_000))).MulInt(sdk.NewInt(1000_000_000))
 	app.AllianceKeeper.LastRewardClaimTime(ctx)
