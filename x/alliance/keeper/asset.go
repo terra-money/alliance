@@ -31,8 +31,9 @@ func (k Keeper) RebalanceInternalStakeWeights(ctx sdk.Context) error {
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 
 	assets := k.GetAllAssets(ctx)
-
-	for iter := k.IterateAllianceValidatorInfo(ctx); iter.Valid(); iter.Next() {
+	iter := k.IterateAllianceValidatorInfo(ctx)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
 		valAddr := types.ParseAllianceValidatorKey(iter.Key())
 		validator, err := k.GetAllianceValidator(ctx, valAddr)
 		if err != nil {
@@ -82,7 +83,11 @@ func (k Keeper) RebalanceInternalStakeWeights(ctx sdk.Context) error {
 			if err != nil {
 				return err
 			}
-			k.bankKeeper.BurnCoins(ctx, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(bondDenom, tokensToBurn)))
+			err = k.bankKeeper.BurnCoins(ctx, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(bondDenom, tokensToBurn)))
+			if err != nil {
+				return err
+			}
+
 		}
 	}
 	return nil

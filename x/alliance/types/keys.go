@@ -48,7 +48,7 @@ func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom stri
 	return append(GetDelegationsKeyForAllDenoms(delAddr, valAddr), address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
 }
 
-// GetDelegationKey creates the key for delegator bond with validator for all denoms
+// GetDelegationsKeyForAllDenoms creates the key for delegator bond with validator for all denoms
 func GetDelegationsKeyForAllDenoms(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetDelegationsKey(delAddr), address.MustLengthPrefix(valAddr)...)
 }
@@ -84,11 +84,11 @@ func ParseRedelegationQueueKey(key []byte) time.Time {
 	offset := 0
 	offset += len(RedelegationQueueKey)
 	b := key[offset:]
-	time, err := sdk.ParseTimeBytes(b)
+	t, err := sdk.ParseTimeBytes(b)
 	if err != nil {
 		panic(err)
 	}
-	return time
+	return t
 }
 
 func CreateDenomAddressPrefix(denom string) []byte {
@@ -107,11 +107,11 @@ func ParseRedelegationKeyForCompletionTime(key []byte) time.Time {
 	offset += int(key[offset]) + 1
 	offset += int(key[offset]) + 1
 	b := key[offset:]
-	time, err := sdk.ParseTimeBytes(b)
+	t, err := sdk.ParseTimeBytes(b)
 	if err != nil {
 		panic(err)
 	}
-	return time
+	return t
 }
 
 func GetUndelegationQueueKey(completion time.Time) []byte {
@@ -125,5 +125,5 @@ func GetAllianceValidatorInfoKey(valAddr sdk.ValAddress) []byte {
 
 func ParseAllianceValidatorKey(key []byte) sdk.ValAddress {
 	b := key[2:]
-	return sdk.ValAddress(b)
+	return b
 }

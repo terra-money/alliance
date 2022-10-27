@@ -26,7 +26,7 @@ func (k Keeper) Alliances(c context.Context, req *types.QueryAlliancesRequest) (
 	store := ctx.KVStore(k.storeKey)
 
 	// Get the part of the store that keeps assets
-	assetsStore := prefix.NewStore(store, []byte(types.AssetKey))
+	assetsStore := prefix.NewStore(store, types.AssetKey)
 
 	// Paginate the assets store based on PageRequest
 	pageRes, err := query.Paginate(assetsStore, req.Pagination, func(key []byte, value []byte) error {

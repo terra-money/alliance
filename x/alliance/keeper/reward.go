@@ -72,7 +72,7 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 	return coins, nil
 }
 
-func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Delegation, val types.AllianceValidator, asset types.AllianceAsset) (sdk.Coins, types.RewardHistories, error) {
+func (k Keeper) CalculateDelegationRewards(_ sdk.Context, delegation types.Delegation, val types.AllianceValidator, asset types.AllianceAsset) (sdk.Coins, types.RewardHistories, error) {
 	var rewards sdk.Coins
 	currentRewardHistory := types.NewRewardHistories(val.GlobalRewardHistory)
 	for _, history := range currentRewardHistory {

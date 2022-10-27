@@ -195,7 +195,10 @@ func (k Keeper) CompleteUndelegations(ctx sdk.Context) (int, error) {
 		k.cdc.MustUnmarshal(iter.Value(), &queued)
 		for _, undel := range queued.Entries {
 			delArr, _ := sdk.AccAddressFromBech32(undel.DelegatorAddress)
-			k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, delArr, sdk.NewCoins(undel.Balance))
+			err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, delArr, sdk.NewCoins(undel.Balance))
+			if err != nil {
+				return 0, err
+			}
 			processed++
 		}
 		store.Delete(iter.Key())

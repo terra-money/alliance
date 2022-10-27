@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"golang.org/x/exp/slices"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -41,19 +40,6 @@ func validateTime(i interface{}) error {
 	_, ok := i.(time.Time)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	return nil
-}
-
-func validatePositiveRewardHistories(i interface{}) error {
-	v, ok := i.(RewardHistories)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	for _, i := range v {
-		if i.Index.LT(sdk.ZeroDec()) {
-			return fmt.Errorf("unbonding time must be positive: %s", v)
-		}
 	}
 	return nil
 }

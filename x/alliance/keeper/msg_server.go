@@ -155,7 +155,10 @@ func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAllia
 	asset.RewardWeight = req.RewardWeight
 	asset.TakeRate = req.TakeRate
 
-	m.Keeper.UpdateAllianceAsset(sdkCtx, asset)
+	err = m.Keeper.UpdateAllianceAsset(sdkCtx, asset)
+	if err != nil {
+		return nil, err
+	}
 	return &types.MsgUpdateAllianceResponse{}, nil
 }
 
