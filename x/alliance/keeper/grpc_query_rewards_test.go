@@ -93,7 +93,7 @@ func TestClaimQueryReward(t *testing.T) {
 		Rewards: []sdk.Coin{
 			{
 				Denom:  ULUNA_ALLIANCE,
-				Amount: math.NewInt(3114),
+				Amount: math.NewInt(3115),
 			},
 		},
 	}, queryDelegation)

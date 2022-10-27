@@ -473,8 +473,7 @@ func TestClaimTakeRate(t *testing.T) {
 
 	asset, found := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.True(t, found)
-	expectedRewardRate := sdk.MustNewDecFromStr("2").Mul(sdk.OneDec().Add(sdk.MustNewDecFromStr("0.5").Mul(sdk.NewDec(timePassed.Nanoseconds()).Quo(sdk.NewDec(31_557_000_000_000_000)))))
-	require.Equal(t, expectedRewardRate, asset.RewardWeight)
+	require.Equal(t, sdk.NewDec(2), asset.RewardWeight)
 
 	// At the next begin block, tokens will be distributed from the fee pool
 	cons, _ := val1.GetConsAddr()
