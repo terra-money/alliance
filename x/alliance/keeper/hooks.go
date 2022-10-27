@@ -54,5 +54,7 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 }
 
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+	h.k.SlashValidator(ctx, valAddr, fraction)
+	h.k.QueueAssetRebalanceEvent(ctx)
 	return nil
 }

@@ -171,7 +171,7 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 	if !found {
 		return &types.QueryAllianceDelegationResponse{
 			Delegation: types.DelegationResponse{
-				Delegation: types.NewDelegation(delAddr, valAddr, req.Denom, sdk.ZeroDec(), []types.RewardHistory{}),
+				Delegation: types.NewDelegation(ctx, delAddr, valAddr, req.Denom, sdk.ZeroDec(), []types.RewardHistory{}),
 				Balance:    sdk.NewCoin(req.Denom, sdk.ZeroInt()),
 			}}, nil
 	}

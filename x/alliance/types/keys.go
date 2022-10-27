@@ -29,9 +29,10 @@ const (
 var (
 	ModuleAccKey = []byte{0x01}
 
-	AssetKey               = []byte{0x11}
-	ValidatorInfoKey       = []byte{0x12}
-	AssetRebalanceQueueKey = []byte{0x13} // TODO: find a better name. This represents an event to update weightages after changes to voting power
+	AssetKey                    = []byte{0x11}
+	ValidatorInfoKey            = []byte{0x12}
+	AssetRebalanceQueueKey      = []byte{0x13} // TODO: find a better name. This represents an event to update weightages after changes to voting power
+	RewardRateChangeSnapshotKey = []byte{0x14}
 
 	DelegationKey        = []byte{0x21}
 	RedelegationKey      = []byte{0x22}
@@ -126,4 +127,10 @@ func GetAllianceValidatorInfoKey(valAddr sdk.ValAddress) []byte {
 func ParseAllianceValidatorKey(key []byte) sdk.ValAddress {
 	b := key[2:]
 	return b
+}
+
+func GetRewardRateChangeSnapshotKey(denom string, val sdk.ValAddress, height uint64) []byte {
+	key := append(RewardRateChangeSnapshotKey, address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
+	key = append(key, address.MustLengthPrefix(val)...)
+	return append(key, sdk.Uint64ToBigEndian(height)...)
 }

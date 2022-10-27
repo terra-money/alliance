@@ -62,6 +62,7 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 	}
 
 	delegation.RewardHistory = newIndices
+	delegation.LastRewardClaimHeight = uint64(ctx.BlockHeight())
 	k.SetDelegation(ctx, delAddr, val, denom, delegation)
 
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.RewardsPoolName, delAddr, coins)
@@ -72,30 +73,65 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 	return coins, nil
 }
 
-func (k Keeper) CalculateDelegationRewards(_ sdk.Context, delegation types.Delegation, val types.AllianceValidator, asset types.AllianceAsset) (sdk.Coins, types.RewardHistories, error) {
+func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Delegation, val types.AllianceValidator, asset types.AllianceAsset) (sdk.Coins, types.RewardHistories, error) {
 	var rewards sdk.Coins
 	currentRewardHistory := types.NewRewardHistories(val.GlobalRewardHistory)
+	delegationRewardHistories := delegation.RewardHistory
+	// If there are reward rate changes between last and current claim, claim that first using the snapshots
+	snapshotIter := k.IterateRewardRatesChangeSnapshot(ctx, asset.Denom, val.GetOperator(), delegation.LastRewardClaimHeight)
+	for ; snapshotIter.Valid(); snapshotIter.Next() {
+		var snapshot types.RewardRateChangeSnapshot
+		b := snapshotIter.Value()
+		k.cdc.MustUnmarshal(b, &snapshot)
+		// Go through each reward denom and accumulate rewards
+		for _, history := range snapshot.RewardHistories {
+			idx := slices.IndexFunc(delegationRewardHistories, func(r types.RewardHistory) bool {
+				return r.Denom == history.Denom
+			})
+
+			// If local history == global history, it means that user has already claimed
+			// Index should never be more than global unless some rewards are withdrawn from the pool
+			if idx >= 0 && delegationRewardHistories[idx].Index.GTE(history.Index) {
+				continue
+			}
+			if idx < 0 {
+				idx = len(delegationRewardHistories)
+				delegationRewardHistories = append(delegationRewardHistories, types.RewardHistory{
+					Denom: history.Denom,
+					Index: sdk.ZeroDec(),
+				})
+			}
+			delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, val, asset).Amount)
+
+			claimWeight := delegationTokens.Mul(snapshot.PrevRewardWeight)
+			totalClaimable := (history.Index.Sub(delegationRewardHistories[idx].Index)).Mul(claimWeight)
+			delegationRewardHistories[idx].Index = history.Index
+			rewards = rewards.Add(sdk.NewCoin(history.Denom, totalClaimable.TruncateInt()))
+		}
+	}
+
+	// Go through each reward denom and accumulate rewards
 	for _, history := range currentRewardHistory {
-		idx := slices.IndexFunc(delegation.RewardHistory, func(r types.RewardHistory) bool {
+		idx := slices.IndexFunc(delegationRewardHistories, func(r types.RewardHistory) bool {
 			return r.Denom == history.Denom
 		})
 
 		// If local history == global history, it means that user has already claimed
 		// Index should never be more than global unless some rewards are withdrawn from the pool
-		if idx >= 0 && delegation.RewardHistory[idx].Index.GTE(history.Index) {
+		if idx >= 0 && delegationRewardHistories[idx].Index.GTE(history.Index) {
 			continue
 		}
-		var localIndex sdk.Dec
+		var localRewardHistory sdk.Dec
 		if idx < 0 {
-			localIndex = sdk.ZeroDec()
+			localRewardHistory = sdk.ZeroDec()
 		} else {
-			localIndex = delegation.RewardHistory[idx].Index
+			localRewardHistory = delegationRewardHistories[idx].Index
 		}
 		delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, val, asset).Amount)
 
 		claimWeight := delegationTokens.Mul(asset.RewardWeight)
-		totalClaimable := (history.Index.Sub(localIndex)).Mul(claimWeight)
-		rewards = append(rewards, sdk.NewCoin(history.Denom, totalClaimable.TruncateInt()))
+		totalClaimable := (history.Index.Sub(localRewardHistory)).Mul(claimWeight)
+		rewards = rewards.Add(sdk.NewCoin(history.Denom, totalClaimable.TruncateInt()))
 	}
 	return rewards, currentRewardHistory, nil
 }

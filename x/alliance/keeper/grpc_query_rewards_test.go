@@ -48,13 +48,14 @@ func TestClaimQueryReward(t *testing.T) {
 	delRes, delErr := app.AllianceKeeper.Delegate(ctx, delAddr, val1, sdk.NewCoin(ULUNA_ALLIANCE, sdk.NewInt(1000_000_000)))
 	require.Nil(t, delErr)
 	require.Equal(t, delRes, &types.Delegation{
-		DelegatorAddress: delAddr.String(),
-		ValidatorAddress: valAddr.String(),
-		Denom:            "uluna",
-		Shares:           sdk.NewDec(1000_000_000),
-		RewardHistory:    []types.RewardHistory{},
+		DelegatorAddress:      delAddr.String(),
+		ValidatorAddress:      valAddr.String(),
+		Denom:                 "uluna",
+		Shares:                sdk.NewDec(1000_000_000),
+		RewardHistory:         []types.RewardHistory{},
+		LastRewardClaimHeight: uint64(ctx.BlockHeight()),
 	})
-	err := app.AllianceKeeper.RebalanceInternalStakeWeights(ctx)
+	err := app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)
 
 	// ...and advance block...

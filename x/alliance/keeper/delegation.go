@@ -357,7 +357,7 @@ func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAd
 	delegation, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 	latestClaimHistory := validator.GlobalRewardHistory
 	if !ok {
-		delegation = types.NewDelegation(delAddr, validator.GetOperator(), coin.Denom, newShares, latestClaimHistory)
+		delegation = types.NewDelegation(ctx, delAddr, validator.GetOperator(), coin.Denom, newShares, latestClaimHistory)
 	} else {
 		delegation.AddShares(newShares)
 	}
