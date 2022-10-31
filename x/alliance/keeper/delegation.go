@@ -187,20 +187,31 @@ func (k Keeper) CompleteRedelegations(ctx sdk.Context) int {
 }
 
 // CompleteUndelegations Go through all queued undelegations and send the tokens to the delegators
-func (k Keeper) CompleteUndelegations(ctx sdk.Context) (int, error) {
+func (k Keeper) CompleteUndelegations(ctx sdk.Context) error {
 	store := ctx.KVStore(k.storeKey)
-	iter := store.Iterator(types.UndelegationQueueKey, types.GetUndelegationQueueKey(ctx.BlockTime()))
-	processed := 0
+	iter := k.IterateUndelegations(ctx, ctx.BlockTime())
 	for ; iter.Valid(); iter.Next() {
 		var queued types.QueuedUndelegation
+		completionTime, err := types.ParseUndelegationQueueKeyForCompletionTime(iter.Key())
+		if err != nil {
+			return err
+		}
 		k.cdc.MustUnmarshal(iter.Value(), &queued)
 		for _, undel := range queued.Entries {
-			delArr, _ := sdk.AccAddressFromBech32(undel.DelegatorAddress)
-			err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, delArr, sdk.NewCoins(undel.Balance))
+			delAddr, err := sdk.AccAddressFromBech32(undel.DelegatorAddress)
 			if err != nil {
-				return 0, err
+				return err
 			}
-			processed++
+			err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, delAddr, sdk.NewCoins(undel.Balance))
+			if err != nil {
+				return err
+			}
+			valAddr, err := sdk.ValAddressFromBech32(undel.ValidatorAddress)
+			if err != nil {
+				return err
+			}
+			indexKey := types.GetUnbondingIndexKey(valAddr, completionTime, undel.Balance.Denom, delAddr)
+			store.Delete(indexKey)
 		}
 		store.Delete(iter.Key())
 	}
@@ -211,10 +222,10 @@ func (k Keeper) CompleteUndelegations(ctx sdk.Context) (int, error) {
 	if !coin.IsZero() {
 		err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coin))
 		if err != nil {
-			return processed, err
+			return err
 		}
 	}
-	return processed, nil
+	return nil
 }
 
 func (k Keeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, denom string) (d types.Delegation, found bool) {
@@ -249,7 +260,7 @@ func (k Keeper) DeleteRedelegation(ctx sdk.Context, redel types.Redelegation, co
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRedelegationKey(delAddr, redel.Balance.Denom, dstValAddr, completion)
 	store.Delete(key)
-	indexKey := types.GetRedelegationIndex(srcValAddr, completion, redel.Balance.Denom, dstValAddr, delAddr)
+	indexKey := types.GetRedelegationIndexKey(srcValAddr, completion, redel.Balance.Denom, dstValAddr, delAddr)
 	store.Delete(indexKey)
 }
 
@@ -265,10 +276,21 @@ func (k Keeper) IterateRedelegationsByDelegator(ctx sdk.Context, delAddr sdk.Acc
 	return sdk.KVStorePrefixIterator(store, key)
 }
 
-func (k Keeper) IterateImmatureRedelegationsBySrcValidator(ctx sdk.Context, srcValAddr sdk.ValAddress) sdk.Iterator {
+func (k Keeper) IterateRedelegationsBySrcValidator(ctx sdk.Context, srcValAddr sdk.ValAddress) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetRedelegationsIndexOrderedByValidatorKey(srcValAddr)
 	return sdk.KVStorePrefixIterator(store, prefix)
+}
+
+func (k Keeper) IterateUndelegationsBySrcValidator(ctx sdk.Context, valAddr sdk.ValAddress) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	prefix := types.GetUndelegationsIndexOrderedByValidatorKey(valAddr)
+	return sdk.KVStorePrefixIterator(store, prefix)
+}
+
+func (k Keeper) IterateUndelegations(ctx sdk.Context, completionTime time.Time) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	return store.Iterator(types.UndelegationQueueKey, types.GetUndelegationQueueKeyByTime(completionTime))
 }
 
 func (k Keeper) SetValidator(ctx sdk.Context, val types.AllianceValidator) {
@@ -307,7 +329,7 @@ func (k Keeper) addRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, srcVal 
 	store.Set(key, b)
 
 	// Add another entry as an index to retrieve redelegations by validator
-	indexKey := types.GetRedelegationIndex(srcVal, completionTime, coin.Denom, dstVal, delAddr)
+	indexKey := types.GetRedelegationIndexKey(srcVal, completionTime, coin.Denom, dstVal, delAddr)
 	store.Set(indexKey, []byte{})
 }
 
@@ -343,7 +365,7 @@ func (k Keeper) queueRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, srcVa
 func (k Keeper) queueUndelegation(ctx sdk.Context, delAddr sdk.AccAddress, val sdk.ValAddress, coin sdk.Coin) {
 	store := ctx.KVStore(k.storeKey)
 	completionTime := ctx.BlockTime().Add(k.stakingKeeper.UnbondingTime(ctx))
-	queueKey := types.GetUndelegationQueueKey(completionTime)
+	queueKey := types.GetUndelegationQueueKey(completionTime, delAddr)
 	b := store.Get(queueKey)
 	var queue types.QueuedUndelegation
 	if b == nil {
@@ -366,6 +388,9 @@ func (k Keeper) queueUndelegation(ctx sdk.Context, delAddr sdk.AccAddress, val s
 	}
 	b = k.cdc.MustMarshal(&queue)
 	store.Set(queueKey, b)
+
+	indexKey := types.GetUnbondingIndexKey(val, completionTime, coin.Denom, delAddr)
+	store.Set(indexKey, []byte{})
 }
 
 func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) {

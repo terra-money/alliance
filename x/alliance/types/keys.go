@@ -41,6 +41,7 @@ var (
 
 	// Indexes for querying
 	RedelegationByValidatorIndexKey = []byte{0x31}
+	UndelegationByValidatorIndexKey = []byte{0x32}
 )
 
 func GetAssetKey(denom string) []byte {
@@ -84,7 +85,7 @@ func GetRedelegationQueueKey(completion time.Time) []byte {
 	return append(RedelegationQueueKey, bz...)
 }
 
-func GetRedelegationIndex(srcVal sdk.ValAddress, completion time.Time, denom string, dstVal sdk.ValAddress, delAddr sdk.AccAddress) []byte {
+func GetRedelegationIndexKey(srcVal sdk.ValAddress, completion time.Time, denom string, dstVal sdk.ValAddress, delAddr sdk.AccAddress) []byte {
 	key := append(GetRedelegationsIndexOrderedByValidatorKey(srcVal), address.MustLengthPrefix(sdk.FormatTimeBytes(completion))...)
 	key = append(key, address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
 	key = append(key, address.MustLengthPrefix(dstVal)...)
@@ -132,6 +133,45 @@ func ParseRedelegationIndexForRedelegationKey(key []byte) ([]byte, time.Time, er
 	return newKey, completionTime, err
 }
 
+func GetUnbondingIndexKey(valAddr sdk.ValAddress, completion time.Time, denom string, delAddress sdk.AccAddress) (key []byte) {
+	key = GetUndelegationsIndexOrderedByValidatorKey(valAddr)
+	key = append(key, address.MustLengthPrefix(sdk.FormatTimeBytes(completion))...)
+	key = append(key, address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
+	key = append(key, address.MustLengthPrefix(delAddress)...)
+	return key
+}
+
+func GetUndelegationsIndexOrderedByValidatorKey(valAddr sdk.ValAddress) []byte {
+	key := append(UndelegationByValidatorIndexKey, address.MustLengthPrefix(valAddr)...)
+	return key
+}
+
+func ParseUnbondingIndexKeyToUndelegationKey(key []byte) ([]byte, time.Time, error) {
+	offset := 0
+	offset += len(UndelegationByValidatorIndexKey)
+
+	valAddrLen := int(key[offset])
+	offset += 1
+	offset += valAddrLen
+
+	timeLen := int(key[offset])
+	offset += 1
+	timeBytes := key[offset : offset+timeLen]
+	offset += timeLen
+
+	denomLen := int(key[offset])
+	offset += 1
+	offset += denomLen
+
+	delAddrLen := int(key[offset])
+	offset += 1
+	delAddrBytes := key[offset : offset+delAddrLen]
+	newKey := append(UndelegationQueueKey, address.MustLengthPrefix(timeBytes)...)
+	newKey = append(newKey, address.MustLengthPrefix(delAddrBytes)...)
+	completionTime, err := sdk.ParseTimeBytes(timeBytes)
+	return newKey, completionTime, err
+}
+
 func ParseRedelegationQueueKey(key []byte) time.Time {
 	offset := 0
 	offset += len(RedelegationQueueKey)
@@ -166,9 +206,27 @@ func ParseRedelegationKeyForCompletionTime(key []byte) time.Time {
 	return t
 }
 
-func GetUndelegationQueueKey(completion time.Time) []byte {
+func ParseUndelegationQueueKeyForCompletionTime(key []byte) (time.Time, error) {
+	offset := 0
+	offset += len(UndelegationQueueKey)
+
+	timeLen := int(key[offset])
+	offset += 1
+	b := key[offset : offset+timeLen]
+	t, err := sdk.ParseTimeBytes(b)
+	return t, err
+}
+
+func GetUndelegationQueueKeyByTime(completion time.Time) (key []byte) {
 	bz := sdk.FormatTimeBytes(completion)
-	return append(UndelegationQueueKey, bz...)
+	key = append(UndelegationQueueKey, address.MustLengthPrefix(bz)...)
+	return key
+}
+
+func GetUndelegationQueueKey(completion time.Time, delAddr sdk.AccAddress) (key []byte) {
+	key = GetUndelegationQueueKeyByTime(completion)
+	key = append(key, address.MustLengthPrefix(delAddr)...)
+	return key
 }
 
 func GetAllianceValidatorInfoKey(valAddr sdk.ValAddress) []byte {

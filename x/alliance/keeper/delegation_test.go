@@ -284,7 +284,7 @@ func TestRedelegation(t *testing.T) {
 	require.True(t, found)
 
 	// Check if index by src validator was saved
-	iter = app.AllianceKeeper.IterateImmatureRedelegationsBySrcValidator(ctx, valAddr1)
+	iter = app.AllianceKeeper.IterateRedelegationsBySrcValidator(ctx, valAddr1)
 	require.True(t, iter.Valid())
 
 	// Should fail when re-delegating back to validator1
@@ -337,6 +337,7 @@ func TestRedelegation(t *testing.T) {
 
 func TestUndelegation(t *testing.T) {
 	app, ctx := createTestContext(t)
+	ctx = ctx.WithBlockTime(time.Now())
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
@@ -416,9 +417,8 @@ func TestUndelegation(t *testing.T) {
 	}, d)
 
 	// Immediately try to complete undelegation
-	processed, err := app.AllianceKeeper.CompleteUndelegations(ctx)
+	err = app.AllianceKeeper.CompleteUndelegations(ctx)
 	require.NoError(t, err)
-	require.Equal(t, 0, processed)
 
 	// Check that balance stayed the same
 	coin = app.BankKeeper.GetBalance(ctx, delAddr, ALLIANCE_TOKEN_DENOM)
@@ -427,18 +427,16 @@ func TestUndelegation(t *testing.T) {
 	// Advance time to after unbonding period
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(app.StakingKeeper.UnbondingTime(ctx)).Add(time.Minute))
 
-	processed, err = app.AllianceKeeper.CompleteUndelegations(ctx)
+	err = app.AllianceKeeper.CompleteUndelegations(ctx)
 	require.NoError(t, err)
-	require.Equal(t, 1, processed)
 
 	// Check that balance increased
 	coin = app.BankKeeper.GetBalance(ctx, delAddr, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1500_000)), coin)
 
 	// Completing again should not process anymore undelegations
-	processed, err = app.AllianceKeeper.CompleteUndelegations(ctx)
+	err = app.AllianceKeeper.CompleteUndelegations(ctx)
 	require.NoError(t, err)
-	require.Equal(t, 0, processed)
 }
 
 func TestUndelegateAfterClaimingTakeRate(t *testing.T) {

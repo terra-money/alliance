@@ -4,6 +4,7 @@ import (
 	"alliance/x/alliance/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"math"
 )
@@ -143,19 +144,24 @@ func (k Keeper) SlashValidator(ctx sdk.Context, valAddr sdk.ValAddress, fraction
 	if err != nil {
 		return err
 	}
+
+	err = k.SlashUndelegations(ctx, valAddr, fraction)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (k Keeper) SlashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
 	store := ctx.KVStore(k.storeKey)
 	// Slash all immature re-delegations
-	redelegationIterator := k.IterateImmatureRedelegationsBySrcValidator(ctx, valAddr)
+	redelegationIterator := k.IterateRedelegationsBySrcValidator(ctx, valAddr)
 	for ; redelegationIterator.Valid(); redelegationIterator.Next() {
 		redelegationKey, completion, err := types.ParseRedelegationIndexForRedelegationKey(redelegationIterator.Key())
 		if err != nil {
 			return err
 		}
-		// If redelegation is already mature
+		// Skip if redelegation is already mature
 		if completion.Before(ctx.BlockTime()) {
 			continue
 		}
@@ -197,6 +203,39 @@ func (k Keeper) SlashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, frac
 
 		delegation.Shares = delegation.Shares.Sub(sharesToSlash)
 		k.SetDelegation(ctx, delAddr, dstVal, asset.Denom, delegation)
+	}
+	return nil
+}
+
+func (k Keeper) SlashUndelegations(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+	store := ctx.KVStore(k.storeKey)
+	// Slash all immature re-delegations
+	undelegationIterator := k.IterateUndelegationsBySrcValidator(ctx, valAddr)
+	for ; undelegationIterator.Valid(); undelegationIterator.Next() {
+		undelegationKey, completion, err := types.ParseUnbondingIndexKeyToUndelegationKey(undelegationIterator.Key())
+		if err != nil {
+			return err
+		}
+		// Skip if undelegation is already mature
+		if completion.Before(ctx.BlockTime()) {
+			continue
+		}
+		b := store.Get(undelegationKey)
+		var undelegations types.QueuedUndelegation
+		k.cdc.MustUnmarshal(b, &undelegations)
+
+		// Slash undelegations by sending slashed tokens to fee pool
+		for _, entry := range undelegations.Entries {
+			tokensToSlash := fraction.MulInt(entry.Balance.Amount).TruncateInt()
+			entry.Balance = sdk.NewCoin(entry.Balance.Denom, entry.Balance.Amount.Sub(tokensToSlash))
+			coinToSlash := sdk.NewCoin(entry.Balance.Denom, tokensToSlash)
+			err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(coinToSlash))
+			if err != nil {
+				return err
+			}
+		}
+		b = k.cdc.MustMarshal(&undelegations)
+		store.Set(undelegationKey, b)
 	}
 	return nil
 }

@@ -20,7 +20,7 @@ import (
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	k.CompleteRedelegations(ctx)
-	if _, err := k.CompleteUndelegations(ctx); err != nil {
+	if err := k.CompleteUndelegations(ctx); err != nil {
 		panic(err)
 	}
 	if _, err := k.DeductAssetsHook(ctx); err != nil {

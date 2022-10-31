@@ -35,10 +35,26 @@ func TestRedelegationIndex(t *testing.T) {
 	require.NoError(t, err)
 	completion := time.Now().UTC()
 	denom := "token"
-	indexKey := types.GetRedelegationIndex(srcValAddr, completion, denom, dstValAddr, delAddr)
+	indexKey := types.GetRedelegationIndexKey(srcValAddr, completion, denom, dstValAddr, delAddr)
 	parsedDelKey, parsedTime, err := types.ParseRedelegationIndexForRedelegationKey(indexKey)
 	require.NoError(t, err)
 	require.Equal(t, parsedTime, completion)
 	delKey := types.GetRedelegationKey(delAddr, denom, dstValAddr, completion)
 	require.Equal(t, parsedDelKey, delKey)
+}
+
+func TestUndelegationIndex(t *testing.T) {
+	delAddr, err := sdk.AccAddressFromHexUnsafe("aa")
+	require.NoError(t, err)
+	srcValAddr, err := sdk.ValAddressFromHex("bb")
+	require.NoError(t, err)
+	completion := time.Now().UTC()
+	denom := "token"
+
+	indexKey := types.GetUnbondingIndexKey(srcValAddr, completion, denom, delAddr)
+	parsedUndelKey, parsedTime, err := types.ParseUnbondingIndexKeyToUndelegationKey(indexKey)
+	require.NoError(t, err)
+	require.Equal(t, parsedTime, completion)
+	delKey := types.GetUndelegationQueueKey(completion, delAddr)
+	require.Equal(t, delKey, parsedUndelKey)
 }
