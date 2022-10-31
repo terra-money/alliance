@@ -97,29 +97,29 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Del
 
 // accumulateRewards compares the latest reward history with the delegation's reward history
 // It takes the difference and calculates how much can be claimed
-func accumulateRewards(latestRewardHistories types.RewardHistories, delegationRewardHistories types.RewardHistories, asset types.AllianceAsset, rewardWeight sdk.Dec, delegation types.Delegation, validator types.AllianceValidator) (sdk.Coins, types.RewardHistories) {
+func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistories types.RewardHistories, asset types.AllianceAsset, rewardWeight sdk.Dec, delegation types.Delegation, validator types.AllianceValidator) (sdk.Coins, types.RewardHistories) {
 	// Go through each reward denom and accumulate rewards
 	var rewards sdk.Coins
 	for _, history := range latestRewardHistories {
-		delegationHistory, found := delegationRewardHistories.GetIndexByDenom(history.Denom)
+		rewardHistory, found := rewardHistories.GetIndexByDenom(history.Denom)
 		if !found {
-			delegationHistory.Denom = history.Denom
-			delegationHistory.Index = sdk.ZeroDec()
+			rewardHistory.Denom = history.Denom
+			rewardHistory.Index = sdk.ZeroDec()
 		}
-		if delegationHistory.Index.GTE(history.Index) {
+		if rewardHistory.Index.GTE(history.Index) {
 			continue
 		}
 		delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, validator, asset).Amount)
 
 		claimWeight := delegationTokens.Mul(rewardWeight)
-		totalClaimable := (history.Index.Sub(delegationHistory.Index)).Mul(claimWeight)
-		delegationHistory.Index = history.Index
+		totalClaimable := (history.Index.Sub(rewardHistory.Index)).Mul(claimWeight)
+		rewardHistory.Index = history.Index
 		rewards = rewards.Add(sdk.NewCoin(history.Denom, totalClaimable.TruncateInt()))
 		if !found {
-			delegationRewardHistories = append(delegationRewardHistories, *delegationHistory)
+			rewardHistories = append(rewardHistories, *rewardHistory)
 		}
 	}
-	return rewards, delegationRewardHistories
+	return rewards, rewardHistories
 }
 
 // AddAssetsToRewardPool increments a reward history array. A reward history stores the average reward per token/reward_weight.

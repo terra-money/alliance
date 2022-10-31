@@ -17,8 +17,8 @@ func (k Keeper) GetAllianceValidator(ctx sdk.Context, valAddr sdk.ValAddress) (t
 		valInfo = k.createAllianceValidatorInfo(ctx, valAddr)
 	}
 	return types.AllianceValidator{
-		&val,
-		&valInfo,
+		Validator:             &val,
+		AllianceValidatorInfo: &valInfo,
 	}, nil
 }
 

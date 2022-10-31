@@ -31,7 +31,7 @@ var (
 
 	AssetKey                    = []byte{0x11}
 	ValidatorInfoKey            = []byte{0x12}
-	AssetRebalanceQueueKey      = []byte{0x13} // TODO: find a better name. This represents an event to update weightages after changes to voting power
+	AssetRebalanceQueueKey      = []byte{0x13}
 	RewardRateChangeSnapshotKey = []byte{0x14}
 
 	DelegationKey        = []byte{0x21}

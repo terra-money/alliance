@@ -70,10 +70,10 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) (err error) {
 	}
 
 	for _, validator := range bondedValidators {
-		actualBondAmount := sdk.NewDec(0)
+		currentBondedAmount := sdk.NewDec(0)
 		delegation, found := k.stakingKeeper.GetDelegation(ctx, moduleAddr, validator.GetOperator())
 		if found {
-			actualBondAmount = validator.TokensFromShares(delegation.GetShares())
+			currentBondedAmount = validator.TokensFromShares(delegation.GetShares())
 		}
 
 		expectedBondAmount := sdk.ZeroDec()
@@ -89,9 +89,9 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) (err error) {
 				expectedBondAmount = expectedBondAmount.Add(valShares.MulInt(expectedBondAmountForAsset).Quo(asset.TotalValidatorShares.Sub(unbondedValidatorShares.AmountOf(asset.Denom))))
 			}
 		}
-		if expectedBondAmount.GT(actualBondAmount) {
+		if expectedBondAmount.GT(currentBondedAmount) {
 			// add
-			bondAmount := expectedBondAmount.Sub(actualBondAmount).RoundInt()
+			bondAmount := expectedBondAmount.Sub(currentBondedAmount).RoundInt()
 			err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, bondAmount)))
 			if err != nil {
 				return nil
@@ -100,9 +100,9 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) (err error) {
 			if err != nil {
 				return err
 			}
-		} else if expectedBondAmount.LT(actualBondAmount) {
+		} else if expectedBondAmount.LT(currentBondedAmount) {
 			// sub
-			unbondAmount := actualBondAmount.Sub(expectedBondAmount).RoundInt()
+			unbondAmount := currentBondedAmount.Sub(expectedBondAmount).RoundInt()
 			sharesToUnbond, err := k.stakingKeeper.ValidateUnbondAmount(ctx, moduleAddr, validator.GetOperator(), unbondAmount)
 			if err != nil {
 				return err
