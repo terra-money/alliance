@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"golang.org/x/exp/slices"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -31,7 +30,7 @@ func validatePositiveDuration(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	if v <= 0 {
+	if v < 0 {
 		return fmt.Errorf("duration must be positive: %d", v)
 	}
 	return nil
@@ -41,19 +40,6 @@ func validateTime(i interface{}) error {
 	_, ok := i.(time.Time)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	return nil
-}
-
-func validatePositiveRewardIndices(i interface{}) error {
-	v, ok := i.(RewardIndices)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	for _, i := range v {
-		if i.Index.LT(sdk.ZeroDec()) {
-			return fmt.Errorf("unbonding time must be positive: %s", v)
-		}
 	}
 	return nil
 }
@@ -72,18 +58,18 @@ func DefaultParams() Params {
 	return NewParams()
 }
 
-type RewardIndices []RewardIndex
+type RewardHistories []RewardHistory
 
-func NewRewardIndices(r []RewardIndex) RewardIndices {
+func NewRewardHistories(r []RewardHistory) RewardHistories {
 	return r
 }
 
-func (r RewardIndices) GetIndexByDenom(denom string) (ri *RewardIndex, found bool) {
-	idx := slices.IndexFunc(r, func(e RewardIndex) bool {
+func (r RewardHistories) GetIndexByDenom(denom string) (ri *RewardHistory, found bool) {
+	idx := slices.IndexFunc(r, func(e RewardHistory) bool {
 		return e.Denom == denom
 	})
 	if idx < 0 {
-		return &RewardIndex{}, false
+		return &RewardHistory{}, false
 	} else {
 		return &r[idx], true
 	}

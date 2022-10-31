@@ -22,11 +22,12 @@ func TestCreateAlliance(t *testing.T) {
 	startTime := time.Now()
 	ctx.WithBlockTime(startTime).WithBlockHeight(1)
 	msgServer := keeper.NewMsgServerImpl(app.AllianceKeeper)
+	rewardDuration := app.AllianceKeeper.RewardDelayTime(ctx)
 
 	// WHEN
 	createRes, createErr := msgServer.CreateAlliance(ctx, &types.MsgCreateAlliance{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		Alliance: types.AllianceAsset{
+		Alliance: types.NewAllianceAssetMsg{
 			Denom:        "uluna",
 			RewardWeight: sdk.OneDec(),
 			TakeRate:     sdk.OneDec(),
@@ -46,6 +47,7 @@ func TestCreateAlliance(t *testing.T) {
 				TakeRate:             sdk.NewDec(1),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
+				RewardStartTime:      ctx.BlockTime().Add(rewardDuration),
 			},
 		},
 		Pagination: &query.PageResponse{
@@ -65,7 +67,7 @@ func TestCreateAllianceWithNoDenom(t *testing.T) {
 	// WHEN
 	_, err := msgServer.CreateAlliance(ctx, &types.MsgCreateAlliance{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		Alliance:  types.AllianceAsset{},
+		Alliance:  types.NewAllianceAssetMsg{},
 	})
 
 	// THEN
@@ -82,7 +84,7 @@ func TestCreateAllianceWithNoRewardWeight(t *testing.T) {
 	// WHEN
 	_, err := msgServer.CreateAlliance(ctx, &types.MsgCreateAlliance{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		Alliance: types.AllianceAsset{
+		Alliance: types.NewAllianceAssetMsg{
 			Denom: "uluna",
 		},
 	})
@@ -101,7 +103,7 @@ func TestCreateAllianceWithNoTakeRate(t *testing.T) {
 	// WHEN
 	_, err := msgServer.CreateAlliance(ctx, &types.MsgCreateAlliance{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		Alliance: types.AllianceAsset{
+		Alliance: types.NewAllianceAssetMsg{
 			Denom:        "uluna",
 			RewardWeight: sdk.OneDec(),
 		},
@@ -121,7 +123,7 @@ func TestCreateAllianceWithWrongAuthority(t *testing.T) {
 	// WHEN
 	_, err := msgServer.CreateAlliance(ctx, &types.MsgCreateAlliance{
 		Authority: "cosmosvaloper19lss6zgdh5vvcpjhfftdghrpsw7a4434elpwpu",
-		Alliance: types.AllianceAsset{
+		Alliance: types.NewAllianceAssetMsg{
 			Denom:        "uluna",
 			RewardWeight: sdk.OneDec(),
 			TakeRate:     sdk.OneDec(),
@@ -147,10 +149,11 @@ func TestUpdateAlliance(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        "uluna",
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.OneDec(),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:                "uluna",
+				RewardWeight:         sdk.NewDec(2),
+				TakeRate:             sdk.OneDec(),
+				TotalTokens:          sdk.ZeroInt(),
+				TotalValidatorShares: sdk.NewDec(0),
 			},
 		},
 	})

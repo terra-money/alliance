@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -35,9 +34,9 @@ func (m MsgServer) Delegate(ctx context.Context, delegate *types.MsgDelegate) (*
 		return nil, err
 	}
 
-	validator, ok := m.Keeper.stakingKeeper.GetValidator(sdkCtx, valAddr)
-	if !ok {
-		return nil, stakingtypes.ErrNoValidatorFound
+	validator, err := m.Keeper.GetAllianceValidator(sdkCtx, valAddr)
+	if err != nil {
+		return nil, err
 	}
 
 	_, err = m.Keeper.Delegate(sdkCtx, delAddr, validator, delegate.Amount)
@@ -68,13 +67,14 @@ func (m MsgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelega
 		return nil, err
 	}
 
-	srcValidator, ok := m.Keeper.stakingKeeper.GetValidator(sdkCtx, srcValAddr)
-	if !ok {
-		return nil, stakingtypes.ErrNoValidatorFound
+	srcValidator, err := m.Keeper.GetAllianceValidator(sdkCtx, srcValAddr)
+	if err != nil {
+		return nil, err
 	}
-	dstValidator, ok := m.Keeper.stakingKeeper.GetValidator(sdkCtx, dstValAddr)
-	if !ok {
-		return nil, stakingtypes.ErrNoValidatorFound
+
+	dstValidator, err := m.Keeper.GetAllianceValidator(sdkCtx, dstValAddr)
+	if err != nil {
+		return nil, err
 	}
 
 	_, err = m.Keeper.Redelegate(sdkCtx, delAddr, srcValidator, dstValidator, redelegate.Amount)
@@ -100,9 +100,9 @@ func (m MsgServer) Undelegate(ctx context.Context, undelegate *types.MsgUndelega
 		return nil, err
 	}
 
-	validator, ok := m.Keeper.stakingKeeper.GetValidator(sdkCtx, valAddr)
-	if !ok {
-		return nil, stakingtypes.ErrNoValidatorFound
+	validator, err := m.Keeper.GetAllianceValidator(sdkCtx, valAddr)
+	if err != nil {
+		return nil, err
 	}
 
 	err = m.Keeper.Undelegate(sdkCtx, delAddr, validator, undelegate.Amount)
@@ -129,7 +129,9 @@ func (m MsgServer) CreateAlliance(ctx context.Context, req *types.MsgCreateAllia
 		return nil, status.Errorf(codes.AlreadyExists, "Asset with denom: %s already exists", req.Alliance.Denom)
 	}
 
-	m.Keeper.SetAsset(sdkCtx, req.Alliance)
+	rewardStartTime := sdkCtx.BlockTime().Add(m.Keeper.RewardDelayTime(sdkCtx))
+	asset := types.NewAllianceAsset(req.Alliance.Denom, req.Alliance.RewardWeight, req.Alliance.TakeRate, rewardStartTime)
+	m.Keeper.SetAsset(sdkCtx, asset)
 
 	return &types.MsgCreateAllianceResponse{}, nil
 }
@@ -155,7 +157,10 @@ func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAllia
 	asset.RewardWeight = req.RewardWeight
 	asset.TakeRate = req.TakeRate
 
-	m.Keeper.UpdateAllianceAsset(sdkCtx, asset)
+	err = m.Keeper.UpdateAllianceAsset(sdkCtx, asset)
+	if err != nil {
+		return nil, err
+	}
 	return &types.MsgUpdateAllianceResponse{}, nil
 }
 
@@ -201,11 +206,13 @@ func (m MsgServer) ClaimDelegationRewards(ctx context.Context, request *types.Ms
 	if err != nil {
 		return nil, err
 	}
-	val, found := m.Keeper.stakingKeeper.GetValidator(sdkCtx, valAddr)
-	if !found {
-		return nil, stakingtypes.ErrNoValidatorFound
+
+	validator, err := m.Keeper.GetAllianceValidator(sdkCtx, valAddr)
+	if err != nil {
+		return nil, err
 	}
-	_, err = m.Keeper.ClaimDelegationRewards(sdkCtx, delAddr, val, request.Denom)
+
+	_, err = m.Keeper.ClaimDelegationRewards(sdkCtx, delAddr, validator, request.Denom)
 	return &types.MsgClaimDelegationRewardsResponse{}, err
 }
 

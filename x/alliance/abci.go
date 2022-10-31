@@ -11,7 +11,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// BeginBlocker
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 }
@@ -20,7 +19,14 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	k.CompleteRedelegations(ctx)
-	k.CompleteUndelegations(ctx)
-	k.ClaimAssetsWithTakeRateRateLimited(ctx)
+	if err := k.CompleteUndelegations(ctx); err != nil {
+		panic(err)
+	}
+	if _, err := k.DeductAssetsHook(ctx); err != nil {
+		panic(err)
+	}
+	if err := k.RebalanceHook(ctx); err != nil {
+		panic(err)
+	}
 	return []abci.ValidatorUpdate{}
 }

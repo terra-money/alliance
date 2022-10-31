@@ -50,8 +50,11 @@ func (k Keeper) AlliancesDelegation(c context.Context, req *types.QueryAlliances
 		}
 
 		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
-		aVal := k.GetOrCreateValidator(ctx, valAddr)
-		balance := types.GetDelegationTokens(delegation, aVal, asset)
+		validator, err := k.GetAllianceValidator(ctx, valAddr)
+		if err != nil {
+			return err
+		}
+		balance := types.GetDelegationTokens(delegation, validator, asset)
 
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
@@ -91,7 +94,6 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "Validator not found by address %s", req.ValidatorAddr)
 	}
-	aVal := k.GetOrCreateValidator(ctx, valAddr)
 
 	// Get the key-value module store using the store key
 	store := ctx.KVStore(k.storeKey)
@@ -114,7 +116,13 @@ func (k Keeper) AlliancesDelegationByValidator(c context.Context, req *types.Que
 			return types.ErrUnknownAsset
 		}
 
-		balance := types.GetDelegationTokens(delegation, aVal, asset)
+		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		validator, err := k.GetAllianceValidator(ctx, valAddr)
+		if err != nil {
+			return err
+		}
+		balance := types.GetDelegationTokens(delegation, validator, asset)
+
 		delegationRes := types.DelegationResponse{
 			Delegation: delegation,
 			Balance:    balance,
@@ -148,9 +156,8 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 		return nil, err
 	}
 
-	validator, found := k.stakingKeeper.GetValidator(ctx, valAddr)
-
-	if !found {
+	validator, err := k.GetAllianceValidator(ctx, valAddr)
+	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Validator not found by address %s", req.ValidatorAddr)
 	}
 
@@ -164,13 +171,12 @@ func (k Keeper) AllianceDelegation(c context.Context, req *types.QueryAllianceDe
 	if !found {
 		return &types.QueryAllianceDelegationResponse{
 			Delegation: types.DelegationResponse{
-				Delegation: types.NewDelegation(delAddr, valAddr, req.Denom, sdk.ZeroDec(), []types.RewardIndex{}),
+				Delegation: types.NewDelegation(ctx, delAddr, valAddr, req.Denom, sdk.ZeroDec(), []types.RewardHistory{}),
 				Balance:    sdk.NewCoin(req.Denom, sdk.ZeroInt()),
 			}}, nil
 	}
 
-	aVal := k.GetOrCreateValidator(ctx, valAddr)
-	balance := types.GetDelegationTokens(delegation, aVal, asset)
+	balance := types.GetDelegationTokens(delegation, validator, asset)
 	return &types.QueryAllianceDelegationResponse{
 		Delegation: types.DelegationResponse{
 			Delegation: delegation,

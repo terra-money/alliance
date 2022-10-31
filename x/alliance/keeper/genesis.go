@@ -15,7 +15,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, g *types.GenesisState) []abci.Valid
 	return []abci.ValidatorUpdate{}
 }
 
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramstore.SetParamSet(ctx, &params)
-	return nil
 }

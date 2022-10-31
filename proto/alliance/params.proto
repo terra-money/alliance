@@ -26,7 +26,7 @@ message Params {
   ];
 }
 
-message RewardIndex {
+message RewardHistory {
   option (gogoproto.equal)            = true;
   string denom = 1;
   string index = 2 [

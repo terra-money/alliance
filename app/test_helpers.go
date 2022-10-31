@@ -316,6 +316,7 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 
 func RegisterNewValidator(t *testing.T, app *App, ctx sdk.Context, val stakingtypes.Validator) {
 	t.Helper()
+	val.Status = stakingtypes.Bonded
 	app.StakingKeeper.SetValidator(ctx, val)
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, val)
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val)

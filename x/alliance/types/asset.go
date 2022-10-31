@@ -3,21 +3,18 @@ package types
 import (
 	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"time"
 )
 
-func NewAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec) AllianceAsset {
+func NewAllianceAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec, rewardStartTime time.Time) AllianceAsset {
 	return AllianceAsset{
 		Denom:                denom,
 		RewardWeight:         rewardWeight,
 		TakeRate:             takeRate,
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
+		RewardStartTime:      rewardStartTime,
 	}
-}
-
-func (asset AllianceAsset) ConvertToStake(amount cosmosmath.Int) (token cosmosmath.Int) {
-	token = asset.RewardWeight.MulInt(amount).TruncateInt()
-	return
 }
 
 func ConvertNewTokenToShares(totalTokens cosmosmath.Int, totalShares sdk.Dec, newTokens cosmosmath.Int) (shares sdk.Dec) {
@@ -35,14 +32,14 @@ func ConvertNewShareToToken(totalTokens cosmosmath.Int, totalShares sdk.Dec, sha
 	return shares.MulInt(totalTokens).Quo(totalShares).TruncateInt()
 }
 
-func GetDelegationTokens(del Delegation, val Validator, asset AllianceAsset) sdk.Coin {
+func GetDelegationTokens(del Delegation, val AllianceValidator, asset AllianceAsset) sdk.Coin {
 	valTokens := val.TotalTokensWithAsset(asset)
 	valShares := val.ValidatorSharesWithDenom(asset.Denom)
 	delTokens := ConvertNewShareToToken(valTokens, valShares, del.Shares)
 	return sdk.NewCoin(asset.Denom, delTokens)
 }
 
-func GetDelegationSharesFromTokens(val Validator, asset AllianceAsset, token cosmosmath.Int) sdk.Dec {
+func GetDelegationSharesFromTokens(val AllianceValidator, asset AllianceAsset, token cosmosmath.Int) sdk.Dec {
 	valTokens := val.TotalTokensWithAsset(asset)
 	valShares := val.ValidatorSharesWithDenom(asset.Denom)
 	return ConvertNewTokenToShares(valTokens, valShares, token)

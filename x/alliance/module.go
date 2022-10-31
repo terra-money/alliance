@@ -31,6 +31,7 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.EndBlockAppModule   = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
 )
 
 type AppModuleBasic struct {
@@ -90,6 +91,10 @@ type AppModule struct {
 	stakingKeeper types.StakingKeeper
 }
 
+func (a AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+	BeginBlocker(ctx, a.keeper)
+}
+
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return EndBlocker(ctx, a.keeper)
 }
@@ -110,13 +115,13 @@ func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {
 }
 
 // Deprecated: use RegisterServices
-func (am AppModule) Route() sdk.Route { return sdk.Route{} }
+func (a AppModule) Route() sdk.Route { return sdk.Route{} }
 
 // Deprecated: use RegisterServices
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
 // Deprecated: use RegisterServices
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
+func (a AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 

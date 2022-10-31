@@ -23,9 +23,9 @@ func (k Keeper) AllianceDelegationRewards(context context.Context, request *type
 		return nil, types.ErrUnknownAsset
 	}
 
-	val, found := k.stakingKeeper.GetValidator(ctx, valAddr)
-	if !found {
-		return nil, stakingtypes.ErrNoValidatorFound
+	val, err := k.GetAllianceValidator(ctx, valAddr)
+	if err != nil {
+		return nil, err
 	}
 
 	_, found = k.GetDelegation(ctx, delAddr, val, request.Denom)

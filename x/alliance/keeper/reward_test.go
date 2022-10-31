@@ -41,8 +41,8 @@ func TestRewardPoolAndGlobalIndex(t *testing.T) {
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	valAddr1, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	require.NoError(t, err)
-	val1, found := app.StakingKeeper.GetValidator(ctx, valAddr1)
-	require.True(t, found)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 2, sdk.NewCoins(
 		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)),
 		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)),
@@ -59,14 +59,16 @@ func TestRewardPoolAndGlobalIndex(t *testing.T) {
 	require.Equal(t, sdk.NewCoin("stake", sdk.NewInt(4000_000)), coin)
 
 	// Transfer to reward pool without delegations will fail
-	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, valAddr1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
 	require.Error(t, err)
 
 	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	require.NoError(t, err)
 
 	// Transfer to reward pool
-	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, valAddr1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
 	require.NoError(t, err)
 
 	// Expect rewards pool to have something
@@ -74,10 +76,10 @@ func TestRewardPoolAndGlobalIndex(t *testing.T) {
 	require.Equal(t, sdk.NewCoin("stake", sdk.NewInt(2000_000)), balance)
 
 	// Expect validator global index to be updated
-	aVal := app.AllianceKeeper.GetOrCreateValidator(ctx, valAddr1)
-	globalIndices := types.NewRewardIndices(aVal.RewardIndices)
-	require.Equal(t, types.RewardIndices{
-		types.RewardIndex{
+	require.NoError(t, err)
+	globalIndices := types.NewRewardHistories(val1.GlobalRewardHistory)
+	require.Equal(t, types.RewardHistories{
+		types.RewardHistory{
 			Denom: "stake",
 			Index: sdk.NewDec(1),
 		},
@@ -86,34 +88,34 @@ func TestRewardPoolAndGlobalIndex(t *testing.T) {
 	// New delegation from user 2
 	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
-
-	// Transfer to reward pool
-	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, valAddr1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)
 
-	aVal = app.AllianceKeeper.GetOrCreateValidator(ctx, valAddr1)
-	globalIndices = types.NewRewardIndices(aVal.RewardIndices)
-	require.Equal(t, types.RewardIndices{
-		types.RewardIndex{
+	// Transfer to reward pool
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	globalIndices = types.NewRewardHistories(val1.GlobalRewardHistory)
+	require.Equal(t, types.RewardHistories{
+		types.RewardHistory{
 			Denom: "stake",
 			Index: sdk.NewDec(14).Quo(sdk.NewDec(12)),
 		},
 	}, globalIndices)
 
 	// Transfer another token to reward pool
-	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, valAddr1, sdk.NewCoins(sdk.NewCoin("stake2", sdk.NewInt(4000_000))))
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val1, sdk.NewCoins(sdk.NewCoin("stake2", sdk.NewInt(4000_000))))
 	require.NoError(t, err)
 
 	// Expect global index to be updated
 	// 14/12 + 4/12 = 18/12
-	aVal = app.AllianceKeeper.GetOrCreateValidator(ctx, valAddr1)
-	globalIndices = types.NewRewardIndices(aVal.RewardIndices)
-	require.Equal(t, types.RewardIndices{
-		types.RewardIndex{
+	globalIndices = types.NewRewardHistories(val1.GlobalRewardHistory)
+	require.Equal(t, types.RewardHistories{
+		types.RewardHistory{
 			Denom: "stake",
 			Index: sdk.NewDec(14).Quo(sdk.NewDec(12)),
 		},
-		types.RewardIndex{
+		types.RewardHistory{
 			Denom: "stake2",
 			Index: sdk.NewDec(4).Quo(sdk.NewDec(12)),
 		},
@@ -125,18 +127,8 @@ func TestClaimRewards(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
-			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()),
 		},
 	})
 
@@ -146,8 +138,8 @@ func TestClaimRewards(t *testing.T) {
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	valAddr1, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	require.NoError(t, err)
-	val1, found := app.StakingKeeper.GetValidator(ctx, valAddr1)
-	require.True(t, found)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 2, sdk.NewCoins(
 		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)),
 		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)),
@@ -164,39 +156,41 @@ func TestClaimRewards(t *testing.T) {
 	// New delegation from user 1
 	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	require.NoError(t, err)
 
 	// Transfer to reward pool
-	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, valAddr1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
 	require.NoError(t, err)
 
 	// New delegation from user 2
 	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
-
-	// Transfer to reward pool
-	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, valAddr1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)
 
-	aVal1 := app.AllianceKeeper.GetOrCreateValidator(ctx, valAddr1)
+	// Transfer to reward pool
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t,
 		sdk.NewInt(1000_000),
-		aVal1.TotalTokensWithAsset(asset),
+		val1.TotalTokensWithAsset(asset),
 	)
 	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
 	require.Equal(t,
 		sdk.NewInt(1000_000),
-		aVal1.TotalTokensWithAsset(asset),
+		val1.TotalTokensWithAsset(asset),
 	)
 
 	// Transfer another token to reward pool
-	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, valAddr1, sdk.NewCoins(sdk.NewCoin("stake2", sdk.NewInt(4000_000))))
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val1, sdk.NewCoins(sdk.NewCoin("stake2", sdk.NewInt(4000_000))))
 	require.NoError(t, err)
 
 	// Make sure reward indices are right
-	aVal1 = app.AllianceKeeper.GetOrCreateValidator(ctx, valAddr1)
 	require.Equal(t,
-		types.NewRewardIndices([]types.RewardIndex{
+		types.NewRewardHistories([]types.RewardHistory{
 			{
 				Denom: "stake",
 				Index: sdk.MustNewDecFromStr("1.166666666666666667"),
@@ -206,7 +200,7 @@ func TestClaimRewards(t *testing.T) {
 				Index: sdk.MustNewDecFromStr("0.333333333333333333"),
 			},
 		}),
-		types.NewRewardIndices(aVal1.RewardIndices),
+		types.NewRewardHistories(val1.GlobalRewardHistory),
 	)
 
 	// before claiming, there should be tokens in rewards pool
@@ -241,49 +235,31 @@ func TestClaimRewards(t *testing.T) {
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1)), sdk.NewCoin("stake2", sdk.NewInt(1))), coins)
 
 	// Global indices
-	aVal := app.AllianceKeeper.GetOrCreateValidator(ctx, valAddr1)
-	indices := types.NewRewardIndices(aVal.RewardIndices)
+	require.NoError(t, err)
+	indices := types.NewRewardHistories(val1.GlobalRewardHistory)
 
 	// Check that all delegations have updated local indices
 	delegation, found := app.AllianceKeeper.GetDelegation(ctx, user1, val1, ALLIANCE_TOKEN_DENOM)
 	require.True(t, found)
-	require.Equal(t, indices, types.NewRewardIndices(delegation.RewardIndices))
+	require.Equal(t, indices, types.NewRewardHistories(delegation.RewardHistory))
 
 	delegation, found = app.AllianceKeeper.GetDelegation(ctx, user2, val1, ALLIANCE_2_TOKEN_DENOM)
 	require.True(t, found)
-	require.Equal(t, indices, types.NewRewardIndices(delegation.RewardIndices))
+	require.Equal(t, indices, types.NewRewardHistories(delegation.RewardHistory))
 }
 
 func TestClaimRewardsWithMultipleValidators(t *testing.T) {
+	var err error
 	app, ctx := createTestContext(t)
 	startTime := time.Now()
-	ctx.WithBlockTime(startTime)
+	ctx = ctx.WithBlockTime(startTime)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
-			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), startTime),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), startTime),
 		},
 	})
-
-	// remove genesis validator delegations
-	delegations := app.StakingKeeper.GetAllDelegations(ctx)
-	require.Len(t, delegations, 1)
-	err := app.StakingKeeper.RemoveDelegation(ctx, stakingtypes.Delegation{
-		ValidatorAddress: delegations[0].ValidatorAddress,
-		DelegatorAddress: delegations[0].DelegatorAddress,
-	})
-	require.NoError(t, err)
 
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
@@ -293,8 +269,6 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 	app.DistrKeeper.SetParams(ctx, distParams)
 
 	// Accounts
-	//mintPoolAddr := app.AccountKeeper.GetModuleAddress(minttypes.ModuleName)
-	//rewardsPoolAddr := app.AccountKeeper.GetModuleAddress(types.RewardsPoolName)
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
 		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)),
 		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)),
@@ -303,8 +277,8 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 
 	// Creating two validators: 1 with 0% commission, 1 with 100% commission
 	valAddr1 := sdk.ValAddress(addrs[0])
-	val1 := teststaking.NewValidator(t, valAddr1, pks[0])
-	val1.Commission = stakingtypes.Commission{
+	_val1 := teststaking.NewValidator(t, valAddr1, pks[0])
+	_val1.Commission = stakingtypes.Commission{
 		CommissionRates: stakingtypes.CommissionRates{
 			Rate:          sdk.NewDec(0),
 			MaxRate:       sdk.NewDec(0),
@@ -312,11 +286,11 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 		},
 		UpdateTime: time.Now(),
 	}
-	test_helpers.RegisterNewValidator(t, app, ctx, val1)
+	test_helpers.RegisterNewValidator(t, app, ctx, _val1)
 
 	valAddr2 := sdk.ValAddress(addrs[1])
-	val2 := teststaking.NewValidator(t, valAddr2, pks[1])
-	val2.Commission = stakingtypes.Commission{
+	_val2 := teststaking.NewValidator(t, valAddr2, pks[1])
+	_val2.Commission = stakingtypes.Commission{
 		CommissionRates: stakingtypes.CommissionRates{
 			Rate:          sdk.NewDec(1),
 			MaxRate:       sdk.NewDec(1),
@@ -324,7 +298,7 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 		},
 		UpdateTime: time.Now(),
 	}
-	test_helpers.RegisterNewValidator(t, app, ctx, val2)
+	test_helpers.RegisterNewValidator(t, app, ctx, _val2)
 
 	user1 := addrs[2]
 	user2 := addrs[3]
@@ -336,12 +310,19 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 	require.NoError(t, err)
 
 	// New delegation from user 1 to val 1
+	val1, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
 	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
 
 	// New delegation from user 2 to val 2
+	val2, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
 	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
+
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	require.NoError(t, err)
+	// Check total bonded amount
+	require.Equal(t, sdk.NewInt(13_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
 	// Transfer to rewards to fee pool to be distributed
 	app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(4000_000))))
@@ -402,30 +383,18 @@ func TestClaimTakeRate(t *testing.T) {
 			LastRewardClaimTime: startTime,
 		},
 		Assets: []types.AllianceAsset{
-			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.MustNewDecFromStr("0.5"),
-				TotalTokens:  sdk.ZeroInt(),
-			},
-			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.MustNewDecFromStr("0.5"), startTime),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), startTime),
 		},
 	})
 
 	// Accounts
-	//mintPoolAddr := app.AccountKeeper.GetModuleAddress(minttypes.ModuleName)
-	//rewardsPoolAddr := app.AccountKeeper.GetModuleAddress(types.RewardsPoolName)
 	feeCollectorAddr := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	valAddr1, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	require.NoError(t, err)
-	val1, found := app.StakingKeeper.GetValidator(ctx, valAddr1)
-	require.True(t, found)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 1, sdk.NewCoins(
 		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000)),
 		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)),
@@ -435,8 +404,13 @@ func TestClaimTakeRate(t *testing.T) {
 	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
 	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
 
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	require.NoError(t, err)
+	// Check total bonded amount
+	require.Equal(t, sdk.NewInt(13_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
+
 	// Calling it immediately will not update anything
-	coins, err := app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
+	coins, err := app.AllianceKeeper.DeductAssetsHook(ctx)
 	require.Nil(t, coins)
 	require.Nil(t, err)
 
@@ -444,7 +418,7 @@ func TestClaimTakeRate(t *testing.T) {
 	timePassed := time.Minute*5 + time.Second
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(timePassed))
 	ctx = ctx.WithBlockHeight(2)
-	coinsClaimed, _ := app.AllianceKeeper.ClaimAssetsWithTakeRateRateLimited(ctx)
+	coinsClaimed, _ := app.AllianceKeeper.DeductAssetsHook(ctx)
 	coins = app.BankKeeper.GetAllBalances(ctx, feeCollectorAddr)
 	require.Equal(t, coinsClaimed, coins)
 
@@ -456,8 +430,7 @@ func TestClaimTakeRate(t *testing.T) {
 
 	asset, found := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.True(t, found)
-	expectedRewardRate := sdk.MustNewDecFromStr("2").Mul(sdk.OneDec().Add(sdk.MustNewDecFromStr("0.5").Mul(sdk.NewDec(timePassed.Nanoseconds()).Quo(sdk.NewDec(31_557_000_000_000_000)))))
-	require.Equal(t, expectedRewardRate, asset.RewardWeight)
+	require.Equal(t, sdk.NewDec(2), asset.RewardWeight)
 
 	// At the next begin block, tokens will be distributed from the fee pool
 	cons, _ := val1.GetConsAddr()
@@ -481,4 +454,195 @@ func TestClaimTakeRate(t *testing.T) {
 		sdk.NewDecFromInt(coinsClaimed.AmountOf(ALLIANCE_TOKEN_DENOM)),
 		rewards.AmountOf(ALLIANCE_TOKEN_DENOM).Add(community.AmountOf(ALLIANCE_TOKEN_DENOM)),
 	)
+}
+
+func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
+	var err error
+	app, ctx := createTestContext(t)
+	ctx = ctx.WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()),
+		},
+	})
+
+	// Set tax and rewards to be zero for easier calculation
+	distParams := app.DistrKeeper.GetParams(ctx)
+	distParams.CommunityTax = sdk.ZeroDec()
+	distParams.BaseProposerReward = sdk.ZeroDec()
+	distParams.BonusProposerReward = sdk.ZeroDec()
+	app.DistrKeeper.SetParams(ctx, distParams)
+
+	// Accounts
+	bondDenom := app.StakingKeeper.BondDenom(ctx)
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
+		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)),
+		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)),
+	))
+
+	// Creating two validators: 1 with 0% commission, 1 with 100% commission
+	pks := test_helpers.CreateTestPubKeys(2)
+	valAddr1 := sdk.ValAddress(addrs[0])
+	_val1 := teststaking.NewValidator(t, valAddr1, pks[0])
+	_val1.Commission = stakingtypes.Commission{
+		CommissionRates: stakingtypes.CommissionRates{
+			Rate:          sdk.NewDec(0),
+			MaxRate:       sdk.NewDec(0),
+			MaxChangeRate: sdk.NewDec(0),
+		},
+		UpdateTime: time.Now(),
+	}
+	test_helpers.RegisterNewValidator(t, app, ctx, _val1)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
+
+	valAddr2 := sdk.ValAddress(addrs[1])
+	_val2 := teststaking.NewValidator(t, valAddr2, pks[1])
+	_val2.Commission = stakingtypes.Commission{
+		CommissionRates: stakingtypes.CommissionRates{
+			Rate:          sdk.NewDec(0),
+			MaxRate:       sdk.NewDec(1),
+			MaxChangeRate: sdk.NewDec(0),
+		},
+		UpdateTime: time.Now(),
+	}
+	test_helpers.RegisterNewValidator(t, app, ctx, _val2)
+	val2, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	require.NoError(t, err)
+
+	user1 := addrs[2]
+	user2 := addrs[3]
+
+	// New delegations
+	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
+	app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	require.NoError(t, err)
+
+	// Accumulate rewards in pool and distribute it
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(40_000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(10_000_000))))
+	require.NoError(t, err)
+
+	// Distribute in the next begin block
+	// At the next begin block, tokens will be distributed from the fee pool
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	cons1, _ := val1.GetConsAddr()
+	power1 := val1.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
+
+	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	cons2, _ := val2.GetConsAddr()
+	power2 := val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
+
+	app.DistrKeeper.AllocateTokens(ctx, power1+power2, power1+power2, cons1, []abcitypes.VoteInfo{
+		{
+			Validator: abcitypes.Validator{
+				Address: cons1,
+				Power:   power1,
+			},
+			SignedLastBlock: true,
+		},
+		{
+			Validator: abcitypes.Validator{
+				Address: cons2,
+				Power:   power2,
+			},
+			SignedLastBlock: true,
+		},
+	})
+
+	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()))
+	require.NoError(t, err)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	require.NoError(t, err)
+
+	// Expect reward change snapshots to be taken
+	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	iter := app.AllianceKeeper.IterateRewardRatesChangeSnapshot(ctx, ALLIANCE_TOKEN_DENOM, valAddr1, 0)
+	var snapshot types.RewardRateChangeSnapshot
+	require.True(t, iter.Valid())
+	app.AppCodec().MustUnmarshal(iter.Value(), &snapshot)
+	require.Equal(t, types.RewardRateChangeSnapshot{
+		PrevRewardWeight: sdk.NewDec(2),
+		RewardHistories:  val1.GlobalRewardHistory,
+	}, snapshot)
+	iter.Close()
+
+	// Accumulate rewards in pool
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(10_000_000))))
+	require.NoError(t, err)
+
+	// Distribute in the next begin block
+	// At the next begin block, tokens will be distributed from the fee pool
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	power1 = val1.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
+
+	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	power2 = val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
+	app.DistrKeeper.AllocateTokens(ctx, power1+power2, power1+power2, cons1, []abcitypes.VoteInfo{
+		{
+			Validator: abcitypes.Validator{
+				Address: cons1,
+				Power:   power1,
+			},
+			SignedLastBlock: true,
+		},
+		{
+			Validator: abcitypes.Validator{
+				Address: cons2,
+				Power:   power2,
+			},
+			SignedLastBlock: true,
+		},
+	})
+
+	rewards1, err := app.AllianceKeeper.ClaimDelegationRewards(ctx, user1, val1, ALLIANCE_TOKEN_DENOM)
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewInt(5_000_000+1_666_666), rewards1.AmountOf(bondDenom))
+
+	rewards2, err := app.AllianceKeeper.ClaimDelegationRewards(ctx, user2, val2, ALLIANCE_2_TOKEN_DENOM)
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewInt(5_000_000+8_333_333), rewards2.AmountOf(bondDenom))
+
+	// Accumulate rewards in pool
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(10_000_000))))
+	require.NoError(t, err)
+
+	// Distribute in the next begin block
+	// At the next begin block, tokens will be distributed from the fee pool
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	power1 = val1.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
+
+	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	power2 = val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
+	app.DistrKeeper.AllocateTokens(ctx, power1+power2, power1+power2, cons1, []abcitypes.VoteInfo{
+		{
+			Validator: abcitypes.Validator{
+				Address: cons1,
+				Power:   power1,
+			},
+			SignedLastBlock: true,
+		},
+		{
+			Validator: abcitypes.Validator{
+				Address: cons2,
+				Power:   power2,
+			},
+			SignedLastBlock: true,
+		},
+	})
+
+	rewards1, err = app.AllianceKeeper.ClaimDelegationRewards(ctx, user1, val1, ALLIANCE_TOKEN_DENOM)
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewInt(5_000_000), rewards1.AmountOf(bondDenom))
+
+	rewards2, err = app.AllianceKeeper.ClaimDelegationRewards(ctx, user2, val2, ALLIANCE_2_TOKEN_DENOM)
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewInt(5_000_000), rewards2.AmountOf(bondDenom))
 }

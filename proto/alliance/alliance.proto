@@ -4,6 +4,8 @@ package alliance.alliance;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
+import "alliance/params.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "alliance/x/alliance/types";
 
@@ -34,6 +36,10 @@ message AllianceAsset {
   ];
   string total_validator_shares = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  google.protobuf.Timestamp reward_start_time = 6 [
+    (gogoproto.stdtime) = true,
     (gogoproto.nullable)   = false
   ];
 }
@@ -80,13 +86,11 @@ message RewardRateChangeSnapshot {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
 
-  string global_index = 1 [
+  string prev_reward_weight = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  string reward_weight = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+  repeated RewardHistory reward_histories = 2 [
     (gogoproto.nullable)   = false
   ];
-  repeated  cosmos.base.v1beta1.Coin balance = 3 [(gogoproto.nullable) = false];
 }
