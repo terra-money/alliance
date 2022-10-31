@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"alliance/x/alliance/types"
+	"cosmossdk.io/math"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -387,4 +388,24 @@ func (k Keeper) updateValidatorShares(ctx sdk.Context, validator types.AllianceV
 		validator.ReduceShares(delegationShares, validatorShares)
 	}
 	k.SetValidator(ctx, validator)
+}
+
+// getAllianceBondedAmount returns the total amount of bonded native tokens that are not in the
+// unbonding pool
+func (k Keeper) getAllianceBondedAmount(ctx sdk.Context, delegator sdk.AccAddress) math.Int {
+	bonded := sdk.ZeroDec()
+	k.stakingKeeper.IterateDelegatorDelegations(ctx, delegator, func(delegation stakingtypes.Delegation) bool {
+		validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		if err != nil {
+			panic(err) // shouldn't happen
+		}
+		validator, found := k.stakingKeeper.GetValidator(ctx, validatorAddr)
+		if found && validator.IsBonded() {
+			shares := delegation.Shares
+			tokens := validator.TokensFromSharesTruncated(shares)
+			bonded = bonded.Add(tokens)
+		}
+		return false
+	})
+	return bonded.RoundInt()
 }

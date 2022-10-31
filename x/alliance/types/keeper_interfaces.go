@@ -33,6 +33,7 @@ type StakingKeeper interface {
 	RemoveValidatorTokens(ctx sdk.Context,
 		validator types.Validator, tokensToRemove math.Int,
 	) types.Validator
+	IterateDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool))
 }
 
 type BankKeeper interface {

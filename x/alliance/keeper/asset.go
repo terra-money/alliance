@@ -42,13 +42,17 @@ func (k Keeper) RebalanceHook(ctx sdk.Context) error {
 	return nil
 }
 
-func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) error {
+func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) (err error) {
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	allianceBondAmount := k.stakingKeeper.GetDelegatorBonded(ctx, moduleAddr)
+	allianceBondAmount := k.getAllianceBondedAmount(ctx, moduleAddr)
+
 	nativeBondAmount := k.stakingKeeper.TotalBondedTokens(ctx).Sub(allianceBondAmount)
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 
 	assets := k.GetAllAssets(ctx)
+	unbondedValidatorShares := sdk.NewDecCoins()
+	var bondedValidators []types.AllianceValidator
+
 	iter := k.IterateAllianceValidatorInfo(ctx)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -57,8 +61,16 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) error {
 		if err != nil {
 			return err
 		}
+		if validator.IsBonded() {
+			bondedValidators = append(bondedValidators, validator)
+		} else {
+			unbondedValidatorShares = unbondedValidatorShares.Add(validator.ValidatorShares...)
+		}
+	}
+
+	for _, validator := range bondedValidators {
 		actualBondAmount := sdk.NewDec(0)
-		delegation, found := k.stakingKeeper.GetDelegation(ctx, moduleAddr, valAddr)
+		delegation, found := k.stakingKeeper.GetDelegation(ctx, moduleAddr, validator.GetOperator())
 		if found {
 			actualBondAmount = validator.TokensFromShares(delegation.GetShares())
 		}
@@ -70,7 +82,7 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) error {
 
 			// Accumulate expected tokens staked by adding up all expected tokens from each alliance asset
 			if valShares.IsPositive() {
-				expectedBondAmount = expectedBondAmount.Add(valShares.MulInt(expectedBondAmountForAsset).Quo(asset.TotalValidatorShares))
+				expectedBondAmount = expectedBondAmount.Add(valShares.MulInt(expectedBondAmountForAsset).Quo(asset.TotalValidatorShares.Sub(unbondedValidatorShares.AmountOf(asset.Denom))))
 			}
 
 			// Update total staked tokens if we are handling this alliance token for the first time
