@@ -234,11 +234,6 @@ func TestRedelegation(t *testing.T) {
 	_, err = app.AllianceKeeper.Delegate(ctx, delAddr1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
 	require.NoError(t, err)
 
-	//err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
-	//require.NoError(t, err)
-	//// Check total bonded amount
-	//require.Equal(t, sdk.NewInt(3_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
-
 	// Then redelegate to validator2
 	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr1, val1, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
 	require.NoError(t, err)
@@ -287,6 +282,10 @@ func TestRedelegation(t *testing.T) {
 		RewardHistory:    types.RewardHistories(nil),
 	}, dstDelegation)
 	require.True(t, found)
+
+	// Check if index by src validator was saved
+	iter = app.AllianceKeeper.IterateImmatureRedelegationsBySrcValidator(ctx, valAddr1)
+	require.True(t, iter.Valid())
 
 	// Should fail when re-delegating back to validator1
 	// Same user who re-delegated to from 1 -> 2 cannot re-re-delegate from 2 -> X

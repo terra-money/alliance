@@ -242,9 +242,15 @@ func (k Keeper) DeleteRedelegation(ctx sdk.Context, redel types.Redelegation, co
 	if err != nil {
 		panic(err)
 	}
+	srcValAddr, err := sdk.ValAddressFromBech32(redel.SrcValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRedelegationKey(delAddr, redel.Balance.Denom, dstValAddr, completion)
 	store.Delete(key)
+	indexKey := types.GetRedelegationIndex(srcValAddr, completion, redel.Balance.Denom, dstValAddr, delAddr)
+	store.Delete(indexKey)
 }
 
 func (k Keeper) IterateRedelegations(ctx sdk.Context, delAddr sdk.AccAddress, dstVal sdk.ValAddress, denom string) sdk.Iterator {
@@ -257,6 +263,12 @@ func (k Keeper) IterateRedelegationsByDelegator(ctx sdk.Context, delAddr sdk.Acc
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRedelegationsKeyByDelegator(delAddr)
 	return sdk.KVStorePrefixIterator(store, key)
+}
+
+func (k Keeper) IterateImmatureRedelegationsBySrcValidator(ctx sdk.Context, srcValAddr sdk.ValAddress) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	prefix := types.GetRedelegationsIndexOrderedByValidatorKey(srcValAddr)
+	return sdk.KVStorePrefixIterator(store, prefix)
 }
 
 func (k Keeper) SetValidator(ctx sdk.Context, val types.AllianceValidator) {
@@ -293,6 +305,10 @@ func (k Keeper) addRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, srcVal 
 	}
 	b = k.cdc.MustMarshal(&redelegation)
 	store.Set(key, b)
+
+	// Add another entry as an index to retrieve redelegations by validator
+	indexKey := types.GetRedelegationIndex(srcVal, completionTime, coin.Denom, dstVal, delAddr)
+	store.Set(indexKey, []byte{})
 }
 
 func (k Keeper) queueRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, srcVal sdk.ValAddress, dstVal sdk.ValAddress, coin sdk.Coin, completionTime time.Time) {

@@ -38,6 +38,9 @@ var (
 	RedelegationKey      = []byte{0x22}
 	RedelegationQueueKey = []byte{0x23}
 	UndelegationQueueKey = []byte{0x24}
+
+	// Indexes for querying
+	RedelegationByValidatorIndexKey = []byte{0x31}
 )
 
 func GetAssetKey(denom string) []byte {
@@ -79,6 +82,54 @@ func GetRedelegationKey(delAddr sdk.AccAddress, denom string, dstValAddr sdk.Val
 func GetRedelegationQueueKey(completion time.Time) []byte {
 	bz := sdk.FormatTimeBytes(completion)
 	return append(RedelegationQueueKey, bz...)
+}
+
+func GetRedelegationIndex(srcVal sdk.ValAddress, completion time.Time, denom string, dstVal sdk.ValAddress, delAddr sdk.AccAddress) []byte {
+	key := append(GetRedelegationsIndexOrderedByValidatorKey(srcVal), address.MustLengthPrefix(sdk.FormatTimeBytes(completion))...)
+	key = append(key, address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
+	key = append(key, address.MustLengthPrefix(dstVal)...)
+	key = append(key, address.MustLengthPrefix(delAddr)...)
+	return key
+}
+
+func GetRedelegationsIndexOrderedByValidatorKey(srcVal sdk.ValAddress) []byte {
+	key := append(RedelegationByValidatorIndexKey, address.MustLengthPrefix(srcVal)...)
+	return key
+}
+
+func ParseRedelegationIndexForRedelegationKey(key []byte) ([]byte, time.Time, error) {
+	offset := 0
+	offset += len(RedelegationByValidatorIndexKey)
+
+	srcValAddrLen := int(key[offset])
+	offset += 1
+	offset += srcValAddrLen
+
+	timeLen := int(key[offset])
+	offset += 1
+	timeBytes := key[offset : offset+timeLen]
+	offset += timeLen
+
+	denomLen := int(key[offset])
+	offset += 1
+	denomBytes := key[offset : offset+denomLen]
+	offset += denomLen
+
+	dstValAddrLen := int(key[offset])
+	offset += 1
+	dstValAddrBytes := key[offset : offset+dstValAddrLen]
+	offset += dstValAddrLen
+
+	delAddrLen := int(key[offset])
+	offset += 1
+	delAddrBytes := key[offset : offset+delAddrLen]
+
+	newKey := append(RedelegationKey, address.MustLengthPrefix(delAddrBytes)...)
+	newKey = append(newKey, address.MustLengthPrefix(denomBytes)...)
+	newKey = append(newKey, address.MustLengthPrefix(dstValAddrBytes)...)
+	newKey = append(newKey, timeBytes...)
+	completionTime, err := sdk.ParseTimeBytes(timeBytes)
+	return newKey, completionTime, err
 }
 
 func ParseRedelegationQueueKey(key []byte) time.Time {
