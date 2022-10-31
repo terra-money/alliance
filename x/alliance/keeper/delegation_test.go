@@ -106,7 +106,6 @@ func TestDelegation(t *testing.T) {
 		TakeRate:             sdk.NewDec(0),
 		TotalTokens:          sdk.NewInt(1000_000),
 		TotalValidatorShares: sdk.NewDec(1000_000),
-		TotalStakeTokens:     sdk.NewInt(2000_000),
 	}, asset)
 
 	// Delegate with same denom again
@@ -137,7 +136,6 @@ func TestDelegation(t *testing.T) {
 		TakeRate:             sdk.NewDec(0),
 		TotalTokens:          sdk.NewInt(2000_000),
 		TotalValidatorShares: sdk.NewDec(2000_000),
-		TotalStakeTokens:     sdk.NewInt(2000_000),
 	}, asset)
 
 	// Check delegation in staking module total shares should not change

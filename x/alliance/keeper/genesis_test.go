@@ -18,7 +18,7 @@ func TestGenesis(t *testing.T) {
 			LastRewardClaimTime: time.Unix(0, 0).UTC(),
 		},
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset("stake", sdk.NewDec(1), sdk.ZeroDec()),
+			types.NewAllianceAsset("stake", sdk.NewDec(1), sdk.ZeroDec(), ctx.BlockTime()),
 		},
 	})
 
@@ -39,6 +39,5 @@ func TestGenesis(t *testing.T) {
 		TakeRate:             sdk.NewDec(0.0),
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
-		TotalStakeTokens:     sdk.ZeroInt(),
 	}, assets[0])
 }

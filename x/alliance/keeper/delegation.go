@@ -275,7 +275,6 @@ func (k Keeper) ValidateDelegatedAmount(delegation types.Delegation, coin sdk.Co
 }
 
 // queueRedelegation Adds a redelegation to a queue to be processed at a later timestamp
-// TODO: Handle a max number of entries per timestamp
 func (k Keeper) addRedelegation(ctx sdk.Context, delAddr sdk.AccAddress, srcVal sdk.ValAddress, dstVal sdk.ValAddress, coin sdk.Coin, completionTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRedelegationKey(delAddr, coin.Denom, dstVal, completionTime)

@@ -30,7 +30,7 @@ func validatePositiveDuration(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	if v <= 0 {
+	if v < 0 {
 		return fmt.Errorf("duration must be positive: %d", v)
 	}
 	return nil

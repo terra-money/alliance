@@ -77,18 +77,15 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) (err error) {
 
 		expectedBondAmount := sdk.ZeroDec()
 		for _, asset := range assets {
+			if ctx.BlockTime().Before(asset.RewardStartTime) {
+				continue
+			}
 			valShares := validator.ValidatorSharesWithDenom(asset.Denom)
 			expectedBondAmountForAsset := asset.RewardWeight.MulInt(nativeBondAmount).TruncateInt()
 
 			// Accumulate expected tokens staked by adding up all expected tokens from each alliance asset
 			if valShares.IsPositive() {
 				expectedBondAmount = expectedBondAmount.Add(valShares.MulInt(expectedBondAmountForAsset).Quo(asset.TotalValidatorShares.Sub(unbondedValidatorShares.AmountOf(asset.Denom))))
-			}
-
-			// Update total staked tokens if we are handling this alliance token for the first time
-			if asset.TotalStakeTokens.IsZero() && asset.TotalValidatorShares.IsPositive() {
-				asset.TotalStakeTokens = expectedBondAmountForAsset
-				k.SetAsset(ctx, *asset)
 			}
 		}
 		if expectedBondAmount.GT(actualBondAmount) {

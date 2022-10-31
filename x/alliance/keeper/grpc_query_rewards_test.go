@@ -34,7 +34,6 @@ func TestClaimQueryReward(t *testing.T) {
 				TakeRate:             sdk.MustNewDecFromStr("0.5"),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
-				TotalStakeTokens:     sdk.ZeroInt(),
 			},
 		},
 	})

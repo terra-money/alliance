@@ -210,7 +210,6 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 				RewardWeight:         sdk.NewDec(2),
 				TakeRate:             sdk.NewDec(0),
 				TotalTokens:          sdk.ZeroInt(),
-				TotalStakeTokens:     sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
 			},
 			{
@@ -218,7 +217,6 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 				RewardWeight:         sdk.NewDec(10),
 				TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
 				TotalTokens:          sdk.ZeroInt(),
-				TotalStakeTokens:     sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
 			},
 		},

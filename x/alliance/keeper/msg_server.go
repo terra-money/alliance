@@ -129,7 +129,9 @@ func (m MsgServer) CreateAlliance(ctx context.Context, req *types.MsgCreateAllia
 		return nil, status.Errorf(codes.AlreadyExists, "Asset with denom: %s already exists", req.Alliance.Denom)
 	}
 
-	m.Keeper.SetAsset(sdkCtx, req.Alliance)
+	rewardStartTime := sdkCtx.BlockTime().Add(m.Keeper.RewardDelayTime(sdkCtx))
+	asset := types.NewAllianceAsset(req.Alliance.Denom, req.Alliance.RewardWeight, req.Alliance.TakeRate, rewardStartTime)
+	m.Keeper.SetAsset(sdkCtx, asset)
 
 	return &types.MsgCreateAllianceResponse{}, nil
 }
