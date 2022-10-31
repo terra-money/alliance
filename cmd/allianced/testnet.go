@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
@@ -17,6 +18,8 @@ import (
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"cosmossdk.io/math"
+
+	alliancetypes "alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -34,6 +37,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -353,6 +359,44 @@ func initGenFiles(
 	genFiles []string, numValidators int,
 ) error {
 	appGenState := mbm.DefaultGenesis(clientCtx.Codec)
+
+	// ALLIANCE
+	var allianceGenState alliancetypes.GenesisState
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[alliancetypes.ModuleName], &allianceGenState)
+	allianceParams := allianceGenState.GetParams()
+	allianceParams.RewardClaimInterval = time.Second * 30
+	allianceParams.RewardDelayTime = time.Second * 30
+	allianceGenState.Params = allianceParams
+	appGenState[alliancetypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&allianceGenState)
+
+	// STAKING
+	var stakingGenState stakingtypes.GenesisState
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakingGenState)
+	stakingParams := stakingGenState.GetParams()
+	stakingParams.UnbondingTime = time.Hour
+	stakingGenState.Params = stakingParams
+	appGenState[stakingtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&stakingGenState)
+
+	// GOV
+	var govGenState govtypesv1.GenesisState = *govtypesv1.NewGenesisState(
+		1,
+		govtypesv1.NewDepositParams(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000))), time.Minute),
+		govtypesv1.NewVotingParams(time.Minute),
+		govtypesv1.DefaultTallyParams(),
+	)
+
+	appGenState[govtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&govGenState)
+
+	// MINT
+	var mintGenState minttypes.GenesisState
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
+	minterParams := mintGenState.GetMinter()
+	minterParams.Inflation = sdk.NewDecWithPrec(50, 2)
+	mintGenState.Minter = minterParams
+	mintParams := mintGenState.GetParams()
+	mintParams.InflationMax = sdk.NewDec(1)
+	mintGenState.Params = mintParams
+	appGenState[minttypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&mintGenState)
 
 	// set the accounts in the genesis state
 	var authGenState authtypes.GenesisState
