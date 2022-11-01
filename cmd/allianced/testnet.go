@@ -373,7 +373,7 @@ func initGenFiles(
 	var stakingGenState stakingtypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakingGenState)
 	stakingParams := stakingGenState.GetParams()
-	stakingParams.UnbondingTime = time.Hour
+	stakingParams.UnbondingTime = time.Hour * 24
 	stakingGenState.Params = stakingParams
 	appGenState[stakingtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&stakingGenState)
 
