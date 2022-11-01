@@ -21,10 +21,9 @@ export interface AllianceAllianceAsset {
   take_rate?: string;
   total_tokens?: string;
   total_validator_shares?: string;
-}
 
-export interface AllianceAllianceDelegationRewardsResponse {
-  rewards?: V1Beta1Coin[];
+  /** @format date-time */
+  reward_start_time?: string;
 }
 
 export interface AllianceDelegation {
@@ -37,7 +36,10 @@ export interface AllianceDelegation {
 
   /** shares define the delegation shares received. */
   shares?: string;
-  reward_indices?: AllianceRewardIndex[];
+  reward_history?: AllianceRewardHistory[];
+
+  /** @format uint64 */
+  last_reward_claim_height?: string;
 }
 
 /**
@@ -70,6 +72,18 @@ export type AllianceMsgUndelegateResponse = object;
 
 export type AllianceMsgUpdateAllianceResponse = object;
 
+export interface AllianceNewAllianceAssetMsg {
+  denom?: string;
+
+  /**
+   * The reward weight specifies the ratio of rewards that will be given to each alliance asset
+   * It does not need to sum to 1. rate = weight / total_weight
+   * Native asset is always assumed to have a weight of 1.
+   */
+  reward_weight?: string;
+  take_rate?: string;
+}
+
 export interface AllianceParams {
   reward_delay_time?: string;
   reward_claim_interval?: string;
@@ -84,6 +98,10 @@ export interface AllianceQueryAllianceDelegationResponse {
    * balance in addition to shares which is more suitable for client responses.
    */
   delegation?: AllianceDelegationResponse;
+}
+
+export interface AllianceQueryAllianceDelegationRewardsResponse {
+  rewards?: V1Beta1Coin[];
 }
 
 export interface AllianceQueryAllianceResponse {
@@ -124,7 +142,7 @@ export interface AllianceQueryParamsResponse {
   params?: AllianceParams;
 }
 
-export interface AllianceRewardIndex {
+export interface AllianceRewardHistory {
   denom?: string;
   index?: string;
 }
@@ -477,7 +495,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     },
     params: RequestParams = {},
   ) =>
-    this.request<AllianceAllianceDelegationRewardsResponse, RpcStatus>({
+    this.request<AllianceQueryAllianceDelegationRewardsResponse, RpcStatus>({
       path: `/terra/alliances/${delegator_addr_1}/${validator_addr}/${denom}`,
       method: "GET",
       query: query,

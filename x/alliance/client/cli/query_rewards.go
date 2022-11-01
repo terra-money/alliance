@@ -12,8 +12,8 @@ import (
 
 func CmdQueryRewards() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rewards delegator_addr validator_addr denom",
-		Short: "Query module parameters",
+		Use:   "rewards delegator-addr validator-addr denom",
+		Short: "Query rewards generated for a specific alliance by delegator-addr validator-addr denom",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			delegatorAddr := args[0]

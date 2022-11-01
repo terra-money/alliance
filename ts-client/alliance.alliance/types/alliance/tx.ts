@@ -1,7 +1,6 @@
 /* eslint-disable */
 import { Reader, Writer } from "protobufjs/minimal";
 import { Coin } from "../cosmos/base/v1beta1/coin";
-import { AllianceAsset } from "../alliance/alliance";
 
 export const protobufPackage = "alliance.alliance";
 
@@ -34,7 +33,23 @@ export interface MsgCreateAlliance {
   /** authority is the address of the governance account. */
   authority: string;
   /** plan is the upgrade plan. */
-  alliance: AllianceAsset | undefined;
+  alliance: NewAllianceAssetMsg | undefined;
+}
+
+export interface NewAllianceAssetMsg {
+  /** Denom of the asset. It could either be a native token or an IBC token */
+  denom: string;
+  /**
+   * The reward weight specifies the ratio of rewards that will be given to each alliance asset
+   * It does not need to sum to 1. rate = weight / total_weight
+   * Native asset is always assumed to have a weight of 1.
+   */
+  rewardWeight: string;
+  /**
+   * A positive take rate is used for liquid staking derivatives. It defines an annualized reward rate that
+   * will be redirected to the distribution rewards pool
+   */
+  takeRate: string;
 }
 
 export interface MsgCreateAllianceResponse {}
@@ -536,7 +551,10 @@ export const MsgCreateAlliance = {
       writer.uint32(10).string(message.authority);
     }
     if (message.alliance !== undefined) {
-      AllianceAsset.encode(message.alliance, writer.uint32(18).fork()).ldelim();
+      NewAllianceAssetMsg.encode(
+        message.alliance,
+        writer.uint32(18).fork()
+      ).ldelim();
     }
     return writer;
   },
@@ -552,7 +570,10 @@ export const MsgCreateAlliance = {
           message.authority = reader.string();
           break;
         case 2:
-          message.alliance = AllianceAsset.decode(reader, reader.uint32());
+          message.alliance = NewAllianceAssetMsg.decode(
+            reader,
+            reader.uint32()
+          );
           break;
         default:
           reader.skipType(tag & 7);
@@ -570,7 +591,7 @@ export const MsgCreateAlliance = {
       message.authority = "";
     }
     if (object.alliance !== undefined && object.alliance !== null) {
-      message.alliance = AllianceAsset.fromJSON(object.alliance);
+      message.alliance = NewAllianceAssetMsg.fromJSON(object.alliance);
     } else {
       message.alliance = undefined;
     }
@@ -582,7 +603,7 @@ export const MsgCreateAlliance = {
     message.authority !== undefined && (obj.authority = message.authority);
     message.alliance !== undefined &&
       (obj.alliance = message.alliance
-        ? AllianceAsset.toJSON(message.alliance)
+        ? NewAllianceAssetMsg.toJSON(message.alliance)
         : undefined);
     return obj;
   },
@@ -595,9 +616,106 @@ export const MsgCreateAlliance = {
       message.authority = "";
     }
     if (object.alliance !== undefined && object.alliance !== null) {
-      message.alliance = AllianceAsset.fromPartial(object.alliance);
+      message.alliance = NewAllianceAssetMsg.fromPartial(object.alliance);
     } else {
       message.alliance = undefined;
+    }
+    return message;
+  },
+};
+
+const baseNewAllianceAssetMsg: object = {
+  denom: "",
+  rewardWeight: "",
+  takeRate: "",
+};
+
+export const NewAllianceAssetMsg = {
+  encode(
+    message: NewAllianceAssetMsg,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.denom !== "") {
+      writer.uint32(10).string(message.denom);
+    }
+    if (message.rewardWeight !== "") {
+      writer.uint32(18).string(message.rewardWeight);
+    }
+    if (message.takeRate !== "") {
+      writer.uint32(26).string(message.takeRate);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): NewAllianceAssetMsg {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseNewAllianceAssetMsg } as NewAllianceAssetMsg;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.denom = reader.string();
+          break;
+        case 2:
+          message.rewardWeight = reader.string();
+          break;
+        case 3:
+          message.takeRate = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): NewAllianceAssetMsg {
+    const message = { ...baseNewAllianceAssetMsg } as NewAllianceAssetMsg;
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = String(object.denom);
+    } else {
+      message.denom = "";
+    }
+    if (object.rewardWeight !== undefined && object.rewardWeight !== null) {
+      message.rewardWeight = String(object.rewardWeight);
+    } else {
+      message.rewardWeight = "";
+    }
+    if (object.takeRate !== undefined && object.takeRate !== null) {
+      message.takeRate = String(object.takeRate);
+    } else {
+      message.takeRate = "";
+    }
+    return message;
+  },
+
+  toJSON(message: NewAllianceAssetMsg): unknown {
+    const obj: any = {};
+    message.denom !== undefined && (obj.denom = message.denom);
+    message.rewardWeight !== undefined &&
+      (obj.rewardWeight = message.rewardWeight);
+    message.takeRate !== undefined && (obj.takeRate = message.takeRate);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<NewAllianceAssetMsg>): NewAllianceAssetMsg {
+    const message = { ...baseNewAllianceAssetMsg } as NewAllianceAssetMsg;
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = object.denom;
+    } else {
+      message.denom = "";
+    }
+    if (object.rewardWeight !== undefined && object.rewardWeight !== null) {
+      message.rewardWeight = object.rewardWeight;
+    } else {
+      message.rewardWeight = "";
+    }
+    if (object.takeRate !== undefined && object.takeRate !== null) {
+      message.takeRate = object.takeRate;
+    } else {
+      message.takeRate = "";
     }
     return message;
   },

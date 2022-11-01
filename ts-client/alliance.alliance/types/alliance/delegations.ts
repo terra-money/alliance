@@ -1,7 +1,8 @@
 /* eslint-disable */
-import { RewardIndex } from "../alliance/params";
+import * as Long from "long";
+import { util, configure, Writer, Reader } from "protobufjs/minimal";
+import { RewardHistory } from "../alliance/params";
 import { Coin, DecCoin } from "../cosmos/base/v1beta1/coin";
-import { Writer, Reader } from "protobufjs/minimal";
 
 export const protobufPackage = "alliance.alliance";
 
@@ -14,7 +15,8 @@ export interface Delegation {
   denom: string;
   /** shares define the delegation shares received. */
   shares: string;
-  rewardIndices: RewardIndex[];
+  rewardHistory: RewardHistory[];
+  lastRewardClaimHeight: number;
 }
 
 /**
@@ -47,10 +49,9 @@ export interface QueuedUndelegation {
   entries: Undelegation[];
 }
 
-export interface Validator {
-  validatorAddress: string;
-  rewardIndices: RewardIndex[];
-  totalShares: DecCoin[];
+export interface AllianceValidatorInfo {
+  globalRewardHistory: RewardHistory[];
+  totalDelegatorShares: DecCoin[];
   validatorShares: DecCoin[];
 }
 
@@ -59,6 +60,7 @@ const baseDelegation: object = {
   validatorAddress: "",
   denom: "",
   shares: "",
+  lastRewardClaimHeight: 0,
 };
 
 export const Delegation = {
@@ -75,8 +77,11 @@ export const Delegation = {
     if (message.shares !== "") {
       writer.uint32(34).string(message.shares);
     }
-    for (const v of message.rewardIndices) {
-      RewardIndex.encode(v!, writer.uint32(42).fork()).ldelim();
+    for (const v of message.rewardHistory) {
+      RewardHistory.encode(v!, writer.uint32(42).fork()).ldelim();
+    }
+    if (message.lastRewardClaimHeight !== 0) {
+      writer.uint32(48).uint64(message.lastRewardClaimHeight);
     }
     return writer;
   },
@@ -85,7 +90,7 @@ export const Delegation = {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseDelegation } as Delegation;
-    message.rewardIndices = [];
+    message.rewardHistory = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -102,9 +107,12 @@ export const Delegation = {
           message.shares = reader.string();
           break;
         case 5:
-          message.rewardIndices.push(
-            RewardIndex.decode(reader, reader.uint32())
+          message.rewardHistory.push(
+            RewardHistory.decode(reader, reader.uint32())
           );
+          break;
+        case 6:
+          message.lastRewardClaimHeight = longToNumber(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -116,7 +124,7 @@ export const Delegation = {
 
   fromJSON(object: any): Delegation {
     const message = { ...baseDelegation } as Delegation;
-    message.rewardIndices = [];
+    message.rewardHistory = [];
     if (
       object.delegatorAddress !== undefined &&
       object.delegatorAddress !== null
@@ -143,10 +151,18 @@ export const Delegation = {
     } else {
       message.shares = "";
     }
-    if (object.rewardIndices !== undefined && object.rewardIndices !== null) {
-      for (const e of object.rewardIndices) {
-        message.rewardIndices.push(RewardIndex.fromJSON(e));
+    if (object.rewardHistory !== undefined && object.rewardHistory !== null) {
+      for (const e of object.rewardHistory) {
+        message.rewardHistory.push(RewardHistory.fromJSON(e));
       }
+    }
+    if (
+      object.lastRewardClaimHeight !== undefined &&
+      object.lastRewardClaimHeight !== null
+    ) {
+      message.lastRewardClaimHeight = Number(object.lastRewardClaimHeight);
+    } else {
+      message.lastRewardClaimHeight = 0;
     }
     return message;
   },
@@ -159,19 +175,21 @@ export const Delegation = {
       (obj.validatorAddress = message.validatorAddress);
     message.denom !== undefined && (obj.denom = message.denom);
     message.shares !== undefined && (obj.shares = message.shares);
-    if (message.rewardIndices) {
-      obj.rewardIndices = message.rewardIndices.map((e) =>
-        e ? RewardIndex.toJSON(e) : undefined
+    if (message.rewardHistory) {
+      obj.rewardHistory = message.rewardHistory.map((e) =>
+        e ? RewardHistory.toJSON(e) : undefined
       );
     } else {
-      obj.rewardIndices = [];
+      obj.rewardHistory = [];
     }
+    message.lastRewardClaimHeight !== undefined &&
+      (obj.lastRewardClaimHeight = message.lastRewardClaimHeight);
     return obj;
   },
 
   fromPartial(object: DeepPartial<Delegation>): Delegation {
     const message = { ...baseDelegation } as Delegation;
-    message.rewardIndices = [];
+    message.rewardHistory = [];
     if (
       object.delegatorAddress !== undefined &&
       object.delegatorAddress !== null
@@ -198,10 +216,18 @@ export const Delegation = {
     } else {
       message.shares = "";
     }
-    if (object.rewardIndices !== undefined && object.rewardIndices !== null) {
-      for (const e of object.rewardIndices) {
-        message.rewardIndices.push(RewardIndex.fromPartial(e));
+    if (object.rewardHistory !== undefined && object.rewardHistory !== null) {
+      for (const e of object.rewardHistory) {
+        message.rewardHistory.push(RewardHistory.fromPartial(e));
       }
+    }
+    if (
+      object.lastRewardClaimHeight !== undefined &&
+      object.lastRewardClaimHeight !== null
+    ) {
+      message.lastRewardClaimHeight = object.lastRewardClaimHeight;
+    } else {
+      message.lastRewardClaimHeight = 0;
     }
     return message;
   },
@@ -662,47 +688,46 @@ export const QueuedUndelegation = {
   },
 };
 
-const baseValidator: object = { validatorAddress: "" };
+const baseAllianceValidatorInfo: object = {};
 
-export const Validator = {
-  encode(message: Validator, writer: Writer = Writer.create()): Writer {
-    if (message.validatorAddress !== "") {
-      writer.uint32(10).string(message.validatorAddress);
+export const AllianceValidatorInfo = {
+  encode(
+    message: AllianceValidatorInfo,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.globalRewardHistory) {
+      RewardHistory.encode(v!, writer.uint32(10).fork()).ldelim();
     }
-    for (const v of message.rewardIndices) {
-      RewardIndex.encode(v!, writer.uint32(18).fork()).ldelim();
-    }
-    for (const v of message.totalShares) {
-      DecCoin.encode(v!, writer.uint32(34).fork()).ldelim();
+    for (const v of message.totalDelegatorShares) {
+      DecCoin.encode(v!, writer.uint32(18).fork()).ldelim();
     }
     for (const v of message.validatorShares) {
-      DecCoin.encode(v!, writer.uint32(42).fork()).ldelim();
+      DecCoin.encode(v!, writer.uint32(26).fork()).ldelim();
     }
     return writer;
   },
 
-  decode(input: Reader | Uint8Array, length?: number): Validator {
+  decode(input: Reader | Uint8Array, length?: number): AllianceValidatorInfo {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseValidator } as Validator;
-    message.rewardIndices = [];
-    message.totalShares = [];
+    const message = { ...baseAllianceValidatorInfo } as AllianceValidatorInfo;
+    message.globalRewardHistory = [];
+    message.totalDelegatorShares = [];
     message.validatorShares = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.validatorAddress = reader.string();
-          break;
-        case 2:
-          message.rewardIndices.push(
-            RewardIndex.decode(reader, reader.uint32())
+          message.globalRewardHistory.push(
+            RewardHistory.decode(reader, reader.uint32())
           );
           break;
-        case 4:
-          message.totalShares.push(DecCoin.decode(reader, reader.uint32()));
+        case 2:
+          message.totalDelegatorShares.push(
+            DecCoin.decode(reader, reader.uint32())
+          );
           break;
-        case 5:
+        case 3:
           message.validatorShares.push(DecCoin.decode(reader, reader.uint32()));
           break;
         default:
@@ -713,27 +738,25 @@ export const Validator = {
     return message;
   },
 
-  fromJSON(object: any): Validator {
-    const message = { ...baseValidator } as Validator;
-    message.rewardIndices = [];
-    message.totalShares = [];
+  fromJSON(object: any): AllianceValidatorInfo {
+    const message = { ...baseAllianceValidatorInfo } as AllianceValidatorInfo;
+    message.globalRewardHistory = [];
+    message.totalDelegatorShares = [];
     message.validatorShares = [];
     if (
-      object.validatorAddress !== undefined &&
-      object.validatorAddress !== null
+      object.globalRewardHistory !== undefined &&
+      object.globalRewardHistory !== null
     ) {
-      message.validatorAddress = String(object.validatorAddress);
-    } else {
-      message.validatorAddress = "";
-    }
-    if (object.rewardIndices !== undefined && object.rewardIndices !== null) {
-      for (const e of object.rewardIndices) {
-        message.rewardIndices.push(RewardIndex.fromJSON(e));
+      for (const e of object.globalRewardHistory) {
+        message.globalRewardHistory.push(RewardHistory.fromJSON(e));
       }
     }
-    if (object.totalShares !== undefined && object.totalShares !== null) {
-      for (const e of object.totalShares) {
-        message.totalShares.push(DecCoin.fromJSON(e));
+    if (
+      object.totalDelegatorShares !== undefined &&
+      object.totalDelegatorShares !== null
+    ) {
+      for (const e of object.totalDelegatorShares) {
+        message.totalDelegatorShares.push(DecCoin.fromJSON(e));
       }
     }
     if (
@@ -747,23 +770,21 @@ export const Validator = {
     return message;
   },
 
-  toJSON(message: Validator): unknown {
+  toJSON(message: AllianceValidatorInfo): unknown {
     const obj: any = {};
-    message.validatorAddress !== undefined &&
-      (obj.validatorAddress = message.validatorAddress);
-    if (message.rewardIndices) {
-      obj.rewardIndices = message.rewardIndices.map((e) =>
-        e ? RewardIndex.toJSON(e) : undefined
+    if (message.globalRewardHistory) {
+      obj.globalRewardHistory = message.globalRewardHistory.map((e) =>
+        e ? RewardHistory.toJSON(e) : undefined
       );
     } else {
-      obj.rewardIndices = [];
+      obj.globalRewardHistory = [];
     }
-    if (message.totalShares) {
-      obj.totalShares = message.totalShares.map((e) =>
+    if (message.totalDelegatorShares) {
+      obj.totalDelegatorShares = message.totalDelegatorShares.map((e) =>
         e ? DecCoin.toJSON(e) : undefined
       );
     } else {
-      obj.totalShares = [];
+      obj.totalDelegatorShares = [];
     }
     if (message.validatorShares) {
       obj.validatorShares = message.validatorShares.map((e) =>
@@ -775,27 +796,27 @@ export const Validator = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Validator>): Validator {
-    const message = { ...baseValidator } as Validator;
-    message.rewardIndices = [];
-    message.totalShares = [];
+  fromPartial(
+    object: DeepPartial<AllianceValidatorInfo>
+  ): AllianceValidatorInfo {
+    const message = { ...baseAllianceValidatorInfo } as AllianceValidatorInfo;
+    message.globalRewardHistory = [];
+    message.totalDelegatorShares = [];
     message.validatorShares = [];
     if (
-      object.validatorAddress !== undefined &&
-      object.validatorAddress !== null
+      object.globalRewardHistory !== undefined &&
+      object.globalRewardHistory !== null
     ) {
-      message.validatorAddress = object.validatorAddress;
-    } else {
-      message.validatorAddress = "";
-    }
-    if (object.rewardIndices !== undefined && object.rewardIndices !== null) {
-      for (const e of object.rewardIndices) {
-        message.rewardIndices.push(RewardIndex.fromPartial(e));
+      for (const e of object.globalRewardHistory) {
+        message.globalRewardHistory.push(RewardHistory.fromPartial(e));
       }
     }
-    if (object.totalShares !== undefined && object.totalShares !== null) {
-      for (const e of object.totalShares) {
-        message.totalShares.push(DecCoin.fromPartial(e));
+    if (
+      object.totalDelegatorShares !== undefined &&
+      object.totalDelegatorShares !== null
+    ) {
+      for (const e of object.totalDelegatorShares) {
+        message.totalDelegatorShares.push(DecCoin.fromPartial(e));
       }
     }
     if (
@@ -810,6 +831,16 @@ export const Validator = {
   },
 };
 
+declare var self: any | undefined;
+declare var window: any | undefined;
+var globalThis: any = (() => {
+  if (typeof globalThis !== "undefined") return globalThis;
+  if (typeof self !== "undefined") return self;
+  if (typeof window !== "undefined") return window;
+  if (typeof global !== "undefined") return global;
+  throw "Unable to locate global object";
+})();
+
 type Builtin = Date | Function | Uint8Array | string | number | undefined;
 export type DeepPartial<T> = T extends Builtin
   ? T
@@ -820,3 +851,15 @@ export type DeepPartial<T> = T extends Builtin
   : T extends {}
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+function longToNumber(long: Long): number {
+  if (long.gt(Number.MAX_SAFE_INTEGER)) {
+    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
+  }
+  return long.toNumber();
+}
+
+if (util.Long !== Long) {
+  util.Long = Long as any;
+  configure();
+}

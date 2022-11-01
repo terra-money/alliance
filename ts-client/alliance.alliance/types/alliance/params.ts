@@ -13,7 +13,7 @@ export interface Params {
   lastRewardClaimTime: Date | undefined;
 }
 
-export interface RewardIndex {
+export interface RewardHistory {
   denom: string;
   index: string;
 }
@@ -155,10 +155,10 @@ export const Params = {
   },
 };
 
-const baseRewardIndex: object = { denom: "", index: "" };
+const baseRewardHistory: object = { denom: "", index: "" };
 
-export const RewardIndex = {
-  encode(message: RewardIndex, writer: Writer = Writer.create()): Writer {
+export const RewardHistory = {
+  encode(message: RewardHistory, writer: Writer = Writer.create()): Writer {
     if (message.denom !== "") {
       writer.uint32(10).string(message.denom);
     }
@@ -168,10 +168,10 @@ export const RewardIndex = {
     return writer;
   },
 
-  decode(input: Reader | Uint8Array, length?: number): RewardIndex {
+  decode(input: Reader | Uint8Array, length?: number): RewardHistory {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseRewardIndex } as RewardIndex;
+    const message = { ...baseRewardHistory } as RewardHistory;
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -189,8 +189,8 @@ export const RewardIndex = {
     return message;
   },
 
-  fromJSON(object: any): RewardIndex {
-    const message = { ...baseRewardIndex } as RewardIndex;
+  fromJSON(object: any): RewardHistory {
+    const message = { ...baseRewardHistory } as RewardHistory;
     if (object.denom !== undefined && object.denom !== null) {
       message.denom = String(object.denom);
     } else {
@@ -204,15 +204,15 @@ export const RewardIndex = {
     return message;
   },
 
-  toJSON(message: RewardIndex): unknown {
+  toJSON(message: RewardHistory): unknown {
     const obj: any = {};
     message.denom !== undefined && (obj.denom = message.denom);
     message.index !== undefined && (obj.index = message.index);
     return obj;
   },
 
-  fromPartial(object: DeepPartial<RewardIndex>): RewardIndex {
-    const message = { ...baseRewardIndex } as RewardIndex;
+  fromPartial(object: DeepPartial<RewardHistory>): RewardHistory {
+    const message = { ...baseRewardHistory } as RewardHistory;
     if (object.denom !== undefined && object.denom !== null) {
       message.denom = object.denom;
     } else {

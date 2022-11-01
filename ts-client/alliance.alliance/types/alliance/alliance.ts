@@ -1,5 +1,6 @@
 /* eslint-disable */
-import { Coin } from "../cosmos/base/v1beta1/coin";
+import { Timestamp } from "../google/protobuf/timestamp";
+import { RewardHistory } from "../alliance/params";
 import { Writer, Reader } from "protobufjs/minimal";
 
 export const protobufPackage = "alliance.alliance";
@@ -21,6 +22,7 @@ export interface AllianceAsset {
   takeRate: string;
   totalTokens: string;
   totalValidatorShares: string;
+  rewardStartTime: Date | undefined;
 }
 
 export interface AddAssetProposal {
@@ -47,9 +49,8 @@ export interface QueuedRewardRateChange {
 }
 
 export interface RewardRateChangeSnapshot {
-  globalIndex: string;
-  rewardWeight: string;
-  balance: Coin[];
+  prevRewardWeight: string;
+  rewardHistories: RewardHistory[];
 }
 
 const baseAllianceAsset: object = {
@@ -77,6 +78,12 @@ export const AllianceAsset = {
     if (message.totalValidatorShares !== "") {
       writer.uint32(42).string(message.totalValidatorShares);
     }
+    if (message.rewardStartTime !== undefined) {
+      Timestamp.encode(
+        toTimestamp(message.rewardStartTime),
+        writer.uint32(50).fork()
+      ).ldelim();
+    }
     return writer;
   },
 
@@ -101,6 +108,11 @@ export const AllianceAsset = {
           break;
         case 5:
           message.totalValidatorShares = reader.string();
+          break;
+        case 6:
+          message.rewardStartTime = fromTimestamp(
+            Timestamp.decode(reader, reader.uint32())
+          );
           break;
         default:
           reader.skipType(tag & 7);
@@ -140,6 +152,14 @@ export const AllianceAsset = {
     } else {
       message.totalValidatorShares = "";
     }
+    if (
+      object.rewardStartTime !== undefined &&
+      object.rewardStartTime !== null
+    ) {
+      message.rewardStartTime = fromJsonTimestamp(object.rewardStartTime);
+    } else {
+      message.rewardStartTime = undefined;
+    }
     return message;
   },
 
@@ -153,6 +173,11 @@ export const AllianceAsset = {
       (obj.totalTokens = message.totalTokens);
     message.totalValidatorShares !== undefined &&
       (obj.totalValidatorShares = message.totalValidatorShares);
+    message.rewardStartTime !== undefined &&
+      (obj.rewardStartTime =
+        message.rewardStartTime !== undefined
+          ? message.rewardStartTime.toISOString()
+          : null);
     return obj;
   },
 
@@ -185,6 +210,14 @@ export const AllianceAsset = {
       message.totalValidatorShares = object.totalValidatorShares;
     } else {
       message.totalValidatorShares = "";
+    }
+    if (
+      object.rewardStartTime !== undefined &&
+      object.rewardStartTime !== null
+    ) {
+      message.rewardStartTime = object.rewardStartTime;
+    } else {
+      message.rewardStartTime = undefined;
     }
     return message;
   },
@@ -554,24 +587,18 @@ export const QueuedRewardRateChange = {
   },
 };
 
-const baseRewardRateChangeSnapshot: object = {
-  globalIndex: "",
-  rewardWeight: "",
-};
+const baseRewardRateChangeSnapshot: object = { prevRewardWeight: "" };
 
 export const RewardRateChangeSnapshot = {
   encode(
     message: RewardRateChangeSnapshot,
     writer: Writer = Writer.create()
   ): Writer {
-    if (message.globalIndex !== "") {
-      writer.uint32(10).string(message.globalIndex);
+    if (message.prevRewardWeight !== "") {
+      writer.uint32(10).string(message.prevRewardWeight);
     }
-    if (message.rewardWeight !== "") {
-      writer.uint32(18).string(message.rewardWeight);
-    }
-    for (const v of message.balance) {
-      Coin.encode(v!, writer.uint32(26).fork()).ldelim();
+    for (const v of message.rewardHistories) {
+      RewardHistory.encode(v!, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -585,18 +612,17 @@ export const RewardRateChangeSnapshot = {
     const message = {
       ...baseRewardRateChangeSnapshot,
     } as RewardRateChangeSnapshot;
-    message.balance = [];
+    message.rewardHistories = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.globalIndex = reader.string();
+          message.prevRewardWeight = reader.string();
           break;
         case 2:
-          message.rewardWeight = reader.string();
-          break;
-        case 3:
-          message.balance.push(Coin.decode(reader, reader.uint32()));
+          message.rewardHistories.push(
+            RewardHistory.decode(reader, reader.uint32())
+          );
           break;
         default:
           reader.skipType(tag & 7);
@@ -610,20 +636,21 @@ export const RewardRateChangeSnapshot = {
     const message = {
       ...baseRewardRateChangeSnapshot,
     } as RewardRateChangeSnapshot;
-    message.balance = [];
-    if (object.globalIndex !== undefined && object.globalIndex !== null) {
-      message.globalIndex = String(object.globalIndex);
+    message.rewardHistories = [];
+    if (
+      object.prevRewardWeight !== undefined &&
+      object.prevRewardWeight !== null
+    ) {
+      message.prevRewardWeight = String(object.prevRewardWeight);
     } else {
-      message.globalIndex = "";
+      message.prevRewardWeight = "";
     }
-    if (object.rewardWeight !== undefined && object.rewardWeight !== null) {
-      message.rewardWeight = String(object.rewardWeight);
-    } else {
-      message.rewardWeight = "";
-    }
-    if (object.balance !== undefined && object.balance !== null) {
-      for (const e of object.balance) {
-        message.balance.push(Coin.fromJSON(e));
+    if (
+      object.rewardHistories !== undefined &&
+      object.rewardHistories !== null
+    ) {
+      for (const e of object.rewardHistories) {
+        message.rewardHistories.push(RewardHistory.fromJSON(e));
       }
     }
     return message;
@@ -631,16 +658,14 @@ export const RewardRateChangeSnapshot = {
 
   toJSON(message: RewardRateChangeSnapshot): unknown {
     const obj: any = {};
-    message.globalIndex !== undefined &&
-      (obj.globalIndex = message.globalIndex);
-    message.rewardWeight !== undefined &&
-      (obj.rewardWeight = message.rewardWeight);
-    if (message.balance) {
-      obj.balance = message.balance.map((e) =>
-        e ? Coin.toJSON(e) : undefined
+    message.prevRewardWeight !== undefined &&
+      (obj.prevRewardWeight = message.prevRewardWeight);
+    if (message.rewardHistories) {
+      obj.rewardHistories = message.rewardHistories.map((e) =>
+        e ? RewardHistory.toJSON(e) : undefined
       );
     } else {
-      obj.balance = [];
+      obj.rewardHistories = [];
     }
     return obj;
   },
@@ -651,20 +676,21 @@ export const RewardRateChangeSnapshot = {
     const message = {
       ...baseRewardRateChangeSnapshot,
     } as RewardRateChangeSnapshot;
-    message.balance = [];
-    if (object.globalIndex !== undefined && object.globalIndex !== null) {
-      message.globalIndex = object.globalIndex;
+    message.rewardHistories = [];
+    if (
+      object.prevRewardWeight !== undefined &&
+      object.prevRewardWeight !== null
+    ) {
+      message.prevRewardWeight = object.prevRewardWeight;
     } else {
-      message.globalIndex = "";
+      message.prevRewardWeight = "";
     }
-    if (object.rewardWeight !== undefined && object.rewardWeight !== null) {
-      message.rewardWeight = object.rewardWeight;
-    } else {
-      message.rewardWeight = "";
-    }
-    if (object.balance !== undefined && object.balance !== null) {
-      for (const e of object.balance) {
-        message.balance.push(Coin.fromPartial(e));
+    if (
+      object.rewardHistories !== undefined &&
+      object.rewardHistories !== null
+    ) {
+      for (const e of object.rewardHistories) {
+        message.rewardHistories.push(RewardHistory.fromPartial(e));
       }
     }
     return message;
@@ -681,3 +707,25 @@ export type DeepPartial<T> = T extends Builtin
   : T extends {}
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+function toTimestamp(date: Date): Timestamp {
+  const seconds = date.getTime() / 1_000;
+  const nanos = (date.getTime() % 1_000) * 1_000_000;
+  return { seconds, nanos };
+}
+
+function fromTimestamp(t: Timestamp): Date {
+  let millis = t.seconds * 1_000;
+  millis += t.nanos / 1_000_000;
+  return new Date(millis);
+}
+
+function fromJsonTimestamp(o: any): Date {
+  if (o instanceof Date) {
+    return o;
+  } else if (typeof o === "string") {
+    return new Date(o);
+  } else {
+    return fromTimestamp(Timestamp.fromJSON(o));
+  }
+}

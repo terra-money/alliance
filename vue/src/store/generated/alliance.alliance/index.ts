@@ -12,12 +12,13 @@ import { Redelegation } from "alliance-client-ts/alliance.alliance/types"
 import { QueuedRedelegation } from "alliance-client-ts/alliance.alliance/types"
 import { Undelegation } from "alliance-client-ts/alliance.alliance/types"
 import { QueuedUndelegation } from "alliance-client-ts/alliance.alliance/types"
-import { Validator } from "alliance-client-ts/alliance.alliance/types"
+import { AllianceValidatorInfo } from "alliance-client-ts/alliance.alliance/types"
 import { Params } from "alliance-client-ts/alliance.alliance/types"
-import { RewardIndex } from "alliance-client-ts/alliance.alliance/types"
+import { RewardHistory } from "alliance-client-ts/alliance.alliance/types"
+import { NewAllianceAssetMsg } from "alliance-client-ts/alliance.alliance/types"
 
 
-export { AllianceAsset, AddAssetProposal, RemoveAssetProposal, UpdateAssetProposal, QueuedRewardRateChange, RewardRateChangeSnapshot, Delegation, DelegationResponse, Redelegation, QueuedRedelegation, Undelegation, QueuedUndelegation, Validator, Params, RewardIndex };
+export { AllianceAsset, AddAssetProposal, RemoveAssetProposal, UpdateAssetProposal, QueuedRewardRateChange, RewardRateChangeSnapshot, Delegation, DelegationResponse, Redelegation, QueuedRedelegation, Undelegation, QueuedUndelegation, AllianceValidatorInfo, Params, RewardHistory, NewAllianceAssetMsg };
 
 function initClient(vuexGetters) {
 	return new Client(vuexGetters['common/env/getEnv'], vuexGetters['common/wallet/signer'])
@@ -69,9 +70,10 @@ const getDefaultState = () => {
 						QueuedRedelegation: getStructure(QueuedRedelegation.fromPartial({})),
 						Undelegation: getStructure(Undelegation.fromPartial({})),
 						QueuedUndelegation: getStructure(QueuedUndelegation.fromPartial({})),
-						Validator: getStructure(Validator.fromPartial({})),
+						AllianceValidatorInfo: getStructure(AllianceValidatorInfo.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
-						RewardIndex: getStructure(RewardIndex.fromPartial({})),
+						RewardHistory: getStructure(RewardHistory.fromPartial({})),
+						NewAllianceAssetMsg: getStructure(NewAllianceAssetMsg.fromPartial({})),
 						
 		},
 		_Registry: registry,

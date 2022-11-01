@@ -29,7 +29,7 @@ func NewDelegateCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
-		Use:   "delegate [validator-addr] [amount]",
+		Use:   "delegate validator-addr amount",
 		Args:  cobra.ExactArgs(2),
 		Short: "Delegate alliance enabled tokens to a validator",
 		Long: strings.TrimSpace(
@@ -76,7 +76,7 @@ func NewRedelegateCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
 	cmd := &cobra.Command{
-		Use:   "redelegate [src-validator-addr] [dst-validator-addr] [amount]",
+		Use:   "redelegate src-validator-addr dst-validator-addr amount",
 		Args:  cobra.ExactArgs(3),
 		Short: "Re-delegate alliance enabled tokens from a validator to another",
 		Long: strings.TrimSpace(
@@ -134,7 +134,7 @@ func NewUndelegateCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Undelegate alliance enabled tokens to a validator",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Undelegate an amount of liquid alliance enabled coins from a validator to your wallet (after the unbonding period has passed).
+			fmt.Sprintf(`Undelegate an amount of liquid alliance enabled coins from a validator to your wallet (after the unbonding period has finished).
 
 Example:
 $ %s tx alliance undelegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
@@ -178,7 +178,7 @@ func NewClaimDelegationRewardsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "claim-rewards validator-addr denom",
 		Args:  cobra.ExactArgs(2),
-		Short: "claim rewards from a delegation by specifying a validator address and denom",
+		Short: "Claim rewards from a delegation by specifying a validator address and denom",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Claim all rewards from a delegation
 Example:

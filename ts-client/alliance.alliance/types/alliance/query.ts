@@ -68,14 +68,14 @@ export interface QueryAllianceDelegationResponse {
 }
 
 /** AllianceDelegation */
-export interface AllianceDelegationRewardsRequest {
+export interface QueryAllianceDelegationRewardsRequest {
   delegatorAddr: string;
   validatorAddr: string;
   denom: string;
   pagination: PageRequest | undefined;
 }
 
-export interface AllianceDelegationRewardsResponse {
+export interface QueryAllianceDelegationRewardsResponse {
   rewards: Coin[];
 }
 
@@ -963,15 +963,15 @@ export const QueryAllianceDelegationResponse = {
   },
 };
 
-const baseAllianceDelegationRewardsRequest: object = {
+const baseQueryAllianceDelegationRewardsRequest: object = {
   delegatorAddr: "",
   validatorAddr: "",
   denom: "",
 };
 
-export const AllianceDelegationRewardsRequest = {
+export const QueryAllianceDelegationRewardsRequest = {
   encode(
-    message: AllianceDelegationRewardsRequest,
+    message: QueryAllianceDelegationRewardsRequest,
     writer: Writer = Writer.create()
   ): Writer {
     if (message.delegatorAddr !== "") {
@@ -992,12 +992,12 @@ export const AllianceDelegationRewardsRequest = {
   decode(
     input: Reader | Uint8Array,
     length?: number
-  ): AllianceDelegationRewardsRequest {
+  ): QueryAllianceDelegationRewardsRequest {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = {
-      ...baseAllianceDelegationRewardsRequest,
-    } as AllianceDelegationRewardsRequest;
+      ...baseQueryAllianceDelegationRewardsRequest,
+    } as QueryAllianceDelegationRewardsRequest;
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -1021,10 +1021,10 @@ export const AllianceDelegationRewardsRequest = {
     return message;
   },
 
-  fromJSON(object: any): AllianceDelegationRewardsRequest {
+  fromJSON(object: any): QueryAllianceDelegationRewardsRequest {
     const message = {
-      ...baseAllianceDelegationRewardsRequest,
-    } as AllianceDelegationRewardsRequest;
+      ...baseQueryAllianceDelegationRewardsRequest,
+    } as QueryAllianceDelegationRewardsRequest;
     if (object.delegatorAddr !== undefined && object.delegatorAddr !== null) {
       message.delegatorAddr = String(object.delegatorAddr);
     } else {
@@ -1048,7 +1048,7 @@ export const AllianceDelegationRewardsRequest = {
     return message;
   },
 
-  toJSON(message: AllianceDelegationRewardsRequest): unknown {
+  toJSON(message: QueryAllianceDelegationRewardsRequest): unknown {
     const obj: any = {};
     message.delegatorAddr !== undefined &&
       (obj.delegatorAddr = message.delegatorAddr);
@@ -1063,11 +1063,11 @@ export const AllianceDelegationRewardsRequest = {
   },
 
   fromPartial(
-    object: DeepPartial<AllianceDelegationRewardsRequest>
-  ): AllianceDelegationRewardsRequest {
+    object: DeepPartial<QueryAllianceDelegationRewardsRequest>
+  ): QueryAllianceDelegationRewardsRequest {
     const message = {
-      ...baseAllianceDelegationRewardsRequest,
-    } as AllianceDelegationRewardsRequest;
+      ...baseQueryAllianceDelegationRewardsRequest,
+    } as QueryAllianceDelegationRewardsRequest;
     if (object.delegatorAddr !== undefined && object.delegatorAddr !== null) {
       message.delegatorAddr = object.delegatorAddr;
     } else {
@@ -1092,11 +1092,11 @@ export const AllianceDelegationRewardsRequest = {
   },
 };
 
-const baseAllianceDelegationRewardsResponse: object = {};
+const baseQueryAllianceDelegationRewardsResponse: object = {};
 
-export const AllianceDelegationRewardsResponse = {
+export const QueryAllianceDelegationRewardsResponse = {
   encode(
-    message: AllianceDelegationRewardsResponse,
+    message: QueryAllianceDelegationRewardsResponse,
     writer: Writer = Writer.create()
   ): Writer {
     for (const v of message.rewards) {
@@ -1108,12 +1108,12 @@ export const AllianceDelegationRewardsResponse = {
   decode(
     input: Reader | Uint8Array,
     length?: number
-  ): AllianceDelegationRewardsResponse {
+  ): QueryAllianceDelegationRewardsResponse {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = {
-      ...baseAllianceDelegationRewardsResponse,
-    } as AllianceDelegationRewardsResponse;
+      ...baseQueryAllianceDelegationRewardsResponse,
+    } as QueryAllianceDelegationRewardsResponse;
     message.rewards = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -1129,10 +1129,10 @@ export const AllianceDelegationRewardsResponse = {
     return message;
   },
 
-  fromJSON(object: any): AllianceDelegationRewardsResponse {
+  fromJSON(object: any): QueryAllianceDelegationRewardsResponse {
     const message = {
-      ...baseAllianceDelegationRewardsResponse,
-    } as AllianceDelegationRewardsResponse;
+      ...baseQueryAllianceDelegationRewardsResponse,
+    } as QueryAllianceDelegationRewardsResponse;
     message.rewards = [];
     if (object.rewards !== undefined && object.rewards !== null) {
       for (const e of object.rewards) {
@@ -1142,7 +1142,7 @@ export const AllianceDelegationRewardsResponse = {
     return message;
   },
 
-  toJSON(message: AllianceDelegationRewardsResponse): unknown {
+  toJSON(message: QueryAllianceDelegationRewardsResponse): unknown {
     const obj: any = {};
     if (message.rewards) {
       obj.rewards = message.rewards.map((e) =>
@@ -1155,11 +1155,11 @@ export const AllianceDelegationRewardsResponse = {
   },
 
   fromPartial(
-    object: DeepPartial<AllianceDelegationRewardsResponse>
-  ): AllianceDelegationRewardsResponse {
+    object: DeepPartial<QueryAllianceDelegationRewardsResponse>
+  ): QueryAllianceDelegationRewardsResponse {
     const message = {
-      ...baseAllianceDelegationRewardsResponse,
-    } as AllianceDelegationRewardsResponse;
+      ...baseQueryAllianceDelegationRewardsResponse,
+    } as QueryAllianceDelegationRewardsResponse;
     message.rewards = [];
     if (object.rewards !== undefined && object.rewards !== null) {
       for (const e of object.rewards) {
@@ -1190,8 +1190,8 @@ export interface Query {
   ): Promise<QueryAllianceDelegationResponse>;
   /** Query for rewards by delegator addr, validator_addr and denom */
   AllianceDelegationRewards(
-    request: AllianceDelegationRewardsRequest
-  ): Promise<AllianceDelegationRewardsResponse>;
+    request: QueryAllianceDelegationRewardsRequest
+  ): Promise<QueryAllianceDelegationRewardsResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -1274,16 +1274,16 @@ export class QueryClientImpl implements Query {
   }
 
   AllianceDelegationRewards(
-    request: AllianceDelegationRewardsRequest
-  ): Promise<AllianceDelegationRewardsResponse> {
-    const data = AllianceDelegationRewardsRequest.encode(request).finish();
+    request: QueryAllianceDelegationRewardsRequest
+  ): Promise<QueryAllianceDelegationRewardsResponse> {
+    const data = QueryAllianceDelegationRewardsRequest.encode(request).finish();
     const promise = this.rpc.request(
       "alliance.alliance.Query",
       "AllianceDelegationRewards",
       data
     );
     return promise.then((data) =>
-      AllianceDelegationRewardsResponse.decode(new Reader(data))
+      QueryAllianceDelegationRewardsResponse.decode(new Reader(data))
     );
   }
 }

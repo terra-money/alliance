@@ -10,9 +10,10 @@ import { Redelegation } from "./types/alliance/delegations"
 import { QueuedRedelegation } from "./types/alliance/delegations"
 import { Undelegation } from "./types/alliance/delegations"
 import { QueuedUndelegation } from "./types/alliance/delegations"
-import { Validator } from "./types/alliance/delegations"
+import { AllianceValidatorInfo } from "./types/alliance/delegations"
 import { Params } from "./types/alliance/params"
-import { RewardIndex } from "./types/alliance/params"
+import { RewardHistory } from "./types/alliance/params"
+import { NewAllianceAssetMsg } from "./types/alliance/tx"
 
 
 export {     
@@ -28,8 +29,9 @@ export {
     QueuedRedelegation,
     Undelegation,
     QueuedUndelegation,
-    Validator,
+    AllianceValidatorInfo,
     Params,
-    RewardIndex,
+    RewardHistory,
+    NewAllianceAssetMsg,
     
  }

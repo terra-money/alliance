@@ -45,6 +45,9 @@ paths:
                       type: string
                     total_validator_shares:
                       type: string
+                    reward_start_time:
+                      type: string
+                      format: date-time
                   title: 'key: denom value: AllianceAsset'
               pagination:
                 type: object
@@ -344,7 +347,7 @@ paths:
                         shares:
                           type: string
                           description: shares define the delegation shares received.
-                        reward_indices:
+                        reward_history:
                           type: array
                           items:
                             type: object
@@ -353,6 +356,9 @@ paths:
                                 type: string
                               index:
                                 type: string
+                        last_reward_claim_height:
+                          type: string
+                          format: uint64
                     balance:
                       type: object
                       properties:
@@ -519,7 +525,7 @@ paths:
                         shares:
                           type: string
                           description: shares define the delegation shares received.
-                        reward_indices:
+                        reward_history:
                           type: array
                           items:
                             type: object
@@ -528,6 +534,9 @@ paths:
                                 type: string
                               index:
                                 type: string
+                        last_reward_claim_height:
+                          type: string
+                          format: uint64
                     balance:
                       type: object
                       properties:
@@ -696,7 +705,7 @@ paths:
                       shares:
                         type: string
                         description: shares define the delegation shares received.
-                      reward_indices:
+                      reward_history:
                         type: array
                         items:
                           type: object
@@ -705,6 +714,9 @@ paths:
                               type: string
                             index:
                               type: string
+                      last_reward_claim_height:
+                        type: string
+                        format: uint64
                   balance:
                     type: object
                     properties:
@@ -853,6 +865,9 @@ paths:
                     type: string
                   total_validator_shares:
                     type: string
+                  reward_start_time:
+                    type: string
+                    format: date-time
                 title: 'key: denom value: AllianceAsset'
         default:
           description: An unexpected error response.
@@ -45023,6 +45038,9 @@ definitions:
         type: string
       total_validator_shares:
         type: string
+      reward_start_time:
+        type: string
+        format: date-time
     title: 'key: denom value: AllianceAsset'
   alliance.alliance.Delegation:
     type: object
@@ -45039,7 +45057,7 @@ definitions:
       shares:
         type: string
         description: shares define the delegation shares received.
-      reward_indices:
+      reward_history:
         type: array
         items:
           type: object
@@ -45048,6 +45066,9 @@ definitions:
               type: string
             index:
               type: string
+      last_reward_claim_height:
+        type: string
+        format: uint64
   alliance.alliance.DelegationResponse:
     type: object
     properties:
@@ -45066,7 +45087,7 @@ definitions:
           shares:
             type: string
             description: shares define the delegation shares received.
-          reward_indices:
+          reward_history:
             type: array
             items:
               type: object
@@ -45075,6 +45096,9 @@ definitions:
                   type: string
                 index:
                   type: string
+          last_reward_claim_height:
+            type: string
+            format: uint64
       balance:
         type: object
         properties:
@@ -45104,6 +45128,28 @@ definitions:
     type: object
   alliance.alliance.MsgUpdateAllianceResponse:
     type: object
+  alliance.alliance.NewAllianceAssetMsg:
+    type: object
+    properties:
+      denom:
+        type: string
+        title: Denom of the asset. It could either be a native token or an IBC token
+      reward_weight:
+        type: string
+        description: >-
+          The reward weight specifies the ratio of rewards that will be given to
+          each alliance asset
+
+          It does not need to sum to 1. rate = weight / total_weight
+
+          Native asset is always assumed to have a weight of 1.
+      take_rate:
+        type: string
+        title: >-
+          A positive take rate is used for liquid staking derivatives. It
+          defines an annualized reward rate that
+
+          will be redirected to the distribution rewards pool
   alliance.alliance.Params:
     type: object
     properties:
@@ -45141,7 +45187,7 @@ definitions:
               shares:
                 type: string
                 description: shares define the delegation shares received.
-              reward_indices:
+              reward_history:
                 type: array
                 items:
                   type: object
@@ -45150,6 +45196,9 @@ definitions:
                       type: string
                     index:
                       type: string
+              last_reward_claim_height:
+                type: string
+                format: uint64
           balance:
             type: object
             properties:
@@ -45219,6 +45268,9 @@ definitions:
             type: string
           total_validator_shares:
             type: string
+          reward_start_time:
+            type: string
+            format: date-time
         title: 'key: denom value: AllianceAsset'
   alliance.alliance.QueryAlliancesDelegationsResponse:
     type: object
@@ -45247,7 +45299,7 @@ definitions:
                 shares:
                   type: string
                   description: shares define the delegation shares received.
-                reward_indices:
+                reward_history:
                   type: array
                   items:
                     type: object
@@ -45256,6 +45308,9 @@ definitions:
                         type: string
                       index:
                         type: string
+                last_reward_claim_height:
+                  type: string
+                  format: uint64
             balance:
               type: object
               properties:
@@ -45336,6 +45391,9 @@ definitions:
               type: string
             total_validator_shares:
               type: string
+            reward_start_time:
+              type: string
+              format: date-time
           title: 'key: denom value: AllianceAsset'
       pagination:
         type: object
@@ -45378,7 +45436,7 @@ definitions:
             type: string
             format: date-time
             title: Last application of `take_rate` on assets
-  alliance.alliance.RewardIndex:
+  alliance.alliance.RewardHistory:
     type: object
     properties:
       denom:
