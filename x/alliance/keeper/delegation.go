@@ -54,17 +54,30 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 // Method assumes that all tokens are owned by delegator and has delegations staked with srcVal
 func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types.AllianceValidator, dstVal types.AllianceValidator, coin sdk.Coin) (*types.MsgRedelegateResponse, error) {
 	asset, found := k.GetAssetByDenom(ctx, coin.Denom)
-
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", coin.Denom)
 	}
 
-	srcDelegation, ok := k.GetDelegation(ctx, delAddr, srcVal, coin.Denom)
+	_, ok := k.GetDelegation(ctx, delAddr, srcVal, coin.Denom)
 	if !ok {
 		return nil, stakingtypes.ErrNoDelegatorForAddress
 	}
+	_, err := k.ClaimDelegationRewards(ctx, delAddr, srcVal, coin.Denom)
+	if err != nil {
+		return nil, err
+	}
+	// re-query delegation since it was updated in `ClaimDelegationRewards`
+	srcDelegation, _ := k.GetDelegation(ctx, delAddr, srcVal, coin.Denom)
 
-	updatedDelegationShares, err := k.ValidateDelegatedAmount(srcDelegation, coin, srcVal, asset)
+	_, found = k.GetDelegation(ctx, delAddr, dstVal, coin.Denom)
+	if found {
+		_, err = k.ClaimDelegationRewards(ctx, delAddr, dstVal, coin.Denom)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	delegationSharesToRemove, err := k.ValidateDelegatedAmount(srcDelegation, coin, srcVal, asset)
 	if err != nil {
 		return nil, err
 	}
@@ -77,30 +90,15 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 		return nil, stakingtypes.ErrTransitiveRedelegation
 	}
 
-	_, found = k.GetDelegation(ctx, delAddr, srcVal, coin.Denom)
-	if found {
-		_, err = k.ClaimDelegationRewards(ctx, delAddr, srcVal, coin.Denom)
-		if err != nil {
-			return nil, err
-		}
-	}
-	_, found = k.GetDelegation(ctx, delAddr, dstVal, coin.Denom)
-	if found {
-		_, err = k.ClaimDelegationRewards(ctx, delAddr, dstVal, coin.Denom)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	completionTime := ctx.BlockHeader().Time.Add(k.stakingKeeper.UnbondingTime(ctx))
 	changedValidatorShares := types.GetValidatorShares(asset, coin.Amount)
 
 	// Remove tokens and from from src validator
-	k.reduceDelegationShares(ctx, delAddr, srcVal, coin, updatedDelegationShares, srcDelegation)
+	k.reduceDelegationShares(ctx, delAddr, srcVal, coin, delegationSharesToRemove, srcDelegation)
 	k.updateValidatorShares(
 		ctx,
 		srcVal,
-		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, updatedDelegationShares)),
+		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, delegationSharesToRemove)),
 		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, changedValidatorShares)),
 		false,
 	)
@@ -130,10 +128,16 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 		return status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", coin.Denom)
 	}
 
-	delegation, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
+	_, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 	if !ok {
 		return stakingtypes.ErrNoDelegatorForAddress
 	}
+	// Claim delegation rewards first
+	_, err := k.ClaimDelegationRewards(ctx, delAddr, validator, coin.Denom)
+	if err != nil {
+		return err
+	}
+	delegation, _ := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 
 	// Calculate how much delegation shares to be undelegated
 	delegationSharesToUndelegate, err := k.ValidateDelegatedAmount(delegation, coin, validator, asset)
@@ -141,12 +145,6 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 		return err
 	}
 	validatorSharesToRemove := types.GetValidatorShares(asset, coin.Amount)
-
-	// Claim delegation rewards first
-	_, err = k.ClaimDelegationRewards(ctx, delAddr, validator, coin.Denom)
-	if err != nil {
-		return err
-	}
 
 	asset.TotalTokens = asset.TotalTokens.Sub(coin.Amount)
 	asset.TotalValidatorShares = asset.TotalValidatorShares.Sub(validatorSharesToRemove)
@@ -460,5 +458,5 @@ func (k Keeper) getAllianceBondedAmount(ctx sdk.Context, delegator sdk.AccAddres
 		}
 		return false
 	})
-	return bonded.RoundInt()
+	return bonded.TruncateInt()
 }

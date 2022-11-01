@@ -576,7 +576,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 
 	// User should have everything withdrawn
 	_, found = app.AllianceKeeper.GetDelegation(ctx, user1, val1, ALLIANCE_2_TOKEN_DENOM)
-	require.True(t, found)
+	require.False(t, found)
 
 	res, err = app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"alliance/x/alliance/types"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -42,6 +43,7 @@ func (k Keeper) ClaimValidatorRewards(ctx sdk.Context, val types.AllianceValidat
 }
 
 // ClaimDelegationRewards claims delegation rewards and transfers to the delegator account
+// This method updates the delegation so you will need to re-query an updated version from the database
 func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, val types.AllianceValidator, denom string) (sdk.Coins, error) {
 	asset, found := k.GetAssetByDenom(ctx, denom)
 	if !found {
@@ -125,28 +127,28 @@ func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistor
 // AddAssetsToRewardPool increments a reward history array. A reward history stores the average reward per token/reward_weight.
 // To calculate the number of rewards claimable, take reward_history * alliance_token_amount * reward_weight
 func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val types.AllianceValidator, coins sdk.Coins) error {
-	globalIndices := types.NewRewardHistories(val.GlobalRewardHistory)
+	rewardHistories := types.NewRewardHistories(val.GlobalRewardHistory)
 	totalAssetWeight := k.totalAssetWeight(ctx, val)
 	// We need some delegations before we can split rewards. Else rewards belong to no one
 	if totalAssetWeight.IsZero() {
+		fmt.Println(val.ValidatorShares, totalAssetWeight.String())
 		return types.ErrZeroDelegations
 	}
 
 	for _, c := range coins {
-		index, found := globalIndices.GetIndexByDenom(c.Denom)
+		rewardHistory, found := rewardHistories.GetIndexByDenom(c.Denom)
 		if !found {
-			globalIndices = append(globalIndices, types.RewardHistory{
+			rewardHistories = append(rewardHistories, types.RewardHistory{
 				Denom: c.Denom,
 				Index: sdk.NewDecFromInt(c.Amount).Quo(totalAssetWeight),
 			})
 		} else {
-			index.Index = index.Index.Add(sdk.NewDecFromInt(c.Amount).Quo(totalAssetWeight))
+			rewardHistory.Index = rewardHistory.Index.Add(sdk.NewDecFromInt(c.Amount).Quo(totalAssetWeight))
 		}
 	}
 
-	val.GlobalRewardHistory = globalIndices
+	val.GlobalRewardHistory = rewardHistories
 	k.SetValidator(ctx, val)
-
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, from, types.RewardsPoolName, coins)
 	if err != nil {
 		return err
@@ -179,7 +181,7 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time) (
 		if asset.TotalTokens.IsPositive() && asset.TakeRate.IsPositive() {
 			reward := asset.TakeRate.Mul(prorate).MulInt(asset.TotalTokens).TruncateInt()
 			asset.TotalTokens = asset.TotalTokens.Sub(reward)
-			coins = append(coins, sdk.NewCoin(asset.Denom, reward))
+			coins = coins.Add(sdk.NewCoin(asset.Denom, reward))
 			k.SetAsset(ctx, *asset)
 		}
 	}
@@ -203,8 +205,8 @@ func (k Keeper) totalAssetWeight(ctx sdk.Context, val types.AllianceValidator) s
 		if !found {
 			continue
 		}
-		totalValTokens := val.TotalTokensWithAsset(asset)
-		total = total.Add(asset.RewardWeight.MulInt(totalValTokens))
+		totalValTokens := val.TotalDecTokensWithAsset(asset)
+		total = total.Add(asset.RewardWeight.Mul(totalValTokens))
 	}
 	return total
 }

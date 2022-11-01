@@ -129,7 +129,7 @@ func (k Keeper) SlashValidator(ctx sdk.Context, valAddr sdk.ValAddress, fraction
 	slashedValidatorShares := sdk.NewDecCoins()
 	for _, share := range val.ValidatorShares {
 		sharesToSlash := share.Amount.Mul(fraction)
-		slashedValidatorShares = append(slashedValidatorShares, sdk.NewDecCoinFromDec(share.Denom, share.Amount.Sub(sharesToSlash)))
+		slashedValidatorShares = slashedValidatorShares.Add(sdk.NewDecCoinFromDec(share.Denom, share.Amount.Sub(sharesToSlash)))
 		asset, found := k.GetAssetByDenom(ctx, share.Denom)
 		if !found {
 			return types.ErrUnknownAsset
@@ -178,6 +178,11 @@ func (k Keeper) SlashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, frac
 			return err
 		}
 		dstVal, err := k.GetAllianceValidator(ctx, dstValAddr)
+		if err != nil {
+			return err
+		}
+
+		_, err = k.ClaimDelegationRewards(ctx, delAddr, dstVal, redelegation.Balance.Denom)
 		if err != nil {
 			return err
 		}
