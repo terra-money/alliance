@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	test_helpers "alliance/app"
+	"alliance/x/alliance"
 	"alliance/x/alliance/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
@@ -99,6 +100,10 @@ func TestUpdateRewardRates(t *testing.T) {
 	val, found = app.StakingKeeper.GetValidator(ctx, valAddr1)
 	require.True(t, found)
 	require.Equal(t, int64(1), val.ConsensusPower(powerReduction))
+
+	_, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
+	require.False(t, stop)
+
 }
 
 func TestSlashingEvent(t *testing.T) {
@@ -235,6 +240,9 @@ func TestSlashingEvent(t *testing.T) {
 	// Expect that consensus power for val1 dropped
 	newValPower1 := val1.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx))
 	require.Less(t, newValPower1, valPower1)
+
+	_, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
+	require.False(t, stop)
 }
 
 func TestUnbondedValidator(t *testing.T) {
@@ -378,6 +386,9 @@ func TestUnbondedValidator(t *testing.T) {
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(16_000_000).String(), app.StakingKeeper.TotalBondedTokens(ctx).String())
+
+	_, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
+	require.False(t, stop)
 }
 
 func TestJailedValidator(t *testing.T) {
@@ -525,6 +536,9 @@ func TestJailedValidator(t *testing.T) {
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(19_200_000).String(), app.StakingKeeper.TotalBondedTokens(ctx).String())
+
+	_, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
+	require.False(t, stop)
 }
 
 func TestDelayedRewardsStartTime(t *testing.T) {
@@ -644,6 +658,9 @@ func TestDelayedRewardsStartTime(t *testing.T) {
 	require.NoError(t, err)
 	// 12 * 1.7 = 18
 	require.Equal(t, sdk.NewInt(20_400_000), app.StakingKeeper.TotalBondedTokens(ctx))
+
+	_, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
+	require.False(t, stop)
 }
 
 func TestSlashingAfterRedelegation(t *testing.T) {
@@ -773,6 +790,9 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	delegation, _ = app.AllianceKeeper.GetDelegation(ctx, user1, val2, ALLIANCE_TOKEN_DENOM)
 	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, tokens.Amount.Int64(), types.GetDelegationTokens(delegation, val2, asset).Amount.Int64())
+
+	_, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
+	require.False(t, stop)
 }
 
 func TestSlashingAfterUndelegation(t *testing.T) {
@@ -907,4 +927,7 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	require.Equal(t, 1, len(newUndelegations.Entries))
 	entry2 := newUndelegations.Entries[0]
 	require.Equal(t, entry.Balance.Amount.Int64(), entry2.Balance.Amount.Int64())
+
+	_, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
+	require.False(t, stop)
 }

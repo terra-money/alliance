@@ -264,6 +264,19 @@ func (k Keeper) DeleteRedelegation(ctx sdk.Context, redel types.Redelegation, co
 	store.Delete(indexKey)
 }
 
+func (k Keeper) IterateDelegations(ctx sdk.Context, cb func(d types.Delegation) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.DelegationKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var delegation types.Delegation
+		k.cdc.MustUnmarshal(iter.Value(), &delegation)
+		if cb(delegation) {
+			break
+		}
+	}
+}
+
 func (k Keeper) IterateRedelegations(ctx sdk.Context, delAddr sdk.AccAddress, dstVal sdk.ValAddress, denom string) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRedelegationsKey(delAddr, denom, dstVal)

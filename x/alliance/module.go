@@ -111,7 +111,7 @@ func (a AppModule) ExportGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec) jso
 }
 
 func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {
-	//TODO implement me
+	RegisterInvariants(registry, a.keeper)
 }
 
 // Deprecated: use RegisterServices
