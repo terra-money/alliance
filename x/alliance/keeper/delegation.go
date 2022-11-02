@@ -170,6 +170,7 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 func (k Keeper) CompleteRedelegations(ctx sdk.Context) int {
 	store := ctx.KVStore(k.storeKey)
 	iter := store.Iterator(types.RedelegationQueueKey, types.GetRedelegationQueueKey(ctx.BlockTime()))
+	defer iter.Close()
 	deleted := 0
 	for ; iter.Valid(); iter.Next() {
 		completion := types.ParseRedelegationQueueKey(iter.Key())
@@ -188,6 +189,7 @@ func (k Keeper) CompleteRedelegations(ctx sdk.Context) int {
 func (k Keeper) CompleteUndelegations(ctx sdk.Context) error {
 	store := ctx.KVStore(k.storeKey)
 	iter := k.IterateUndelegations(ctx, ctx.BlockTime())
+	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var queued types.QueuedUndelegation
 		completionTime, err := types.ParseUndelegationQueueKeyForCompletionTime(iter.Key())
@@ -312,11 +314,17 @@ func (k Keeper) SetValidator(ctx sdk.Context, val types.AllianceValidator) {
 }
 
 func (k Keeper) ValidateDelegatedAmount(delegation types.Delegation, coin sdk.Coin, val types.AllianceValidator, asset types.AllianceAsset) (shares sdk.Dec, err error) {
-	delegationShares := types.GetDelegationSharesFromTokens(val, asset, coin.Amount)
-	if delegation.Shares.LT(delegationShares.TruncateDec()) {
+	delegationSharesToUpdate := types.GetDelegationSharesFromTokens(val, asset, coin.Amount)
+	if delegation.Shares.LT(delegationSharesToUpdate.TruncateDec()) {
 		return sdk.Dec{}, stakingtypes.ErrInsufficientShares
 	}
-	return delegationShares, nil
+
+	// Account for rounding
+	if delegation.Shares.LT(delegationSharesToUpdate) {
+		delegationSharesToUpdate = delegation.Shares
+	}
+
+	return delegationSharesToUpdate, nil
 }
 
 // queueRedelegation Adds a redelegation to a queue to be processed at a later timestamp

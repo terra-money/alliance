@@ -20,7 +20,7 @@ func genRewardClaimInterval(r *rand.Rand) time.Duration {
 }
 
 func genNumOfAllianceAssets(r *rand.Rand) int {
-	return simulation.RandIntBetween(r, 100, 101)
+	return simulation.RandIntBetween(r, 0, 50)
 }
 
 func RandomizedGenesisState(simState *module.SimulationState) {

@@ -52,6 +52,7 @@ func (k Keeper) IterateAllianceValidatorInfo(ctx sdk.Context) storetypes.Iterato
 func (k Keeper) GetAllAllianceValidatorInfo(ctx sdk.Context) []types.AllianceValidatorInfo {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.ValidatorInfoKey)
+	defer iter.Close()
 	var infos []types.AllianceValidatorInfo
 	for ; iter.Valid(); iter.Next() {
 		b := iter.Value()

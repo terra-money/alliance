@@ -31,7 +31,13 @@ func ValidatorSharesInvariant(k keeper.Keeper) sdk.Invariant {
 		infos := k.GetAllAllianceValidatorInfo(ctx)
 		validatorShares := map[string]sdk.Dec{} // {denom: shares}
 		for _, info := range infos {
+
 			for _, share := range info.ValidatorShares {
+				if share.IsNegative() {
+					msg += fmt.Sprintf("negative validator shares found\n")
+					broken = true
+					return sdk.FormatInvariant(types.ModuleName, "validator shares", msg), broken
+				}
 				if validatorShares[share.Denom].IsNil() {
 					validatorShares[share.Denom] = share.Amount
 				} else {
@@ -58,7 +64,12 @@ func DelegatorSharesInvariant(k keeper.Keeper) sdk.Invariant {
 			broken bool
 		)
 		delegatorShares := map[string]map[string]sdk.Dec{} // {validator: {asset: share}}
+		var hasNegativeShares bool
 		k.IterateDelegations(ctx, func(delegation types.Delegation) bool {
+			if delegation.Shares.IsNegative() {
+				hasNegativeShares = true
+				return true
+			}
 			if delegatorShares[delegation.ValidatorAddress] == nil {
 				delegatorShares[delegation.ValidatorAddress] = map[string]sdk.Dec{
 					delegation.Denom: delegation.Shares,
@@ -72,6 +83,12 @@ func DelegatorSharesInvariant(k keeper.Keeper) sdk.Invariant {
 			}
 			return false
 		})
+
+		if hasNegativeShares {
+			msg += fmt.Sprintf("negative delegation shares found\n")
+			broken = true
+			return sdk.FormatInvariant(types.ModuleName, "validator shares", msg), broken
+		}
 
 		for val, assets := range delegatorShares {
 			valAddr, err := sdk.ValAddressFromBech32(val)
@@ -96,6 +113,6 @@ func DelegatorSharesInvariant(k keeper.Keeper) sdk.Invariant {
 				}
 			}
 		}
-		return sdk.FormatInvariant(types.ModuleName, "validator shares", msg), broken
+		return sdk.FormatInvariant(types.ModuleName, "delegations shares", msg), broken
 	}
 }
