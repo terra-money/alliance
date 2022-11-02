@@ -1,6 +1,12 @@
 # x/alliance interchain security
 
-Independent blockchain module compatible with [CosmosSDK v0.46.x](https://github.com/cosmos/cosmos-sdk) that allow blockchains to share security without  necessity of modifying the core Cosmos SDK modules nor share any hardware resources. By design, x/alliance use the following CosmosSDK modules to implement interchain security to a new or existing blockchain :
+The Alliance module is part of the Interchain Security (Cosmos Shared Security that benefits from the IBC standard). Alliance is a friction free Interchain Security solution because there is no necessity to share hardware resources, have the blockchains synchronized nor modify the core of the origin chain that provide Interchain Security. Alliance module introduces the concept of alliance coins that can be seen as foreign coins bridged thru an IBC channel (ICS-004), whitelisted with the help of on-chain governance in the Alliance module and delegated by users or smart contracts to the active set of network validators.
+
+Delegators of the alliance coins will be subjected to similar rules as the delegators of native coins but these delegators will provide Interchain Security to the network. The previously mentioned foreign coins can be in the form of Liquid Staked Derivative that benefits from the inflation of its native chain or any type of coin that can be bridged through the previously mentioned channels respecting the ICS-020 standard.
+
+When users delegate coins through the Alliance module the voting power of the validators will be diluted, as a consequence, bad actors will have to increase their capital spendings to try and corrupt the consensus of the blockchain. 
+
+By design, x/alliance use the following CosmosSDK modules to implement interchain security to a new or existing blockchain :
 
 - [x/auth](https://github.com/cosmos/cosmos-sdk/blob/main/x/auth/README.md),
 - [x/bank](https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/README.md),
@@ -8,8 +14,6 @@ Independent blockchain module compatible with [CosmosSDK v0.46.x](https://github
 - [x/staking](https://github.com/cosmos/cosmos-sdk/blob/main/x/staking/README.md), 
 - [x/distribution](https://github.com/cosmos/cosmos-sdk/blob/main/x/distribution/README.md), 
 - [x/gov](https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/README.md).
-
-Since security on Delegated Proof of Stake Chains is directly related to the [voting power of the validators](https://docs.tendermint.com/v0.34/tendermint-core/validators.html#validators) x/alliance enable staking of native tokens to increase the chain security and users that stake will also earn staking rewards.
 
 # Development environment
 
