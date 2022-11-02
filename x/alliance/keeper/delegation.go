@@ -54,17 +54,30 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 // Method assumes that all tokens are owned by delegator and has delegations staked with srcVal
 func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types.AllianceValidator, dstVal types.AllianceValidator, coin sdk.Coin) (*types.MsgRedelegateResponse, error) {
 	asset, found := k.GetAssetByDenom(ctx, coin.Denom)
-
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", coin.Denom)
 	}
 
-	srcDelegation, ok := k.GetDelegation(ctx, delAddr, srcVal, coin.Denom)
-	if !ok {
+	_, found = k.GetDelegation(ctx, delAddr, srcVal, coin.Denom)
+	if !found {
 		return nil, stakingtypes.ErrNoDelegatorForAddress
 	}
+	_, err := k.ClaimDelegationRewards(ctx, delAddr, srcVal, coin.Denom)
+	if err != nil {
+		return nil, err
+	}
+	// re-query delegation since it was updated in `ClaimDelegationRewards`
+	srcDelegation, _ := k.GetDelegation(ctx, delAddr, srcVal, coin.Denom)
 
-	updatedDelegationShares, err := k.ValidateDelegatedAmount(srcDelegation, coin, srcVal, asset)
+	_, found = k.GetDelegation(ctx, delAddr, dstVal, coin.Denom)
+	if found {
+		_, err = k.ClaimDelegationRewards(ctx, delAddr, dstVal, coin.Denom)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	delegationSharesToRemove, err := k.ValidateDelegatedAmount(srcDelegation, coin, srcVal, asset)
 	if err != nil {
 		return nil, err
 	}
@@ -77,30 +90,15 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 		return nil, stakingtypes.ErrTransitiveRedelegation
 	}
 
-	_, found = k.GetDelegation(ctx, delAddr, srcVal, coin.Denom)
-	if found {
-		_, err = k.ClaimDelegationRewards(ctx, delAddr, srcVal, coin.Denom)
-		if err != nil {
-			return nil, err
-		}
-	}
-	_, found = k.GetDelegation(ctx, delAddr, dstVal, coin.Denom)
-	if found {
-		_, err = k.ClaimDelegationRewards(ctx, delAddr, dstVal, coin.Denom)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	completionTime := ctx.BlockHeader().Time.Add(k.stakingKeeper.UnbondingTime(ctx))
 	changedValidatorShares := types.GetValidatorShares(asset, coin.Amount)
 
 	// Remove tokens and from from src validator
-	k.reduceDelegationShares(ctx, delAddr, srcVal, coin, updatedDelegationShares, srcDelegation)
+	k.reduceDelegationShares(ctx, delAddr, srcVal, coin, delegationSharesToRemove, srcDelegation)
 	k.updateValidatorShares(
 		ctx,
 		srcVal,
-		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, updatedDelegationShares)),
+		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, delegationSharesToRemove)),
 		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, changedValidatorShares)),
 		false,
 	)
@@ -130,10 +128,16 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 		return status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", coin.Denom)
 	}
 
-	delegation, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
+	_, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 	if !ok {
 		return stakingtypes.ErrNoDelegatorForAddress
 	}
+	// Claim delegation rewards first
+	_, err := k.ClaimDelegationRewards(ctx, delAddr, validator, coin.Denom)
+	if err != nil {
+		return err
+	}
+	delegation, _ := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 
 	// Calculate how much delegation shares to be undelegated
 	delegationSharesToUndelegate, err := k.ValidateDelegatedAmount(delegation, coin, validator, asset)
@@ -141,12 +145,6 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 		return err
 	}
 	validatorSharesToRemove := types.GetValidatorShares(asset, coin.Amount)
-
-	// Claim delegation rewards first
-	_, err = k.ClaimDelegationRewards(ctx, delAddr, validator, coin.Denom)
-	if err != nil {
-		return err
-	}
 
 	asset.TotalTokens = asset.TotalTokens.Sub(coin.Amount)
 	asset.TotalValidatorShares = asset.TotalValidatorShares.Sub(validatorSharesToRemove)
@@ -172,6 +170,7 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 func (k Keeper) CompleteRedelegations(ctx sdk.Context) int {
 	store := ctx.KVStore(k.storeKey)
 	iter := store.Iterator(types.RedelegationQueueKey, types.GetRedelegationQueueKey(ctx.BlockTime()))
+	defer iter.Close()
 	deleted := 0
 	for ; iter.Valid(); iter.Next() {
 		completion := types.ParseRedelegationQueueKey(iter.Key())
@@ -190,6 +189,7 @@ func (k Keeper) CompleteRedelegations(ctx sdk.Context) int {
 func (k Keeper) CompleteUndelegations(ctx sdk.Context) error {
 	store := ctx.KVStore(k.storeKey)
 	iter := k.IterateUndelegations(ctx, ctx.BlockTime())
+	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var queued types.QueuedUndelegation
 		completionTime, err := types.ParseUndelegationQueueKeyForCompletionTime(iter.Key())
@@ -264,6 +264,19 @@ func (k Keeper) DeleteRedelegation(ctx sdk.Context, redel types.Redelegation, co
 	store.Delete(indexKey)
 }
 
+func (k Keeper) IterateDelegations(ctx sdk.Context, cb func(d types.Delegation) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.DelegationKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var delegation types.Delegation
+		k.cdc.MustUnmarshal(iter.Value(), &delegation)
+		if cb(delegation) {
+			break
+		}
+	}
+}
+
 func (k Keeper) IterateRedelegations(ctx sdk.Context, delAddr sdk.AccAddress, dstVal sdk.ValAddress, denom string) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetRedelegationsKey(delAddr, denom, dstVal)
@@ -301,11 +314,17 @@ func (k Keeper) SetValidator(ctx sdk.Context, val types.AllianceValidator) {
 }
 
 func (k Keeper) ValidateDelegatedAmount(delegation types.Delegation, coin sdk.Coin, val types.AllianceValidator, asset types.AllianceAsset) (shares sdk.Dec, err error) {
-	delegationShares := types.GetDelegationSharesFromTokens(val, asset, coin.Amount)
-	if delegation.Shares.LT(delegationShares.TruncateDec()) {
+	delegationSharesToUpdate := types.GetDelegationSharesFromTokens(val, asset, coin.Amount)
+	if delegation.Shares.LT(delegationSharesToUpdate.TruncateDec()) {
 		return sdk.Dec{}, stakingtypes.ErrInsufficientShares
 	}
-	return delegationShares, nil
+
+	// Account for rounding
+	if delegation.Shares.LT(delegationSharesToUpdate) {
+		delegationSharesToUpdate = delegation.Shares
+	}
+
+	return delegationSharesToUpdate, nil
 }
 
 // queueRedelegation Adds a redelegation to a queue to be processed at a later timestamp
@@ -395,9 +414,9 @@ func (k Keeper) queueUndelegation(ctx sdk.Context, delAddr sdk.AccAddress, val s
 
 func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) {
 	newShares := types.GetDelegationSharesFromTokens(validator, asset, coin.Amount)
-	delegation, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
+	delegation, found := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 	latestClaimHistory := validator.GlobalRewardHistory
-	if !ok {
+	if !found {
 		delegation = types.NewDelegation(ctx, delAddr, validator.GetOperator(), coin.Denom, newShares, latestClaimHistory)
 	} else {
 		delegation.AddShares(newShares)
@@ -447,5 +466,5 @@ func (k Keeper) getAllianceBondedAmount(ctx sdk.Context, delegator sdk.AccAddres
 		}
 		return false
 	})
-	return bonded.RoundInt()
+	return bonded.TruncateInt()
 }

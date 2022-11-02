@@ -31,20 +31,24 @@ var (
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.EndBlockAppModule   = AppModule{}
-	_ module.BeginBlockAppModule = AppModule{}
 )
 
 type AppModuleBasic struct {
-	cdc codec.Codec
+	cdc  codec.Codec
+	pcdc *codec.ProtoCodec
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sk types.StakingKeeper,
+	ak types.AccountKeeper, bk types.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		AppModuleBasic: AppModuleBasic{cdc: cdc, pcdc: codec.NewProtoCodec(registry)},
 		keeper:         keeper,
-		stakingKeeper:  stakingKeeper,
+		stakingKeeper:  sk,
+		bankKeeper:     bk,
+		accountKeeper:  ak,
 	}
+
 }
 
 func (a AppModuleBasic) Name() string {
@@ -89,10 +93,8 @@ type AppModule struct {
 	AppModuleBasic
 	keeper        keeper.Keeper
 	stakingKeeper types.StakingKeeper
-}
-
-func (a AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	BeginBlocker(ctx, a.keeper)
+	bankKeeper    types.BankKeeper
+	accountKeeper types.AccountKeeper
 }
 
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
@@ -111,7 +113,7 @@ func (a AppModule) ExportGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec) jso
 }
 
 func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {
-	//TODO implement me
+	RegisterInvariants(registry, a.keeper)
 }
 
 // Deprecated: use RegisterServices
@@ -135,9 +137,8 @@ func (a AppModule) ConsensusVersion() uint64 {
 	return 3
 }
 
-func (a AppModule) GenerateGenesisState(input *module.SimulationState) {
-	//TODO implement me
-	panic("implement me")
+func (a AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenesisState(simState)
 }
 
 func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
@@ -145,8 +146,7 @@ func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.
 }
 
 func (a AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	//TODO implement me
-	panic("implement me")
+	return simulation.ParamChanges(r)
 }
 
 func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
@@ -154,6 +154,5 @@ func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
 }
 
 func (a AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	//TODO implement me
-	panic("implement me")
+	return simulation.WeightedOperations(simState.AppParams, a.pcdc, a.accountKeeper, a.bankKeeper, a.stakingKeeper, a.keeper)
 }

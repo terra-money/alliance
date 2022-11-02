@@ -12,7 +12,7 @@ func (k Keeper) GetAllianceValidator(ctx sdk.Context, valAddr sdk.ValAddress) (t
 	if !found {
 		return types.AllianceValidator{}, fmt.Errorf("validator with address %s does not exist", valAddr.String())
 	}
-	valInfo, found := k.getAllianceValidatorInfo(ctx, valAddr)
+	valInfo, found := k.GetAllianceValidatorInfo(ctx, valAddr)
 	if !found {
 		valInfo = k.createAllianceValidatorInfo(ctx, valAddr)
 	}
@@ -22,7 +22,7 @@ func (k Keeper) GetAllianceValidator(ctx sdk.Context, valAddr sdk.ValAddress) (t
 	}, nil
 }
 
-func (k Keeper) getAllianceValidatorInfo(ctx sdk.Context, valAddr sdk.ValAddress) (types.AllianceValidatorInfo, bool) {
+func (k Keeper) GetAllianceValidatorInfo(ctx sdk.Context, valAddr sdk.ValAddress) (types.AllianceValidatorInfo, bool) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetAllianceValidatorInfoKey(valAddr)
 	vb := store.Get(key)
@@ -47,4 +47,18 @@ func (k Keeper) createAllianceValidatorInfo(ctx sdk.Context, valAddr sdk.ValAddr
 func (k Keeper) IterateAllianceValidatorInfo(ctx sdk.Context) storetypes.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(store, types.ValidatorInfoKey)
+}
+
+func (k Keeper) GetAllAllianceValidatorInfo(ctx sdk.Context) []types.AllianceValidatorInfo {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, types.ValidatorInfoKey)
+	defer iter.Close()
+	var infos []types.AllianceValidatorInfo
+	for ; iter.Valid(); iter.Next() {
+		b := iter.Value()
+		var info types.AllianceValidatorInfo
+		k.cdc.UnmarshalInterface(b, &info)
+		infos = append(infos, info)
+	}
+	return infos
 }
