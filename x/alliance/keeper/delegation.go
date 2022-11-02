@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"alliance/x/alliance/types"
-	"cosmossdk.io/math"
 	"time"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -18,7 +19,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 		return nil, status.Errorf(codes.NotFound, "asset with denom: %s does not exist in alliance whitelist", coin.Denom)
 	}
 
-	// Check and send delegated tokens into the alliance module address
+	// Check and send delegated coins into the alliance module address
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, delAddr, types.ModuleName, sdk.NewCoins(coin))
 	if err != nil {
 		return nil, err
@@ -51,7 +52,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 }
 
 // Redelegate from one validator to another
-// Method assumes that all tokens are owned by delegator and has delegations staked with srcVal
+// Method assumes that all coins are owned by delegator and has delegations staked with srcVal
 func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types.AllianceValidator, dstVal types.AllianceValidator, coin sdk.Coin) (*types.MsgRedelegateResponse, error) {
 	asset, found := k.GetAssetByDenom(ctx, coin.Denom)
 	if !found {
@@ -93,7 +94,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 	completionTime := ctx.BlockHeader().Time.Add(k.stakingKeeper.UnbondingTime(ctx))
 	changedValidatorShares := types.GetValidatorShares(asset, coin.Amount)
 
-	// Remove tokens and from from src validator
+	// Remove coins and shares from from src validator
 	k.reduceDelegationShares(ctx, delAddr, srcVal, coin, delegationSharesToRemove, srcDelegation)
 	k.updateValidatorShares(
 		ctx,
@@ -103,7 +104,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 		false,
 	)
 
-	// Add tokens and shares to dst validator
+	// Add coins and shares to dst validator
 	_, newDelegationShares := k.upsertDelegationWithNewTokens(ctx, delAddr, dstVal, coin, asset)
 	k.updateValidatorShares(
 		ctx,
@@ -151,7 +152,7 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 	k.SetAsset(ctx, asset)
 	k.reduceDelegationShares(ctx, delAddr, validator, coin, delegationSharesToUndelegate, delegation)
 
-	// Remove tokens and shares from src validator
+	// Remove coins and shares from src validator
 	k.updateValidatorShares(
 		ctx,
 		validator,
@@ -160,7 +161,7 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 		false,
 	)
 
-	// Queue undelegation messages to distribute tokens after undelegation completes in the future
+	// Queue undelegation messages to distribute coins after undelegation completes in the future
 	k.queueUndelegation(ctx, delAddr, validator.GetOperator(), coin)
 	k.QueueAssetRebalanceEvent(ctx)
 	return nil
@@ -185,7 +186,7 @@ func (k Keeper) CompleteRedelegations(ctx sdk.Context) int {
 	return deleted
 }
 
-// CompleteUndelegations Go through all queued undelegations and send the tokens to the delegators
+// CompleteUndelegations Go through all queued undelegations and send the coins to the delegators
 func (k Keeper) CompleteUndelegations(ctx sdk.Context) error {
 	store := ctx.KVStore(k.storeKey)
 	iter := k.IterateUndelegations(ctx, ctx.BlockTime())
@@ -216,7 +217,7 @@ func (k Keeper) CompleteUndelegations(ctx sdk.Context) error {
 		store.Delete(iter.Key())
 	}
 
-	// Burn all "virtual" staking tokens in the module account
+	// Burn all "virtual" staking coins in the module account
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	coin := k.bankKeeper.GetBalance(ctx, moduleAddr, k.stakingKeeper.BondDenom(ctx))
 	if !coin.IsZero() {
@@ -449,7 +450,7 @@ func (k Keeper) updateValidatorShares(ctx sdk.Context, validator types.AllianceV
 	k.SetValidator(ctx, validator)
 }
 
-// getAllianceBondedAmount returns the total amount of bonded native tokens that are not in the
+// getAllianceBondedAmount returns the total amount of bonded native coins that are not in the
 // unbonding pool
 func (k Keeper) getAllianceBondedAmount(ctx sdk.Context, delegator sdk.AccAddress) math.Int {
 	bonded := sdk.ZeroDec()
