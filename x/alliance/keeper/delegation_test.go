@@ -2,15 +2,17 @@ package keeper_test
 
 import (
 	test_helpers "alliance/app"
+	"alliance/x/alliance/keeper"
 	"alliance/x/alliance/types"
+	"testing"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
-	"testing"
-	"time"
 )
 
 var ALLIANCE_TOKEN_DENOM = "alliance"
@@ -66,7 +68,7 @@ func TestDelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// Manually trigger rebalancing
-	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)
 
@@ -99,7 +101,7 @@ func TestDelegation(t *testing.T) {
 	}, allianceDelegation)
 
 	// Check asset
-	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, types.AllianceAsset{
 		Denom:                ALLIANCE_TOKEN_DENOM,
 		RewardWeight:         sdk.NewDec(2),
@@ -157,7 +159,7 @@ func TestDelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// Manually trigger rebalancing
-	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
+	app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)
 
@@ -461,6 +463,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 			},
 		},
 	})
+	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
@@ -526,7 +529,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, coins.IsZero())
 
-	res, err := app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
+	res, err := queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),
 		ValidatorAddr: val1.GetOperator().String(),
 		Denom:         ALLIANCE_2_TOKEN_DENOM,
@@ -561,7 +564,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, coins.IsZero())
 
-	res, err = app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
+	res, err = queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),
 		ValidatorAddr: val1.GetOperator().String(),
 		Denom:         ALLIANCE_2_TOKEN_DENOM,
@@ -579,7 +582,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	_, found = app.AllianceKeeper.GetDelegation(ctx, user1, val1, ALLIANCE_2_TOKEN_DENOM)
 	require.False(t, found)
 
-	res, err = app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
+	res, err = queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),
 		ValidatorAddr: val1.GetOperator().String(),
 		Denom:         ALLIANCE_2_TOKEN_DENOM,
@@ -694,7 +697,7 @@ func TestDelegationWithNativeStakingChanges(t *testing.T) {
 	require.Equal(t, sdk.NewInt(39_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
 	// Undelegate some native tokens
-	shares, err := app.StakingKeeper.ValidateUnbondAmount(ctx, user2, valAddr2, sdk.NewInt(1000_000))
+	shares, _ := app.StakingKeeper.ValidateUnbondAmount(ctx, user2, valAddr2, sdk.NewInt(1000_000))
 	_, err = app.StakingKeeper.Undelegate(ctx, user2, valAddr2, shares)
 	require.NoError(t, err)
 

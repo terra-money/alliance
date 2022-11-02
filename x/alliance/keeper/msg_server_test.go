@@ -22,6 +22,7 @@ func TestCreateAlliance(t *testing.T) {
 	startTime := time.Now()
 	ctx.WithBlockTime(startTime).WithBlockHeight(1)
 	msgServer := keeper.NewMsgServerImpl(app.AllianceKeeper)
+	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 	rewardDuration := app.AllianceKeeper.RewardDelayTime(ctx)
 
 	// WHEN
@@ -33,7 +34,7 @@ func TestCreateAlliance(t *testing.T) {
 			TakeRate:     sdk.OneDec(),
 		},
 	})
-	alliancesRes, alliancesErr := app.AllianceKeeper.Alliances(ctx, &types.QueryAlliancesRequest{})
+	alliancesRes, alliancesErr := queryServer.Alliances(ctx, &types.QueryAlliancesRequest{})
 
 	// THEN
 	require.Nil(t, createErr)
@@ -158,6 +159,7 @@ func TestUpdateAlliance(t *testing.T) {
 		},
 	})
 	msgServer := keeper.NewMsgServerImpl(app.AllianceKeeper)
+	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// WHEN
 	createRes, updateErr := msgServer.UpdateAlliance(ctx, &types.MsgUpdateAlliance{
@@ -166,7 +168,7 @@ func TestUpdateAlliance(t *testing.T) {
 		RewardWeight: sdk.NewDec(6),
 		TakeRate:     sdk.NewDec(7),
 	})
-	alliancesRes, alliancesErr := app.AllianceKeeper.Alliances(ctx, &types.QueryAlliancesRequest{})
+	alliancesRes, alliancesErr := queryServer.Alliances(ctx, &types.QueryAlliancesRequest{})
 
 	// THEN
 	require.Nil(t, updateErr)
@@ -206,13 +208,14 @@ func TestDeleteAlliance(t *testing.T) {
 		},
 	})
 	msgServer := keeper.NewMsgServerImpl(app.AllianceKeeper)
+	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// WHEN
 	createRes, updateErr := msgServer.DeleteAlliance(ctx, &types.MsgDeleteAlliance{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		Denom:     "uluna",
 	})
-	alliancesRes, alliancesErr := app.AllianceKeeper.Alliances(ctx, &types.QueryAlliancesRequest{})
+	alliancesRes, alliancesErr := queryServer.Alliances(ctx, &types.QueryAlliancesRequest{})
 
 	// THEN
 	require.Nil(t, updateErr)
