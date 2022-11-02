@@ -4,12 +4,13 @@ import (
 	test_helpers "alliance/app"
 	"alliance/x/alliance"
 	"alliance/x/alliance/types"
+	"testing"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestSlashingEvent(t *testing.T) {
@@ -106,7 +107,7 @@ func TestSlashingEvent(t *testing.T) {
 
 	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
 	valPower1 := val1.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx))
-	valConAddr1, err := val1.GetConsAddr()
+	valConAddr1, _ := val1.GetConsAddr()
 
 	// Tokens should remain the same before slashing
 	asset1, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
