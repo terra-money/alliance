@@ -45,6 +45,9 @@ paths:
                       type: string
                     total_validator_shares:
                       type: string
+                    reward_start_time:
+                      type: string
+                      format: date-time
                   title: 'key: denom value: AllianceAsset'
               pagination:
                 type: object
@@ -151,6 +154,73 @@ paths:
           type: boolean
       tags:
         - Query
+  '/terra/alliances/ibc/{hash}':
+    get:
+      summary: Query a specific alliance by ibc hash
+      operationId: AllianceAllianceIBCAlliance
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              alliance:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                    title: >-
+                      Denom of the asset. It could either be a native token or
+                      an IBC token
+                  reward_weight:
+                    type: string
+                    description: >-
+                      The reward weight specifies the ratio of rewards that will
+                      be given to each alliance asset
+
+                      It does not need to sum to 1. rate = weight / total_weight
+
+                      Native asset is always assumed to have a weight of 1.
+                  take_rate:
+                    type: string
+                    title: >-
+                      A positive take rate is used for liquid staking
+                      derivatives. It defines an annualized reward rate that
+
+                      will be redirected to the distribution rewards pool
+                  total_tokens:
+                    type: string
+                  total_validator_shares:
+                    type: string
+                  reward_start_time:
+                    type: string
+                    format: date-time
+                title: 'key: denom value: AllianceAsset'
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /terra/alliances/params:
     get:
       operationId: AllianceAllianceParams
@@ -194,7 +264,123 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  '/terra/alliances/{delegator_addr_1}/{validator_addr}/{denom}':
+  '/terra/alliances/rewards/{delegator_addr}/{validator_addr}/ibc/{hash}':
+    get:
+      summary: 'Query for rewards by delegator addr, validator_addr and denom'
+      operationId: AllianceAllianceIBCAllianceDelegationRewards
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              rewards:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: delegator_addr
+          in: path
+          required: true
+          type: string
+        - name: validator_addr
+          in: path
+          required: true
+          type: string
+        - name: hash
+          in: path
+          required: true
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/terra/alliances/rewards/{delegator_addr}/{validator_addr}/{denom}':
     get:
       summary: 'Query for rewards by delegator addr, validator_addr and denom'
       operationId: AllianceAllianceAllianceDelegationRewards
@@ -240,7 +426,7 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: delegator_addr_1
+        - name: delegator_addr
           in: path
           required: true
           type: string
@@ -344,7 +530,7 @@ paths:
                         shares:
                           type: string
                           description: shares define the delegation shares received.
-                        reward_indices:
+                        reward_history:
                           type: array
                           items:
                             type: object
@@ -353,6 +539,9 @@ paths:
                                 type: string
                               index:
                                 type: string
+                        last_reward_claim_height:
+                          type: string
+                          format: uint64
                     balance:
                       type: object
                       properties:
@@ -519,7 +708,7 @@ paths:
                         shares:
                           type: string
                           description: shares define the delegation shares received.
-                        reward_indices:
+                        reward_history:
                           type: array
                           items:
                             type: object
@@ -528,6 +717,9 @@ paths:
                                 type: string
                               index:
                                 type: string
+                        last_reward_claim_height:
+                          type: string
+                          format: uint64
                     balance:
                       type: object
                       properties:
@@ -662,6 +854,162 @@ paths:
           type: boolean
       tags:
         - Query
+  '/terra/alliances/{delegator_addr}/{validator_addr}/ibc/{hash}':
+    get:
+      summary: >-
+        Query a delegation to an alliance by delegator addr, validator_addr and
+        denom
+      operationId: AllianceAllianceIBCAllianceDelegation
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              delegation:
+                type: object
+                properties:
+                  delegation:
+                    type: object
+                    properties:
+                      delegator_address:
+                        type: string
+                        description: >-
+                          delegator_address is the bech32-encoded address of the
+                          delegator.
+                      validator_address:
+                        type: string
+                        description: >-
+                          validator_address is the bech32-encoded address of the
+                          validator.
+                      denom:
+                        type: string
+                        title: denom of token staked
+                      shares:
+                        type: string
+                        description: shares define the delegation shares received.
+                      reward_history:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            index:
+                              type: string
+                      last_reward_claim_height:
+                        type: string
+                        format: uint64
+                  balance:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                description: >-
+                  DelegationResponse is equivalent to Delegation except that it
+                  contains a
+
+                  balance in addition to shares which is more suitable for
+                  client responses.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: delegator_addr
+          in: path
+          required: true
+          type: string
+        - name: validator_addr
+          in: path
+          required: true
+          type: string
+        - name: hash
+          in: path
+          required: true
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
   '/terra/alliances/{delegator_addr}/{validator_addr}/{denom}':
     get:
       summary: >-
@@ -696,7 +1044,7 @@ paths:
                       shares:
                         type: string
                         description: shares define the delegation shares received.
-                      reward_indices:
+                      reward_history:
                         type: array
                         items:
                           type: object
@@ -705,6 +1053,9 @@ paths:
                               type: string
                             index:
                               type: string
+                      last_reward_claim_height:
+                        type: string
+                        format: uint64
                   balance:
                     type: object
                     properties:
@@ -853,6 +1204,9 @@ paths:
                     type: string
                   total_validator_shares:
                     type: string
+                  reward_start_time:
+                    type: string
+                    format: date-time
                 title: 'key: denom value: AllianceAsset'
         default:
           description: An unexpected error response.
@@ -45023,6 +45377,9 @@ definitions:
         type: string
       total_validator_shares:
         type: string
+      reward_start_time:
+        type: string
+        format: date-time
     title: 'key: denom value: AllianceAsset'
   alliance.alliance.Delegation:
     type: object
@@ -45039,7 +45396,7 @@ definitions:
       shares:
         type: string
         description: shares define the delegation shares received.
-      reward_indices:
+      reward_history:
         type: array
         items:
           type: object
@@ -45048,6 +45405,9 @@ definitions:
               type: string
             index:
               type: string
+      last_reward_claim_height:
+        type: string
+        format: uint64
   alliance.alliance.DelegationResponse:
     type: object
     properties:
@@ -45066,7 +45426,7 @@ definitions:
           shares:
             type: string
             description: shares define the delegation shares received.
-          reward_indices:
+          reward_history:
             type: array
             items:
               type: object
@@ -45075,6 +45435,9 @@ definitions:
                   type: string
                 index:
                   type: string
+          last_reward_claim_height:
+            type: string
+            format: uint64
       balance:
         type: object
         properties:
@@ -45104,6 +45467,28 @@ definitions:
     type: object
   alliance.alliance.MsgUpdateAllianceResponse:
     type: object
+  alliance.alliance.NewAllianceAssetMsg:
+    type: object
+    properties:
+      denom:
+        type: string
+        title: Denom of the asset. It could either be a native token or an IBC token
+      reward_weight:
+        type: string
+        description: >-
+          The reward weight specifies the ratio of rewards that will be given to
+          each alliance asset
+
+          It does not need to sum to 1. rate = weight / total_weight
+
+          Native asset is always assumed to have a weight of 1.
+      take_rate:
+        type: string
+        title: >-
+          A positive take rate is used for liquid staking derivatives. It
+          defines an annualized reward rate that
+
+          will be redirected to the distribution rewards pool
   alliance.alliance.Params:
     type: object
     properties:
@@ -45141,7 +45526,7 @@ definitions:
               shares:
                 type: string
                 description: shares define the delegation shares received.
-              reward_indices:
+              reward_history:
                 type: array
                 items:
                   type: object
@@ -45150,6 +45535,9 @@ definitions:
                       type: string
                     index:
                       type: string
+              last_reward_claim_height:
+                type: string
+                format: uint64
           balance:
             type: object
             properties:
@@ -45219,6 +45607,9 @@ definitions:
             type: string
           total_validator_shares:
             type: string
+          reward_start_time:
+            type: string
+            format: date-time
         title: 'key: denom value: AllianceAsset'
   alliance.alliance.QueryAlliancesDelegationsResponse:
     type: object
@@ -45247,7 +45638,7 @@ definitions:
                 shares:
                   type: string
                   description: shares define the delegation shares received.
-                reward_indices:
+                reward_history:
                   type: array
                   items:
                     type: object
@@ -45256,6 +45647,9 @@ definitions:
                         type: string
                       index:
                         type: string
+                last_reward_claim_height:
+                  type: string
+                  format: uint64
             balance:
               type: object
               properties:
@@ -45336,6 +45730,9 @@ definitions:
               type: string
             total_validator_shares:
               type: string
+            reward_start_time:
+              type: string
+              format: date-time
           title: 'key: denom value: AllianceAsset'
       pagination:
         type: object
@@ -45378,7 +45775,7 @@ definitions:
             type: string
             format: date-time
             title: Last application of `take_rate` on assets
-  alliance.alliance.RewardIndex:
+  alliance.alliance.RewardHistory:
     type: object
     properties:
       denom:

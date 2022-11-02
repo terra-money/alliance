@@ -116,6 +116,42 @@ func TestQueryAnUniqueAlliance(t *testing.T) {
 	}, alliances)
 }
 
+func TestQueryAnUniqueIBCAlliance(t *testing.T) {
+	// GIVEN: THE BLOCKCHAIN WITH ALLIANCES ON GENESIS
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			{
+				Denom:        "ibc/" + ALLIANCE_2_TOKEN_DENOM,
+				RewardWeight: sdk.NewDec(10),
+				TakeRate:     sdk.MustNewDecFromStr("0.14159265359"),
+				TotalTokens:  sdk.ZeroInt(),
+			},
+		},
+	})
+	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
+
+	// WHEN: QUERYING THE ALLIANCES LIST
+	alliances, err := queryServer.IBCAlliance(ctx, &types.QueryIBCAllianceRequest{
+		Hash: "alliance2",
+	})
+
+	// THEN: VALIDATE THAT BOTH ALLIANCES HAVE THE CORRECT MODEL WHEN QUERYING
+	require.Nil(t, err)
+	require.Equal(t, &types.QueryAllianceResponse{
+		Alliance: &types.AllianceAsset{
+			Denom:                "ibc/alliance2",
+			RewardWeight:         sdk.NewDec(10),
+			TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
+			TotalTokens:          sdk.ZeroInt(),
+			TotalValidatorShares: sdk.NewDec(0),
+		},
+	}, alliances)
+}
+
 func TestQueryAllianceNotFound(t *testing.T) {
 	// GIVEN: THE BLOCKCHAIN
 	app, ctx := createTestContext(t)
