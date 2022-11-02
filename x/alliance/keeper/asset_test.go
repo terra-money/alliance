@@ -4,12 +4,13 @@ import (
 	test_helpers "alliance/app"
 	"alliance/x/alliance"
 	"alliance/x/alliance/types"
+	"testing"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestUpdateRewardRates(t *testing.T) {
@@ -234,7 +235,7 @@ func TestUnbondedValidator(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(16_000_000).String(), app.StakingKeeper.TotalBondedTokens(ctx).String())
 
-	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
 
 	// Set max validators to be 3 to trigger rebonding
 	params = app.StakingKeeper.GetParams(ctx)
@@ -385,7 +386,7 @@ func TestJailedValidator(t *testing.T) {
 	// 11 * 1.6 = 17.6
 	require.Equal(t, sdk.NewInt(17_600_000).String(), app.StakingKeeper.TotalBondedTokens(ctx).String())
 
-	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
 
 	// Unjail validator
 	err = app.SlashingKeeper.Unjail(ctx, valAddr2)

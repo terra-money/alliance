@@ -68,7 +68,7 @@ func TestDelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// Manually trigger rebalancing
-	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)
 
@@ -101,7 +101,7 @@ func TestDelegation(t *testing.T) {
 	}, allianceDelegation)
 
 	// Check asset
-	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, types.AllianceAsset{
 		Denom:                ALLIANCE_TOKEN_DENOM,
 		RewardWeight:         sdk.NewDec(2),
@@ -159,7 +159,7 @@ func TestDelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// Manually trigger rebalancing
-	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
+	app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)
 
