@@ -58,8 +58,8 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 		return nil, status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", coin.Denom)
 	}
 
-	_, ok := k.GetDelegation(ctx, delAddr, srcVal, coin.Denom)
-	if !ok {
+	_, found = k.GetDelegation(ctx, delAddr, srcVal, coin.Denom)
+	if !found {
 		return nil, stakingtypes.ErrNoDelegatorForAddress
 	}
 	_, err := k.ClaimDelegationRewards(ctx, delAddr, srcVal, coin.Denom)
@@ -414,9 +414,9 @@ func (k Keeper) queueUndelegation(ctx sdk.Context, delAddr sdk.AccAddress, val s
 
 func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) {
 	newShares := types.GetDelegationSharesFromTokens(validator, asset, coin.Amount)
-	delegation, ok := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
+	delegation, found := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 	latestClaimHistory := validator.GlobalRewardHistory
-	if !ok {
+	if !found {
 		delegation = types.NewDelegation(ctx, delAddr, validator.GetOperator(), coin.Denom, newShares, latestClaimHistory)
 	} else {
 		delegation.AddShares(newShares)
