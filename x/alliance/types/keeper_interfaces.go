@@ -34,6 +34,7 @@ type StakingKeeper interface {
 		validator types.Validator, tokensToRemove math.Int,
 	) types.Validator
 	IterateDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool))
+	GetAllValidators(ctx sdk.Context) (validators []types.Validator)
 }
 
 type BankKeeper interface {
@@ -44,6 +45,7 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)

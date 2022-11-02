@@ -258,6 +258,7 @@ func TestRedelegation(t *testing.T) {
 
 	// Check if there is a re-delegation event stored
 	iter := app.AllianceKeeper.IterateRedelegationsByDelegator(ctx, delAddr1)
+	defer iter.Close()
 	require.True(t, iter.Valid())
 	for ; iter.Valid(); iter.Next() {
 		var redelegation types.Redelegation
@@ -576,7 +577,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 
 	// User should have everything withdrawn
 	_, found = app.AllianceKeeper.GetDelegation(ctx, user1, val1, ALLIANCE_2_TOKEN_DENOM)
-	require.True(t, found)
+	require.False(t, found)
 
 	res, err = app.AllianceKeeper.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),

@@ -17,6 +17,13 @@ var (
 	_ sdk.Msg = &MsgClaimDelegationRewards{}
 )
 
+var (
+	MsgDelegateType               = "msg_delegate"
+	MsgUndelegateType             = "msg_undelegate"
+	MsgRedelegateType             = "msg_redelegate"
+	MsgClaimDelegationRewardsType = "claim_delegation_rewards"
+)
+
 // Execution allowed only from Governance Module
 func (m MsgCreateAlliance) ValidateBasic() error {
 	if m.Alliance.Denom == "" {
@@ -97,6 +104,9 @@ func (m MsgDelegate) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{signer}
 }
+
+func (msg MsgDelegate) Type() string { return MsgDelegateType }
+
 func (m MsgRedelegate) ValidateBasic() error {
 	if m.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance redelegation amount must be more than zero")
@@ -111,6 +121,8 @@ func (m MsgRedelegate) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{signer}
 }
+
+func (msg MsgRedelegate) Type() string { return MsgRedelegateType }
 
 func (m MsgUndelegate) ValidateBasic() error {
 	if m.Amount.Amount.LTE(sdk.ZeroInt()) {
@@ -127,6 +139,8 @@ func (m MsgUndelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{signer}
 }
 
+func (msg MsgUndelegate) Type() string { return MsgUndelegateType }
+
 func (m *MsgClaimDelegationRewards) ValidateBasic() error {
 	if m.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
@@ -141,3 +155,5 @@ func (m *MsgClaimDelegationRewards) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{signer}
 }
+
+func (msg MsgClaimDelegationRewards) Type() string { return MsgClaimDelegationRewardsType }
