@@ -4,12 +4,13 @@ import (
 	test_helpers "alliance/app"
 	"alliance/x/alliance"
 	"alliance/x/alliance/types"
+	"testing"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestSlashingEvent(t *testing.T) {
@@ -106,7 +107,7 @@ func TestSlashingEvent(t *testing.T) {
 
 	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
 	valPower1 := val1.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx))
-	valConAddr1, err := val1.GetConsAddr()
+	valConAddr1, _ := val1.GetConsAddr()
 
 	// Tokens should remain the same before slashing
 	asset1, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
@@ -257,7 +258,7 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	// Now we slash val 1
 	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
 	valPower1 := val1.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx))
-	valConAddr1, err := val1.GetConsAddr()
+	valConAddr1, _ := val1.GetConsAddr()
 	slashFraction := app.SlashingKeeper.SlashFractionDoubleSign(ctx)
 	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
 
@@ -271,7 +272,7 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(app.StakingKeeper.UnbondingTime(ctx)).Add(time.Second))
 
 	// Now we slash val 1
-	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
 	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
 
 	// Expect that delegation stayed the same
@@ -387,7 +388,7 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	// Now we slash val 1
 	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
 	valPower1 := val1.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx))
-	valConAddr1, err := val1.GetConsAddr()
+	valConAddr1, _ := val1.GetConsAddr()
 	slashFraction := app.SlashingKeeper.SlashFractionDoubleSign(ctx)
 	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
 
@@ -404,7 +405,7 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(app.StakingKeeper.UnbondingTime(ctx)).Add(time.Second))
 
 	// Now we slash val 1
-	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
 	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
 
 	// Expect that delegation stayed the same
