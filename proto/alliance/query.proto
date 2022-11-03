@@ -26,6 +26,11 @@ service Query {
     option (google.api.http).get = "/terra/alliances/{denom}";
   }
 
+  // Query a specific alliance by ibc hash
+  rpc IBCAlliance(QueryIBCAllianceRequest) returns (QueryAllianceResponse) {
+    option (google.api.http).get = "/terra/alliances/ibc/{hash}";
+  }
+
   // Query all paginated alliance delegations for a delegator addr
   rpc AlliancesDelegation(QueryAlliancesDelegationsRequest) returns (QueryAlliancesDelegationsResponse) {
     option (google.api.http).get = "/terra/alliances/{delegator_addr}";
@@ -41,9 +46,18 @@ service Query {
     option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}/{denom}";
   }
 
+  // Query a delegation to an alliance by delegator addr, validator_addr and denom
+  rpc IBCAllianceDelegation(QueryIBCAllianceDelegationRequest) returns (QueryAllianceDelegationResponse) {
+    option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}/ibc/{hash}";
+  }
+
   // Query for rewards by delegator addr, validator_addr and denom
   rpc AllianceDelegationRewards(QueryAllianceDelegationRewardsRequest) returns (QueryAllianceDelegationRewardsResponse) {
-    option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}/{denom}";
+    option (google.api.http).get = "/terra/alliances/rewards/{delegator_addr}/{validator_addr}/{denom}";
+  }
+  // Query for rewards by delegator addr, validator_addr and denom
+  rpc IBCAllianceDelegationRewards(QueryIBCAllianceDelegationRewardsRequest) returns (QueryAllianceDelegationRewardsResponse) {
+    option (google.api.http).get = "/terra/alliances/rewards/{delegator_addr}/{validator_addr}/ibc/{hash}";
   }
 }
 
@@ -71,6 +85,10 @@ message QueryAllianceRequest {
 
 message QueryAllianceResponse {
   AllianceAsset alliance = 1;
+}
+
+message QueryIBCAllianceRequest {
+  string hash = 1;
 }
 
 // AlliancesDelegation
@@ -104,7 +122,17 @@ message QueryAllianceDelegationRequest {
 
   string delegator_addr  = 1;
   string validator_addr  = 2;
-  string denom              = 3;
+  string denom           = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+message QueryIBCAllianceDelegationRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_addr  = 1;
+  string validator_addr  = 2;
+  string hash            = 3;
   cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }
 
@@ -119,7 +147,17 @@ message QueryAllianceDelegationRewardsRequest {
 
   string delegator_addr  = 1;
   string validator_addr  = 2;
-  string denom              = 3;
+  string denom           = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+message QueryIBCAllianceDelegationRewardsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_addr  = 1;
+  string validator_addr  = 2;
+  string hash            = 3;
   cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }
 
