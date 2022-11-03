@@ -3,6 +3,7 @@ package keeper
 import (
 	"alliance/x/alliance/types"
 	"context"
+	"time"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -18,18 +19,18 @@ type MsgServer struct {
 
 var _ types.MsgServer = MsgServer{}
 
-func (m MsgServer) Delegate(ctx context.Context, delegate *types.MsgDelegate) (*types.MsgDelegateResponse, error) {
-	err := delegate.ValidateBasic()
+func (m MsgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types.MsgDelegateResponse, error) {
+	err := msg.ValidateBasic()
 	if err != nil {
 		return nil, err
 	}
 
-	delAddr, err := sdk.AccAddressFromBech32(delegate.DelegatorAddress)
+	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	valAddr, err := sdk.ValAddressFromBech32(delegate.ValidatorAddress)
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -39,30 +40,40 @@ func (m MsgServer) Delegate(ctx context.Context, delegate *types.MsgDelegate) (*
 		return nil, err
 	}
 
-	_, err = m.Keeper.Delegate(sdkCtx, delAddr, validator, delegate.Amount)
+	newShares, err := m.Keeper.Delegate(sdkCtx, delAddr, validator, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
+
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeDelegate,
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyNewShares, newShares.String()),
+		),
+	})
+
 	return &types.MsgDelegateResponse{}, nil
 }
 
-func (m MsgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelegate) (*types.MsgRedelegateResponse, error) {
-	err := redelegate.ValidateBasic()
+func (m MsgServer) Redelegate(ctx context.Context, msg *types.MsgRedelegate) (*types.MsgRedelegateResponse, error) {
+	err := msg.ValidateBasic()
 	if err != nil {
 		return nil, err
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	delAddr, err := sdk.AccAddressFromBech32(redelegate.DelegatorAddress)
+	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	srcValAddr, err := sdk.ValAddressFromBech32(redelegate.ValidatorSrcAddress)
+	srcValAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress)
 	if err != nil {
 		return nil, err
 	}
-	dstValAddr, err := sdk.ValAddressFromBech32(redelegate.ValidatorDstAddress)
+	dstValAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -77,25 +88,35 @@ func (m MsgServer) Redelegate(ctx context.Context, redelegate *types.MsgRedelega
 		return nil, err
 	}
 
-	_, err = m.Keeper.Redelegate(sdkCtx, delAddr, srcValidator, dstValidator, redelegate.Amount)
+	completionTime, err := m.Keeper.Redelegate(sdkCtx, delAddr, srcValidator, dstValidator, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
+
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeRedelegate,
+			sdk.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
+			sdk.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
+		),
+	})
 	return &types.MsgRedelegateResponse{}, nil
 }
 
-func (m MsgServer) Undelegate(ctx context.Context, undelegate *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
-	err := undelegate.ValidateBasic()
+func (m MsgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
+	err := msg.ValidateBasic()
 	if err != nil {
 		return nil, err
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	delAddr, err := sdk.AccAddressFromBech32(undelegate.DelegatorAddress)
+	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
-	valAddr, err := sdk.ValAddressFromBech32(undelegate.ValidatorAddress)
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -105,10 +126,19 @@ func (m MsgServer) Undelegate(ctx context.Context, undelegate *types.MsgUndelega
 		return nil, err
 	}
 
-	err = m.Keeper.Undelegate(sdkCtx, delAddr, validator, undelegate.Amount)
+	completionTime, err := m.Keeper.Undelegate(sdkCtx, delAddr, validator, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
+
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeUndelegate,
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
+		),
+	})
 	return &types.MsgUndelegateResponse{}, nil
 }
 
