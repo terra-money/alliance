@@ -8,8 +8,8 @@ release/
 .testnets
 test
 
-**/**.pb.go
-**/**.pb.gw.go
+*/*.pb.go
+*/*.pb.gw.go
 
 flutter
 ts-client
