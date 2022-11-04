@@ -221,18 +221,18 @@ func (m MsgServer) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAllia
 	return &types.MsgDeleteAllianceResponse{}, nil
 }
 
-func (m MsgServer) ClaimDelegationRewards(ctx context.Context, request *types.MsgClaimDelegationRewards) (*types.MsgClaimDelegationRewardsResponse, error) {
-	err := request.ValidateBasic()
+func (m MsgServer) ClaimDelegationRewards(ctx context.Context, msg *types.MsgClaimDelegationRewards) (*types.MsgClaimDelegationRewardsResponse, error) {
+	err := msg.ValidateBasic()
 	if err != nil {
 		return nil, err
 	}
 
-	delAddr, err := sdk.AccAddressFromBech32(request.DelegatorAddress)
+	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	valAddr, err := sdk.ValAddressFromBech32(request.ValidatorAddress)
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +242,15 @@ func (m MsgServer) ClaimDelegationRewards(ctx context.Context, request *types.Ms
 		return nil, err
 	}
 
-	_, err = m.Keeper.ClaimDelegationRewards(sdkCtx, delAddr, validator, request.Denom)
+	coins, err := m.Keeper.ClaimDelegationRewards(sdkCtx, delAddr, validator, msg.Denom)
+
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeClaimDelegationRewards,
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, coins.String()),
+		),
+	})
 	return &types.MsgClaimDelegationRewardsResponse{}, err
 }
 
