@@ -1,7 +1,7 @@
 #!/bin/bash
 
 printf "#1) Submit proposal to creaet ulunax Alliance...\n\n"
-allianced tx gov submit-proposal gov.json --from=demowallet1 --home ./data/alliance --keyring-backend=test --broadcast-mode=block --gas 1000000 -y > /dev/null 2>&1
+allianced tx gov submit-legacy-proposal create-alliance e2mi 1 1 --from=demowallet1 --home ./data/alliance --keyring-backend=test --broadcast-mode=block --gas 1000000 -y
 
 sleep 2
 PROPOSAL_ID=$(allianced query gov proposals --count-total --output json | jq .pagination.total -r)

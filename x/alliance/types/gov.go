@@ -37,9 +37,6 @@ func (m *MsgCreateAllianceProposal) GetTitle() string       { return m.Title }
 func (m *MsgCreateAllianceProposal) GetDescription() string { return m.Description }
 func (m *MsgCreateAllianceProposal) ProposalRoute() string  { return RouterKey }
 func (m *MsgCreateAllianceProposal) ProposalType() string   { return ProposalTypeCreateAlliance }
-func (m MsgCreateAllianceProposal) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{}
-}
 
 func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 
@@ -71,9 +68,7 @@ func (m *MsgUpdateAllianceProposal) GetTitle() string       { return m.Title }
 func (m *MsgUpdateAllianceProposal) GetDescription() string { return m.Description }
 func (m *MsgUpdateAllianceProposal) ProposalRoute() string  { return RouterKey }
 func (m *MsgUpdateAllianceProposal) ProposalType() string   { return ProposalTypeUpdateAlliance }
-func (m MsgUpdateAllianceProposal) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{}
-}
+
 func (m *MsgUpdateAllianceProposal) ValidateBasic() error {
 	if m.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
@@ -102,9 +97,6 @@ func (m *MsgDeleteAllianceProposal) GetDescription() string { return m.Descripti
 func (m *MsgDeleteAllianceProposal) ProposalRoute() string  { return RouterKey }
 func (m *MsgDeleteAllianceProposal) ProposalType() string   { return ProposalTypeDeleteAlliance }
 
-func (m MsgDeleteAllianceProposal) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{}
-}
 func (m *MsgDeleteAllianceProposal) ValidateBasic() error {
 	if m.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")

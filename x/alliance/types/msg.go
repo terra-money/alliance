@@ -11,20 +11,12 @@ var (
 	_ sdk.Msg = &MsgRedelegate{}
 	_ sdk.Msg = &MsgUndelegate{}
 	_ sdk.Msg = &MsgClaimDelegationRewards{}
-
-	_ sdk.Msg = &MsgCreateAllianceProposal{}
-	_ sdk.Msg = &MsgUpdateAllianceProposal{}
-	_ sdk.Msg = &MsgDeleteAllianceProposal{}
 )
 
 var (
-	MsgDelegateType   = "msg_delegate"
-	MsgUndelegateType = "msg_undelegate"
-	MsgRedelegateType = "msg_redelegate"
-
-	MsgCreateAllianceProposalType = "msg_create_alliance_proposal"
-	MsgUpdateAllianceProposalType = "msg_update_alliance_proposal"
-	MsgDeleteAllianceProposalType = "msg_delete_alliance_proposal"
+	MsgDelegateType               = "msg_delegate"
+	MsgUndelegateType             = "msg_undelegate"
+	MsgRedelegateType             = "msg_redelegate"
 	MsgClaimDelegationRewardsType = "claim_delegation_rewards"
 )
 
