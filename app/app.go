@@ -107,6 +107,7 @@ import (
 	"alliance/docs"
 
 	alliancemodule "alliance/x/alliance"
+	allianceclient "alliance/x/alliance/client"
 	alliancemodulekeeper "alliance/x/alliance/keeper"
 	alliancemoduletypes "alliance/x/alliance/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
@@ -130,6 +131,9 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 		upgradeclient.LegacyCancelProposalHandler,
 		ibcclientclient.UpdateClientProposalHandler,
 		ibcclientclient.UpgradeProposalHandler,
+		allianceclient.CreateAllianceHandler,
+		allianceclient.UpdateAllianceHandler,
+		allianceclient.DeleteAllianceHandler,
 		// this line is used by starport scaffolding # stargate/app/govProposalHandler
 	)
 
@@ -421,7 +425,6 @@ func New(
 		app.BankKeeper,
 		&stakingKeeper,
 		app.DistrKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// register the staking hooks

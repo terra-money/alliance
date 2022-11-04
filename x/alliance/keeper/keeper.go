@@ -3,6 +3,7 @@ package keeper
 import (
 	"alliance/x/alliance/types"
 	"fmt"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -30,7 +31,6 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	stakingKeeper types.StakingKeeper,
 	distributionKeeper types.DistributionKeeper,
-	authority string,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -46,7 +46,6 @@ func NewKeeper(
 		bankKeeper:         bankKeeper,
 		stakingKeeper:      stakingKeeper,
 		distributionKeeper: distributionKeeper,
-		authority:          authority,
 	}
 }
 

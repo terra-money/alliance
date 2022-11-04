@@ -48,7 +48,6 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sk types.StakingKeeper,
 		bankKeeper:     bk,
 		accountKeeper:  ak,
 	}
-
 }
 
 func (a AppModuleBasic) Name() string {
