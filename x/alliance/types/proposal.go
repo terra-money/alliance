@@ -8,15 +8,15 @@ import (
 )
 
 const (
-	ProposalTypeCreateAlliance = "CreateAlliance"
-	ProposalTypeUpdateAlliance = "UpdateAlliance"
-	ProposalTypeDeleteAlliance = "DeleteAlliance"
+	ProposalTypeCreateAlliance = "msg_create_alliance_proposal"
+	ProposalTypeUpdateAlliance = "msg_update_alliance_proposal"
+	ProposalTypeDeleteAlliance = "msg_delete_alliance_proposal"
 )
 
 var (
-	_ govtypes.Content = &CreateAllianceProposal{}
-	_ govtypes.Content = &UpdateAllianceProposal{}
-	_ govtypes.Content = &DeleteAllianceProposal{}
+	_ govtypes.Content = &MsgCreateAllianceProposal{}
+	_ govtypes.Content = &MsgUpdateAllianceProposal{}
+	_ govtypes.Content = &MsgDeleteAllianceProposal{}
 )
 
 func init() {
@@ -24,8 +24,8 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdateAlliance)
 	govtypes.RegisterProposalType(ProposalTypeDeleteAlliance)
 }
-func NewCreateAllianceProposal(title, description, denom string, rewardWeight, takeRate sdk.Dec) govtypes.Content {
-	return &CreateAllianceProposal{
+func NewMsgCreateAllianceProposal(title, description, denom string, rewardWeight, takeRate sdk.Dec) govtypes.Content {
+	return &MsgCreateAllianceProposal{
 		Title:        title,
 		Description:  description,
 		Denom:        denom,
@@ -33,11 +33,15 @@ func NewCreateAllianceProposal(title, description, denom string, rewardWeight, t
 		TakeRate:     takeRate,
 	}
 }
-func (m *CreateAllianceProposal) GetTitle() string       { return m.Title }
-func (m *CreateAllianceProposal) GetDescription() string { return m.Description }
-func (m *CreateAllianceProposal) ProposalRoute() string  { return RouterKey }
-func (m *CreateAllianceProposal) ProposalType() string   { return ProposalTypeCreateAlliance }
-func (m *CreateAllianceProposal) ValidateBasic() error {
+func (m *MsgCreateAllianceProposal) GetTitle() string       { return m.Title }
+func (m *MsgCreateAllianceProposal) GetDescription() string { return m.Description }
+func (m *MsgCreateAllianceProposal) ProposalRoute() string  { return RouterKey }
+func (m *MsgCreateAllianceProposal) ProposalType() string   { return ProposalTypeCreateAlliance }
+func (m MsgCreateAllianceProposal) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{}
+}
+
+func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 
 	if m.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
@@ -54,8 +58,8 @@ func (m *CreateAllianceProposal) ValidateBasic() error {
 	return nil
 }
 
-func NewUpdateAllianceProposal(title, description, denom string, rewardWeight, takeRate sdk.Dec) govtypes.Content {
-	return &UpdateAllianceProposal{
+func NewMsgUpdateAllianceProposal(title, description, denom string, rewardWeight, takeRate sdk.Dec) govtypes.Content {
+	return &MsgUpdateAllianceProposal{
 		Title:        title,
 		Description:  description,
 		Denom:        denom,
@@ -63,11 +67,14 @@ func NewUpdateAllianceProposal(title, description, denom string, rewardWeight, t
 		TakeRate:     takeRate,
 	}
 }
-func (m *UpdateAllianceProposal) GetTitle() string       { return m.Title }
-func (m *UpdateAllianceProposal) GetDescription() string { return m.Description }
-func (m *UpdateAllianceProposal) ProposalRoute() string  { return RouterKey }
-func (m *UpdateAllianceProposal) ProposalType() string   { return ProposalTypeUpdateAlliance }
-func (m *UpdateAllianceProposal) ValidateBasic() error {
+func (m *MsgUpdateAllianceProposal) GetTitle() string       { return m.Title }
+func (m *MsgUpdateAllianceProposal) GetDescription() string { return m.Description }
+func (m *MsgUpdateAllianceProposal) ProposalRoute() string  { return RouterKey }
+func (m *MsgUpdateAllianceProposal) ProposalType() string   { return ProposalTypeUpdateAlliance }
+func (m MsgUpdateAllianceProposal) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{}
+}
+func (m *MsgUpdateAllianceProposal) ValidateBasic() error {
 	if m.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
@@ -83,18 +90,22 @@ func (m *UpdateAllianceProposal) ValidateBasic() error {
 	return nil
 }
 
-func NewDeleteAllianceProposal(title, description, denom string) govtypes.Content {
-	return &DeleteAllianceProposal{
+func NewMsgDeleteAllianceProposal(title, description, denom string) govtypes.Content {
+	return &MsgDeleteAllianceProposal{
 		Title:       title,
 		Description: description,
 		Denom:       denom,
 	}
 }
-func (m *DeleteAllianceProposal) GetTitle() string       { return m.Title }
-func (m *DeleteAllianceProposal) GetDescription() string { return m.Description }
-func (m *DeleteAllianceProposal) ProposalRoute() string  { return RouterKey }
-func (m *DeleteAllianceProposal) ProposalType() string   { return ProposalTypeDeleteAlliance }
-func (m *DeleteAllianceProposal) ValidateBasic() error {
+func (m *MsgDeleteAllianceProposal) GetTitle() string       { return m.Title }
+func (m *MsgDeleteAllianceProposal) GetDescription() string { return m.Description }
+func (m *MsgDeleteAllianceProposal) ProposalRoute() string  { return RouterKey }
+func (m *MsgDeleteAllianceProposal) ProposalType() string   { return ProposalTypeDeleteAlliance }
+
+func (m MsgDeleteAllianceProposal) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{}
+}
+func (m *MsgDeleteAllianceProposal) ValidateBasic() error {
 	if m.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}

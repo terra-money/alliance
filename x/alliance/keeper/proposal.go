@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) CreateAlliance(ctx context.Context, req *types.CreateAllianceProposal) error {
+func (k Keeper) CreateAlliance(ctx context.Context, req *types.MsgCreateAllianceProposal) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	_, found := k.GetAssetByDenom(sdkCtx, req.Denom)
 
@@ -25,7 +25,7 @@ func (k Keeper) CreateAlliance(ctx context.Context, req *types.CreateAlliancePro
 	return nil
 }
 
-func (k Keeper) UpdateAlliance(ctx context.Context, req *types.UpdateAllianceProposal) error {
+func (k Keeper) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAllianceProposal) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	asset, found := k.GetAssetByDenom(sdkCtx, req.Denom)
 
@@ -44,7 +44,7 @@ func (k Keeper) UpdateAlliance(ctx context.Context, req *types.UpdateAlliancePro
 	return nil
 }
 
-func (k Keeper) DeleteAlliance(ctx context.Context, req *types.DeleteAllianceProposal) error {
+func (k Keeper) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAllianceProposal) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	asset, found := k.GetAssetByDenom(sdkCtx, req.Denom)
 

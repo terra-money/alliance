@@ -131,9 +131,9 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 		upgradeclient.LegacyCancelProposalHandler,
 		ibcclientclient.UpdateClientProposalHandler,
 		ibcclientclient.UpgradeProposalHandler,
-		allianceclient.CreateAllianceHandler,
-		allianceclient.UpdateAllianceHandler,
-		allianceclient.DeleteAllianceHandler,
+		allianceclient.CreateAllianceProposalHandler,
+		allianceclient.UpdateAllianceProposalHandler,
+		allianceclient.DeleteAllianceProposalHandler,
 		// this line is used by starport scaffolding # stargate/app/govProposalHandler
 	)
 

@@ -14,6 +14,9 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgDelegate{},
 		&MsgRedelegate{},
 		&MsgUndelegate{},
+		&MsgCreateAllianceProposal{},
+		&MsgUpdateAllianceProposal{},
+		&MsgDeleteAllianceProposal{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

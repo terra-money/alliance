@@ -54,7 +54,7 @@ func CreateAlliance() *cobra.Command {
 				return err
 			}
 
-			content := types.NewCreateAllianceProposal(
+			content := types.NewMsgCreateAllianceProposal(
 				title,
 				description,
 				args[0],
@@ -130,7 +130,7 @@ func UpdateAlliance() *cobra.Command {
 				return err
 			}
 
-			content := types.NewCreateAllianceProposal(
+			content := types.NewMsgCreateAllianceProposal(
 				title,
 				description,
 				args[0],
@@ -196,7 +196,7 @@ func DeleteAlliance() *cobra.Command {
 				return err
 			}
 
-			content := types.NewDeleteAllianceProposal(
+			content := types.NewMsgDeleteAllianceProposal(
 				title,
 				description,
 				args[0],
