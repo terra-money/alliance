@@ -2,8 +2,6 @@ package cli
 
 import (
 	"alliance/x/alliance/types"
-	"strconv"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,12 +30,12 @@ func CreateAlliance() *cobra.Command {
 				return err
 			}
 
-			rewardWeight, err := strconv.ParseInt(args[1], 10, 64)
+			rewardWeight, err := sdk.NewDecFromStr(args[1])
 			if err != nil {
 				return err
 			}
 
-			takeRate, err := strconv.ParseInt(args[2], 10, 64)
+			takeRate, err := sdk.NewDecFromStr(args[2])
 			if err != nil {
 				return err
 			}
@@ -58,8 +56,8 @@ func CreateAlliance() *cobra.Command {
 				title,
 				description,
 				args[0],
-				sdk.NewDec(rewardWeight),
-				sdk.NewDec(takeRate),
+				rewardWeight,
+				takeRate,
 			)
 
 			err = content.ValidateBasic()
@@ -108,12 +106,12 @@ func UpdateAlliance() *cobra.Command {
 				return err
 			}
 
-			rewardWeight, err := strconv.ParseInt(args[1], 10, 64)
+			rewardWeight, err := sdk.NewDecFromStr(args[1])
 			if err != nil {
 				return err
 			}
 
-			takeRate, err := strconv.ParseInt(args[2], 10, 64)
+			takeRate, err := sdk.NewDecFromStr(args[2])
 			if err != nil {
 				return err
 			}
@@ -134,8 +132,8 @@ func UpdateAlliance() *cobra.Command {
 				title,
 				description,
 				args[0],
-				sdk.NewDec(rewardWeight),
-				sdk.NewDec(takeRate),
+				rewardWeight,
+				takeRate,
 			)
 
 			err = content.ValidateBasic()

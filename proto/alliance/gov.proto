@@ -8,8 +8,7 @@ option go_package = "alliance/x/alliance/types";
 
 message CreateAllianceProposal {
     option (gogoproto.goproto_getters)         = false;
-    //option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
-    
+
     // the title of the update proposal
     string title = 1;
     // the description of the proposal
@@ -34,7 +33,6 @@ message CreateAllianceProposal {
   
 message UpdateAllianceProposal {
     option (gogoproto.goproto_getters)         = false;
-    //option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
     // the title of the update proposal
     string title = 1;
     // the description of the proposal
@@ -59,7 +57,6 @@ message UpdateAllianceProposal {
   
 message DeleteAllianceProposal {
     option (gogoproto.goproto_getters)         = false;
-    //option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
     // the title of the update proposal
     string title = 1;
     // the description of the proposal

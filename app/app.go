@@ -107,6 +107,7 @@ import (
 	"alliance/docs"
 
 	alliancemodule "alliance/x/alliance"
+	alliancemoduleclient "alliance/x/alliance/client"
 	alliancemodulekeeper "alliance/x/alliance/keeper"
 	alliancemoduletypes "alliance/x/alliance/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
@@ -130,6 +131,9 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 		upgradeclient.LegacyCancelProposalHandler,
 		ibcclientclient.UpdateClientProposalHandler,
 		ibcclientclient.UpgradeProposalHandler,
+		alliancemoduleclient.CreateAllianceHandler,
+		alliancemoduleclient.UpdateAllianceHandler,
+		alliancemoduleclient.DeleteAllianceHandler,
 		// this line is used by starport scaffolding # stargate/app/govProposalHandler
 	)
 
