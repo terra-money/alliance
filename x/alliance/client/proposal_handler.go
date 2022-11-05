@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	CreateAllianceHandler = govclient.NewProposalHandler(cli.CreateAlliance)
-	UpdateAllianceHandler = govclient.NewProposalHandler(cli.UpdateAlliance)
-	DeleteAllianceHandler = govclient.NewProposalHandler(cli.DeleteAlliance)
+	CreateAllianceProposalHandler = govclient.NewProposalHandler(cli.CreateAlliance)
+	UpdateAllianceProposalHandler = govclient.NewProposalHandler(cli.UpdateAlliance)
+	DeleteAllianceProposalHandler = govclient.NewProposalHandler(cli.DeleteAlliance)
 )

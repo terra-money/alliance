@@ -425,7 +425,6 @@ func New(
 		app.BankKeeper,
 		&stakingKeeper,
 		app.DistrKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// register the staking hooks

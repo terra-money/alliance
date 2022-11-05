@@ -16,10 +16,11 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgRedelegate{},
 		&MsgUndelegate{},
 	)
+
 	registry.RegisterImplementations((*govtypes.Content)(nil),
-		&CreateAllianceProposal{},
-		&UpdateAllianceProposal{},
-		&DeleteAllianceProposal{},
+		&MsgCreateAllianceProposal{},
+		&MsgUpdateAllianceProposal{},
+		&MsgDeleteAllianceProposal{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

@@ -12,11 +12,11 @@ import (
 func NewAllianceProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
-		case *types.CreateAllianceProposal:
+		case *types.MsgCreateAllianceProposal:
 			return k.CreateAlliance(ctx, c)
-		case *types.UpdateAllianceProposal:
+		case *types.MsgUpdateAllianceProposal:
 			return k.UpdateAlliance(ctx, c)
-		case *types.DeleteAllianceProposal:
+		case *types.MsgDeleteAllianceProposal:
 			return k.DeleteAlliance(ctx, c)
 
 		default:
