@@ -20,7 +20,7 @@ func TestCreateAlliance(t *testing.T) {
 	rewardDuration := app.AllianceKeeper.RewardDelayTime(ctx)
 
 	// WHEN
-	createErr := app.AllianceKeeper.CreateAlliance(ctx, &types.CreateAllianceProposal{
+	createErr := app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
 		Title:        "",
 		Description:  "",
 		Denom:        "uluna",
@@ -70,7 +70,7 @@ func TestUpdateAlliance(t *testing.T) {
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// WHEN
-	updateErr := app.AllianceKeeper.UpdateAlliance(ctx, &types.UpdateAllianceProposal{
+	updateErr := app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
 		Title:        "",
 		Description:  "",
 		Denom:        "uluna",
@@ -118,7 +118,7 @@ func TestDeleteAlliance(t *testing.T) {
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// WHEN
-	deleteErr := app.AllianceKeeper.DeleteAlliance(ctx, &types.DeleteAllianceProposal{
+	deleteErr := app.AllianceKeeper.DeleteAlliance(ctx, &types.MsgDeleteAllianceProposal{
 		Denom: "uluna",
 	})
 	alliancesRes, alliancesErr := queryServer.Alliances(ctx, &types.QueryAlliancesRequest{})

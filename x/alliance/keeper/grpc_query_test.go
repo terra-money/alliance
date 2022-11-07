@@ -253,14 +253,7 @@ func TestClaimQueryReward(t *testing.T) {
 	// WHEN: DELEGATING ...
 	delRes, delErr := app.AllianceKeeper.Delegate(ctx, delAddr, val1, sdk.NewCoin(ULUNA_ALLIANCE, sdk.NewInt(1000_000_000)))
 	require.Nil(t, delErr)
-	require.Equal(t, delRes, &types.Delegation{
-		DelegatorAddress:      delAddr.String(),
-		ValidatorAddress:      valAddr.String(),
-		Denom:                 "uluna",
-		Shares:                sdk.NewDec(1000_000_000),
-		RewardHistory:         []types.RewardHistory{},
-		LastRewardClaimHeight: uint64(ctx.BlockHeight()),
-	})
+	require.Equal(t, sdk.NewDec(1000000000), *delRes)
 	err := app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)
 
@@ -357,14 +350,7 @@ func TestQueryAllianceDelegation(t *testing.T) {
 			},
 		},
 	}, queryDelegation)
-	require.Equal(t, &types.Delegation{
-		DelegatorAddress:      delAddr.String(),
-		ValidatorAddress:      val.OperatorAddress,
-		Denom:                 ALLIANCE_TOKEN_DENOM,
-		Shares:                sdk.NewDec(1000_000),
-		RewardHistory:         []types.RewardHistory{},
-		LastRewardClaimHeight: uint64(ctx.BlockHeight()),
-	}, delegationTxRes)
+	require.Equal(t, sdk.NewDec(1000000), *delegationTxRes)
 }
 
 func TestQueryAllianceDelegationNotFound(t *testing.T) {
@@ -465,14 +451,7 @@ func TestQueryAlliancesDelegationByValidator(t *testing.T) {
 			Total:   1,
 		},
 	}, queryDelegation)
-	require.Equal(t, &types.Delegation{
-		DelegatorAddress:      delAddr.String(),
-		ValidatorAddress:      val.OperatorAddress,
-		Denom:                 ALLIANCE_TOKEN_DENOM,
-		Shares:                sdk.NewDec(1000_000),
-		RewardHistory:         []types.RewardHistory{},
-		LastRewardClaimHeight: uint64(ctx.BlockHeight()),
-	}, delegationTxRes)
+	require.Equal(t, sdk.NewDec(1000_000), *delegationTxRes)
 }
 
 func TestQueryAlliancesDelegationByValidatorNotFound(t *testing.T) {
@@ -575,20 +554,6 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 			Total:   2,
 		},
 	}, queryDelegation)
-	require.Equal(t, &types.Delegation{
-		DelegatorAddress:      delAddr.String(),
-		ValidatorAddress:      val.OperatorAddress,
-		Denom:                 ALLIANCE_TOKEN_DENOM,
-		Shares:                sdk.NewDec(1000_000),
-		RewardHistory:         []types.RewardHistory{},
-		LastRewardClaimHeight: uint64(ctx.BlockHeight()),
-	}, delegationTxRes)
-	require.Equal(t, &types.Delegation{
-		DelegatorAddress:      delAddr.String(),
-		ValidatorAddress:      val.OperatorAddress,
-		Denom:                 ALLIANCE_2_TOKEN_DENOM,
-		Shares:                sdk.NewDec(1000_000),
-		RewardHistory:         []types.RewardHistory{},
-		LastRewardClaimHeight: uint64(ctx.BlockHeight()),
-	}, delegation2TxRes)
+	require.Equal(t, sdk.NewDec(1000_000), *delegationTxRes)
+	require.Equal(t, sdk.NewDec(1000_000), *delegation2TxRes)
 }
