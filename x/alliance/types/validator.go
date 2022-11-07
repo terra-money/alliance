@@ -45,15 +45,21 @@ func SubtractDecCoinsWithRounding(d1s sdk.DecCoins, d2s sdk.DecCoins) (d3s sdk.D
 }
 
 func (v AllianceValidator) TotalSharesWithDenom(denom string) sdk.Dec {
-	return sdk.NewDecCoins(v.TotalDelegatorShares...).AmountOf(denom)
+	return sdk.DecCoins(v.TotalDelegatorShares).AmountOf(denom)
 }
 
 func (v AllianceValidator) ValidatorSharesWithDenom(denom string) sdk.Dec {
-	return sdk.NewDecCoins(v.ValidatorShares...).AmountOf(denom)
+	// This is used instead of coins.AmountOf to reduce the need for regex matching to speed up the query
+	for _, c := range v.ValidatorShares {
+		if c.Denom == denom {
+			return c.Amount
+		}
+	}
+	return sdk.ZeroDec()
 }
 
 func (v AllianceValidator) TotalDelegationSharesWithDenom(denom string) sdk.Dec {
-	return sdk.NewDecCoins(v.TotalDelegatorShares...).AmountOf(denom)
+	return sdk.DecCoins(v.TotalDelegatorShares).AmountOf(denom)
 }
 
 func (v AllianceValidator) TotalTokensWithAsset(asset AllianceAsset) sdk.Int {
