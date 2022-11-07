@@ -13,7 +13,7 @@ DEMO_MNEMONIC_4="bounce success option birth apple portion aunt rural episode so
 
 STAKEDENOM=${STAKEDENOM:-stake}
 UNBONDING_TIME="5s"
-GOV_PERIOD="5s"
+GOV_PERIOD="8s"
 INFLATION="0.999999999999999999"
 ALLIANCE_CLAIM_REWARDS="5s"
 
