@@ -376,7 +376,7 @@ func TestUndelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// Undelegating without a delegation will fail
-	err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
+	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.Error(t, err)
 
 	// Delegate to a validator
@@ -402,7 +402,7 @@ func TestUndelegation(t *testing.T) {
 	}, d)
 
 	// Immediately undelegate from the validator
-	err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
 	require.NoError(t, err)
 
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
@@ -539,11 +539,11 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	del := res.GetDelegation()
 	require.True(t, del.GetBalance().Amount.LT(sdk.NewInt(1000_000_000)), "%s should be less than %s", del.GetBalance().Amount, sdk.NewInt(1000_000_000))
 	// Undelegate token with initial amount should fail
-	err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
+	_, err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
 	require.Error(t, err)
 
 	// Undelegate token with current amount should pass
-	err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, del.Balance.Amount))
+	_, err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, del.Balance.Amount))
 	require.NoError(t, err)
 
 	// User should have everything withdrawn
@@ -575,7 +575,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	require.True(t, del.GetBalance().Amount.LT(sdk.NewInt(900_000_000)), "%s should be less than %s", del.GetBalance().Amount, sdk.NewInt(1000_000_000))
 
 	// Undelegate token with current amount should pass
-	err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, del.Balance.Amount))
+	_, err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, del.Balance.Amount))
 	require.NoError(t, err)
 
 	// User should have everything withdrawn

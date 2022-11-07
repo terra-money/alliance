@@ -374,7 +374,7 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(12_999_999), app.StakingKeeper.TotalBondedTokens(ctx))
 
-	err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
 
 	// Expect to have undelegation index saved

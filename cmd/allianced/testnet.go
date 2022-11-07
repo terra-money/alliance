@@ -284,8 +284,8 @@ func initTestnetFiles(
 			return err
 		}
 
-		accTokens := sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction)
-		accStakingTokens := sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction)
+		accTokens := sdk.TokensFromConsensusPower(100_000_000, sdk.DefaultPowerReduction)
+		accStakingTokens := sdk.TokensFromConsensusPower(500_000_000, sdk.DefaultPowerReduction)
 		coins := sdk.Coins{
 			sdk.NewCoin("testtoken", accTokens),
 			sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
@@ -300,7 +300,11 @@ func initTestnetFiles(
 			valPubKeys[i],
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+			stakingtypes.NewCommissionRates(
+				sdk.NewDec(1).Quo(sdk.NewDec(100)),
+				sdk.NewDec(1).Quo(sdk.NewDec(100)),
+				sdk.NewDec(1).Quo(sdk.NewDec(100)),
+			),
 			math.OneInt(),
 		)
 		if err != nil {

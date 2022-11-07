@@ -9,7 +9,7 @@ localnet-build-env: localnet-alliance-rmi
 	
 localnet-build-nodes:
 	docker run --rm -v $(CURDIR)/.testnets:/alliance terra-money/localnet-alliance \
-		testnet init-files --v 8 -o /alliance --starting-ip-address 192.168.5.20 --keyring-backend=test --chain-id=alliance-testnet-1
+		testnet init-files --v 3 -o /alliance --starting-ip-address 192.168.5.20 --keyring-backend=test --chain-id=alliance-testnet-1
 	docker-compose up -d
 
 localnet-stop:

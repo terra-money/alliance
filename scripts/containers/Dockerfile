@@ -5,7 +5,7 @@ RUN apt update && apt install jq build-essential -y
 WORKDIR /allianced
 COPY . /allianced
 
-RUN curl https://get.ignite.com/cli@v0.24.0! | bash
+RUN curl https://get.ignite.com/cli@v0.25.1! | bash
 RUN ignite chain build --output . --verbose
 
 FROM debian:bullseye AS run
