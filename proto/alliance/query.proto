@@ -33,22 +33,22 @@ service Query {
 
   // Query all paginated alliance delegations for a delegator addr
   rpc AlliancesDelegation(QueryAlliancesDelegationsRequest) returns (QueryAlliancesDelegationsResponse) {
-    option (google.api.http).get = "/terra/alliances/{delegator_addr}";
+    option (google.api.http).get = "/terra/alliances/delegations/{delegator_addr}";
   }
 
   // Query all paginated alliance delegations for a delegator addr and validator_addr
   rpc AlliancesDelegationByValidator(QueryAlliancesDelegationByValidatorRequest) returns (QueryAlliancesDelegationsResponse) {
-    option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}";
+    option (google.api.http).get = "/terra/alliances/delegations/{delegator_addr}/{validator_addr}";
   }
 
   // Query a delegation to an alliance by delegator addr, validator_addr and denom
   rpc AllianceDelegation(QueryAllianceDelegationRequest) returns (QueryAllianceDelegationResponse) {
-    option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}/{denom}";
+    option (google.api.http).get = "/terra/alliances/delegations/{delegator_addr}/{validator_addr}/{denom}";
   }
 
   // Query a delegation to an alliance by delegator addr, validator_addr and denom
   rpc IBCAllianceDelegation(QueryIBCAllianceDelegationRequest) returns (QueryAllianceDelegationResponse) {
-    option (google.api.http).get = "/terra/alliances/{delegator_addr}/{validator_addr}/ibc/{hash}";
+    option (google.api.http).get = "/terra/alliances/delegations/{delegator_addr}/{validator_addr}/ibc/{hash}";
   }
 
   // Query for rewards by delegator addr, validator_addr and denom
