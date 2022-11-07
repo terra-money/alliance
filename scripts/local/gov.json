@@ -1,14 +1,11 @@
 {
-    "messages": [
+    "content": [
         {
-            "@type": "/alliance.alliance.MsgCreateAlliance",
-            "alliance" : {
-                "denom"  : "ulunax",
-                "rewardWeight"  : "1",
-                "takeRate"  : "1"
-            },
-            "authority" : "alliance10d07y265gmmuvt4z0w9aw880jnsr700j8hf8cu"
+            "@type": "/alliance.alliance.MsgCreateAllianceProposal",
+            "denom"  : "ibc/hash",
+            "rewardWeight"  : "1",
+            "takeRate"  : "1"
         }
     ],
-    "metadata": "Create Alliance with our own 'ulunax' denomination"
+    "metadata": "Create Alliance with our own 'ibc/hash' denomination"
 }
