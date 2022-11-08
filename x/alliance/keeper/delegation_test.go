@@ -183,8 +183,6 @@ func TestDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewDec(13), val.DelegatorShares)
 }
 
-//// TODO: test using unsupported denoms
-
 func TestRedelegation(t *testing.T) {
 	app, ctx := createTestContext(t)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
@@ -360,6 +358,7 @@ func TestUndelegation(t *testing.T) {
 	})
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	require.Len(t, delegations, 1)
+	unbondingTime := app.StakingKeeper.UnbondingTime(ctx)
 
 	// All the addresses needed
 	delAddr, err := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
@@ -402,8 +401,28 @@ func TestUndelegation(t *testing.T) {
 	}, d)
 
 	// Immediately undelegate from the validator
-	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(250_000)))
+	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(250_000)))
 	require.NoError(t, err)
+
+	// Check if undelegations were stored correctly
+	iter := app.AllianceKeeper.IterateUndelegations(ctx, ctx.BlockTime().Add(unbondingTime).Add(time.Second))
+	require.True(t, iter.Valid())
+	var queuedUndelegations types.QueuedUndelegation
+	b := iter.Value()
+	app.AppCodec().MustUnmarshal(b, &queuedUndelegations)
+	require.Equal(t, types.QueuedUndelegation{Entries: []*types.Undelegation{
+		{
+			DelegatorAddress: delAddr.String(),
+			ValidatorAddress: val.GetOperator().String(),
+			Balance:          sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(250_000)),
+		},
+		{
+			DelegatorAddress: delAddr.String(),
+			ValidatorAddress: val.GetOperator().String(),
+			Balance:          sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(250_000)),
+		},
+	}}, queuedUndelegations)
 
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)

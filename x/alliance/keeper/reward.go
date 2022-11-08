@@ -191,8 +191,7 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time) (
 		if err != nil {
 			return nil, err
 		}
-		// Only update if there was a token transfer to prevent < 1 amounts to be totally ignored
-		// TODO: Look into how to deal with rounding issues if claim interval is too short
+		// Only update if there was a token transfer to prevent < 1 amounts to be ignored
 		k.SetLastRewardClaimTime(ctx, ctx.BlockTime())
 	}
 	return coins, nil
