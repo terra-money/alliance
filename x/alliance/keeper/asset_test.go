@@ -70,12 +70,28 @@ func TestUpdateRewardRates(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, int64(2), val.ConsensusPower(powerReduction))
 
+	// Update but did not change reward weight
+	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.AllianceAsset{
+		Denom:        ALLIANCE_TOKEN_DENOM,
+		RewardWeight: sdk.NewDec(2),
+		TakeRate:     sdk.NewDec(10),
+	})
+	require.NoError(t, err)
+
+	// Expect no snapshots to be created
+	iter := app.AllianceKeeper.IterateRewardRatesChangeSnapshot(ctx, ALLIANCE_TOKEN_DENOM, val.GetOperator(), 0)
+	require.False(t, iter.Valid())
+
 	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.AllianceAsset{
 		Denom:        ALLIANCE_TOKEN_DENOM,
 		RewardWeight: sdk.NewDec(20),
 		TakeRate:     sdk.NewDec(0),
 	})
 	require.NoError(t, err)
+
+	// Expect a snapshot to be created
+	iter = app.AllianceKeeper.IterateRewardRatesChangeSnapshot(ctx, ALLIANCE_TOKEN_DENOM, val.GetOperator(), 0)
+	require.True(t, iter.Valid())
 
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)

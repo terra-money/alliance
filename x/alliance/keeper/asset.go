@@ -8,27 +8,34 @@ import (
 	"math"
 )
 
+// UpdateAllianceAsset updates the alliance asset with new params
+// Also saves a snapshot whenever rewards weight changes to make sure delegation reward calculation has reference to
+// historical reward rates
 func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsset) error {
 	asset, found := k.GetAssetByDenom(ctx, newAsset.Denom)
 	if !found {
 		return types.ErrUnknownAsset
 	}
 
-	valIter := k.IterateAllianceValidatorInfo(ctx)
-	defer valIter.Close()
-	for ; valIter.Valid(); valIter.Next() {
-		valAddr := types.ParseAllianceValidatorKey(valIter.Key())
-		validator, err := k.GetAllianceValidator(ctx, valAddr)
-		if err != nil {
-			return err
+	// Only add a snapshot if reward weight changes
+	if !newAsset.RewardWeight.Equal(asset.RewardWeight) {
+		valIter := k.IterateAllianceValidatorInfo(ctx)
+		defer valIter.Close()
+		for ; valIter.Valid(); valIter.Next() {
+			valAddr := types.ParseAllianceValidatorKey(valIter.Key())
+			validator, err := k.GetAllianceValidator(ctx, valAddr)
+			if err != nil {
+				return err
+			}
+			_, err = k.ClaimValidatorRewards(ctx, validator)
+			if err != nil {
+				return err
+			}
+			k.SetRewardRatesChangeSnapshot(ctx, asset, validator)
 		}
-		_, err = k.ClaimValidatorRewards(ctx, validator)
-		if err != nil {
-			return err
-		}
-		k.SetRewardRatesChangeSnapshot(ctx, asset, validator)
 	}
 
+	// Make sure only the take rate and reward weight can be updated
 	asset.TakeRate = newAsset.TakeRate
 	asset.RewardWeight = newAsset.RewardWeight
 	k.SetAsset(ctx, asset)
