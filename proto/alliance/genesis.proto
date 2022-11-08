@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "alliance/alliance.proto";
 import "alliance/params.proto";
 
-option go_package = "alliance/x/alliance/types";
+option go_package = "github.com/terra-money/alliance/x/alliance/types";
 
 // GenesisState defines the module's genesis state.
 message GenesisState {

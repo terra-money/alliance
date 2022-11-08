@@ -6,7 +6,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "alliance/params.proto";
 
-option go_package = "alliance/x/alliance/types";
+option go_package = "github.com/terra-money/alliance/x/alliance/types";
 
 message Delegation {
   option (gogoproto.equal)            = false;

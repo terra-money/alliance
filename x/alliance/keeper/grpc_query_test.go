@@ -14,9 +14,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	test_helpers "alliance/app"
-	"alliance/x/alliance/keeper"
-	"alliance/x/alliance/types"
+	test_helpers "github.com/terra-money/alliance/app"
+	"github.com/terra-money/alliance/x/alliance/keeper"
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 var ULUNA_ALLIANCE = "uluna"

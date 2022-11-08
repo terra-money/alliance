@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"alliance/app"
+	"github.com/terra-money/alliance/app"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

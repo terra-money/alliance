@@ -4,7 +4,7 @@ package alliance.alliance;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "alliance/x/alliance/types";
+option go_package = "github.com/terra-money/alliance/x/alliance/types";
 
 message MsgCreateAllianceProposal {
   option (gogoproto.equal)            = false;

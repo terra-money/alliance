@@ -1,10 +1,10 @@
 package keeper
 
 import (
-	"alliance/x/alliance/types"
 	"fmt"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 func (k Keeper) GetAllianceValidator(ctx sdk.Context, valAddr sdk.ValAddress) (types.AllianceValidator, error) {

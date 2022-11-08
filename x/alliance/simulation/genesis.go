@@ -1,12 +1,12 @@
 package simulation
 
 import (
-	"alliance/x/alliance/types"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/tendermint/tendermint/libs/json"
+	"github.com/terra-money/alliance/x/alliance/types"
 	"math/rand"
 	"time"
 )

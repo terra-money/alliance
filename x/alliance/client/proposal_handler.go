@@ -1,7 +1,7 @@
 package client
 
 import (
-	"alliance/x/alliance/client/cli"
+	"github.com/terra-money/alliance/x/alliance/client/cli"
 
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )

@@ -1,10 +1,10 @@
 package simulation
 
 import (
-	"alliance/x/alliance/types"
 	"fmt"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/terra-money/alliance/x/alliance/types"
 	"math/rand"
 )
 

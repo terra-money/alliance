@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"alliance/x/alliance/types"
+	"github.com/terra-money/alliance/x/alliance/types"
 	"testing"
 	"time"
 

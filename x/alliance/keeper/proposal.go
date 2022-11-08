@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"alliance/x/alliance/types"
 	"context"
+	"github.com/terra-money/alliance/x/alliance/types"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"

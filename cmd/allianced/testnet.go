@@ -19,7 +19,7 @@ import (
 
 	"cosmossdk.io/math"
 
-	alliancetypes "alliance/x/alliance/types"
+	alliancetypes "github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
