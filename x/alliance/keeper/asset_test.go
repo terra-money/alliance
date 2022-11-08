@@ -540,3 +540,29 @@ func TestDelayedRewardsStartTime(t *testing.T) {
 	_, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
 	require.False(t, stop)
 }
+
+func TestConsumingRebalancingEvent(t *testing.T) {
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.1"), startTime.Add(time.Hour*24)),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.1"), startTime.Add(time.Hour*24*2)),
+		},
+	})
+
+	app.AllianceKeeper.QueueAssetRebalanceEvent(ctx)
+	store := ctx.KVStore(app.AllianceKeeper.StoreKey())
+	key := types.AssetRebalanceQueueKey
+	b := store.Get(key)
+	require.NotNil(t, b)
+
+	require.True(t, app.AllianceKeeper.ConsumeAssetRebalanceEvent(ctx))
+	b = store.Get(key)
+	require.Nil(t, b)
+
+	require.False(t, app.AllianceKeeper.ConsumeAssetRebalanceEvent(ctx))
+}
