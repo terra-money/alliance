@@ -33,16 +33,6 @@ To build the proto files:
 $ ignite generate proto-go
 ```
 
-## Running the simulation
-The simulation app does not run out of the box since the alliance module owns all native stake. The `x/staking` module's operation.go file panics when a delegator does not have a private key.
-
-In order to run the simulation, you can update the `x/staking` module directly before compiling the simulation app using the following command
-```shell
-go mod vendor
-sed -i '' 's/fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)/nil/g' vendor/github.com/cosmos/cosmos-sdk/x/staking/simulation/operations.go
-ignite chain simulate
-```
-
 ## Localnet 
 Docker orchestration to create a local network with 3 docker containers:
 
