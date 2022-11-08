@@ -12,3 +12,4 @@ flutter
 ts-client
 vue/src/store/generated
 scripts/local/data
+scripts/testnet/data
