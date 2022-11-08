@@ -18,7 +18,6 @@ func NewAllianceAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec, rewa
 }
 
 func ConvertNewTokenToShares(totalTokens cosmosmath.Int, totalShares sdk.Dec, newTokens cosmosmath.Int) (shares sdk.Dec) {
-	// TODO: Verify this logic when totalShares != 0 or totalTotals != 0
 	if totalShares.IsZero() || totalTokens.IsZero() {
 		return sdk.NewDecFromInt(newTokens)
 	}

@@ -49,6 +49,10 @@ func (k Keeper) RebalanceHook(ctx sdk.Context) error {
 	return nil
 }
 
+// RebalanceBondTokenWeights uses asset reward weights to calculate the expected amount of staking token that has to be
+// minted / burned to maintain the right ratio
+// It iterates all validators and calculates the expected staked amount based on delegations and delegates/undelegates
+// the difference.
 func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) (err error) {
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	allianceBondAmount := k.getAllianceBondedAmount(ctx, moduleAddr)
@@ -60,6 +64,8 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) (err error) {
 	unbondedValidatorShares := sdk.NewDecCoins()
 	var bondedValidators []types.AllianceValidator
 
+	// Iterate through all alliance validators to remove those that are unbonded.
+	// Unbonded validators will be ignored when rebalancing.
 	iter := k.IterateAllianceValidatorInfo(ctx)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
@@ -84,6 +90,8 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) (err error) {
 
 		expectedBondAmount := sdk.ZeroDec()
 		for _, asset := range assets {
+			// Ignores assets that were recently added to prevent a small set of stakers from owning too much of the
+			// voting power
 			if ctx.BlockTime().Before(asset.RewardStartTime) {
 				continue
 			}
@@ -91,8 +99,6 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) (err error) {
 			expectedBondAmountForAsset := asset.RewardWeight.MulInt(nativeBondAmount)
 
 			bondedValidatorShares := asset.TotalValidatorShares.Sub(unbondedValidatorShares.AmountOf(asset.Denom))
-			// Accumulate expected tokens staked by adding up all expected tokens from each alliance asset
-			// Skip if the only validator with an alliance asset is unbonded
 			if valShares.IsPositive() && bondedValidatorShares.IsPositive() {
 				expectedBondAmount = expectedBondAmount.Add(valShares.Mul(expectedBondAmountForAsset).Quo(bondedValidatorShares))
 			}
@@ -123,7 +129,6 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) (err error) {
 			if err != nil {
 				return err
 			}
-
 		}
 	}
 	return nil

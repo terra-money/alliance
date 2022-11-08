@@ -183,8 +183,6 @@ func TestDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewDec(13), val.DelegatorShares)
 }
 
-//// TODO: test using unsupported denoms
-
 func TestRedelegation(t *testing.T) {
 	app, ctx := createTestContext(t)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
