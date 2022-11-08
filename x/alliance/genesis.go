@@ -1,7 +1,7 @@
 package alliance
 
 import (
-	"alliance/x/alliance/types"
+	"github.com/terra-money/alliance/x/alliance/types"
 	"time"
 )
 

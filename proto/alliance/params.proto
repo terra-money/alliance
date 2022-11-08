@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "alliance/x/alliance/types";
+option go_package = "github.com/terra-money/alliance/x/alliance/types";
 
 message Params {
   option (gogoproto.equal)            = true;

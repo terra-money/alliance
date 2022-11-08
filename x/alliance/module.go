@@ -13,10 +13,10 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"alliance/x/alliance/client/cli"
-	"alliance/x/alliance/keeper"
-	"alliance/x/alliance/simulation"
-	"alliance/x/alliance/types"
+	"github.com/terra-money/alliance/x/alliance/client/cli"
+	"github.com/terra-money/alliance/x/alliance/keeper"
+	"github.com/terra-money/alliance/x/alliance/simulation"
+	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

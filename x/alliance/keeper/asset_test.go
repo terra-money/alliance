@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
-	test_helpers "alliance/app"
-	"alliance/x/alliance"
-	"alliance/x/alliance/types"
+	test_helpers "github.com/terra-money/alliance/app"
+	"github.com/terra-money/alliance/x/alliance"
+	"github.com/terra-money/alliance/x/alliance/types"
 	"testing"
 	"time"
 

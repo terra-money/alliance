@@ -19,7 +19,7 @@ import (
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	tmdb "github.com/tendermint/tm-db"
 
-	"alliance/app"
+	"github.com/terra-money/alliance/app"
 )
 
 type (

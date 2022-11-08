@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	"alliance/x/alliance/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 func (k Keeper) SlashValidator(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {

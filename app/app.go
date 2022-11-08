@@ -104,12 +104,12 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmoscmd"
 	"github.com/ignite/cli/ignite/pkg/openapiconsole"
 
-	"alliance/docs"
+	"github.com/terra-money/alliance/docs"
 
-	alliancemodule "alliance/x/alliance"
-	alliancemoduleclient "alliance/x/alliance/client"
-	alliancemodulekeeper "alliance/x/alliance/keeper"
-	alliancemoduletypes "alliance/x/alliance/types"
+	alliancemodule "github.com/terra-money/alliance/x/alliance"
+	alliancemoduleclient "github.com/terra-money/alliance/x/alliance/client"
+	alliancemodulekeeper "github.com/terra-money/alliance/x/alliance/keeper"
+	alliancemoduletypes "github.com/terra-money/alliance/x/alliance/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 

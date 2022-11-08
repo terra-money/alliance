@@ -3,8 +3,8 @@ package alliance
 import (
 	"time"
 
-	"alliance/x/alliance/keeper"
-	"alliance/x/alliance/types"
+	"github.com/terra-money/alliance/x/alliance/keeper"
+	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"

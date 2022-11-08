@@ -1,10 +1,10 @@
 package keeper
 
 import (
-	"alliance/x/alliance/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/terra-money/alliance/x/alliance/types"
 	"math"
 )
 

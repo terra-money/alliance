@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"alliance/app"
+	"github.com/terra-money/alliance/app"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"

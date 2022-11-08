@@ -1,10 +1,10 @@
 package alliance
 
 import (
-	"alliance/x/alliance/keeper"
-	"alliance/x/alliance/types"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/terra-money/alliance/x/alliance/keeper"
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 func RegisterInvariants(ir sdk.InvariantRegistry, k keeper.Keeper) {

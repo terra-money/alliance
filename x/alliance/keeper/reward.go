@@ -1,11 +1,11 @@
 package keeper
 
 import (
-	"alliance/x/alliance/types"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/terra-money/alliance/x/alliance/types"
 	"time"
 )
 

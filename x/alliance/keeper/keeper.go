@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"alliance/x/alliance/types"
 	"fmt"
+	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/tendermint/tendermint/libs/log"
 

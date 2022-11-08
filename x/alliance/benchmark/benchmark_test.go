@@ -1,14 +1,14 @@
 package benchmark_test
 
 import (
-	test_helpers "alliance/app"
-	"alliance/x/alliance/benchmark"
-	"alliance/x/alliance/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
+	test_helpers "github.com/terra-money/alliance/app"
+	"github.com/terra-money/alliance/x/alliance/benchmark"
+	"github.com/terra-money/alliance/x/alliance/types"
 	"math/rand"
 	"testing"
 	"time"

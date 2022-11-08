@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"alliance/x/alliance/types"
 	"context"
 	"fmt"
+	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
