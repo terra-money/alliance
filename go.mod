@@ -1,4 +1,4 @@
-module alliance
+module github.com/terra-money/alliance
 
 go 1.18
 
