@@ -562,7 +562,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 
 	// Expect reward change snapshots to be taken
 	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
-	iter := app.AllianceKeeper.IterateRewardRatesChangeSnapshot(ctx, ALLIANCE_TOKEN_DENOM, valAddr1, 0)
+	iter := app.AllianceKeeper.IterateWeightChangeSnapshot(ctx, ALLIANCE_TOKEN_DENOM, valAddr1, 0)
 	var snapshot types.RewardRateChangeSnapshot
 	require.True(t, iter.Valid())
 	app.AppCodec().MustUnmarshal(iter.Value(), &snapshot)

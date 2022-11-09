@@ -39,5 +39,8 @@ func TestGenesis(t *testing.T) {
 		TakeRate:             sdk.NewDec(0.0),
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
+		RewardStartTime:      ctx.BlockTime(),
+		RewardDecayRate:      sdk.NewDec(0),
+		RewardDecayInterval:  0,
 	}, assets[0])
 }

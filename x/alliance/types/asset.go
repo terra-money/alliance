@@ -14,6 +14,8 @@ func NewAllianceAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec, rewa
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
 		RewardStartTime:      rewardStartTime,
+		RewardDecayRate:      sdk.ZeroDec(),
+		RewardDecayInterval:  time.Duration(0),
 	}
 }
 
@@ -46,4 +48,8 @@ func GetDelegationSharesFromTokens(val AllianceValidator, asset AllianceAsset, t
 
 func GetValidatorShares(asset AllianceAsset, token cosmosmath.Int) sdk.Dec {
 	return ConvertNewTokenToShares(asset.TotalTokens, asset.TotalValidatorShares, token)
+}
+
+func (a AllianceAsset) HasPositiveDecay() bool {
+	return a.RewardDecayInterval > 0 && a.RewardDecayRate.IsPositive()
 }

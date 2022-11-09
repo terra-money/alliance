@@ -58,3 +58,10 @@ func TestUndelegationIndex(t *testing.T) {
 	delKey := types.GetUndelegationQueueKey(completion, delAddr)
 	require.Equal(t, delKey, parsedUndelKey)
 }
+
+func TestRewardWeightDecayQueueKey(t *testing.T) {
+	triggerTime := time.Now()
+	key := types.GetRewardWeightDecayQueueKey(triggerTime, "denom")
+	denom := types.ParseRewardWeightDecayQueueKeyForDenom(key)
+	require.Equal(t, "denom", denom)
+}

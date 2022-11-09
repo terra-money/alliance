@@ -41,6 +41,8 @@ func TestCreateAlliance(t *testing.T) {
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
 				RewardStartTime:      ctx.BlockTime().Add(rewardDuration),
+				RewardDecayRate:      sdk.NewDec(0),
+				RewardDecayInterval:  0,
 			},
 		},
 		Pagination: &query.PageResponse{
@@ -71,11 +73,13 @@ func TestUpdateAlliance(t *testing.T) {
 
 	// WHEN
 	updateErr := app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
-		Title:        "",
-		Description:  "",
-		Denom:        "uluna",
-		RewardWeight: sdk.NewDec(6),
-		TakeRate:     sdk.NewDec(7),
+		Title:               "",
+		Description:         "",
+		Denom:               "uluna",
+		RewardWeight:        sdk.NewDec(6),
+		TakeRate:            sdk.NewDec(7),
+		RewardDecayInterval: 0,
+		RewardDecayRate:     sdk.ZeroDec(),
 	})
 	alliancesRes, alliancesErr := queryServer.Alliances(ctx, &types.QueryAlliancesRequest{})
 
@@ -90,6 +94,8 @@ func TestUpdateAlliance(t *testing.T) {
 				TakeRate:             sdk.NewDec(7),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
+				RewardDecayRate:      sdk.NewDec(0),
+				RewardDecayInterval:  0,
 			},
 		},
 		Pagination: &query.PageResponse{

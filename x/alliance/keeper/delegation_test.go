@@ -20,21 +20,12 @@ var ALLIANCE_2_TOKEN_DENOM = "alliance2"
 
 func TestDelegation(t *testing.T) {
 	app, ctx := createTestContext(t)
+	genesisTime := ctx.BlockTime()
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
-			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), genesisTime),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), genesisTime),
 		},
 	})
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
@@ -108,6 +99,9 @@ func TestDelegation(t *testing.T) {
 		TakeRate:             sdk.NewDec(0),
 		TotalTokens:          sdk.NewInt(1000_000),
 		TotalValidatorShares: sdk.NewDec(1000_000),
+		RewardStartTime:      genesisTime,
+		RewardDecayRate:      sdk.NewDec(0),
+		RewardDecayInterval:  0,
 	}, asset)
 
 	// Delegate with same denom again
@@ -138,6 +132,9 @@ func TestDelegation(t *testing.T) {
 		TakeRate:             sdk.NewDec(0),
 		TotalTokens:          sdk.NewInt(2000_000),
 		TotalValidatorShares: sdk.NewDec(2000_000),
+		RewardStartTime:      genesisTime,
+		RewardDecayRate:      sdk.NewDec(0),
+		RewardDecayInterval:  0,
 	}, asset)
 
 	// Check delegation in staking module total shares should not change
