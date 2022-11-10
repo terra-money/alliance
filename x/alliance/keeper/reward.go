@@ -83,7 +83,7 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Del
 	currentRewardHistory := types.NewRewardHistories(val.GlobalRewardHistory)
 	delegationRewardHistories := types.NewRewardHistories(delegation.RewardHistory)
 	// If there are reward rate changes between last and current claim, sequentially claim with the help of the snapshots
-	snapshotIter := k.IterateRewardRatesChangeSnapshot(ctx, asset.Denom, val.GetOperator(), delegation.LastRewardClaimHeight)
+	snapshotIter := k.IterateWeightChangeSnapshot(ctx, asset.Denom, val.GetOperator(), delegation.LastRewardClaimHeight)
 	for ; snapshotIter.Valid(); snapshotIter.Next() {
 		var snapshot types.RewardRateChangeSnapshot
 		b := snapshotIter.Value()

@@ -2,10 +2,9 @@ package keeper
 
 import (
 	"context"
-	"github.com/terra-money/alliance/x/alliance/types"
-
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/terra-money/alliance/x/alliance/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -19,8 +18,21 @@ func (k Keeper) CreateAlliance(ctx context.Context, req *types.MsgCreateAlliance
 	}
 
 	rewardStartTime := sdkCtx.BlockTime().Add(k.RewardDelayTime(sdkCtx))
-	asset := types.NewAllianceAsset(req.Denom, req.RewardWeight, req.TakeRate, rewardStartTime)
+	asset := types.AllianceAsset{
+		Denom:                req.Denom,
+		RewardWeight:         req.RewardWeight,
+		TakeRate:             req.TakeRate,
+		TotalTokens:          sdk.ZeroInt(),
+		TotalValidatorShares: sdk.ZeroDec(),
+		RewardStartTime:      rewardStartTime,
+		RewardDecayRate:      req.RewardDecayRate,
+		RewardDecayInterval:  req.RewardDecayInterval,
+	}
 	k.SetAsset(sdkCtx, asset)
+
+	if asset.HasPositiveDecay() {
+		k.QueueRewardWeightDecayEvent(sdkCtx, asset)
+	}
 
 	return nil
 }
@@ -35,6 +47,8 @@ func (k Keeper) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAlliance
 
 	asset.RewardWeight = req.RewardWeight
 	asset.TakeRate = req.TakeRate
+	asset.RewardDecayRate = req.RewardDecayRate
+	asset.RewardDecayInterval = req.RewardDecayInterval
 
 	err := k.UpdateAllianceAsset(sdkCtx, asset)
 	if err != nil {

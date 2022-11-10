@@ -3,6 +3,7 @@ package alliance.alliance;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/terra-money/alliance/x/alliance/types";
 
@@ -27,7 +28,17 @@ message MsgCreateAllianceProposal {
     // will be redirected to the distribution rewards pool
     string take_rate = 5 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-        (gogoproto.nullable)   = false
+      (gogoproto.nullable)   = false
+    ];
+
+    string reward_decay_rate = 6 [
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+      (gogoproto.nullable)   = false
+    ];
+
+    google.protobuf.Duration reward_decay_interval = 7 [
+      (gogoproto.nullable)   = false,
+      (gogoproto.stdduration) = true
     ];
 }
   
@@ -53,8 +64,19 @@ message MsgUpdateAllianceProposal {
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
         (gogoproto.nullable)   = false
     ];
+
+    string reward_decay_rate = 6 [
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+      (gogoproto.nullable)   = false
+    ];
+
+    google.protobuf.Duration reward_decay_interval = 7 [
+      (gogoproto.nullable)   = false,
+      (gogoproto.stdduration) = true
+    ];
+
 }
-  
+
 message MsgDeleteAllianceProposal {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;

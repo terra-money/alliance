@@ -58,6 +58,8 @@ func TestQueryAlliances(t *testing.T) {
 				TakeRate:             sdk.NewDec(0),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
+				RewardDecayRate:      sdk.NewDec(0),
+				RewardDecayInterval:  0,
 			},
 			{
 				Denom:                "alliance2",
@@ -65,6 +67,8 @@ func TestQueryAlliances(t *testing.T) {
 				TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
+				RewardDecayRate:      sdk.NewDec(0),
+				RewardDecayInterval:  0,
 			},
 		},
 		Pagination: &query.PageResponse{
@@ -83,16 +87,20 @@ func TestQueryAnUniqueAlliance(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:               ALLIANCE_TOKEN_DENOM,
+				RewardWeight:        sdk.NewDec(2),
+				TakeRate:            sdk.NewDec(0),
+				TotalTokens:         sdk.ZeroInt(),
+				RewardDecayRate:     sdk.NewDec(0),
+				RewardDecayInterval: 0,
 			},
 			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.MustNewDecFromStr("0.14159265359"),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:               ALLIANCE_2_TOKEN_DENOM,
+				RewardWeight:        sdk.NewDec(10),
+				TakeRate:            sdk.MustNewDecFromStr("0.14159265359"),
+				TotalTokens:         sdk.ZeroInt(),
+				RewardDecayRate:     sdk.NewDec(0),
+				RewardDecayInterval: 0,
 			},
 		},
 	})
@@ -112,6 +120,8 @@ func TestQueryAnUniqueAlliance(t *testing.T) {
 			TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
 			TotalTokens:          sdk.ZeroInt(),
 			TotalValidatorShares: sdk.NewDec(0),
+			RewardDecayRate:      sdk.NewDec(0),
+			RewardDecayInterval:  0,
 		},
 	}, alliances)
 }
@@ -125,10 +135,12 @@ func TestQueryAnUniqueIBCAlliance(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        "ibc/" + ALLIANCE_2_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.MustNewDecFromStr("0.14159265359"),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:               "ibc/" + ALLIANCE_2_TOKEN_DENOM,
+				RewardWeight:        sdk.NewDec(10),
+				TakeRate:            sdk.MustNewDecFromStr("0.14159265359"),
+				TotalTokens:         sdk.ZeroInt(),
+				RewardDecayRate:     sdk.NewDec(0),
+				RewardDecayInterval: 0,
 			},
 		},
 	})
@@ -148,6 +160,8 @@ func TestQueryAnUniqueIBCAlliance(t *testing.T) {
 			TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
 			TotalTokens:          sdk.ZeroInt(),
 			TotalValidatorShares: sdk.NewDec(0),
+			RewardDecayRate:      sdk.NewDec(0),
+			RewardDecayInterval:  0,
 		},
 	}, alliances)
 }
@@ -196,10 +210,12 @@ func TestQueryParams(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:               ALLIANCE_TOKEN_DENOM,
+				RewardWeight:        sdk.NewDec(2),
+				TakeRate:            sdk.NewDec(0),
+				TotalTokens:         sdk.ZeroInt(),
+				RewardDecayRate:     sdk.NewDec(0),
+				RewardDecayInterval: 0,
 			},
 		},
 	})
@@ -240,6 +256,8 @@ func TestClaimQueryReward(t *testing.T) {
 				TakeRate:             sdk.MustNewDecFromStr("0.5"),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
+				RewardDecayRate:      sdk.NewDec(0),
+				RewardDecayInterval:  0,
 			},
 		},
 	})
@@ -308,10 +326,12 @@ func TestQueryAllianceDelegation(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:               ALLIANCE_TOKEN_DENOM,
+				RewardWeight:        sdk.NewDec(2),
+				TakeRate:            sdk.NewDec(0),
+				TotalTokens:         sdk.ZeroInt(),
+				RewardDecayRate:     sdk.NewDec(0),
+				RewardDecayInterval: 0,
 			},
 		},
 	})
@@ -404,10 +424,12 @@ func TestQueryAlliancesDelegationByValidator(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:               ALLIANCE_TOKEN_DENOM,
+				RewardWeight:        sdk.NewDec(2),
+				TakeRate:            sdk.NewDec(0),
+				TotalTokens:         sdk.ZeroInt(),
+				RewardDecayRate:     sdk.NewDec(0),
+				RewardDecayInterval: 0,
 			},
 		},
 	})
@@ -487,6 +509,8 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 				TakeRate:             sdk.NewDec(0),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
+				RewardDecayRate:      sdk.NewDec(0),
+				RewardDecayInterval:  0,
 			},
 			{
 				Denom:                ALLIANCE_2_TOKEN_DENOM,
@@ -494,6 +518,8 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 				TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
+				RewardDecayRate:      sdk.NewDec(0),
+				RewardDecayInterval:  0,
 			},
 		},
 	})

@@ -29,10 +29,11 @@ const (
 var (
 	ModuleAccKey = []byte{0x01}
 
-	AssetKey                    = []byte{0x11}
-	ValidatorInfoKey            = []byte{0x12}
-	AssetRebalanceQueueKey      = []byte{0x13}
-	RewardRateChangeSnapshotKey = []byte{0x14}
+	AssetKey                      = []byte{0x11}
+	ValidatorInfoKey              = []byte{0x12}
+	AssetRebalanceQueueKey        = []byte{0x13}
+	RewardWeightChangeSnapshotKey = []byte{0x14}
+	RewardWeightDecayQueueKey     = []byte{0x15}
 
 	DelegationKey        = []byte{0x21}
 	RedelegationKey      = []byte{0x22}
@@ -238,8 +239,31 @@ func ParseAllianceValidatorKey(key []byte) sdk.ValAddress {
 	return b
 }
 
-func GetRewardRateChangeSnapshotKey(denom string, val sdk.ValAddress, height uint64) []byte {
-	key := append(RewardRateChangeSnapshotKey, address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
+func GetRewardWeightChangeSnapshotKey(denom string, val sdk.ValAddress, height uint64) (key []byte) {
+	key = append(RewardWeightChangeSnapshotKey, address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
 	key = append(key, address.MustLengthPrefix(val)...)
-	return append(key, sdk.Uint64ToBigEndian(height)...)
+	key = append(key, sdk.Uint64ToBigEndian(height)...)
+	return
+}
+
+func GetRewardWeightDecayQueueByTimestampKey(triggerTime time.Time) (key []byte) {
+	key = append(RewardWeightDecayQueueKey, address.MustLengthPrefix(sdk.FormatTimeBytes(triggerTime))...)
+	return
+}
+
+func GetRewardWeightDecayQueueKey(triggerTime time.Time, denom string) (key []byte) {
+	key = GetRewardWeightDecayQueueByTimestampKey(triggerTime)
+	key = append(key, address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
+	return
+}
+
+func ParseRewardWeightDecayQueueKeyForDenom(key []byte) string {
+	offset := 0
+	offset += len(RewardWeightDecayQueueKey)
+	timeLen := int(key[offset])
+	offset += 1
+	offset += timeLen
+	denomLen := int(key[offset])
+	offset += 1
+	return string(key[offset : offset+denomLen-1])
 }

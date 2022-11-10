@@ -4,6 +4,7 @@ package alliance.alliance;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "alliance/params.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/terra-money/alliance/x/alliance/types";
@@ -40,6 +41,14 @@ message AllianceAsset {
   google.protobuf.Timestamp reward_start_time = 6 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable)   = false
+  ];
+  string reward_decay_rate = 7 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  google.protobuf.Duration reward_decay_interval = 8 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.stdduration) = true
   ];
 }
 
