@@ -280,7 +280,7 @@ func (k Keeper) RewardWeightDecayHook(ctx sdk.Context) error {
 }
 
 func (k Keeper) QueueRewardWeightDecayEvent(ctx sdk.Context, asset types.AllianceAsset) {
-	if asset.RewardDecayRate.IsZero() || asset.RewardDecayRate.IsZero() {
+	if asset.RewardDecayRate.IsZero() || asset.RewardDecayInterval == 0 {
 		return
 	}
 	nextDecayTimestamp := ctx.BlockTime().Add(asset.RewardDecayInterval)
@@ -303,7 +303,6 @@ func (k Keeper) IterateMatureRewardWeightDecayEvent(ctx sdk.Context, cb func(key
 			return
 		}
 	}
-	return
 }
 
 func (k Keeper) IterateRewardWeightDecayEvent(ctx sdk.Context, cb func(key []byte, denom string, triggerTime time.Time) (stop bool)) {
