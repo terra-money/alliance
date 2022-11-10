@@ -246,6 +246,23 @@ func GetRewardWeightChangeSnapshotKey(denom string, val sdk.ValAddress, height u
 	return
 }
 
+func ParseRewardWeightChangeSnapshotKey(key []byte) (denom string, val sdk.ValAddress, height uint64) {
+	offset := 0
+	offset += len(RewardWeightChangeSnapshotKey)
+	denomLen := int(key[offset])
+	offset += 1
+	denom = string(key[offset : offset+denomLen-1])
+	offset += denomLen
+
+	valLen := int(key[offset])
+	offset += 1
+	val = key[offset : offset+valLen]
+	offset += valLen
+
+	height = sdk.BigEndianToUint64(key[offset:])
+	return
+}
+
 func GetRewardWeightDecayQueueByTimestampKey(triggerTime time.Time) (key []byte) {
 	key = append(RewardWeightDecayQueueKey, address.MustLengthPrefix(sdk.FormatTimeBytes(triggerTime))...)
 	return
@@ -257,13 +274,14 @@ func GetRewardWeightDecayQueueKey(triggerTime time.Time, denom string) (key []by
 	return
 }
 
-func ParseRewardWeightDecayQueueKeyForDenom(key []byte) string {
+func ParseRewardWeightDecayQueueKeyForDenom(key []byte) (triggerTime time.Time, denom string) {
 	offset := 0
 	offset += len(RewardWeightDecayQueueKey)
 	timeLen := int(key[offset])
 	offset += 1
+	triggerTime, _ = sdk.ParseTimeBytes(key[offset : offset+timeLen])
 	offset += timeLen
 	denomLen := int(key[offset])
 	offset += 1
-	return string(key[offset : offset+denomLen-1])
+	return triggerTime, string(key[offset : offset+denomLen-1])
 }

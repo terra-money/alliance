@@ -393,7 +393,7 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
 
 	// Expect something to be slashed from undelegation entry
-	undelegationsIter := app.AllianceKeeper.IterateUndelegations(ctx, ctx.BlockTime().Add(app.StakingKeeper.UnbondingTime(ctx)).Add(time.Second))
+	undelegationsIter := app.AllianceKeeper.IterateUndelegationsByCompletionTime(ctx, ctx.BlockTime().Add(app.StakingKeeper.UnbondingTime(ctx)).Add(time.Second))
 	require.True(t, undelegationsIter.Valid())
 	var undelegations types.QueuedUndelegation
 	app.AppCodec().MustUnmarshal(undelegationsIter.Value(), &undelegations)
@@ -409,7 +409,7 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
 
 	// Expect that delegation stayed the same
-	undelegationsIter = app.AllianceKeeper.IterateUndelegations(ctx, ctx.BlockTime())
+	undelegationsIter = app.AllianceKeeper.IterateUndelegationsByCompletionTime(ctx, ctx.BlockTime())
 	require.True(t, undelegationsIter.Valid())
 	var newUndelegations types.QueuedUndelegation
 	app.AppCodec().MustUnmarshal(undelegationsIter.Value(), &newUndelegations)

@@ -4,13 +4,69 @@ package alliance.alliance;
 import "gogoproto/gogo.proto";
 import "alliance/alliance.proto";
 import "alliance/params.proto";
+import "alliance/delegations.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/terra-money/alliance/x/alliance/types";
+
+message ValidatorInfoState {
+  string validator_address = 1;
+  AllianceValidatorInfo validator = 2 [(gogoproto.nullable) = false];
+}
+
+message RedelegationState {
+  google.protobuf.Timestamp completion_time = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
+  Redelegation redelegation = 2 [(gogoproto.nullable) = false];
+}
+
+message UndelegationState {
+  google.protobuf.Timestamp completion_time = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
+  QueuedUndelegation undelegation = 2 [(gogoproto.nullable) = false];
+}
+
+message RewardWeightChangeSnapshotState {
+    uint64 height = 1;
+    string validator = 2;
+    string denom = 3;
+    RewardWeightChangeSnapshot snapshot = 4 [(gogoproto.nullable) = false];
+}
+
+message RewardDecayQueueState {
+  google.protobuf.Timestamp trigger_time = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
+  string denom = 2;
+}
 
 // GenesisState defines the module's genesis state.
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
   repeated AllianceAsset assets = 2 [
+    (gogoproto.nullable) = false
+  ];
+  repeated ValidatorInfoState validator_infos = 3 [
+    (gogoproto.nullable) = false
+  ];
+  repeated RewardWeightChangeSnapshotState reward_weight_change_snaphots = 4 [
+    (gogoproto.nullable) = false
+  ];
+  repeated Delegation delegations = 5 [
+    (gogoproto.nullable) = false
+  ];
+  repeated RedelegationState redelegations = 6 [
+    (gogoproto.nullable) = false
+  ];
+  repeated UndelegationState undelegations = 7 [
+    (gogoproto.nullable) = false
+  ];
+  repeated RewardDecayQueueState reward_decay_queue = 8 [
     (gogoproto.nullable) = false
   ];
 }

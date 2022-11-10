@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance/types"
 	"testing"
 	"time"
@@ -43,4 +46,96 @@ func TestGenesis(t *testing.T) {
 		RewardDecayRate:      sdk.NewDec(0),
 		RewardDecayInterval:  0,
 	}, assets[0])
+}
+
+func TestExportAndImportGenesis(t *testing.T) {
+	app, ctx := createTestContext(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.Params{
+			RewardDelayTime:     time.Duration(1000000),
+			RewardClaimInterval: time.Duration(1000000),
+			LastRewardClaimTime: time.Unix(0, 0).UTC(),
+		},
+		Assets: []types.AllianceAsset{},
+	})
+
+	// All the addresses needed
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Len(t, delegations, 1)
+	delAddr, err := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
+	require.NoError(t, err)
+	valAddr, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
+	require.NoError(t, err)
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 3, sdk.NewCoins(
+		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)),
+		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)),
+	))
+	valAddr2 := sdk.ValAddress(addrs[0])
+	_val2 := teststaking.NewValidator(t, valAddr2, test_helpers.CreateTestPubKeys(1)[0])
+	test_helpers.RegisterNewValidator(t, app, ctx, _val2)
+	val2, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	require.NoError(t, err)
+
+	// Add alliance asset
+	err = app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+		Title:               "",
+		Description:         "",
+		Denom:               ALLIANCE_TOKEN_DENOM,
+		RewardWeight:        sdk.NewDec(1),
+		TakeRate:            sdk.NewDec(0),
+		RewardDecayRate:     sdk.MustNewDecFromStr("0.5"),
+		RewardDecayInterval: time.Hour * 24,
+	})
+	require.NoError(t, err)
+
+	// Delegate
+	delegationCoin := sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000))
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegationCoin))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(delegationCoin))
+	require.NoError(t, err)
+	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val1, delegationCoin)
+	require.NoError(t, err)
+
+	// Redelegate
+	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr, val1, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000_000)))
+	require.NoError(t, err)
+
+	// Undelegate
+	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000_000)))
+	require.NoError(t, err)
+
+	// Trigger decay
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 25)).WithBlockHeight(ctx.BlockHeight() + 1)
+	err = app.AllianceKeeper.RewardWeightDecayHook(ctx)
+
+	genesisState := app.AllianceKeeper.ExportGenesis(ctx)
+	require.NotNil(t, genesisState.Params)
+	require.Greater(t, len(genesisState.Assets), 0)
+	require.Greater(t, len(genesisState.ValidatorInfos), 0)
+	require.Greater(t, len(genesisState.Delegations), 0)
+	require.Greater(t, len(genesisState.Undelegations), 0)
+	require.Greater(t, len(genesisState.Redelegations), 0)
+	require.Greater(t, len(genesisState.RewardWeightChangeSnaphots), 0)
+	require.Greater(t, len(genesisState.RewardDecayQueue), 0)
+
+	store := ctx.KVStore(app.AllianceKeeper.StoreKey())
+	iter := store.Iterator(nil, nil)
+
+	// Init a new app
+	app, ctx = createTestContext(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(1)
+
+	app.AllianceKeeper.InitGenesis(ctx, genesisState)
+
+	// Check all items in the alliance store match
+	iter2 := store.Iterator(nil, nil)
+	for ; iter.Valid(); iter.Next() {
+		require.Equal(t, iter.Key(), iter2.Key())
+		require.Equal(t, iter.Value(), iter2.Value())
+		iter2.Next()
+	}
 }

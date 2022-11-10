@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/terra-money/alliance/x/alliance/types"
 )
@@ -44,9 +43,19 @@ func (k Keeper) createAllianceValidatorInfo(ctx sdk.Context, valAddr sdk.ValAddr
 	return val
 }
 
-func (k Keeper) IterateAllianceValidatorInfo(ctx sdk.Context) storetypes.Iterator {
+func (k Keeper) IterateAllianceValidatorInfo(ctx sdk.Context, cb func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	return sdk.KVStorePrefixIterator(store, types.ValidatorInfoKey)
+	iter := sdk.KVStorePrefixIterator(store, types.ValidatorInfoKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		var info types.AllianceValidatorInfo
+		b := iter.Value()
+		k.cdc.MustUnmarshal(b, &info)
+		valAddr := types.ParseAllianceValidatorKey(iter.Key())
+		if cb(valAddr, info) {
+			return
+		}
+	}
 }
 
 func (k Keeper) GetAllAllianceValidatorInfo(ctx sdk.Context) []types.AllianceValidatorInfo {

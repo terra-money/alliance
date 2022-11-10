@@ -66,7 +66,7 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 
 	delegation.RewardHistory = newIndices
 	delegation.LastRewardClaimHeight = uint64(ctx.BlockHeight())
-	k.SetDelegation(ctx, delAddr, val, denom, delegation)
+	k.SetDelegation(ctx, delAddr, val.GetOperator(), denom, delegation)
 
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.RewardsPoolName, delAddr, coins)
 	if err != nil {
@@ -85,7 +85,7 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Del
 	// If there are reward rate changes between last and current claim, sequentially claim with the help of the snapshots
 	snapshotIter := k.IterateWeightChangeSnapshot(ctx, asset.Denom, val.GetOperator(), delegation.LastRewardClaimHeight)
 	for ; snapshotIter.Valid(); snapshotIter.Next() {
-		var snapshot types.RewardRateChangeSnapshot
+		var snapshot types.RewardWeightChangeSnapshot
 		b := snapshotIter.Value()
 		k.cdc.MustUnmarshal(b, &snapshot)
 		var rewards sdk.Coins
