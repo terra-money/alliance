@@ -403,7 +403,7 @@ func TestUndelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check if undelegations were stored correctly
-	iter := app.AllianceKeeper.IterateUndelegations(ctx, ctx.BlockTime().Add(unbondingTime).Add(time.Second))
+	iter := app.AllianceKeeper.IterateUndelegationsByCompletionTime(ctx, ctx.BlockTime().Add(unbondingTime).Add(time.Second))
 	require.True(t, iter.Valid())
 	var queuedUndelegations types.QueuedUndelegation
 	b := iter.Value()

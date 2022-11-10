@@ -52,15 +52,7 @@ message AllianceAsset {
   ];
 }
 
-message QueuedRewardRateChange {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
-
-  string denom = 1;
-  string prev_reward_rate = 2;
-}
-
-message RewardRateChangeSnapshot {
+message RewardWeightChangeSnapshot {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
 

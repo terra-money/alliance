@@ -110,6 +110,16 @@ message QueryAlliancesDelegationByValidatorRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
+// DelegationResponse is equivalent to Delegation except that it contains a
+// balance in addition to shares which is more suitable for client responses.
+message DelegationResponse {
+  option (gogoproto.equal) = false;
+
+  Delegation delegation = 1 [(gogoproto.nullable) = false];
+
+  cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];
+}
+
 message QueryAlliancesDelegationsResponse {
   repeated DelegationResponse delegations = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

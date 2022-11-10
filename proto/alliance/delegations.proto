@@ -30,16 +30,6 @@ message Delegation {
   uint64 last_reward_claim_height = 6;
 }
 
-// DelegationResponse is equivalent to Delegation except that it contains a
-// balance in addition to shares which is more suitable for client responses.
-message DelegationResponse {
-  option (gogoproto.equal) = false;
-
-  Delegation delegation = 1 [(gogoproto.nullable) = false];
-
-  cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];
-}
-
 message Redelegation {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;

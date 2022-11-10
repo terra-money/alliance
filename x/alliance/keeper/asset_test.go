@@ -697,7 +697,7 @@ func TestRewardWeightDecay(t *testing.T) {
 	iter = sdk.KVStorePrefixIterator(store, types.RewardWeightDecayQueueKey)
 	require.True(t, iter.Valid())
 	for ; iter.Valid(); iter.Next() {
-		denom := types.ParseRewardWeightDecayQueueKeyForDenom(iter.Key())
+		_, denom := types.ParseRewardWeightDecayQueueKeyForDenom(iter.Key())
 		require.NotEqual(t, ALLIANCE_2_TOKEN_DENOM, denom)
 	}
 

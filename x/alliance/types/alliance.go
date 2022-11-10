@@ -1,7 +1,7 @@
 package types
 
-func NewRewardRateChangeSnapshot(asset AllianceAsset, val AllianceValidator) RewardRateChangeSnapshot {
-	return RewardRateChangeSnapshot{
+func NewRewardWeightChangeSnapshot(asset AllianceAsset, val AllianceValidator) RewardWeightChangeSnapshot {
+	return RewardWeightChangeSnapshot{
 		PrevRewardWeight: asset.RewardWeight,
 		RewardHistories:  val.GlobalRewardHistory,
 	}

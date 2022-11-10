@@ -92,7 +92,7 @@ func (k Keeper) SlashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, frac
 		k.SetValidator(ctx, dstVal)
 
 		delegation.Shares = delegation.Shares.Sub(sharesToSlash)
-		k.SetDelegation(ctx, delAddr, dstVal, asset.Denom, delegation)
+		k.SetDelegation(ctx, delAddr, dstVal.GetOperator(), asset.Denom, delegation)
 	}
 	return nil
 }

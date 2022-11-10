@@ -10,20 +10,21 @@ import (
 	"github.com/terra-money/alliance/x/alliance/benchmark"
 	"github.com/terra-money/alliance/x/alliance/types"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 )
 
 var (
 	SEED              = 1
-	NUM_OF_BLOCKS     = 250
+	NUM_OF_BLOCKS     = 100
 	BLOCKTIME_IN_S    = 5
 	VOTE_RATE         = 0.9
-	NUM_OF_VALIDATORS = 300
-	NUM_OF_ASSETS     = 1280
-	NUM_OF_DELEGATORS = 100
+	NUM_OF_VALIDATORS = 5
+	NUM_OF_ASSETS     = 2
+	NUM_OF_DELEGATORS = 10
 
-	OPERATIONS_PER_BLOCK = 50
+	OPERATIONS_PER_BLOCK = 30
 	DELEGATION_RATE      = 10
 	REDELEGATION_RATE    = 1
 	UNDELEGATION_RATE    = 2
@@ -35,7 +36,7 @@ var createdDelegations = []types.Delegation{}
 func TestRunBenchmarks(t *testing.T) {
 	r := rand.New(rand.NewSource(1))
 	app, ctx, assets, vals, dels := benchmark.SetupApp(t, r, NUM_OF_ASSETS, NUM_OF_VALIDATORS, NUM_OF_DELEGATORS)
-	powerReduction := app.StakingKeeper.PowerReduction(ctx)
+	powerReduction := sdk.OneInt()
 	operations := make(map[string]int)
 
 	for b := 0; b < NUM_OF_BLOCKS; b += 1 {
@@ -107,6 +108,11 @@ func TestRunBenchmarks(t *testing.T) {
 		}
 	}
 	t.Logf("%v\n", operations)
+
+	state := app.AllianceKeeper.ExportGenesis(ctx)
+	file, _ := os.Create("./benchmark_genesis.json")
+	defer file.Close()
+	file.Write(app.AppCodec().MustMarshalJSON(state))
 }
 
 func delegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, assets []types.AllianceAsset, vals []sdk.AccAddress, dels []sdk.AccAddress) {
@@ -152,18 +158,25 @@ func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, a
 	srcValidator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, srcValAddr)
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, delegation.Denom)
 
-	if app.AllianceKeeper.IterateRedelegations(ctx, delAddr, srcValAddr, asset.Denom).Valid() {
+	if app.AllianceKeeper.HasRedelegation(ctx, delAddr, srcValAddr, asset.Denom) {
 		return
 	}
 
 	dstValAddr := sdk.ValAddress(vals[r.Intn(len(vals)-1)])
 	dstValidator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, dstValAddr)
 
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, srcValidator, asset.Denom)
+	if !found {
+		return
+	}
 	amountToRedelegate := simulation.RandomAmount(r, types.GetDelegationTokens(delegation, srcValidator, asset).Amount)
 	if amountToRedelegate.IsZero() {
 		return
 	}
-	app.AllianceKeeper.Redelegate(ctx, delAddr, srcValidator, dstValidator, sdk.NewCoin(delegation.Denom, amountToRedelegate))
+	_, err := app.AllianceKeeper.Redelegate(ctx, delAddr, srcValidator, dstValidator, sdk.NewCoin(delegation.Denom, amountToRedelegate))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func undelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {
@@ -183,6 +196,10 @@ func undelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {
 	validator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, delegation.Denom)
 
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, validator, asset.Denom)
+	if !found {
+		return
+	}
 	amountToUndelegate := simulation.RandomAmount(r, types.GetDelegationTokens(delegation, validator, asset).Amount)
 	if amountToUndelegate.IsZero() {
 		return
@@ -204,5 +221,13 @@ func claimRewardsOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand)
 	valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 	validator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 
-	app.AllianceKeeper.ClaimDelegationRewards(ctx, delAddr, validator, delegation.Denom)
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, validator, delegation.Denom)
+	if !found {
+		return
+	}
+
+	_, err := app.AllianceKeeper.ClaimDelegationRewards(ctx, delAddr, validator, delegation.Denom)
+	if err != nil {
+		panic(err)
+	}
 }

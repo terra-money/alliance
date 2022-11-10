@@ -60,8 +60,22 @@ func TestUndelegationIndex(t *testing.T) {
 }
 
 func TestRewardWeightDecayQueueKey(t *testing.T) {
-	triggerTime := time.Now()
+	triggerTime := time.Now().UTC()
 	key := types.GetRewardWeightDecayQueueKey(triggerTime, "denom")
-	denom := types.ParseRewardWeightDecayQueueKeyForDenom(key)
+	parsedTime, denom := types.ParseRewardWeightDecayQueueKeyForDenom(key)
 	require.Equal(t, "denom", denom)
+	require.Equal(t, triggerTime, parsedTime)
+}
+
+func TestRewardSnapshotKey(t *testing.T) {
+	denom := "denom"
+	valAddr, err := sdk.ValAddressFromHex("bb")
+	require.NoError(t, err)
+	height := uint64(100)
+	key := types.GetRewardWeightChangeSnapshotKey(denom, valAddr, height)
+
+	parsedDenom, parsedValAddr, parsedHeight := types.ParseRewardWeightChangeSnapshotKey(key)
+	require.Equal(t, denom, parsedDenom)
+	require.Equal(t, valAddr, parsedValAddr)
+	require.Equal(t, height, parsedHeight)
 }

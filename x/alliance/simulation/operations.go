@@ -126,8 +126,7 @@ func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "Validator not found"), nil, nil
 		}
 
-		iter := k.IterateRedelegations(ctx, simAccountAddr, valAddr, delegation.Denom)
-		if iter.Valid() {
+		if k.HasRedelegation(ctx, simAccountAddr, valAddr, delegation.Denom) {
 			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "Cannot perform redelegation from a previous destination of a redelegation"), nil, nil
 		}
 
