@@ -107,7 +107,7 @@ func (a AppModule) InitGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec, messa
 }
 
 func (a AppModule) ExportGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec) json.RawMessage {
-	genesis := DefaultGenesisState()
+	genesis := a.keeper.ExportGenesis(ctx)
 	return a.cdc.MustMarshalJSON(genesis)
 }
 
