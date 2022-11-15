@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUpdateRewardRates(t *testing.T) {
+func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 	app, ctx := createTestContext(t)
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime)
@@ -129,7 +129,7 @@ func TestUpdateRewardRates(t *testing.T) {
 
 }
 
-func TestUnbondedValidator(t *testing.T) {
+func TestRebalancingWithUnbondedValidator(t *testing.T) {
 	var err error
 	app, ctx := createTestContext(t)
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
@@ -275,7 +275,7 @@ func TestUnbondedValidator(t *testing.T) {
 	require.False(t, stop)
 }
 
-func TestJailedValidator(t *testing.T) {
+func TestRebalancingWithJailedValidator(t *testing.T) {
 	var err error
 	app, ctx := createTestContext(t)
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
@@ -425,7 +425,7 @@ func TestJailedValidator(t *testing.T) {
 	require.False(t, stop)
 }
 
-func TestDelayedRewardsStartTime(t *testing.T) {
+func TestRebalancingWithDelayedRewardsStartTime(t *testing.T) {
 	var err error
 	app, ctx := createTestContext(t)
 	bondDenom := app.StakingKeeper.BondDenom(ctx)

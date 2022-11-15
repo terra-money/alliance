@@ -52,6 +52,31 @@ func TestCreateAlliance(t *testing.T) {
 	})
 }
 
+func TestCreateAllianceFailWithDuplicate(t *testing.T) {
+	// GIVEN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset("uluna", sdk.NewDec(1), sdk.NewDec(0), startTime),
+		},
+	})
+
+	// WHEN
+	createErr := app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+		Title:        "",
+		Description:  "",
+		Denom:        "uluna",
+		RewardWeight: sdk.OneDec(),
+		TakeRate:     sdk.OneDec(),
+	})
+
+	// THEN
+	require.Error(t, createErr)
+}
+
 func TestUpdateAlliance(t *testing.T) {
 	// GIVEN
 	app, ctx := createTestContext(t)
