@@ -64,7 +64,8 @@ func TestRewardPoolAndGlobalIndex(t *testing.T) {
 
 	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 
 	// Transfer to reward pool
@@ -88,7 +89,8 @@ func TestRewardPoolAndGlobalIndex(t *testing.T) {
 	// New delegation from user 2
 	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 
 	// Transfer to reward pool
@@ -156,7 +158,8 @@ func TestClaimRewards(t *testing.T) {
 	// New delegation from user 1
 	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 
 	// Transfer to reward pool
@@ -166,7 +169,8 @@ func TestClaimRewards(t *testing.T) {
 	// New delegation from user 2
 	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 
 	// Transfer to reward pool
@@ -319,7 +323,8 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
 
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	// Check total bonded amount
 	require.Equal(t, sdk.NewInt(13_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
@@ -404,13 +409,14 @@ func TestClaimTakeRate(t *testing.T) {
 	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
 	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
 
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	// Check total bonded amount
 	require.Equal(t, sdk.NewInt(13_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
 	// Calling it immediately will not update anything
-	coins, err := app.AllianceKeeper.DeductAssetsHook(ctx)
+	coins, err := app.AllianceKeeper.DeductAssetsHook(ctx, assets)
 	require.Nil(t, coins)
 	require.Nil(t, err)
 
@@ -418,7 +424,7 @@ func TestClaimTakeRate(t *testing.T) {
 	timePassed := time.Minute*5 + time.Second
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(timePassed))
 	ctx = ctx.WithBlockHeight(2)
-	coinsClaimed, _ := app.AllianceKeeper.DeductAssetsHook(ctx)
+	coinsClaimed, _ := app.AllianceKeeper.DeductAssetsHook(ctx, assets)
 	coins = app.BankKeeper.GetAllBalances(ctx, feeCollectorAddr)
 	require.Equal(t, coinsClaimed, coins)
 
@@ -518,7 +524,8 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 	// New delegations
 	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 
 	// Accumulate rewards in pool and distribute it
@@ -557,7 +564,8 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 
 	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()))
 	require.NoError(t, err)
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 
 	// Expect reward change snapshots to be taken

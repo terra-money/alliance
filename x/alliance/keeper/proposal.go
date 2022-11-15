@@ -25,15 +25,11 @@ func (k Keeper) CreateAlliance(ctx context.Context, req *types.MsgCreateAlliance
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
 		RewardStartTime:      rewardStartTime,
-		RewardDecayRate:      req.RewardDecayRate,
-		RewardDecayInterval:  req.RewardDecayInterval,
+		RewardChangeRate:     req.RewardChangeRate,
+		RewardChangeInterval: req.RewardChangeInterval,
+		LastRewardChangeTime: rewardStartTime,
 	}
 	k.SetAsset(sdkCtx, asset)
-
-	if asset.HasPositiveDecay() {
-		k.QueueRewardWeightDecayEvent(sdkCtx, asset)
-	}
-
 	return nil
 }
 
@@ -47,8 +43,8 @@ func (k Keeper) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAlliance
 
 	asset.RewardWeight = req.RewardWeight
 	asset.TakeRate = req.TakeRate
-	asset.RewardDecayRate = req.RewardDecayRate
-	asset.RewardDecayInterval = req.RewardDecayInterval
+	asset.RewardChangeRate = req.RewardChangeRate
+	asset.RewardChangeInterval = req.RewardChangeInterval
 
 	err := k.UpdateAllianceAsset(sdkCtx, asset)
 	if err != nil {

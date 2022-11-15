@@ -18,13 +18,13 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	if err := k.CompleteUndelegations(ctx); err != nil {
 		panic(err)
 	}
-	if _, err := k.DeductAssetsHook(ctx); err != nil {
+
+	assets := k.GetAllAssets(ctx)
+	if _, err := k.DeductAssetsHook(ctx, assets); err != nil {
 		panic(err)
 	}
-	if err := k.RewardWeightDecayHook(ctx); err != nil {
-		panic(err)
-	}
-	if err := k.RebalanceHook(ctx); err != nil {
+	k.RewardWeightDecayHook(ctx, assets)
+	if err := k.RebalanceHook(ctx, assets); err != nil {
 		panic(err)
 	}
 	return []abci.ValidatorUpdate{}

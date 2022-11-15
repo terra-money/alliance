@@ -3,6 +3,7 @@ package keeper_test
 import (
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance"
+	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
 	"testing"
 	"time"
@@ -61,7 +62,8 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
 
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(3_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
@@ -72,11 +74,11 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 
 	// Update but did not change reward weight
 	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.AllianceAsset{
-		Denom:               ALLIANCE_TOKEN_DENOM,
-		RewardWeight:        sdk.NewDec(2),
-		TakeRate:            sdk.NewDec(10),
-		RewardDecayRate:     sdk.NewDec(0),
-		RewardDecayInterval: 0,
+		Denom:                ALLIANCE_TOKEN_DENOM,
+		RewardWeight:         sdk.NewDec(2),
+		TakeRate:             sdk.NewDec(10),
+		RewardChangeRate:     sdk.NewDec(0),
+		RewardChangeInterval: 0,
 	})
 	require.NoError(t, err)
 
@@ -85,11 +87,11 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 	require.False(t, iter.Valid())
 
 	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.AllianceAsset{
-		Denom:               ALLIANCE_TOKEN_DENOM,
-		RewardWeight:        sdk.NewDec(20),
-		TakeRate:            sdk.NewDec(0),
-		RewardDecayRate:     sdk.NewDec(0),
-		RewardDecayInterval: 0,
+		Denom:                ALLIANCE_TOKEN_DENOM,
+		RewardWeight:         sdk.NewDec(20),
+		TakeRate:             sdk.NewDec(0),
+		RewardChangeRate:     sdk.NewDec(0),
+		RewardChangeInterval: 0,
 	})
 	require.NoError(t, err)
 
@@ -97,7 +99,8 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 	iter = app.AllianceKeeper.IterateWeightChangeSnapshot(ctx, ALLIANCE_TOKEN_DENOM, val.GetOperator(), 0)
 	require.True(t, iter.Valid())
 
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(21_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
@@ -107,15 +110,16 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 	require.Equal(t, int64(20), val.ConsensusPower(powerReduction))
 
 	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.AllianceAsset{
-		Denom:               ALLIANCE_TOKEN_DENOM,
-		RewardWeight:        sdk.NewDec(1),
-		TakeRate:            sdk.NewDec(0),
-		RewardDecayRate:     sdk.NewDec(0),
-		RewardDecayInterval: 0,
+		Denom:                ALLIANCE_TOKEN_DENOM,
+		RewardWeight:         sdk.NewDec(1),
+		TakeRate:             sdk.NewDec(0),
+		RewardChangeRate:     sdk.NewDec(0),
+		RewardChangeInterval: 0,
 	})
 	require.NoError(t, err)
 
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(2_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
@@ -231,7 +235,8 @@ func TestRebalancingWithUnbondedValidator(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, err)
 
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.NoError(t, err)
@@ -253,7 +258,8 @@ func TestRebalancingWithUnbondedValidator(t *testing.T) {
 	require.Equal(t, 2, len(vals))
 	require.Equal(t, "val1", vals[1].GetMoniker())
 
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(16_000_000).String(), app.StakingKeeper.TotalBondedTokens(ctx).String())
 
@@ -267,7 +273,8 @@ func TestRebalancingWithUnbondedValidator(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(18_900_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(16_000_000).String(), app.StakingKeeper.TotalBondedTokens(ctx).String())
 
@@ -383,7 +390,8 @@ func TestRebalancingWithJailedValidator(t *testing.T) {
 
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.NoError(t, err)
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	// 12 * 1.6 = 19.2
 	require.Equal(t, sdk.NewInt(19_200_000), app.StakingKeeper.TotalBondedTokens(ctx))
@@ -403,7 +411,8 @@ func TestRebalancingWithJailedValidator(t *testing.T) {
 	require.Equal(t, 2, len(vals))
 	require.Equal(t, "val1", vals[1].GetMoniker())
 
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	// 11 * 1.6 = 17.6
 	require.Equal(t, sdk.NewInt(17_600_000).String(), app.StakingKeeper.TotalBondedTokens(ctx).String())
@@ -417,7 +426,8 @@ func TestRebalancingWithJailedValidator(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(22_080_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(19_200_000).String(), app.StakingKeeper.TotalBondedTokens(ctx).String())
 
@@ -525,20 +535,23 @@ func TestRebalancingWithDelayedRewardsStartTime(t *testing.T) {
 
 	// Expect that rewards rates are not updated due to ctx being before rewards start time
 	require.NoError(t, err)
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(12_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
 	// Expect that rewards rates are updated only for alliance 1
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 24))
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	// 12 * 1.5 = 18
 	require.Equal(t, sdk.NewInt(18_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
 	// Expect that rewards rates are updated all alliances
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 48))
-	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	// 12 * 1.7 = 18
 	require.Equal(t, sdk.NewInt(20_400_000), app.StakingKeeper.TotalBondedTokens(ctx))
@@ -603,28 +616,25 @@ func TestRewardWeightDecay(t *testing.T) {
 	// Pass a proposal to add a new asset with a decay rate
 	decayInterval := time.Hour * 24 * 30
 	app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
-		Title:               "",
-		Description:         "",
-		Denom:               ALLIANCE_TOKEN_DENOM,
-		RewardWeight:        sdk.NewDec(1),
-		TakeRate:            sdk.ZeroDec(),
-		RewardDecayRate:     sdk.MustNewDecFromStr("0.5"),
-		RewardDecayInterval: decayInterval,
+		Title:                "",
+		Description:          "",
+		Denom:                ALLIANCE_TOKEN_DENOM,
+		RewardWeight:         sdk.NewDec(1),
+		TakeRate:             sdk.ZeroDec(),
+		RewardChangeRate:     sdk.MustNewDecFromStr("0.5"),
+		RewardChangeInterval: decayInterval,
 	})
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 
-	// Expect that there is a decay event queued in the future
-	b := app.AllianceKeeper.GetNextRewardWeightDecayEvent(ctx, ALLIANCE_TOKEN_DENOM)
-	require.NotNil(t, b)
-
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
 	// Running the decay hook now should do nothing
-	app.AllianceKeeper.RewardWeightDecayHook(ctx)
+	app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
 
-	// Move block time to after decay interval
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(decayInterval + 1))
+	// Move block time to after change interval + one year
+	ctx = ctx.WithBlockTime(asset.RewardStartTime.Add(time.Duration(keeper.YEAR_IN_NANOS)))
 
 	// Running the decay hook should update reward weight
-	app.AllianceKeeper.RewardWeightDecayHook(ctx)
+	app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
 	updatedAsset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, types.AllianceAsset{
 		Denom:                ALLIANCE_TOKEN_DENOM,
@@ -633,88 +643,59 @@ func TestRewardWeightDecay(t *testing.T) {
 		TotalTokens:          asset.TotalTokens,
 		TotalValidatorShares: asset.TotalValidatorShares,
 		RewardStartTime:      asset.RewardStartTime,
-		RewardDecayRate:      asset.RewardDecayRate,
-		RewardDecayInterval:  asset.RewardDecayInterval,
+		RewardChangeRate:     asset.RewardChangeRate,
+		RewardChangeInterval: asset.RewardChangeInterval,
+		LastRewardChangeTime: ctx.BlockTime(),
 	}, updatedAsset)
 
 	// There should be a rebalancing event stored
 	require.True(t, app.AllianceKeeper.ConsumeAssetRebalanceEvent(ctx))
 
-	// Expect that there is a decay event queued in the future
-	b2 := app.AllianceKeeper.GetNextRewardWeightDecayEvent(ctx, ALLIANCE_TOKEN_DENOM)
-	require.NotNil(t, b2)
-	require.NotEqual(t, b2, b)
-
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 10))
 	// Updating the alliance asset through proposal should queue another decay event
 	app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
-		Title:               "",
-		Description:         "",
-		Denom:               ALLIANCE_TOKEN_DENOM,
-		RewardWeight:        sdk.MustNewDecFromStr("0.5"),
-		TakeRate:            sdk.ZeroDec(),
-		RewardDecayRate:     sdk.ZeroDec(),
-		RewardDecayInterval: 0,
+		Title:                "",
+		Description:          "",
+		Denom:                ALLIANCE_TOKEN_DENOM,
+		RewardWeight:         sdk.MustNewDecFromStr("0.5"),
+		TakeRate:             sdk.ZeroDec(),
+		RewardChangeRate:     sdk.ZeroDec(),
+		RewardChangeInterval: 0,
 	})
-	store := ctx.KVStore(app.AllianceKeeper.StoreKey())
-	iter := sdk.KVStorePrefixIterator(store, types.RewardWeightDecayQueueKey)
-	require.True(t, iter.Valid())
-	for ; iter.Valid(); iter.Next() {
-		require.Equal(t, b2, iter.Key())
-	}
 
 	// Updating alliance asset again with a non-zero decay
 	app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
-		Title:               "",
-		Description:         "",
-		Denom:               ALLIANCE_TOKEN_DENOM,
-		RewardWeight:        sdk.MustNewDecFromStr("0.5"),
-		TakeRate:            sdk.ZeroDec(),
-		RewardDecayRate:     sdk.MustNewDecFromStr("0.1"),
-		RewardDecayInterval: decayInterval,
+		Title:                "",
+		Description:          "",
+		Denom:                ALLIANCE_TOKEN_DENOM,
+		RewardWeight:         sdk.MustNewDecFromStr("0.5"),
+		TakeRate:             sdk.ZeroDec(),
+		RewardChangeRate:     sdk.MustNewDecFromStr("0.1"),
+		RewardChangeInterval: decayInterval,
 	})
-	store = ctx.KVStore(app.AllianceKeeper.StoreKey())
-	iter = sdk.KVStorePrefixIterator(store, types.RewardWeightDecayQueueKey)
-	require.True(t, iter.Valid())
-	for ; iter.Valid(); iter.Next() {
-		require.Equal(t, b2, iter.Key())
-	}
 
 	// Add a new asset with an initial 0 decay
 	err = app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
-		Title:               "",
-		Description:         "",
-		Denom:               ALLIANCE_2_TOKEN_DENOM,
-		RewardWeight:        sdk.NewDec(1),
-		TakeRate:            sdk.ZeroDec(),
-		RewardDecayRate:     sdk.ZeroDec(),
-		RewardDecayInterval: decayInterval,
+		Title:                "",
+		Description:          "",
+		Denom:                ALLIANCE_2_TOKEN_DENOM,
+		RewardWeight:         sdk.NewDec(1),
+		TakeRate:             sdk.ZeroDec(),
+		RewardChangeRate:     sdk.ZeroDec(),
+		RewardChangeInterval: decayInterval,
 	})
 	require.NoError(t, err)
-
-	// Expect no new decay event added
-	store = ctx.KVStore(app.AllianceKeeper.StoreKey())
-	iter = sdk.KVStorePrefixIterator(store, types.RewardWeightDecayQueueKey)
-	require.True(t, iter.Valid())
-	for ; iter.Valid(); iter.Next() {
-		_, denom := types.ParseRewardWeightDecayQueueKeyForDenom(iter.Key())
-		require.NotEqual(t, ALLIANCE_2_TOKEN_DENOM, denom)
-	}
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
 	// Updating alliance asset again with a non-zero decay
 	err = app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
-		Title:               "",
-		Description:         "",
-		Denom:               ALLIANCE_2_TOKEN_DENOM,
-		RewardWeight:        sdk.MustNewDecFromStr("0.5"),
-		TakeRate:            sdk.ZeroDec(),
-		RewardDecayRate:     sdk.MustNewDecFromStr("0.1"),
-		RewardDecayInterval: decayInterval,
+		Title:                "",
+		Description:          "",
+		Denom:                ALLIANCE_2_TOKEN_DENOM,
+		RewardWeight:         sdk.MustNewDecFromStr("0.5"),
+		TakeRate:             sdk.ZeroDec(),
+		RewardChangeRate:     sdk.MustNewDecFromStr("0.1"),
+		RewardChangeInterval: decayInterval,
 	})
 	require.NoError(t, err)
-
-	// There should be a new decay event scheduled
-	b = app.AllianceKeeper.GetNextRewardWeightDecayEvent(ctx, ALLIANCE_2_TOKEN_DENOM)
-	require.NotNil(t, b)
 }

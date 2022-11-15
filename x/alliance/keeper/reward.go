@@ -159,20 +159,19 @@ func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val 
 
 // DeductAssetsHook is called periodically to deduct from an alliance asset (calculated by take_rate).
 // The interval in which assets are deducted is set in module params
-func (k Keeper) DeductAssetsHook(ctx sdk.Context) (sdk.Coins, error) {
+func (k Keeper) DeductAssetsHook(ctx sdk.Context, assets []*types.AllianceAsset) (sdk.Coins, error) {
 	last := k.LastRewardClaimTime(ctx)
 	interval := k.RewardClaimInterval(ctx)
 	next := last.Add(interval)
 	if ctx.BlockTime().After(next) {
-		return k.DeductAssetsWithTakeRate(ctx, last)
+		return k.DeductAssetsWithTakeRate(ctx, last, assets)
 	}
 	return nil, nil
 }
 
 // DeductAssetsWithTakeRate Deducts an alliance asset using the take_rate
 // The deducted asset is distributed to the fee_collector module account to be redistributed to stakers
-func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time) (sdk.Coins, error) {
-	assets := k.GetAllAssets(ctx)
+func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, assets []*types.AllianceAsset) (sdk.Coins, error) {
 	durationSinceLastClaim := ctx.BlockTime().Sub(lastClaim)
 	prorate := sdk.NewDec(durationSinceLastClaim.Nanoseconds()).Quo(sdk.NewDec(YEAR_IN_NANOS))
 

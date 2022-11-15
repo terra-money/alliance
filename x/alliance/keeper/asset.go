@@ -6,7 +6,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/terra-money/alliance/x/alliance/types"
 	"math"
-	"time"
 )
 
 // UpdateAllianceAsset updates the alliance asset with new params
@@ -41,35 +40,29 @@ func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsse
 	}
 
 	// If there was a change in reward decay rate or reward decay time
-	if !newAsset.RewardDecayRate.Equal(asset.RewardDecayRate) || newAsset.RewardDecayInterval != asset.RewardDecayInterval {
-
-		// If there was no decay scheduled previously, queue a new one
-		if asset.RewardDecayRate.IsZero() || asset.RewardDecayInterval == 0 {
-			// Add 1 to the RewardDecayInterval so that we include the edges when finding the next trigger in case
-			// the update happens on the same block as the creation of the new alliance asset
-			nextTrigger := k.GetNextRewardWeightDecayEvent(ctx, asset.Denom)
-			if nextTrigger == nil {
-				k.QueueRewardWeightDecayEvent(ctx, newAsset)
-			}
+	if !newAsset.RewardChangeRate.Equal(asset.RewardChangeRate) || newAsset.RewardChangeInterval != asset.RewardChangeInterval {
+		// And if there were no reward changes scheduled previously, start the counter from now
+		if asset.RewardChangeRate.IsZero() || asset.RewardChangeInterval == 0 {
+			asset.LastRewardChangeTime = ctx.BlockTime()
 		}
-		// Else do nothing since there is already a decay that was scheduled.
-		// The next trigger will use the new reward decay rate and
-		// following triggers will be scheduled using the new reward decay time
+		// Else do nothing since there is already a change that was scheduled.
+		// The next trigger will use the new reward change and reward interval
+		// following triggers will be scheduled using the new reward change interval
 	}
 
 	// Make sure only whitelisted fields can be updated
 	asset.TakeRate = newAsset.TakeRate
 	asset.RewardWeight = newAsset.RewardWeight
-	asset.RewardDecayRate = newAsset.RewardDecayRate
-	asset.RewardDecayInterval = newAsset.RewardDecayInterval
+	asset.RewardChangeRate = newAsset.RewardChangeRate
+	asset.RewardChangeInterval = newAsset.RewardChangeInterval
 	k.SetAsset(ctx, asset)
 
 	return nil
 }
 
-func (k Keeper) RebalanceHook(ctx sdk.Context) error {
+func (k Keeper) RebalanceHook(ctx sdk.Context, assets []*types.AllianceAsset) error {
 	if k.ConsumeAssetRebalanceEvent(ctx) {
-		return k.RebalanceBondTokenWeights(ctx)
+		return k.RebalanceBondTokenWeights(ctx, assets)
 	}
 	return nil
 }
@@ -78,14 +71,13 @@ func (k Keeper) RebalanceHook(ctx sdk.Context) error {
 // minted / burned to maintain the right ratio
 // It iterates all validators and calculates the expected staked amount based on delegations and delegates/undelegates
 // the difference.
-func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context) (err error) {
+func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.AllianceAsset) (err error) {
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	allianceBondAmount := k.getAllianceBondedAmount(ctx, moduleAddr)
 
 	nativeBondAmount := k.stakingKeeper.TotalBondedTokens(ctx).Sub(allianceBondAmount)
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 
-	assets := k.GetAllAssets(ctx)
 	unbondedValidatorShares := sdk.NewDecCoins()
 	var bondedValidators []types.AllianceValidator
 
@@ -252,81 +244,20 @@ func (k Keeper) IterateAllWeightChangeSnapshot(ctx sdk.Context, cb func(denom st
 	}
 }
 
-func (k Keeper) RewardWeightDecayHook(ctx sdk.Context) error {
-	var err error
-	store := ctx.KVStore(k.storeKey)
-	k.IterateMatureRewardWeightDecayEvent(ctx, func(key []byte, denom string) bool {
-		// Consume the queue event
-		store.Delete(key)
-
-		asset, found := k.GetAssetByDenom(ctx, denom)
-		if !found {
-			return false
+func (k Keeper) RewardWeightDecayHook(ctx sdk.Context, assets []*types.AllianceAsset) {
+	for _, asset := range assets {
+		// If no reward changes are required, skip
+		if asset.RewardChangeInterval == 0 || asset.RewardChangeRate.IsZero() {
+			continue
 		}
-		asset.RewardWeight = asset.RewardWeight.Mul(asset.RewardDecayRate)
-		err = k.UpdateAllianceAsset(ctx, asset)
-		if err != nil {
-			return true
+		// If it is not scheduled for change, skip
+		if ctx.BlockTime().Before(asset.LastRewardChangeTime.Add(asset.RewardChangeInterval)) {
+			continue
 		}
-
-		// Queue a new event to trigger decay in the future
-		k.QueueRewardWeightDecayEvent(ctx, asset)
-		return false
-	})
-	if err != nil {
-		return err
+		durationSinceLastClaim := ctx.BlockTime().Sub(asset.LastRewardChangeTime)
+		rate := sdk.NewDec(durationSinceLastClaim.Nanoseconds()).Quo(sdk.NewDec(YEAR_IN_NANOS)).Mul(asset.RewardChangeRate)
+		asset.RewardWeight = asset.RewardWeight.Mul(rate)
+		asset.LastRewardChangeTime = ctx.BlockTime()
+		k.SetAsset(ctx, *asset)
 	}
-	return nil
-}
-
-func (k Keeper) QueueRewardWeightDecayEvent(ctx sdk.Context, asset types.AllianceAsset) {
-	if asset.RewardDecayRate.IsZero() || asset.RewardDecayInterval == 0 {
-		return
-	}
-	nextDecayTimestamp := ctx.BlockTime().Add(asset.RewardDecayInterval)
-	k.setRewardDecayEvent(ctx, nextDecayTimestamp, asset.Denom)
-}
-
-func (k Keeper) setRewardDecayEvent(ctx sdk.Context, timestamp time.Time, denom string) {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetRewardWeightDecayQueueKey(timestamp, denom)
-	store.Set(key, []byte{})
-}
-
-func (k Keeper) IterateMatureRewardWeightDecayEvent(ctx sdk.Context, cb func(key []byte, denom string) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iter := store.Iterator(types.RewardWeightDecayQueueKey, types.GetRewardWeightDecayQueueByTimestampKey(ctx.BlockTime()))
-	for ; iter.Valid(); iter.Next() {
-		key := iter.Key()
-		_, denom := types.ParseRewardWeightDecayQueueKeyForDenom(key)
-		if cb(key, denom) {
-			return
-		}
-	}
-}
-
-func (k Keeper) IterateRewardWeightDecayEvent(ctx sdk.Context, cb func(key []byte, denom string, triggerTime time.Time) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.RewardWeightDecayQueueKey)
-	for ; iter.Valid(); iter.Next() {
-		key := iter.Key()
-		triggerTime, denom := types.ParseRewardWeightDecayQueueKeyForDenom(key)
-		if cb(key, denom, triggerTime) {
-			return
-		}
-	}
-	return
-}
-
-func (k Keeper) GetNextRewardWeightDecayEvent(ctx sdk.Context, denom string) (key []byte) {
-	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, types.RewardWeightDecayQueueKey)
-	for ; iter.Valid(); iter.Next() {
-		key := iter.Key()
-		_, eventDenom := types.ParseRewardWeightDecayQueueKeyForDenom(key)
-		if eventDenom == denom {
-			return key
-		}
-	}
-	return nil
 }

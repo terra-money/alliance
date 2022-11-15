@@ -45,10 +45,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, g *types.GenesisState) []abci.Valid
 		}
 	}
 
-	for _, decayEvent := range g.RewardDecayQueue {
-		k.setRewardDecayEvent(ctx, decayEvent.TriggerTime, decayEvent.Denom)
-	}
-
 	for _, rewardWeightSnapshot := range g.RewardWeightChangeSnaphots {
 		valAddr, _ := sdk.ValAddressFromBech32(rewardWeightSnapshot.Validator)
 		k.setRewardWeightChangeSnapshot(ctx, rewardWeightSnapshot.Denom, valAddr, rewardWeightSnapshot.Height, rewardWeightSnapshot.Snapshot)
@@ -89,14 +85,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		state.Undelegations = append(state.Undelegations, types.UndelegationState{
 			CompletionTime: completionTime,
 			Undelegation:   u,
-		})
-		return false
-	})
-
-	k.IterateRewardWeightDecayEvent(ctx, func(_ []byte, denom string, triggerTime time.Time) (stop bool) {
-		state.RewardDecayQueue = append(state.RewardDecayQueue, types.RewardDecayQueueState{
-			TriggerTime: triggerTime,
-			Denom:       denom,
 		})
 		return false
 	})

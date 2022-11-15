@@ -43,8 +43,8 @@ func TestGenesis(t *testing.T) {
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
 		RewardStartTime:      ctx.BlockTime(),
-		RewardDecayRate:      sdk.NewDec(0),
-		RewardDecayInterval:  0,
+		RewardChangeRate:     sdk.NewDec(0),
+		RewardChangeInterval: 0,
 	}, assets[0])
 }
 
@@ -81,13 +81,13 @@ func TestExportAndImportGenesis(t *testing.T) {
 
 	// Add alliance asset
 	err = app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
-		Title:               "",
-		Description:         "",
-		Denom:               ALLIANCE_TOKEN_DENOM,
-		RewardWeight:        sdk.NewDec(1),
-		TakeRate:            sdk.NewDec(0),
-		RewardDecayRate:     sdk.MustNewDecFromStr("0.5"),
-		RewardDecayInterval: time.Hour * 24,
+		Title:                "",
+		Description:          "",
+		Denom:                ALLIANCE_TOKEN_DENOM,
+		RewardWeight:         sdk.NewDec(1),
+		TakeRate:             sdk.NewDec(0),
+		RewardChangeRate:     sdk.MustNewDecFromStr("0.5"),
+		RewardChangeInterval: time.Hour * 24,
 	})
 	require.NoError(t, err)
 
@@ -108,9 +108,10 @@ func TestExportAndImportGenesis(t *testing.T) {
 	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000_000)))
 	require.NoError(t, err)
 
-	// Trigger decay
+	// Trigger update asset
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 25)).WithBlockHeight(ctx.BlockHeight() + 1)
-	err = app.AllianceKeeper.RewardWeightDecayHook(ctx)
+	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.MustNewDecFromStr("0.5"), sdk.ZeroDec(), ctx.BlockTime()))
+	require.NoError(t, err)
 
 	genesisState := app.AllianceKeeper.ExportGenesis(ctx)
 	require.NotNil(t, genesisState.Params)
@@ -120,7 +121,6 @@ func TestExportAndImportGenesis(t *testing.T) {
 	require.Greater(t, len(genesisState.Undelegations), 0)
 	require.Greater(t, len(genesisState.Redelegations), 0)
 	require.Greater(t, len(genesisState.RewardWeightChangeSnaphots), 0)
-	require.Greater(t, len(genesisState.RewardDecayQueue), 0)
 
 	store := ctx.KVStore(app.AllianceKeeper.StoreKey())
 	iter := store.Iterator(nil, nil)

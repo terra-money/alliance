@@ -36,6 +36,5 @@ func DefaultGenesisState() *types.GenesisState {
 		Delegations:                []types.Delegation{},
 		Redelegations:              []types.RedelegationState{},
 		Undelegations:              []types.UndelegationState{},
-		RewardDecayQueue:           []types.RewardDecayQueueState{},
 	}
 }
