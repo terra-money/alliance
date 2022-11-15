@@ -18,7 +18,7 @@ import (
 var ALLIANCE_TOKEN_DENOM = "alliance"
 var ALLIANCE_2_TOKEN_DENOM = "alliance2"
 
-func TestDelegation(t *testing.T) {
+func TestDelegationWithASingleAsset(t *testing.T) {
 	app, ctx := createTestContext(t)
 	genesisTime := ctx.BlockTime()
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
@@ -105,7 +105,6 @@ func TestDelegation(t *testing.T) {
 	}, asset)
 
 	// Delegate with same denom again
-	require.NoError(t, err)
 	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
 
@@ -150,8 +149,43 @@ func TestDelegation(t *testing.T) {
 		Shares:           sdk.NewDec(2),
 	}, newDelegation)
 
-	// Delegate with another denom
+}
+
+func TestDelegationWithMultipleAssets(t *testing.T) {
+	app, ctx := createTestContext(t)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()),
+		},
+	})
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Len(t, delegations, 1)
+
+	// All the addresses needed
+	delAddr, err := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
 	require.NoError(t, err)
+	valAddr, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	moduleAddr := app.AccountKeeper.GetModuleAddress(types.ModuleName)
+	val, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
+	require.NoError(t, err)
+
+	// Mint alliance tokens
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	// Delegate
+	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000)))
+	require.NoError(t, err)
+	// Delegate with another denom
 	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
 
@@ -163,10 +197,10 @@ func TestDelegation(t *testing.T) {
 	// Check delegation in staking module
 	delegations = app.StakingKeeper.GetAllDelegations(ctx)
 	require.Len(t, delegations, 2)
-	i = slices.IndexFunc(delegations, func(d stakingtypes.Delegation) bool {
+	i := slices.IndexFunc(delegations, func(d stakingtypes.Delegation) bool {
 		return d.DelegatorAddress == moduleAddr.String()
 	})
-	newDelegation = delegations[i]
+	newDelegation := delegations[i]
 	// 1 * 2 + 1 * 10 = 12
 	require.Equal(t, stakingtypes.Delegation{
 		DelegatorAddress: moduleAddr.String(),
@@ -180,23 +214,41 @@ func TestDelegation(t *testing.T) {
 	require.Equal(t, sdk.NewDec(13), val.DelegatorShares)
 }
 
-func TestRedelegation(t *testing.T) {
+func TestDelegationWithUnknownAssets(t *testing.T) {
 	app, ctx := createTestContext(t)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
-			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()),
+		},
+	})
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Len(t, delegations, 1)
+
+	// All the addresses needed
+	delAddr, err := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
+	require.NoError(t, err)
+	valAddr, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
+	require.NoError(t, err)
+
+	// Mint alliance tokens
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin("UNKNOWN", sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin("UNKNOWN", sdk.NewInt(2000_000)))
+	require.Error(t, err)
+}
+
+func TestSuccessfulRedelegation(t *testing.T) {
+	app, ctx := createTestContext(t)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()),
 		},
 	})
 
@@ -285,25 +337,12 @@ func TestRedelegation(t *testing.T) {
 	iter = app.AllianceKeeper.IterateRedelegationsBySrcValidator(ctx, valAddr1)
 	require.True(t, iter.Valid())
 
-	// Should fail when re-delegating back to validator1
-	// Same user who re-delegated to from 1 -> 2 cannot re-re-delegate from 2 -> X
-	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr1, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
-	require.Error(t, err)
-
-	// Another user tries to re-delegate without having an initial delegation but fails
-	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr2, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
-	require.Error(t, err)
-
 	// User then delegates to validator2
 	_, err = app.AllianceKeeper.Delegate(ctx, delAddr2, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
 	require.NoError(t, err)
 
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
 	require.NoError(t, err)
-
-	// Then redelegate to validator1 with more than what was delegated but fails
-	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr2, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
-	require.Error(t, err)
 
 	// Then redelegate to validator1 correctly
 	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr2, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
@@ -333,24 +372,160 @@ func TestRedelegation(t *testing.T) {
 	require.Equal(t, 0, deleted)
 }
 
-func TestUndelegation(t *testing.T) {
+func TestRedelegationFailsWithNoDelegations(t *testing.T) {
+	app, ctx := createTestContext(t)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()),
+		},
+	})
+
+	// Get all the addresses needed for the test
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	valAddr1, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 3, sdk.NewCoins(
+		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)),
+		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)),
+	))
+	valAddr2 := sdk.ValAddress(addrs[0])
+	_val2 := teststaking.NewValidator(t, valAddr2, test_helpers.CreateTestPubKeys(1)[0])
+	test_helpers.RegisterNewValidator(t, app, ctx, _val2)
+	val2, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	require.NoError(t, err)
+	delAddr1 := addrs[1]
+	delAddr2 := addrs[2]
+
+	// Mint alliance tokens
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr1, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr2, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000))))
+	require.NoError(t, err)
+
+	// User tries to re-delegate without having an initial delegation fails
+	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr2, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+	require.Error(t, err)
+}
+
+func TestRedelegationFailsWithTransitiveDelegation(t *testing.T) {
+	app, ctx := createTestContext(t)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()),
+		},
+	})
+
+	// Get all the addresses needed for the test
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	valAddr1, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 3, sdk.NewCoins(
+		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)),
+		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)),
+	))
+	valAddr2 := sdk.ValAddress(addrs[0])
+	_val2 := teststaking.NewValidator(t, valAddr2, test_helpers.CreateTestPubKeys(1)[0])
+	test_helpers.RegisterNewValidator(t, app, ctx, _val2)
+	val2, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	require.NoError(t, err)
+	delAddr1 := addrs[1]
+	delAddr2 := addrs[2]
+
+	// Mint alliance tokens
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr1, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr2, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000))))
+	require.NoError(t, err)
+
+	// First delegate to validator 1
+	_, err = app.AllianceKeeper.Delegate(ctx, delAddr1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+	require.NoError(t, err)
+
+	// Then redelegate to validator2
+	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr1, val1, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+	require.NoError(t, err)
+
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	require.NoError(t, err)
+
+	// Should fail when re-delegating back to validator1
+	// Same user who re-delegated to from 1 -> 2 cannot re-re-delegate from 2 -> X
+	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr1, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+	require.Error(t, err)
+}
+
+func TestRedelegationFailsWithGreaterAmount(t *testing.T) {
+	app, ctx := createTestContext(t)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()),
+		},
+	})
+
+	// Get all the addresses needed for the test
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	valAddr1, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 3, sdk.NewCoins(
+		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)),
+		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)),
+	))
+	valAddr2 := sdk.ValAddress(addrs[0])
+	_val2 := teststaking.NewValidator(t, valAddr2, test_helpers.CreateTestPubKeys(1)[0])
+	test_helpers.RegisterNewValidator(t, app, ctx, _val2)
+	val2, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	require.NoError(t, err)
+	delAddr1 := addrs[1]
+	delAddr2 := addrs[2]
+
+	// Mint alliance tokens
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr1, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr2, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000))))
+	require.NoError(t, err)
+
+	// First delegate to validator 1
+	_, err = app.AllianceKeeper.Delegate(ctx, delAddr1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+	require.NoError(t, err)
+
+	// User then delegates to validator2
+	_, err = app.AllianceKeeper.Delegate(ctx, delAddr2, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
+	require.NoError(t, err)
+
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx)
+	require.NoError(t, err)
+
+	// Then redelegate to validator1 with more than what was delegated but fails
+	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr2, val2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
+	require.Error(t, err)
+}
+
+func TestSuccessfulUndelegation(t *testing.T) {
 	app, ctx := createTestContext(t)
 	ctx = ctx.WithBlockTime(time.Now())
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
-			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()),
 		},
 	})
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
@@ -370,10 +545,6 @@ func TestUndelegation(t *testing.T) {
 	require.NoError(t, err)
 	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
 	require.NoError(t, err)
-
-	// Undelegating without a delegation will fail
-	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
-	require.Error(t, err)
 
 	// Delegate to a validator
 	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
@@ -458,6 +629,37 @@ func TestUndelegation(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestUndelegationWithoutDelegation(t *testing.T) {
+	app, ctx := createTestContext(t)
+	ctx = ctx.WithBlockTime(time.Now())
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()),
+		},
+	})
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Len(t, delegations, 1)
+
+	// All the addresses needed
+	delAddr, err := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
+	require.NoError(t, err)
+	valAddr, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
+
+	// Mint alliance tokens
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	// Undelegating without a delegation will fail
+	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
+	require.Error(t, err)
+}
+
 func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	app, ctx := createTestContext(t)
 	startTime := time.Now()
@@ -465,18 +667,8 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
-			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.MustNewDecFromStr("0.5"),
-				TotalTokens:  sdk.ZeroInt(),
-			},
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.MustNewDecFromStr("0.5"), ctx.BlockTime()),
 		},
 	})
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
@@ -616,18 +808,8 @@ func TestDelegationWithNativeStakingChanges(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
-			},
-			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.MustNewDecFromStr("0.5"),
-				TotalTokens:  sdk.ZeroInt(),
-			},
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.MustNewDecFromStr("0.5"), ctx.BlockTime()),
 		},
 	})
 
