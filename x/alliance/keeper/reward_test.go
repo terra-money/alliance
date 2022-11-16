@@ -568,3 +568,94 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(5_000_000), rewards2.AmountOf(bondDenom))
 }
+
+func TestRewardClaimingAfterRatesDecay(t *testing.T) {
+	var err error
+	app, ctx := createTestContext(t)
+	bondDenom := app.StakingKeeper.BondDenom(ctx)
+	startTime := time.Now().UTC()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{},
+	})
+	rewardStartDelay := app.AllianceKeeper.RewardDelayTime(ctx)
+
+	// Set tax and rewards to be zero for easier calculation
+	distParams := app.DistrKeeper.GetParams(ctx)
+	distParams.CommunityTax = sdk.ZeroDec()
+	distParams.BaseProposerReward = sdk.ZeroDec()
+	distParams.BonusProposerReward = sdk.ZeroDec()
+	app.DistrKeeper.SetParams(ctx, distParams)
+
+	// Accounts
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 5, sdk.NewCoins(
+		sdk.NewCoin(bondDenom, sdk.NewInt(1_000_000_000_000)),
+		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(5_000_000)),
+		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(5_000_000)),
+	))
+
+	// Increase the stake on genesis validator
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Len(t, delegations, 1)
+	valAddr0, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	_val0, _ := app.StakingKeeper.GetValidator(ctx, valAddr0)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[4], sdk.NewInt(9_000_000), stakingtypes.Unbonded, _val0, true)
+	require.NoError(t, err)
+
+	val0, _ := app.AllianceKeeper.GetAllianceValidator(ctx, _val0.GetOperator())
+	require.NoError(t, err)
+
+	// Pass a proposal to add a new asset with a huge decay rate
+	decayInterval := time.Minute
+	decayRate := sdk.MustNewDecFromStr("0.5")
+	app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+		Title:                "",
+		Description:          "",
+		Denom:                ALLIANCE_TOKEN_DENOM,
+		RewardWeight:         sdk.NewDec(1),
+		TakeRate:             sdk.ZeroDec(),
+		RewardChangeRate:     decayRate,
+		RewardChangeInterval: decayInterval,
+	})
+
+	// Pass a proposal to add another new asset no decay
+	app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+		Title:                "",
+		Description:          "",
+		Denom:                ALLIANCE_2_TOKEN_DENOM,
+		RewardWeight:         sdk.NewDec(1),
+		TakeRate:             sdk.ZeroDec(),
+		RewardChangeRate:     sdk.OneDec(),
+		RewardChangeInterval: time.Duration(0),
+	})
+
+	// Delegate to validator
+	_, err = app.AllianceKeeper.Delegate(ctx, addrs[1], val0, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(5_000_000)))
+	require.NoError(t, err)
+
+	_, err = app.AllianceKeeper.Delegate(ctx, addrs[1], val0, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(5_000_000)))
+	require.NoError(t, err)
+	//
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceHook(ctx, assets)
+	require.NoError(t, err)
+
+	// Move block time to trigger 2 decays
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(decayInterval * 2).Add(rewardStartDelay)).WithBlockHeight(ctx.BlockHeight() + 1)
+	app.AllianceKeeper.AddAssetsToRewardPool(ctx, addrs[0], val0, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1000_000))))
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+
+	// Running the decay hook should update reward weight
+	app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
+	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	require.Equal(t, sdk.MustNewDecFromStr("0.25"), asset.RewardWeight)
+	app.AllianceKeeper.AddAssetsToRewardPool(ctx, addrs[0], val0, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1000_000))))
+
+	coins, err := app.AllianceKeeper.ClaimDelegationRewards(ctx, addrs[1], val0, ALLIANCE_TOKEN_DENOM)
+	coins2, err := app.AllianceKeeper.ClaimDelegationRewards(ctx, addrs[1], val0, ALLIANCE_2_TOKEN_DENOM)
+
+	// Expect total claimed rewards to be whatever that was added
+	require.Equal(t, sdk.NewInt(2000_000), coins.Add(coins2...).AmountOf(bondDenom))
+}
