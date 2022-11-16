@@ -1,7 +1,6 @@
 package types
 
 import (
-	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"time"
 )
@@ -20,7 +19,7 @@ func NewAllianceAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec, rewa
 	}
 }
 
-func ConvertNewTokenToShares(totalTokens cosmosmath.Int, totalShares sdk.Dec, newTokens cosmosmath.Int) (shares sdk.Dec) {
+func ConvertNewTokenToShares(totalTokens sdk.Int, totalShares sdk.Dec, newTokens sdk.Int) (shares sdk.Dec) {
 	if totalShares.IsZero() || totalTokens.IsZero() {
 		return sdk.NewDecFromInt(newTokens)
 	}
@@ -41,13 +40,13 @@ func GetDelegationTokens(del Delegation, val AllianceValidator, asset AllianceAs
 	return sdk.NewCoin(asset.Denom, delTokens.TruncateInt())
 }
 
-func GetDelegationSharesFromTokens(val AllianceValidator, asset AllianceAsset, token cosmosmath.Int) sdk.Dec {
+func GetDelegationSharesFromTokens(val AllianceValidator, asset AllianceAsset, token sdk.Int) sdk.Dec {
 	valTokens := val.TotalTokensWithAsset(asset)
 	totalDelegationShares := val.TotalDelegationSharesWithDenom(asset.Denom)
 	return ConvertNewTokenToShares(valTokens, totalDelegationShares, token)
 }
 
-func GetValidatorShares(asset AllianceAsset, token cosmosmath.Int) sdk.Dec {
+func GetValidatorShares(asset AllianceAsset, token sdk.Int) sdk.Dec {
 	return ConvertNewTokenToShares(asset.TotalTokens, asset.TotalValidatorShares, token)
 }
 

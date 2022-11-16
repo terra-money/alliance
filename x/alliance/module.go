@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/gorilla/mux"
 	"math/rand"
 
 	// this line is used by starport scaffolding # 1
@@ -15,7 +17,6 @@ import (
 
 	"github.com/terra-money/alliance/x/alliance/client/cli"
 	"github.com/terra-money/alliance/x/alliance/keeper"
-	"github.com/terra-money/alliance/x/alliance/simulation"
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -23,19 +24,20 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var (
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleSimulation = AppModule{}
-	_ module.EndBlockAppModule   = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule      = AppModule{}
 )
 
 type AppModuleBasic struct {
 	cdc  codec.Codec
 	pcdc *codec.ProtoCodec
+}
+
+func (a AppModuleBasic) RegisterRESTRoutes(c client.Context, router *mux.Router) {
+	// do nothing
 }
 
 // NewAppModule creates a new AppModule object
@@ -96,6 +98,35 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 }
 
+func (a AppModule) GenerateGenesisState(input *module.SimulationState) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a AppModule) ProposalContents(simState module.SimulationState) []simulation.WeightedProposalContent {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a AppModule) RandomizedParams(r *rand.Rand) []simulation.ParamChange {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a AppModule) WeightedOperations(simState module.SimulationState) []simulation.WeightedOperation {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a AppModule) BeginBlock(s sdk.Context, block abci.RequestBeginBlock) {
+	// do nothing
+}
+
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return EndBlocker(ctx, a.keeper)
 }
@@ -134,24 +165,4 @@ func (a AppModule) RegisterServices(cfg module.Configurator) {
 
 func (a AppModule) ConsensusVersion() uint64 {
 	return 3
-}
-
-func (a AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenesisState(simState)
-}
-
-func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
-func (a AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
-}
-
-func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
-	registry[types.StoreKey] = simulation.NewDecodeStore(a.cdc)
-}
-
-func (a AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(simState.AppParams, a.pcdc, a.accountKeeper, a.bankKeeper, a.stakingKeeper, a.keeper)
 }

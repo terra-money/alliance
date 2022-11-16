@@ -616,7 +616,7 @@ func TestRewardWeightDecay(t *testing.T) {
 
 	// Pass a proposal to add a new asset with a decay rate
 	decayInterval := time.Hour * 24 * 30
-	app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+	app.AllianceKeeper.CreateAlliance(sdk.WrapSDKContext(ctx), &types.MsgCreateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                ALLIANCE_TOKEN_DENOM,
@@ -654,7 +654,7 @@ func TestRewardWeightDecay(t *testing.T) {
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 10))
 	// Updating the alliance asset through proposal should queue another decay event
-	app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
+	app.AllianceKeeper.UpdateAlliance(sdk.WrapSDKContext(ctx), &types.MsgUpdateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                ALLIANCE_TOKEN_DENOM,
@@ -665,7 +665,7 @@ func TestRewardWeightDecay(t *testing.T) {
 	})
 
 	// Updating alliance asset again with a non-zero decay
-	app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
+	app.AllianceKeeper.UpdateAlliance(sdk.WrapSDKContext(ctx), &types.MsgUpdateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                ALLIANCE_TOKEN_DENOM,
@@ -676,7 +676,7 @@ func TestRewardWeightDecay(t *testing.T) {
 	})
 
 	// Add a new asset with an initial 0 decay
-	err = app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+	err = app.AllianceKeeper.CreateAlliance(sdk.WrapSDKContext(ctx), &types.MsgCreateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                ALLIANCE_2_TOKEN_DENOM,
@@ -689,7 +689,7 @@ func TestRewardWeightDecay(t *testing.T) {
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
 	// Updating alliance asset again with a non-zero decay
-	err = app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
+	err = app.AllianceKeeper.UpdateAlliance(sdk.WrapSDKContext(ctx), &types.MsgUpdateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                ALLIANCE_2_TOKEN_DENOM,
@@ -734,7 +734,7 @@ func TestRewardWeightDecayOverTime(t *testing.T) {
 	// Pass a proposal to add a new asset with a decay rate
 	decayInterval := time.Minute
 	decayRate := sdk.MustNewDecFromStr("0.99998")
-	app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+	app.AllianceKeeper.CreateAlliance(sdk.WrapSDKContext(ctx), &types.MsgCreateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                ALLIANCE_TOKEN_DENOM,

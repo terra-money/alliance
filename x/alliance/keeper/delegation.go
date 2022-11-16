@@ -4,8 +4,6 @@ import (
 	"github.com/terra-money/alliance/x/alliance/types"
 	"time"
 
-	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"google.golang.org/grpc/codes"
@@ -516,7 +514,7 @@ func (k Keeper) updateValidatorShares(ctx sdk.Context, validator types.AllianceV
 
 // getAllianceBondedAmount returns the total amount of bonded native tokens that are not in the
 // unbonding pool
-func (k Keeper) getAllianceBondedAmount(ctx sdk.Context, delegator sdk.AccAddress) math.Int {
+func (k Keeper) getAllianceBondedAmount(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int {
 	bonded := sdk.ZeroDec()
 	k.stakingKeeper.IterateDelegatorDelegations(ctx, delegator, func(delegation stakingtypes.Delegation) bool {
 		validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/terra-money/alliance/x/alliance/types"
 	"google.golang.org/grpc/codes"
@@ -62,7 +61,7 @@ func (k Keeper) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAlliance
 		return status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", req.Denom)
 	}
 
-	if asset.TotalTokens.GT(math.ZeroInt()) {
+	if asset.TotalTokens.GT(sdk.ZeroInt()) {
 		return status.Errorf(codes.Internal, "Asset cannot be deleted because there are still %s delegations associated with it", asset.TotalTokens)
 	}
 

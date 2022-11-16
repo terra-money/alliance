@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -20,7 +20,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ignite/cli/ignite/pkg/cosmoscmd"
 	"strconv"
 
 	"github.com/stretchr/testify/require"
@@ -37,7 +36,7 @@ import (
 func Setup(t *testing.T, isCheckTx bool) *App {
 	t.Helper()
 
-	privVal := mock.NewPV()
+	privVal := tmtypes.NewMockPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 
@@ -91,6 +90,8 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	return app
 }
+
+type GenesisState map[string]json.RawMessage
 
 func genesisStateWithValSet(t *testing.T,
 	app *App, genesisState GenesisState,
@@ -160,19 +161,23 @@ func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
 
-	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{}).(*App)
+	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
 	return app, GenesisState{}
 }
 
-func MakeTestEncodingConfig() cosmoscmd.EncodingConfig {
+func NewDefaultGenesisState(marshaler codec.Codec) GenesisState {
+	return map[string]json.RawMessage{}
+}
+
+func MakeTestEncodingConfig() params.EncodingConfig {
 	cdc := codec.NewLegacyAmino()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	codec := codec.NewProtoCodec(interfaceRegistry)
 
-	encodingConfig := cosmoscmd.EncodingConfig{
+	encodingConfig := params.EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Marshaler:         codec,
 		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
@@ -223,7 +228,7 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA6") // base address string
 
 		buffer.WriteString(numString) // adding on final two digits to make addresses unique
-		res, _ := sdk.AccAddressFromHexUnsafe(buffer.String())
+		res, _ := sdk.AccAddressFromHex(buffer.String())
 		bech := res.String()
 		addr, _ := TestAddr(buffer.String(), bech)
 
@@ -235,7 +240,7 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 }
 
 func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
-	res, err := sdk.AccAddressFromHexUnsafe(addr)
+	res, err := sdk.AccAddressFromHex(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -320,6 +325,5 @@ func RegisterNewValidator(t *testing.T, app *App, ctx sdk.Context, val stakingty
 	app.StakingKeeper.SetValidator(ctx, val)
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, val)
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
-	err := app.StakingKeeper.AfterValidatorCreated(ctx, val.GetOperator())
-	require.NoError(t, err)
+	app.StakingKeeper.AfterValidatorCreated(ctx, val.GetOperator())
 }

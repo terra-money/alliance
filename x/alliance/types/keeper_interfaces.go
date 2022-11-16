@@ -1,7 +1,6 @@
 package types
 
 import (
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -10,7 +9,7 @@ import (
 
 type StakingKeeper interface {
 	UnbondingTime(ctx sdk.Context) (res time.Duration)
-	Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt math.Int, tokenSrc types.BondStatus,
+	Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc types.BondStatus,
 		validator types.Validator, subtractAccount bool) (newShares sdk.Dec, err error)
 	BeginRedelegation(
 		ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec,
@@ -18,20 +17,20 @@ type StakingKeeper interface {
 	GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool)
 	BondDenom(ctx sdk.Context) (res string)
 	ValidateUnbondAmount(
-		ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt math.Int,
+		ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int,
 	) (shares sdk.Dec, err error)
 	RemoveRedelegation(ctx sdk.Context, red types.Redelegation)
 	Unbond(
 		ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
-	) (amount math.Int, err error)
+	) (amount sdk.Int, err error)
 	GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation types.Delegation, found bool)
-	TotalBondedTokens(ctx sdk.Context) math.Int
-	GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) math.Int
+	TotalBondedTokens(ctx sdk.Context) sdk.Int
+	GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int
 	RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
 		sharesToRemove sdk.Dec,
-	) (valOut types.Validator, removedTokens math.Int)
+	) (valOut types.Validator, removedTokens sdk.Int)
 	RemoveValidatorTokens(ctx sdk.Context,
-		validator types.Validator, tokensToRemove math.Int,
+		validator types.Validator, tokensToRemove sdk.Int,
 	) types.Validator
 	IterateDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool))
 	GetAllValidators(ctx sdk.Context) (validators []types.Validator)
