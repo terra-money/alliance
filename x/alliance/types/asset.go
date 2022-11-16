@@ -14,7 +14,7 @@ func NewAllianceAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec, rewa
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
 		RewardStartTime:      rewardStartTime,
-		RewardChangeRate:     sdk.ZeroDec(),
+		RewardChangeRate:     sdk.OneDec(),
 		RewardChangeInterval: time.Duration(0),
 		LastRewardChangeTime: rewardStartTime,
 	}

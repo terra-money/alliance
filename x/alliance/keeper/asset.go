@@ -44,7 +44,7 @@ func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsse
 	// If there was a change in reward decay rate or reward decay time
 	if !newAsset.RewardChangeRate.Equal(asset.RewardChangeRate) || newAsset.RewardChangeInterval != asset.RewardChangeInterval {
 		// And if there were no reward changes scheduled previously, start the counter from now
-		if asset.RewardChangeRate.IsZero() || asset.RewardChangeInterval == 0 {
+		if asset.RewardChangeRate.Equal(sdk.OneDec()) || asset.RewardChangeInterval == 0 {
 			asset.LastRewardChangeTime = ctx.BlockTime()
 		}
 		// Else do nothing since there is already a change that was scheduled.
@@ -230,15 +230,16 @@ func (k Keeper) DeductAssetsHook(ctx sdk.Context, assets []*types.AllianceAsset)
 func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, assets []*types.AllianceAsset) (sdk.Coins, error) {
 	rewardClaimInterval := k.RewardClaimInterval(ctx)
 	durationSinceLastClaim := ctx.BlockTime().Sub(lastClaim)
-	intervalsSinceLastClaim := int64(durationSinceLastClaim / rewardClaimInterval)
+	intervalsSinceLastClaim := uint64(durationSinceLastClaim / rewardClaimInterval)
 	var coins sdk.Coins
 	for _, asset := range assets {
 		if asset.TotalTokens.IsPositive() && asset.TakeRate.IsPositive() {
-			for i := int64(0); i < intervalsSinceLastClaim; i++ {
-				deductedAmount := asset.TakeRate.MulInt(asset.TotalTokens).TruncateInt()
-				asset.TotalTokens = asset.TotalTokens.Sub(deductedAmount)
-				coins = coins.Add(sdk.NewCoin(asset.Denom, deductedAmount))
-			}
+			// take rate must be < 1 so multiple is also < 1
+			multiplier := sdk.OneDec().Sub(asset.TakeRate).Power(intervalsSinceLastClaim)
+			oldAmount := asset.TotalTokens
+			asset.TotalTokens = multiplier.MulInt(asset.TotalTokens).TruncateInt()
+			deductedAmount := oldAmount.Sub(asset.TotalTokens)
+			coins = coins.Add(sdk.NewCoin(asset.Denom, deductedAmount))
 			k.SetAsset(ctx, *asset)
 		}
 	}
@@ -287,21 +288,23 @@ func (k Keeper) IterateAllWeightChangeSnapshot(ctx sdk.Context, cb func(denom st
 	}
 }
 
+var Times = uint64(0)
+
 func (k Keeper) RewardWeightDecayHook(ctx sdk.Context, assets []*types.AllianceAsset) {
 	for _, asset := range assets {
 		// If no reward changes are required, skip
-		if asset.RewardChangeInterval == 0 || asset.RewardChangeRate.IsZero() {
+		if asset.RewardChangeInterval == 0 || asset.RewardChangeRate.Equal(sdk.OneDec()) {
 			continue
 		}
 		// If it is not scheduled for change, skip
-		if ctx.BlockTime().Before(asset.LastRewardChangeTime.Add(asset.RewardChangeInterval)) {
+		if asset.LastRewardChangeTime.Add(asset.RewardChangeInterval).After(ctx.BlockTime()) {
 			continue
 		}
 		durationSinceLastClaim := ctx.BlockTime().Sub(asset.LastRewardChangeTime)
-		intervalsSinceLastClaim := int64(durationSinceLastClaim / asset.RewardChangeInterval)
-		for i := int64(0); i < intervalsSinceLastClaim; i++ {
-			asset.RewardWeight = asset.RewardWeight.Mul(asset.RewardChangeRate)
-		}
+		intervalsSinceLastClaim := uint64(durationSinceLastClaim / asset.RewardChangeInterval)
+		Times += intervalsSinceLastClaim
+		multiplier := asset.RewardChangeRate.Power(intervalsSinceLastClaim)
+		asset.RewardWeight = asset.RewardWeight.Mul(multiplier)
 		asset.LastRewardChangeTime = asset.LastRewardChangeTime.Add(asset.RewardChangeInterval * time.Duration(intervalsSinceLastClaim))
 		k.QueueAssetRebalanceEvent(ctx)
 		k.SetAsset(ctx, *asset)

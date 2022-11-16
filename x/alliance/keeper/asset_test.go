@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	test_helpers "github.com/terra-money/alliance/app"
@@ -702,11 +701,11 @@ func TestRewardWeightDecay(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestRewardWeightDecayWithRewardsClaiming(t *testing.T) {
+func TestRewardWeightDecayOverTime(t *testing.T) {
 	var err error
 	app, ctx := createTestContext(t)
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
-	startTime := time.Now()
+	startTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
@@ -734,13 +733,14 @@ func TestRewardWeightDecayWithRewardsClaiming(t *testing.T) {
 
 	// Pass a proposal to add a new asset with a decay rate
 	decayInterval := time.Minute
+	decayRate := sdk.MustNewDecFromStr("0.99998")
 	app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                ALLIANCE_TOKEN_DENOM,
 		RewardWeight:         sdk.NewDec(1),
 		TakeRate:             sdk.ZeroDec(),
-		RewardChangeRate:     sdk.MustNewDecFromStr("0.99998"),
+		RewardChangeRate:     decayRate,
 		RewardChangeInterval: decayInterval,
 	})
 
@@ -753,22 +753,22 @@ func TestRewardWeightDecayWithRewardsClaiming(t *testing.T) {
 	require.NoError(t, err)
 
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
-	fmt.Println(asset.RewardWeight.String())
 
-	// Simulate the chain running for 30 days with a defined block time
-	blockTime := time.Second * 20 * 60
-	for i := blockTime; i < time.Hour*24*30; i += blockTime {
+	// Simulate the chain running for 10 days with a defined block time
+	blockTime := time.Second * 20
+	for i := time.Duration(0); i <= time.Hour*24*10; i += blockTime {
 		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(blockTime)).WithBlockHeight(ctx.BlockHeight() + 1)
-		// Add to reward pool every block
-		app.AllianceKeeper.AddAssetsToRewardPool(ctx, addrs[0], val0, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1000))))
 		assets = app.AllianceKeeper.GetAllAssets(ctx)
 		// Running the decay hook should update reward weight
 		app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
-		//asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	}
 
+	// time passed minus reward delay time (rewards and decay only start after the delay)
+	totalDecayTime := (time.Hour * 24 * 10) - app.AllianceKeeper.RewardDelayTime(ctx)
+	intervals := uint64(totalDecayTime / decayInterval)
 	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
-	fmt.Println(asset.RewardWeight.String())
+	require.Equal(t, startTime.Add(app.AllianceKeeper.RewardDelayTime(ctx)).Add(decayInterval*time.Duration(intervals)), asset.LastRewardChangeTime)
+	require.True(t, decayRate.Power(intervals).Sub(asset.RewardWeight).LT(sdk.MustNewDecFromStr("0.0000000001")))
 }
 
 func TestClaimTakeRate(t *testing.T) {

@@ -43,7 +43,7 @@ func TestGenesis(t *testing.T) {
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
 		RewardStartTime:      ctx.BlockTime(),
-		RewardChangeRate:     sdk.NewDec(0),
+		RewardChangeRate:     sdk.OneDec(),
 		RewardChangeInterval: 0,
 	}, assets[0])
 }

@@ -101,7 +101,7 @@ func TestDelegationWithASingleAsset(t *testing.T) {
 		TotalTokens:          sdk.NewInt(1000_000),
 		TotalValidatorShares: sdk.NewDec(1000_000),
 		RewardStartTime:      genesisTime,
-		RewardChangeRate:     sdk.NewDec(0),
+		RewardChangeRate:     sdk.OneDec(),
 		RewardChangeInterval: 0,
 	}, asset)
 
@@ -134,7 +134,7 @@ func TestDelegationWithASingleAsset(t *testing.T) {
 		TotalTokens:          sdk.NewInt(2000_000),
 		TotalValidatorShares: sdk.NewDec(2000_000),
 		RewardStartTime:      genesisTime,
-		RewardChangeRate:     sdk.NewDec(0),
+		RewardChangeRate:     sdk.OneDec(),
 		RewardChangeInterval: 0,
 	}, asset)
 
