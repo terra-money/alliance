@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
+	"fmt"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	abcitypes "github.com/tendermint/tendermint/abci/types"
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance"
-	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
 	"testing"
 	"time"
@@ -631,7 +633,7 @@ func TestRewardWeightDecay(t *testing.T) {
 	app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
 
 	// Move block time to after change interval + one year
-	ctx = ctx.WithBlockTime(asset.RewardStartTime.Add(time.Duration(keeper.YEAR_IN_NANOS)))
+	ctx = ctx.WithBlockTime(asset.RewardStartTime.Add(decayInterval))
 
 	// Running the decay hook should update reward weight
 	app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
@@ -698,4 +700,160 @@ func TestRewardWeightDecay(t *testing.T) {
 		RewardChangeInterval: decayInterval,
 	})
 	require.NoError(t, err)
+}
+
+func TestRewardWeightDecayWithRewardsClaiming(t *testing.T) {
+	var err error
+	app, ctx := createTestContext(t)
+	bondDenom := app.StakingKeeper.BondDenom(ctx)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{},
+	})
+
+	// Accounts
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 5, sdk.NewCoins(
+		sdk.NewCoin(bondDenom, sdk.NewInt(1_000_000_000_000)),
+		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(5_000_000)),
+		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(5_000_000)),
+	))
+
+	// Increase the stake on genesis validator
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	require.Len(t, delegations, 1)
+	valAddr0, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	_val0, _ := app.StakingKeeper.GetValidator(ctx, valAddr0)
+	_, err = app.StakingKeeper.Delegate(ctx, addrs[4], sdk.NewInt(9_000_000), stakingtypes.Unbonded, _val0, true)
+	require.NoError(t, err)
+
+	val0, _ := app.AllianceKeeper.GetAllianceValidator(ctx, _val0.GetOperator())
+	require.NoError(t, err)
+
+	// Pass a proposal to add a new asset with a decay rate
+	decayInterval := time.Minute
+	app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+		Title:                "",
+		Description:          "",
+		Denom:                ALLIANCE_TOKEN_DENOM,
+		RewardWeight:         sdk.NewDec(1),
+		TakeRate:             sdk.ZeroDec(),
+		RewardChangeRate:     sdk.MustNewDecFromStr("0.99998"),
+		RewardChangeInterval: decayInterval,
+	})
+
+	// Delegate to validator
+	_, err = app.AllianceKeeper.Delegate(ctx, addrs[1], val0, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(5_000_000)))
+	require.NoError(t, err)
+	//
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceHook(ctx, assets)
+	require.NoError(t, err)
+
+	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	fmt.Println(asset.RewardWeight.String())
+
+	// Simulate the chain running for 30 days with a defined block time
+	blockTime := time.Second * 20 * 60
+	for i := blockTime; i < time.Hour*24*30; i += blockTime {
+		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(blockTime)).WithBlockHeight(ctx.BlockHeight() + 1)
+		// Add to reward pool every block
+		app.AllianceKeeper.AddAssetsToRewardPool(ctx, addrs[0], val0, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1000))))
+		assets = app.AllianceKeeper.GetAllAssets(ctx)
+		// Running the decay hook should update reward weight
+		app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
+		//asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	}
+
+	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	fmt.Println(asset.RewardWeight.String())
+}
+
+func TestClaimTakeRate(t *testing.T) {
+	app, ctx := createTestContext(t)
+	startTime := time.Now().UTC()
+	ctx = ctx.WithBlockTime(startTime)
+	ctx = ctx.WithBlockHeight(1)
+	takeRateInterval := time.Minute * 5
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.Params{
+			RewardDelayTime:       time.Minute * 60,
+			TakeRateClaimInterval: takeRateInterval,
+			LastTakeRateClaimTime: startTime,
+		},
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.MustNewDecFromStr("0.5"), startTime),
+			types.NewAllianceAsset(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(10), sdk.NewDec(0), startTime),
+		},
+	})
+
+	// Accounts
+	feeCollectorAddr := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	valAddr1, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 1, sdk.NewCoins(
+		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000)),
+		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)),
+	))
+	user1 := addrs[0]
+
+	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
+	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
+
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
+	require.NoError(t, err)
+	// Check total bonded amount
+	require.Equal(t, sdk.NewInt(13_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
+
+	// Calling it immediately will not update anything
+	coins, err := app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	require.Nil(t, coins)
+	require.Nil(t, err)
+
+	// Advance block time
+	timePassed := time.Minute*5 + time.Second
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(timePassed))
+	ctx = ctx.WithBlockHeight(2)
+	coinsClaimed, _ := app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	coins = app.BankKeeper.GetAllBalances(ctx, feeCollectorAddr)
+	require.Equal(t, coinsClaimed, coins)
+
+	expectedAmount := sdk.MustNewDecFromStr("0.5").Mul(sdk.NewDec(timePassed.Nanoseconds() / takeRateInterval.Nanoseconds())).MulInt(sdk.NewInt(1000_000_000))
+	require.Equal(t, expectedAmount.TruncateInt(), coins.AmountOf(ALLIANCE_TOKEN_DENOM))
+
+	lastUpdate := app.AllianceKeeper.LastRewardClaimTime(ctx)
+	require.Equal(t, startTime.Add(takeRateInterval), lastUpdate)
+
+	asset, found := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	require.True(t, found)
+	require.Equal(t, sdk.NewDec(2), asset.RewardWeight)
+
+	// At the next begin block, tokens will be distributed from the fee pool
+	cons, _ := val1.GetConsAddr()
+	app.DistrKeeper.AllocateTokens(ctx, 1, 1, cons, []abcitypes.VoteInfo{
+		{
+			Validator: abcitypes.Validator{
+				Address: cons,
+				Power:   1,
+			},
+			SignedLastBlock: true,
+		},
+	})
+
+	rewards := app.DistrKeeper.GetValidatorOutstandingRewards(ctx, valAddr1).Rewards
+	community := app.DistrKeeper.GetFeePool(ctx).CommunityPool
+	// This is case, validator 1 has 0% commission
+	commission := app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, valAddr1).Commission
+	require.Equal(t, sdk.DecCoins(nil), commission)
+	// And rewards + community pool should add up to total coins claimed
+	require.Equal(t,
+		sdk.NewDecFromInt(coinsClaimed.AmountOf(ALLIANCE_TOKEN_DENOM)),
+		rewards.AmountOf(ALLIANCE_TOKEN_DENOM).Add(community.AmountOf(ALLIANCE_TOKEN_DENOM)),
+	)
 }

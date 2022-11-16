@@ -45,9 +45,9 @@ func RandomizedGenesisState(simState *module.SimulationState) {
 
 	allianceGenesis := types.GenesisState{
 		Params: types.Params{
-			RewardDelayTime:     rewardDelayTime,
-			RewardClaimInterval: rewardClaimInterval,
-			LastRewardClaimTime: simState.GenTimestamp,
+			RewardDelayTime:       rewardDelayTime,
+			TakeRateClaimInterval: rewardClaimInterval,
+			LastTakeRateClaimTime: simState.GenTimestamp,
 		},
 		Assets: allianceAssets,
 	}

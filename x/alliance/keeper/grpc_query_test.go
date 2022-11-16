@@ -228,32 +228,32 @@ func TestQueryParams(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, queyParams.Params.RewardDelayTime, time.Hour)
-	require.Equal(t, queyParams.Params.RewardClaimInterval, time.Minute*5)
+	require.Equal(t, queyParams.Params.TakeRateClaimInterval, time.Minute*5)
 
 	// there is no way to match the exact time when the module is being instantiated
 	// but we know that this time should be older than actually the time when this
 	// following two lines are executed
-	require.NotNil(t, queyParams.Params.LastRewardClaimTime)
-	require.LessOrEqual(t, queyParams.Params.LastRewardClaimTime, time.Now())
+	require.NotNil(t, queyParams.Params.LastTakeRateClaimTime)
+	require.LessOrEqual(t, queyParams.Params.LastTakeRateClaimTime, time.Now())
 }
 
 func TestClaimQueryReward(t *testing.T) {
 	// GIVEN: THE BLOCKCHAIN WITH ACCOUNTS
 	app, ctx := createTestContext(t)
-	startTime := time.Now()
+	startTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(startTime)
 	ctx = ctx.WithBlockHeight(1)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.Params{
-			RewardDelayTime:     time.Minute * 60,
-			RewardClaimInterval: time.Minute * 5,
-			LastRewardClaimTime: startTime,
+			RewardDelayTime:       time.Minute * 60,
+			TakeRateClaimInterval: time.Minute * 5,
+			LastTakeRateClaimTime: startTime,
 		},
 		Assets: []types.AllianceAsset{
 			{
 				Denom:                ULUNA_ALLIANCE,
 				RewardWeight:         sdk.NewDec(2),
-				TakeRate:             sdk.MustNewDecFromStr("0.5"),
+				TakeRate:             sdk.MustNewDecFromStr("0.00005"),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
 				RewardChangeRate:     sdk.NewDec(0),
@@ -282,10 +282,8 @@ func TestClaimQueryReward(t *testing.T) {
 	ctx = ctx.WithBlockHeight(2)
 	app.AllianceKeeper.DeductAssetsHook(ctx, assets)
 	app.BankKeeper.GetAllBalances(ctx, feeCollectorAddr)
-	sdk.MustNewDecFromStr("0.5").Mul(sdk.NewDec(timePassed.Nanoseconds()).Quo(sdk.NewDec(31_557_000_000_000_000))).MulInt(sdk.NewInt(1000_000_000))
-	app.AllianceKeeper.LastRewardClaimTime(ctx)
+	require.Equal(t, startTime.Add(time.Minute*5), app.AllianceKeeper.LastRewardClaimTime(ctx))
 	app.AllianceKeeper.GetAssetByDenom(ctx, ULUNA_ALLIANCE)
-	sdk.MustNewDecFromStr("2").Mul(sdk.OneDec().Add(sdk.MustNewDecFromStr("0.5").Mul(sdk.NewDec(timePassed.Nanoseconds()).Quo(sdk.NewDec(31_557_000_000_000_000)))))
 
 	// ... at the next begin block, tokens will be distributed from the fee pool...
 	cons, _ := val1.GetConsAddr()
@@ -312,7 +310,7 @@ func TestClaimQueryReward(t *testing.T) {
 		Rewards: []sdk.Coin{
 			{
 				Denom:  ULUNA_ALLIANCE,
-				Amount: math.NewInt(3115),
+				Amount: math.NewInt(32666),
 			},
 		},
 	}, queryDelegation)

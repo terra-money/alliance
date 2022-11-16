@@ -26,7 +26,7 @@ func SetupApp(t *testing.T, r *rand.Rand, numAssets int, numValidators int, numD
 		assets = append(assets, types.NewAllianceAsset(fmt.Sprintf("ASSET%d", i), rewardWeight, takeRate, startTime))
 	}
 	params := types.NewParams()
-	params.RewardClaimInterval = time.Second * 5
+	params.TakeRateClaimInterval = time.Second * 5
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: params,
 		Assets: assets,

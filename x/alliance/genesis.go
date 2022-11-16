@@ -8,7 +8,7 @@ import (
 // ValidateGenesis
 func ValidateGenesis(data *types.GenesisState) error {
 	params := data.Params
-	if params.RewardClaimInterval <= 0 {
+	if params.TakeRateClaimInterval <= 0 {
 		return types.ErrInvalidGenesisState.Wrap("reward_claim_interval has to be more than 0")
 	}
 	if len(data.Delegations) > 0 && len(data.Assets) == 0 {
@@ -26,9 +26,9 @@ func ValidateGenesis(data *types.GenesisState) error {
 func DefaultGenesisState() *types.GenesisState {
 	return &types.GenesisState{
 		Params: types.Params{
-			RewardDelayTime:     24 * 60 * 60 * 1000_000_000,
-			RewardClaimInterval: 5 * 60 * 1000_000_000,
-			LastRewardClaimTime: time.Now(),
+			RewardDelayTime:       24 * 60 * 60 * 1000_000_000,
+			TakeRateClaimInterval: 5 * 60 * 1000_000_000,
+			LastTakeRateClaimTime: time.Now(),
 		},
 		Assets:                     []types.AllianceAsset{},
 		ValidatorInfos:             []types.ValidatorInfoState{},

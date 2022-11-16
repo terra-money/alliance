@@ -3,9 +3,11 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/terra-money/alliance/x/alliance/types"
 	"math"
+	"time"
 )
 
 // UpdateAllianceAsset updates the alliance asset with new params
@@ -211,6 +213,47 @@ func (k Keeper) ConsumeAssetRebalanceEvent(ctx sdk.Context) bool {
 	return true
 }
 
+// DeductAssetsHook is called periodically to deduct from an alliance asset (calculated by take_rate).
+// The interval in which assets are deducted is set in module params
+func (k Keeper) DeductAssetsHook(ctx sdk.Context, assets []*types.AllianceAsset) (sdk.Coins, error) {
+	last := k.LastRewardClaimTime(ctx)
+	interval := k.RewardClaimInterval(ctx)
+	next := last.Add(interval)
+	if ctx.BlockTime().After(next) {
+		return k.DeductAssetsWithTakeRate(ctx, last, assets)
+	}
+	return nil, nil
+}
+
+// DeductAssetsWithTakeRate Deducts an alliance asset using the take_rate
+// The deducted asset is distributed to the fee_collector module account to be redistributed to stakers
+func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, assets []*types.AllianceAsset) (sdk.Coins, error) {
+	rewardClaimInterval := k.RewardClaimInterval(ctx)
+	durationSinceLastClaim := ctx.BlockTime().Sub(lastClaim)
+	intervalsSinceLastClaim := int64(durationSinceLastClaim / rewardClaimInterval)
+	var coins sdk.Coins
+	for _, asset := range assets {
+		if asset.TotalTokens.IsPositive() && asset.TakeRate.IsPositive() {
+			for i := int64(0); i < intervalsSinceLastClaim; i++ {
+				deductedAmount := asset.TakeRate.MulInt(asset.TotalTokens).TruncateInt()
+				asset.TotalTokens = asset.TotalTokens.Sub(deductedAmount)
+				coins = coins.Add(sdk.NewCoin(asset.Denom, deductedAmount))
+			}
+			k.SetAsset(ctx, *asset)
+		}
+	}
+
+	if !coins.Empty() && !coins.IsZero() {
+		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, coins)
+		if err != nil {
+			return nil, err
+		}
+		// Only update if there was a token transfer to prevent < 1 amounts to be ignored
+		k.SetLastRewardClaimTime(ctx, lastClaim.Add(rewardClaimInterval*time.Duration(intervalsSinceLastClaim)))
+	}
+	return coins, nil
+}
+
 func (k Keeper) SetRewardWeightChangeSnapshot(ctx sdk.Context, asset types.AllianceAsset, val types.AllianceValidator) {
 	snapshot := types.NewRewardWeightChangeSnapshot(asset, val)
 	k.setRewardWeightChangeSnapshot(ctx, asset.Denom, val.GetOperator(), uint64(ctx.BlockHeight()), snapshot)
@@ -255,9 +298,12 @@ func (k Keeper) RewardWeightDecayHook(ctx sdk.Context, assets []*types.AllianceA
 			continue
 		}
 		durationSinceLastClaim := ctx.BlockTime().Sub(asset.LastRewardChangeTime)
-		rate := sdk.NewDec(durationSinceLastClaim.Nanoseconds()).Quo(sdk.NewDec(YEAR_IN_NANOS)).Mul(asset.RewardChangeRate)
-		asset.RewardWeight = asset.RewardWeight.Mul(rate)
-		asset.LastRewardChangeTime = ctx.BlockTime()
+		intervalsSinceLastClaim := int64(durationSinceLastClaim / asset.RewardChangeInterval)
+		for i := int64(0); i < intervalsSinceLastClaim; i++ {
+			asset.RewardWeight = asset.RewardWeight.Mul(asset.RewardChangeRate)
+		}
+		asset.LastRewardChangeTime = asset.LastRewardChangeTime.Add(asset.RewardChangeInterval * time.Duration(intervalsSinceLastClaim))
+		k.QueueAssetRebalanceEvent(ctx)
 		k.SetAsset(ctx, *asset)
 	}
 }

@@ -16,9 +16,9 @@ func TestGenesis(t *testing.T) {
 	app, ctx := createTestContext(t)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.Params{
-			RewardDelayTime:     time.Duration(1000000),
-			RewardClaimInterval: time.Duration(1000000),
-			LastRewardClaimTime: time.Unix(0, 0).UTC(),
+			RewardDelayTime:       time.Duration(1000000),
+			TakeRateClaimInterval: time.Duration(1000000),
+			LastTakeRateClaimTime: time.Unix(0, 0).UTC(),
 		},
 		Assets: []types.AllianceAsset{
 			types.NewAllianceAsset("stake", sdk.NewDec(1), sdk.ZeroDec(), ctx.BlockTime()),
@@ -53,9 +53,9 @@ func TestExportAndImportGenesis(t *testing.T) {
 	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(1)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.Params{
-			RewardDelayTime:     time.Duration(1000000),
-			RewardClaimInterval: time.Duration(1000000),
-			LastRewardClaimTime: time.Unix(0, 0).UTC(),
+			RewardDelayTime:       time.Duration(1000000),
+			TakeRateClaimInterval: time.Duration(1000000),
+			LastTakeRateClaimTime: time.Unix(0, 0).UTC(),
 		},
 		Assets: []types.AllianceAsset{},
 	})

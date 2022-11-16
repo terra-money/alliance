@@ -38,8 +38,8 @@ type AllianceAsset struct {
 	// It does not need to sum to 1. rate = weight / total_weight
 	// Native asset is always assumed to have a weight of 1.s
 	RewardWeight github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=reward_weight,json=rewardWeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reward_weight"`
-	// A positive take rate is used for liquid staking derivatives. It defines an annualized reward rate that
-	// will be redirected to the distribution rewards pool
+	// A positive take rate is used for liquid staking derivatives. It defines an rate that is applied per take_rate_interval
+	// that will be redirected to the distribution rewards pool
 	TakeRate             github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=take_rate,json=takeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"take_rate"`
 	TotalTokens          github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=total_tokens,json=totalTokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"total_tokens"`
 	TotalValidatorShares github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=total_validator_shares,json=totalValidatorShares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"total_validator_shares"`
