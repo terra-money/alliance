@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	RewardDelayTime     = []byte("RewardDelayTime")
-	RewardClaimInterval = []byte("TakeRateClaimInterval")
-	LastRewardClaimTime = []byte("LastTakeRateClaimTime")
+	RewardDelayTime       = []byte("RewardDelayTime")
+	TakeRateClaimInterval = []byte("TakeRateClaimInterval")
+	LastTakeRateClaimTime = []byte("LastTakeRateClaimTime")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -20,8 +20,8 @@ var _ paramtypes.ParamSet = (*Params)(nil)
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(RewardDelayTime, &p.RewardDelayTime, validatePositiveDuration),
-		paramtypes.NewParamSetPair(RewardClaimInterval, &p.TakeRateClaimInterval, validatePositiveDuration),
-		paramtypes.NewParamSetPair(LastRewardClaimTime, &p.LastTakeRateClaimTime, validateTime),
+		paramtypes.NewParamSetPair(TakeRateClaimInterval, &p.TakeRateClaimInterval, validatePositiveDuration),
+		paramtypes.NewParamSetPair(LastTakeRateClaimTime, &p.LastTakeRateClaimTime, validateTime),
 	}
 }
 

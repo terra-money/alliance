@@ -25,13 +25,15 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdateAlliance)
 	govtypes.RegisterProposalType(ProposalTypeDeleteAlliance)
 }
-func NewMsgCreateAllianceProposal(title, description, denom string, rewardWeight, takeRate sdk.Dec) govtypes.Content {
+func NewMsgCreateAllianceProposal(title, description, denom string, rewardWeight, takeRate sdk.Dec, rewardChangeRate sdk.Dec, rewardChangeInterval time.Duration) govtypes.Content {
 	return &MsgCreateAllianceProposal{
-		Title:        title,
-		Description:  description,
-		Denom:        denom,
-		RewardWeight: rewardWeight,
-		TakeRate:     takeRate,
+		Title:                title,
+		Description:          description,
+		Denom:                denom,
+		RewardWeight:         rewardWeight,
+		TakeRate:             takeRate,
+		RewardChangeRate:     rewardChangeRate,
+		RewardChangeInterval: rewardChangeInterval,
 	}
 }
 func (m *MsgCreateAllianceProposal) GetTitle() string       { return m.Title }

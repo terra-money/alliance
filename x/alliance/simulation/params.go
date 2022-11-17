@@ -15,9 +15,9 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 				return fmt.Sprintf("\"%d\"", genRewardDelayTime(r))
 			},
 		),
-		simulation.NewSimParamChange(types.ModuleName, string(types.RewardClaimInterval),
+		simulation.NewSimParamChange(types.ModuleName, string(types.TakeRateClaimInterval),
 			func(r *rand.Rand) string {
-				return fmt.Sprintf("\"%d\"", genRewardClaimInterval(r))
+				return fmt.Sprintf("\"%d\"", genTakeRateClaimInterval(r))
 			},
 		),
 	}
