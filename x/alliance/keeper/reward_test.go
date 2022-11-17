@@ -180,12 +180,12 @@ func TestClaimRewards(t *testing.T) {
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t,
 		sdk.NewInt(1000_000),
-		val1.TotalTokensWithAsset(asset),
+		val1.TotalTokensWithAsset(asset).TruncateInt(),
 	)
 	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
 	require.Equal(t,
 		sdk.NewInt(1000_000),
-		val1.TotalTokensWithAsset(asset),
+		val1.TotalTokensWithAsset(asset).TruncateInt(),
 	)
 
 	// Transfer another token to reward pool
