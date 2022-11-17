@@ -23,7 +23,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	if _, err := k.DeductAssetsHook(ctx, assets); err != nil {
 		panic(err)
 	}
-	k.RewardWeightDecayHook(ctx, assets)
+	k.RewardWeightChangeHook(ctx, assets)
 	if err := k.RebalanceHook(ctx, assets); err != nil {
 		panic(err)
 	}

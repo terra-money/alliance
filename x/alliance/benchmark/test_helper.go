@@ -22,11 +22,14 @@ func SetupApp(t *testing.T, r *rand.Rand, numAssets int, numValidators int, numD
 	ctx = ctx.WithBlockTime(startTime)
 	for i := 0; i < numAssets; i += 1 {
 		rewardWeight := simulation.RandomDecAmount(r, sdk.NewDec(1))
-		takeRate := simulation.RandomDecAmount(r, sdk.NewDec(1))
-		assets = append(assets, types.NewAllianceAsset(fmt.Sprintf("ASSET%d", i), rewardWeight, takeRate, startTime))
+		takeRate := simulation.RandomDecAmount(r, sdk.MustNewDecFromStr("0.0001"))
+		asset := types.NewAllianceAsset(fmt.Sprintf("ASSET%d", i), rewardWeight, takeRate, startTime)
+		asset.RewardChangeRate = sdk.OneDec().Sub(simulation.RandomDecAmount(r, sdk.MustNewDecFromStr("0.00001")))
+		asset.RewardChangeInterval = time.Minute * 5
+		assets = append(assets, asset)
 	}
 	params := types.NewParams()
-	params.TakeRateClaimInterval = time.Second * 5
+	params.TakeRateClaimInterval = time.Minute * 5
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: params,
 		Assets: assets,

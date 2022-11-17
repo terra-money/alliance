@@ -629,13 +629,13 @@ func TestRewardWeightDecay(t *testing.T) {
 
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
 	// Running the decay hook now should do nothing
-	app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
+	app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
 
 	// Move block time to after change interval + one year
 	ctx = ctx.WithBlockTime(asset.RewardStartTime.Add(decayInterval))
 
 	// Running the decay hook should update reward weight
-	app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
+	app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
 	updatedAsset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, types.AllianceAsset{
 		Denom:                ALLIANCE_TOKEN_DENOM,
@@ -760,7 +760,7 @@ func TestRewardWeightDecayOverTime(t *testing.T) {
 		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(blockTime)).WithBlockHeight(ctx.BlockHeight() + 1)
 		assets = app.AllianceKeeper.GetAllAssets(ctx)
 		// Running the decay hook should update reward weight
-		app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
+		app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
 	}
 
 	// time passed minus reward delay time (rewards and decay only start after the delay)

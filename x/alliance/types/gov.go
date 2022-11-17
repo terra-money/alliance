@@ -53,6 +53,10 @@ func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be zero or a positive number")
 	}
 
+	if m.TakeRate.GTE(sdk.OneDec()) {
+		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be strictly less than 1.0")
+	}
+
 	if m.RewardChangeRate.IsZero() || m.RewardChangeRate.IsNegative() {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeRate must be strictly a positive number")
 	}

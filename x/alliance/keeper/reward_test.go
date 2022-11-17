@@ -648,7 +648,7 @@ func TestRewardClaimingAfterRatesDecay(t *testing.T) {
 	assets = app.AllianceKeeper.GetAllAssets(ctx)
 
 	// Running the decay hook should update reward weight
-	app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
+	app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, sdk.MustNewDecFromStr("0.25"), asset.RewardWeight)
 	app.AllianceKeeper.AddAssetsToRewardPool(ctx, addrs[0], val0, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1000_000))))
