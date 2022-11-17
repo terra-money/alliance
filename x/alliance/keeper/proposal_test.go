@@ -52,7 +52,7 @@ func TestCreateAlliance(t *testing.T) {
 	})
 }
 
-func TestCreateAllianceFailWithDuplicate(t *testing.T) {
+func TestCreateAllianceFailWithDuplicatedDenom(t *testing.T) {
 	// GIVEN
 	app, ctx := createTestContext(t)
 	startTime := time.Now()
