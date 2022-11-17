@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	test_helpers "github.com/terra-money/alliance/app"
+	"github.com/terra-money/alliance/x/alliance"
 	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
 	"testing"
@@ -289,6 +290,9 @@ func TestSuccessfulRedelegation(t *testing.T) {
 	// Then redelegate to validator2
 	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr1, val1, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000)))
 	require.NoError(t, err)
+
+	_, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
+	require.False(t, stop)
 
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)

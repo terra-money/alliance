@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	test_helpers "github.com/terra-money/alliance/app"
+	"github.com/terra-money/alliance/x/alliance"
 	"github.com/terra-money/alliance/x/alliance/benchmark"
 	"github.com/terra-money/alliance/x/alliance/types"
 	"math/rand"
@@ -17,16 +18,16 @@ import (
 
 var (
 	SEED              = 1
-	NUM_OF_BLOCKS     = 100
+	NUM_OF_BLOCKS     = 1000
 	BLOCKTIME_IN_S    = 5
-	VOTE_RATE         = 0.9
-	NUM_OF_VALIDATORS = 5
-	NUM_OF_ASSETS     = 2
+	VOTE_RATE         = 0.8
+	NUM_OF_VALIDATORS = 160
+	NUM_OF_ASSETS     = 20
 	NUM_OF_DELEGATORS = 10
 
 	OPERATIONS_PER_BLOCK = 30
 	DELEGATION_RATE      = 10
-	REDELEGATION_RATE    = 1
+	REDELEGATION_RATE    = 2
 	UNDELEGATION_RATE    = 2
 	REWARD_CLAIM_RATE    = 2
 )
@@ -103,9 +104,14 @@ func TestRunBenchmarks(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
+		app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
 		err = app.AllianceKeeper.RebalanceHook(ctx, assets)
 		if err != nil {
 			panic(err)
+		}
+		res, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
+		if stop {
+			panic(res)
 		}
 	}
 	t.Logf("%v\n", operations)
@@ -164,6 +170,8 @@ func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, a
 	}
 
 	dstValAddr := sdk.ValAddress(vals[r.Intn(len(vals)-1)])
+	for ; dstValAddr.Equals(srcValAddr); dstValAddr = sdk.ValAddress(vals[r.Intn(len(vals)-1)]) {
+	}
 	dstValidator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, dstValAddr)
 
 	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, srcValidator, asset.Denom)
@@ -171,7 +179,7 @@ func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, a
 		return
 	}
 	amountToRedelegate := simulation.RandomAmount(r, types.GetDelegationTokens(delegation, srcValidator, asset).Amount)
-	if amountToRedelegate.IsZero() {
+	if amountToRedelegate.LTE(sdk.OneInt()) {
 		return
 	}
 	_, err := app.AllianceKeeper.Redelegate(ctx, delAddr, srcValidator, dstValidator, sdk.NewCoin(delegation.Denom, amountToRedelegate))

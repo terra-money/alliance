@@ -23,7 +23,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	if _, err := k.DeductAssetsHook(ctx, assets); err != nil {
 		panic(fmt.Errorf("Failed to deduct take rate from alliance in x/alliance module: %s", err))
 	}
-	k.RewardWeightDecayHook(ctx, assets)
+	k.RewardWeightChangeHook(ctx, assets)
 	if err := k.RebalanceHook(ctx, assets); err != nil {
 		panic(fmt.Errorf("Failed to rebalance assets in x/alliance module: %s", err))
 	}

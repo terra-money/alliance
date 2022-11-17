@@ -112,10 +112,10 @@ func TestSlashingEvent(t *testing.T) {
 
 	// Tokens should remain the same before slashing
 	asset1, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
-	tokens := val1.TotalTokensWithAsset(asset1)
+	tokens := val1.TotalTokensWithAsset(asset1).TruncateInt()
 	require.Equal(t, sdk.NewInt(20_000_000), tokens)
 	asset2, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
-	tokens = val1.TotalTokensWithAsset(asset2)
+	tokens = val1.TotalTokensWithAsset(asset2).TruncateInt()
 	require.Equal(t, sdk.NewInt(20_000_000), tokens)
 
 	app.SlashingKeeper.Slash(ctx, valConAddr1, app.SlashingKeeper.SlashFractionDoubleSign(ctx), valPower1, 1)
@@ -131,19 +131,19 @@ func TestSlashingEvent(t *testing.T) {
 	// Expect that total tokens with validator 1 are reduced
 	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
 	asset1, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
-	tokens = val1.TotalTokensWithAsset(asset1)
+	tokens = val1.TotalTokensWithAsset(asset1).TruncateInt()
 	require.Greater(t, sdk.NewInt(20_000_000).Int64(), tokens.Int64())
 	asset2, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
-	tokens = val1.TotalTokensWithAsset(asset2)
+	tokens = val1.TotalTokensWithAsset(asset2).TruncateInt()
 	require.Greater(t, sdk.NewInt(20_000_000).Int64(), tokens.Int64())
 
 	// Expect that total tokens with validator 2 increased (redistributed from slashing)
 	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
 	asset1, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
-	tokens = val2.TotalTokensWithAsset(asset1)
+	tokens = val2.TotalTokensWithAsset(asset1).TruncateInt()
 	require.Less(t, sdk.NewInt(20_000_000).Int64(), tokens.Int64())
 	asset2, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
-	tokens = val2.TotalTokensWithAsset(asset2)
+	tokens = val2.TotalTokensWithAsset(asset2).TruncateInt()
 	require.Less(t, sdk.NewInt(20_000_000).Int64(), tokens.Int64())
 
 	// Expect that consensus power for val1 dropped

@@ -20,18 +20,18 @@ func NewAllianceAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec, rewa
 	}
 }
 
-func ConvertNewTokenToShares(totalTokens cosmosmath.Int, totalShares sdk.Dec, newTokens cosmosmath.Int) (shares sdk.Dec) {
-	if totalShares.IsZero() || totalTokens.IsZero() {
+func ConvertNewTokenToShares(totalTokens sdk.Dec, totalShares sdk.Dec, newTokens cosmosmath.Int) (shares sdk.Dec) {
+	if totalShares.IsZero() {
 		return sdk.NewDecFromInt(newTokens)
 	}
-	return totalShares.MulInt(newTokens).QuoInt(totalTokens)
+	return totalShares.Quo(totalTokens).MulInt(newTokens)
 }
 
 func ConvertNewShareToDecToken(totalTokens sdk.Dec, totalShares sdk.Dec, shares sdk.Dec) (token sdk.Dec) {
 	if totalShares.IsZero() {
 		return totalTokens
 	}
-	return shares.Mul(totalTokens).Quo(totalShares)
+	return shares.Quo(totalShares).Mul(totalTokens)
 }
 
 func GetDelegationTokens(del Delegation, val AllianceValidator, asset AllianceAsset) sdk.Coin {
@@ -44,11 +44,14 @@ func GetDelegationTokens(del Delegation, val AllianceValidator, asset AllianceAs
 func GetDelegationSharesFromTokens(val AllianceValidator, asset AllianceAsset, token cosmosmath.Int) sdk.Dec {
 	valTokens := val.TotalTokensWithAsset(asset)
 	totalDelegationShares := val.TotalDelegationSharesWithDenom(asset.Denom)
+	if totalDelegationShares.TruncateInt().Equal(sdk.ZeroInt()) {
+		return sdk.NewDecFromInt(token)
+	}
 	return ConvertNewTokenToShares(valTokens, totalDelegationShares, token)
 }
 
 func GetValidatorShares(asset AllianceAsset, token cosmosmath.Int) sdk.Dec {
-	return ConvertNewTokenToShares(asset.TotalTokens, asset.TotalValidatorShares, token)
+	return ConvertNewTokenToShares(sdk.NewDecFromInt(asset.TotalTokens), asset.TotalValidatorShares, token)
 }
 
 func (a AllianceAsset) HasPositiveDecay() bool {

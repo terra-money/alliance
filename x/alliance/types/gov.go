@@ -51,8 +51,8 @@ func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be a positive number")
 	}
 
-	if m.TakeRate.IsNil() || m.TakeRate.LTE(sdk.ZeroDec()) {
-		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be zero or a positive number")
+	if m.TakeRate.IsNil() || m.TakeRate.IsNegative() || m.TakeRate.GTE(sdk.OneDec()) {
+		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be more or equals to 0 but strictly less than 1")
 	}
 
 	if m.RewardChangeRate.IsZero() || m.RewardChangeRate.IsNegative() {
@@ -87,8 +87,8 @@ func (m *MsgUpdateAllianceProposal) ValidateBasic() error {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be a positive number")
 	}
 
-	if m.TakeRate.IsNil() || m.TakeRate.LTE(sdk.ZeroDec()) {
-		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be a positive number")
+	if m.TakeRate.IsNil() || m.TakeRate.IsNegative() || m.TakeRate.GTE(sdk.OneDec()) {
+		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be more or equals to 0 but strictly less than 1")
 	}
 
 	if m.RewardChangeRate.IsZero() || m.RewardChangeRate.IsNegative() {

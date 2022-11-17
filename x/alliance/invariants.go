@@ -107,8 +107,8 @@ func DelegatorSharesInvariant(k keeper.Keeper) sdk.Invariant {
 			for denom, amount := range assets {
 				if !shares.AmountOf(denom).Equal(amount) {
 					msg += fmt.Sprintf("broken alliance delegation share invariance: \n"+
-						"validator.TotalDelegatorShares(%s): %s\n"+
-						"sum of delegator shares: %s\n", denom, shares, amount)
+						"validator (%s) TotalDelegatorShares(%s): %s\n"+
+						"sum of delegator shares: %s\n", valAddr.String(), denom, shares, amount)
 					broken = true
 				}
 			}
