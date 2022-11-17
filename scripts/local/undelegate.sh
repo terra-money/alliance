@@ -4,7 +4,7 @@ DEMO_WALLET_ADDRESS=$(allianced --home ./data/alliance keys show demowallet1 --k
 VAL_ADDR=$(allianced query staking validators --output json | jq .validators[0].operator_address --raw-output)
 COIN_DENOM=ulunax
 COIN_AMOUNT=$(allianced query alliance delegation $DEMO_WALLET_ADDRESS $VAL_ADDR $COIN_DENOM --home ./data/alliance --output json | jq .delegation.balance.amount --raw-output | sed 's/\.[0-9]*//')
-COINS=5000000000$COIN_DENOM
+COINS=$COIN_AMOUNT$COIN_DENOM
 
 # FIX: failed to execute message; message index: 0: invalid shares amount: invalid
 printf "#1) Undelegate 5000000000$COIN_DENOM from x/alliance $COIN_DENOM...\n\n"
