@@ -238,7 +238,12 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 			// take rate must be < 1 so multiple is also < 1
 			multiplier := sdk.OneDec().Sub(asset.TakeRate).Power(intervalsSinceLastClaim)
 			oldAmount := asset.TotalTokens
-			asset.TotalTokens = multiplier.MulInt(asset.TotalTokens).TruncateInt()
+			newAmount := multiplier.MulInt(asset.TotalTokens)
+			if newAmount.LTE(sdk.OneDec()) {
+				// If the next update reduces the amount of tokens to less than or equal to 1, stop reducing
+				continue
+			}
+			asset.TotalTokens = newAmount.TruncateInt()
 			deductedAmount := oldAmount.Sub(asset.TotalTokens)
 			coins = coins.Add(sdk.NewCoin(asset.Denom, deductedAmount))
 			k.SetAsset(ctx, *asset)
