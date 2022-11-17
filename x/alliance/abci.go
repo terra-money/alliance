@@ -25,7 +25,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	}
 	k.RewardWeightDecayHook(ctx, assets)
 	if err := k.RebalanceHook(ctx, assets); err != nil {
-		panic(err)
+		panic(fmt.Errorf("Failed to rebalance assets in x/alliance module: %s", err))
 	}
 	return []abci.ValidatorUpdate{}
 }
