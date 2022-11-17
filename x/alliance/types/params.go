@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	RewardDelayTime     = []byte("RewardDelayTime")
-	RewardClaimInterval = []byte("RewardClaimInterval")
-	LastRewardClaimTime = []byte("LastRewardClaimTime")
+	RewardDelayTime       = []byte("RewardDelayTime")
+	TakeRateClaimInterval = []byte("TakeRateClaimInterval")
+	LastTakeRateClaimTime = []byte("LastTakeRateClaimTime")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -20,8 +20,8 @@ var _ paramtypes.ParamSet = (*Params)(nil)
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(RewardDelayTime, &p.RewardDelayTime, validatePositiveDuration),
-		paramtypes.NewParamSetPair(RewardClaimInterval, &p.RewardClaimInterval, validatePositiveDuration),
-		paramtypes.NewParamSetPair(LastRewardClaimTime, &p.LastRewardClaimTime, validateTime),
+		paramtypes.NewParamSetPair(TakeRateClaimInterval, &p.TakeRateClaimInterval, validatePositiveDuration),
+		paramtypes.NewParamSetPair(LastTakeRateClaimTime, &p.LastTakeRateClaimTime, validateTime),
 	}
 }
 
@@ -47,9 +47,9 @@ func validateTime(i interface{}) error {
 // NewParams creates a new Params instance
 func NewParams() Params {
 	return Params{
-		RewardDelayTime:     time.Hour,
-		RewardClaimInterval: time.Minute * 5,
-		LastRewardClaimTime: time.Now(),
+		RewardDelayTime:       time.Hour,
+		TakeRateClaimInterval: time.Minute * 5,
+		LastTakeRateClaimTime: time.Now(),
 	}
 }
 

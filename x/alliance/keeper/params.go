@@ -13,15 +13,15 @@ func (k Keeper) RewardDelayTime(ctx sdk.Context) (res time.Duration) {
 }
 
 func (k Keeper) RewardClaimInterval(ctx sdk.Context) (res time.Duration) {
-	k.paramstore.Get(ctx, types.RewardClaimInterval, &res)
+	k.paramstore.Get(ctx, types.TakeRateClaimInterval, &res)
 	return
 }
 
 func (k Keeper) LastRewardClaimTime(ctx sdk.Context) (res time.Time) {
-	k.paramstore.Get(ctx, types.LastRewardClaimTime, &res)
+	k.paramstore.Get(ctx, types.LastTakeRateClaimTime, &res)
 	return
 }
 
 func (k Keeper) SetLastRewardClaimTime(ctx sdk.Context, lastTime time.Time) {
-	k.paramstore.Set(ctx, types.LastRewardClaimTime, &lastTime)
+	k.paramstore.Set(ctx, types.LastTakeRateClaimTime, &lastTime)
 }

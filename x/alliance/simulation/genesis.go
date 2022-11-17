@@ -15,7 +15,7 @@ func genRewardDelayTime(r *rand.Rand) time.Duration {
 	return time.Duration(simulation.RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second
 }
 
-func genRewardClaimInterval(r *rand.Rand) time.Duration {
+func genTakeRateClaimInterval(r *rand.Rand) time.Duration {
 	return time.Duration(simulation.RandIntBetween(r, 1, 60*60)) * time.Second
 }
 
@@ -32,7 +32,7 @@ func RandomizedGenesisState(simState *module.SimulationState) {
 
 	r := simState.Rand
 	rewardDelayTime = genRewardDelayTime(r)
-	rewardClaimInterval = genRewardClaimInterval(r)
+	rewardClaimInterval = genTakeRateClaimInterval(r)
 	numOfAllianceAssets = genNumOfAllianceAssets(r)
 
 	var allianceAssets []types.AllianceAsset
@@ -45,9 +45,9 @@ func RandomizedGenesisState(simState *module.SimulationState) {
 
 	allianceGenesis := types.GenesisState{
 		Params: types.Params{
-			RewardDelayTime:     rewardDelayTime,
-			RewardClaimInterval: rewardClaimInterval,
-			LastRewardClaimTime: simState.GenTimestamp,
+			RewardDelayTime:       rewardDelayTime,
+			TakeRateClaimInterval: rewardClaimInterval,
+			LastTakeRateClaimTime: simState.GenTimestamp,
 		},
 		Assets: allianceAssets,
 	}

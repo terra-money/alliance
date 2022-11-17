@@ -45,10 +45,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, g *types.GenesisState) []abci.Valid
 		}
 	}
 
-	for _, decayEvent := range g.RewardDecayQueue {
-		k.setRewardDecayEvent(ctx, decayEvent.TriggerTime, decayEvent.Denom)
-	}
-
 	for _, rewardWeightSnapshot := range g.RewardWeightChangeSnaphots {
 		valAddr, _ := sdk.ValAddressFromBech32(rewardWeightSnapshot.Validator)
 		k.setRewardWeightChangeSnapshot(ctx, rewardWeightSnapshot.Denom, valAddr, rewardWeightSnapshot.Height, rewardWeightSnapshot.Snapshot)
@@ -93,14 +89,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false
 	})
 
-	k.IterateRewardWeightDecayEvent(ctx, func(_ []byte, denom string, triggerTime time.Time) (stop bool) {
-		state.RewardDecayQueue = append(state.RewardDecayQueue, types.RewardDecayQueueState{
-			TriggerTime: triggerTime,
-			Denom:       denom,
-		})
-		return false
-	})
-
 	k.IterateAllWeightChangeSnapshot(ctx, func(denom string, valAddr sdk.ValAddress, height uint64, snapshot types.RewardWeightChangeSnapshot) bool {
 		state.RewardWeightChangeSnaphots = append(state.RewardWeightChangeSnaphots, types.RewardWeightChangeSnapshotState{
 			Height:    height,
@@ -112,9 +100,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	})
 
 	state.Params = types.Params{
-		RewardDelayTime:     k.RewardDelayTime(ctx),
-		RewardClaimInterval: k.RewardClaimInterval(ctx),
-		LastRewardClaimTime: k.LastRewardClaimTime(ctx),
+		RewardDelayTime:       k.RewardDelayTime(ctx),
+		TakeRateClaimInterval: k.RewardClaimInterval(ctx),
+		LastTakeRateClaimTime: k.LastRewardClaimTime(ctx),
 	}
 
 	return &state

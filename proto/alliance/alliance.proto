@@ -23,8 +23,8 @@ message AllianceAsset {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // A positive take rate is used for liquid staking derivatives. It defines an annualized reward rate that
-  // will be redirected to the distribution rewards pool
+  // A positive take rate is used for liquid staking derivatives. It defines an rate that is applied per take_rate_interval
+  // that will be redirected to the distribution rewards pool
   string take_rate = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
@@ -42,13 +42,17 @@ message AllianceAsset {
     (gogoproto.stdtime) = true,
     (gogoproto.nullable)   = false
   ];
-  string reward_decay_rate = 7 [
+  string reward_change_rate = 7 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  google.protobuf.Duration reward_decay_interval = 8 [
+  google.protobuf.Duration reward_change_interval = 8 [
     (gogoproto.nullable)   = false,
     (gogoproto.stdduration) = true
+  ];
+  google.protobuf.Timestamp last_reward_change_time = 9 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable)   = false
   ];
 }
 

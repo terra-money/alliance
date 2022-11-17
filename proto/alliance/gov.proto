@@ -30,12 +30,12 @@ message MsgCreateAllianceProposal {
       (gogoproto.nullable)   = false
     ];
 
-    string reward_decay_rate = 6 [
+    string reward_change_rate = 6 [
       (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
       (gogoproto.nullable)   = false
     ];
 
-    google.protobuf.Duration reward_decay_interval = 7 [
+    google.protobuf.Duration reward_change_interval = 7 [
       (gogoproto.nullable)   = false,
       (gogoproto.stdduration) = true
     ];
@@ -64,12 +64,12 @@ message MsgUpdateAllianceProposal {
         (gogoproto.nullable)   = false
     ];
 
-    string reward_decay_rate = 6 [
+    string reward_change_rate = 6 [
       (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
       (gogoproto.nullable)   = false
     ];
 
-    google.protobuf.Duration reward_decay_interval = 7 [
+    google.protobuf.Duration reward_change_interval = 7 [
       (gogoproto.nullable)   = false,
       (gogoproto.stdduration) = true
     ];

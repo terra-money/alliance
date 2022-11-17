@@ -5,6 +5,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"time"
 )
 
 const (
@@ -24,13 +25,15 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdateAlliance)
 	govtypes.RegisterProposalType(ProposalTypeDeleteAlliance)
 }
-func NewMsgCreateAllianceProposal(title, description, denom string, rewardWeight, takeRate sdk.Dec) govtypes.Content {
+func NewMsgCreateAllianceProposal(title, description, denom string, rewardWeight, takeRate sdk.Dec, rewardChangeRate sdk.Dec, rewardChangeInterval time.Duration) govtypes.Content {
 	return &MsgCreateAllianceProposal{
-		Title:        title,
-		Description:  description,
-		Denom:        denom,
-		RewardWeight: rewardWeight,
-		TakeRate:     takeRate,
+		Title:                title,
+		Description:          description,
+		Denom:                denom,
+		RewardWeight:         rewardWeight,
+		TakeRate:             takeRate,
+		RewardChangeRate:     rewardChangeRate,
+		RewardChangeInterval: rewardChangeInterval,
 	}
 }
 func (m *MsgCreateAllianceProposal) GetTitle() string       { return m.Title }
@@ -49,19 +52,25 @@ func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 	}
 
 	if m.TakeRate.IsNil() || m.TakeRate.LTE(sdk.ZeroDec()) {
-		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be a positive number")
+		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be zero or a positive number")
+	}
+
+	if m.RewardChangeRate.IsZero() || m.RewardChangeRate.IsNegative() {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeRate must be strictly a positive number")
 	}
 
 	return nil
 }
 
-func NewMsgUpdateAllianceProposal(title, description, denom string, rewardWeight, takeRate sdk.Dec) govtypes.Content {
+func NewMsgUpdateAllianceProposal(title, description, denom string, rewardWeight, takeRate sdk.Dec, rewardChangeRate sdk.Dec, rewardChangeInterval time.Duration) govtypes.Content {
 	return &MsgUpdateAllianceProposal{
-		Title:        title,
-		Description:  description,
-		Denom:        denom,
-		RewardWeight: rewardWeight,
-		TakeRate:     takeRate,
+		Title:                title,
+		Description:          description,
+		Denom:                denom,
+		RewardWeight:         rewardWeight,
+		TakeRate:             takeRate,
+		RewardChangeRate:     rewardChangeRate,
+		RewardChangeInterval: rewardChangeInterval,
 	}
 }
 func (m *MsgUpdateAllianceProposal) GetTitle() string       { return m.Title }
@@ -80,6 +89,10 @@ func (m *MsgUpdateAllianceProposal) ValidateBasic() error {
 
 	if m.TakeRate.IsNil() || m.TakeRate.LTE(sdk.ZeroDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be a positive number")
+	}
+
+	if m.RewardChangeRate.IsZero() || m.RewardChangeRate.IsNegative() {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeRate must be strictly a positive number")
 	}
 
 	return nil

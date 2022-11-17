@@ -368,7 +368,7 @@ func initGenFiles(
 	var allianceGenState alliancetypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[alliancetypes.ModuleName], &allianceGenState)
 	allianceParams := allianceGenState.GetParams()
-	allianceParams.RewardClaimInterval = time.Second * 30
+	allianceParams.TakeRateClaimInterval = time.Second * 30
 	allianceParams.RewardDelayTime = time.Second * 30
 	allianceGenState.Params = allianceParams
 	appGenState[alliancetypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&allianceGenState)

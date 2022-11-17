@@ -38,15 +38,15 @@ genesis:
       assets:
       - denom: uluna
         reward_weight: "0.5"
-        take_rate: "0.5"
+        take_rate: "0.000005"
       - denom: bluna
         reward_weight: "0.9"
-        take_rate: "0.9"
+        take_rate: "0.0000009"
       - denom: token
         reward_weight: "5"
-        take_rate: "0.9"
+        take_rate: "0.0000009"
       params:
-        reward_claim_interval: 10s
+        take_rate_claim_interval: 10s
         reward_delay_time: 60s
 validators:
 - name: alice

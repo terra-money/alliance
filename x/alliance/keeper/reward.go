@@ -1,12 +1,9 @@
 package keeper
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/terra-money/alliance/x/alliance/types"
-	"time"
 )
 
 type RewardsKeeper interface {
@@ -14,11 +11,6 @@ type RewardsKeeper interface {
 
 var (
 	_ RewardsKeeper = Keeper{}
-)
-
-const (
-	// YEAR_IN_NANOS is used to calculate the pro-rated take rate when it is periodically applied with DeductAssetsHook
-	YEAR_IN_NANOS int64 = 31_557_000_000_000_000
 )
 
 // ClaimValidatorRewards claims the validator rewards (minus commission) from the distribution module
@@ -131,7 +123,6 @@ func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val 
 	totalAssetWeight := k.totalAssetWeight(ctx, val)
 	// We need some delegations before we can split rewards. Else rewards belong to no one
 	if totalAssetWeight.IsZero() {
-		fmt.Println(val.ValidatorShares, totalAssetWeight.String())
 		return types.ErrZeroDelegations
 	}
 
@@ -155,46 +146,6 @@ func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val 
 	}
 
 	return nil
-}
-
-// DeductAssetsHook is called periodically to deduct from an alliance asset (calculated by take_rate).
-// The interval in which assets are deducted is set in module params
-func (k Keeper) DeductAssetsHook(ctx sdk.Context) (sdk.Coins, error) {
-	last := k.LastRewardClaimTime(ctx)
-	interval := k.RewardClaimInterval(ctx)
-	next := last.Add(interval)
-	if ctx.BlockTime().After(next) {
-		return k.DeductAssetsWithTakeRate(ctx, last)
-	}
-	return nil, nil
-}
-
-// DeductAssetsWithTakeRate Deducts an alliance asset using the take_rate
-// The deducted asset is distributed to the fee_collector module account to be redistributed to stakers
-func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time) (sdk.Coins, error) {
-	assets := k.GetAllAssets(ctx)
-	durationSinceLastClaim := ctx.BlockTime().Sub(lastClaim)
-	prorate := sdk.NewDec(durationSinceLastClaim.Nanoseconds()).Quo(sdk.NewDec(YEAR_IN_NANOS))
-
-	var coins sdk.Coins
-	for _, asset := range assets {
-		if asset.TotalTokens.IsPositive() && asset.TakeRate.IsPositive() {
-			reward := asset.TakeRate.Mul(prorate).MulInt(asset.TotalTokens).TruncateInt()
-			asset.TotalTokens = asset.TotalTokens.Sub(reward)
-			coins = coins.Add(sdk.NewCoin(asset.Denom, reward))
-			k.SetAsset(ctx, *asset)
-		}
-	}
-
-	if !coins.Empty() && !coins.IsZero() {
-		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, coins)
-		if err != nil {
-			return nil, err
-		}
-		// Only update if there was a token transfer to prevent < 1 amounts to be ignored
-		k.SetLastRewardClaimTime(ctx, ctx.BlockTime())
-	}
-	return coins, nil
 }
 
 func (k Keeper) totalAssetWeight(ctx sdk.Context, val types.AllianceValidator) sdk.Dec {

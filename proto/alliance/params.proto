@@ -15,12 +15,12 @@ message Params {
     (gogoproto.stdduration) = true
   ];
   // Time interval between consecutive applications of `take_rate`
-  google.protobuf.Duration reward_claim_interval = 2 [
+  google.protobuf.Duration take_rate_claim_interval = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true
   ];
   // Last application of `take_rate` on assets
-  google.protobuf.Timestamp last_reward_claim_time = 3 [
+  google.protobuf.Timestamp last_take_rate_claim_time = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];

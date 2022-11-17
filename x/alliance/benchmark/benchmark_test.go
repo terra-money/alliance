@@ -93,16 +93,17 @@ func TestRunBenchmarks(t *testing.T) {
 		}
 
 		// Endblock
+		assets := app.AllianceKeeper.GetAllAssets(ctx)
 		app.AllianceKeeper.CompleteRedelegations(ctx)
 		err = app.AllianceKeeper.CompleteUndelegations(ctx)
 		if err != nil {
 			panic(err)
 		}
-		_, err = app.AllianceKeeper.DeductAssetsHook(ctx)
+		_, err = app.AllianceKeeper.DeductAssetsHook(ctx, assets)
 		if err != nil {
 			panic(err)
 		}
-		err = app.AllianceKeeper.RebalanceHook(ctx)
+		err = app.AllianceKeeper.RebalanceHook(ctx, assets)
 		if err != nil {
 			panic(err)
 		}
