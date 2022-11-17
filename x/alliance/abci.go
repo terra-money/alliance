@@ -16,7 +16,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	k.CompleteRedelegations(ctx)
 	if err := k.CompleteUndelegations(ctx); err != nil {
-		panic(err)
+		panic(fmt.Errorf("Failed to complete undelegations from x/alliance module: %s", err))
 	}
 
 	assets := k.GetAllAssets(ctx)
