@@ -1,6 +1,7 @@
 package alliance
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/terra-money/alliance/x/alliance/keeper"

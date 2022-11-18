@@ -76,7 +76,7 @@ func (k Keeper) RebalanceHook(ctx sdk.Context, assets []*types.AllianceAsset) er
 // the difference.
 func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.AllianceAsset) (err error) {
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	allianceBondAmount := k.getAllianceBondedAmount(ctx, moduleAddr)
+	allianceBondAmount := k.GetAllianceBondedAmount(ctx, moduleAddr)
 
 	nativeBondAmount := k.stakingKeeper.TotalBondedTokens(ctx).Sub(allianceBondAmount)
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
