@@ -1,3 +1,16 @@
+<p align="center">
+<h1 align="center"> 🤝 Alliance</h1>
+
+<p align="center">
+  Litepaper
+  ·
+  <a href="https://alliance.terra.money/">Technical Documentation</a>
+  ·
+  <a href="https://alliance.terra.money/guides/get-started">Integration Guide</a>
+</p>
+
+<br/>
+
 # x/alliance interchain security
 
 The Alliance module is part of the Interchain Security (Cosmos Shared Security that benefits from the IBC standard). Alliance is a friction free Interchain Security solution because there is no necessity to share hardware resources, have the blockchains synchronized nor modify the core of the origin chain that provide Interchain Security. Alliance module introduces the concept of alliance coins that can be seen as foreign coins bridged thru an IBC channel (ICS-004), whitelisted with the help of on-chain governance in the Alliance module and delegated by users or smart contracts to the active set of network validators.
