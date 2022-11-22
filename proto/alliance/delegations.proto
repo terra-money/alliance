@@ -1,9 +1,8 @@
 syntax = "proto3";
-package alliance.alliance;
+package alliance;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos_proto/cosmos.proto";
 import "alliance/params.proto";
 
 option go_package = "github.com/terra-money/alliance/x/alliance/types";
@@ -13,14 +12,13 @@ message Delegation {
   option (gogoproto.goproto_getters)  = false;
 
   // delegator_address is the bech32-encoded address of the delegator.
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string delegator_address = 1;
   // validator_address is the bech32-encoded address of the validator.
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2;
   // denom of token staked
   string denom = 3;
   // shares define the delegation shares received.
   string shares = 4 [
-  (cosmos_proto.scalar)  = "cosmos.Dec",
   (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
   (gogoproto.nullable)   = false
   ];
@@ -34,9 +32,9 @@ message Redelegation {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
 
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string src_validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string dst_validator_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string delegator_address = 1;
+  string src_validator_address = 2;
+  string dst_validator_address = 3;
   cosmos.base.v1beta1.Coin balance = 4 [(gogoproto.nullable) = false];
 }
 
@@ -50,8 +48,8 @@ message Undelegation {
   option (gogoproto.equal)            = false;
   option (gogoproto.goproto_getters)  = false;
 
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string delegator_address = 1;
+  string validator_address = 2;
   cosmos.base.v1beta1.Coin balance = 3 [(gogoproto.nullable) = false];
 }
 

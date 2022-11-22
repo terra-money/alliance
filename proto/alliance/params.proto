@@ -1,8 +1,7 @@
 syntax = "proto3";
-package alliance.alliance;
+package alliance;
 
 import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -30,7 +29,6 @@ message RewardHistory {
   option (gogoproto.equal)            = true;
   string denom = 1;
   string index = 2 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];

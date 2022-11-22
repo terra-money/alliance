@@ -1,8 +1,7 @@
 syntax = "proto3";
-package alliance.alliance;
+package alliance;
 
 import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
 import "alliance/params.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -30,7 +29,6 @@ message AllianceAsset {
     (gogoproto.nullable)   = false
   ];
   string total_tokens = 4 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
