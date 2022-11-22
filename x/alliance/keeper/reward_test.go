@@ -180,12 +180,12 @@ func TestClaimRewards(t *testing.T) {
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t,
 		sdk.NewInt(1000_000),
-		val1.TotalTokensWithAsset(asset),
+		val1.TotalTokensWithAsset(asset).TruncateInt(),
 	)
 	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
 	require.Equal(t,
 		sdk.NewInt(1000_000),
-		val1.TotalTokensWithAsset(asset),
+		val1.TotalTokensWithAsset(asset).TruncateInt(),
 	)
 
 	// Transfer another token to reward pool
@@ -648,7 +648,7 @@ func TestRewardClaimingAfterRatesDecay(t *testing.T) {
 	assets = app.AllianceKeeper.GetAllAssets(ctx)
 
 	// Running the decay hook should update reward weight
-	app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
+	app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, sdk.MustNewDecFromStr("0.25"), asset.RewardWeight)
 	app.AllianceKeeper.AddAssetsToRewardPool(ctx, addrs[0], val0, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1000_000))))

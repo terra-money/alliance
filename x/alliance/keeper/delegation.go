@@ -55,6 +55,10 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 
 // Redelegate from one validator to another
 func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types.AllianceValidator, dstVal types.AllianceValidator, coin sdk.Coin) (*time.Time, error) {
+	if srcVal.Validator.Equal(dstVal.Validator) {
+		return nil, status.Errorf(codes.InvalidArgument, "Cannot redelegate to the same validator")
+	}
+
 	asset, found := k.GetAssetByDenom(ctx, coin.Denom)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", coin.Denom)
@@ -117,6 +121,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 	k.addRedelegation(ctx, delAddr, srcVal.GetOperator(), dstVal.GetOperator(), coin, completionTime)
 
 	k.QueueAssetRebalanceEvent(ctx)
+
 	return &completionTime, nil
 }
 
@@ -478,11 +483,10 @@ func (k Keeper) setUnbondingIndexByVal(ctx sdk.Context, valAddr sdk.ValAddress, 
 func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) {
 	newShares := types.GetDelegationSharesFromTokens(validator, asset, coin.Amount)
 	delegation, found := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
-	latestClaimHistory := validator.GlobalRewardHistory
 	if !found {
-		delegation = types.NewDelegation(ctx, delAddr, validator.GetOperator(), coin.Denom, newShares, latestClaimHistory)
+		delegation = types.NewDelegation(ctx, delAddr, validator.GetOperator(), coin.Denom, newShares, validator.GlobalRewardHistory)
 	} else {
-		delegation.AddShares(newShares)
+		delegation.Shares = delegation.Shares.Add(newShares)
 	}
 	k.SetDelegation(ctx, delAddr, validator.GetOperator(), coin.Denom, delegation)
 	return delegation, newShares
@@ -491,15 +495,13 @@ func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAd
 // reduceDelegationShares
 // If shares after reduction = 0, delegation will be deleted
 func (k Keeper) reduceDelegationShares(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, coin sdk.Coin, shares sdk.Dec, delegation types.Delegation) {
-	delegation.ReduceShares(shares)
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetDelegationKey(delAddr, validator.GetOperator(), coin.Denom)
+	delegation.Shares = delegation.Shares.Sub(shares)
 	if delegation.Shares.IsZero() {
+		store := ctx.KVStore(k.storeKey)
+		key := types.GetDelegationKey(delAddr, validator.GetOperator(), coin.Denom)
 		store.Delete(key)
 	} else {
-		b := k.cdc.MustMarshal(&delegation)
-		ctx.KVStore(k.storeKey).Set(key, b)
-		store.Set(key, b)
+		k.SetDelegation(ctx, delAddr, validator.GetOperator(), coin.Denom, delegation)
 	}
 }
 
@@ -512,7 +514,7 @@ func (k Keeper) updateValidatorShares(ctx sdk.Context, validator types.AllianceV
 	k.SetValidator(ctx, validator)
 }
 
-// getAllianceBondedAmount returns the total amount of bonded native tokens that are not in the
+// GetAllianceBondedAmount returns the total amount of bonded native tokens that are not in the
 // unbonding pool
 func (k Keeper) getAllianceBondedAmount(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int {
 	bonded := sdk.ZeroDec()

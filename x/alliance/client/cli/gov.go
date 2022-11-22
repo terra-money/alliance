@@ -8,12 +8,13 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/spf13/cobra"
 	"github.com/terra-money/alliance/x/alliance/types"
+	"time"
 )
 
 func CreateAlliance() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-alliance denom rewards-weight take-rate",
-		Args:  cobra.ExactArgs(3),
+		Use:   "create-alliance denom rewards-weight take-rate reward-change-rate reward-change-interval",
+		Args:  cobra.ExactArgs(5),
 		Short: "Create an alliance with the specified parameters",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -40,6 +41,16 @@ func CreateAlliance() *cobra.Command {
 				return err
 			}
 
+			rewardChangeRate, err := sdk.NewDecFromStr(args[3])
+			if err != nil {
+				return err
+			}
+
+			rewardChangeInterval, err := time.ParseDuration(args[4])
+			if err != nil {
+				return err
+			}
+
 			from := clientCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
@@ -58,6 +69,8 @@ func CreateAlliance() *cobra.Command {
 				args[0],
 				rewardWeight,
 				takeRate,
+				rewardChangeRate,
+				rewardChangeInterval,
 			)
 
 			err = content.ValidateBasic()
@@ -88,8 +101,8 @@ func CreateAlliance() *cobra.Command {
 
 func UpdateAlliance() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-alliance denom rewards-weight take-rate",
-		Args:  cobra.ExactArgs(3),
+		Use:   "update-alliance denom rewards-weight take-rate reward-change-rate reward-change-interval",
+		Args:  cobra.ExactArgs(5),
 		Short: "Update an alliance with the specified parameters",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -116,6 +129,16 @@ func UpdateAlliance() *cobra.Command {
 				return err
 			}
 
+			rewardChangeRate, err := sdk.NewDecFromStr(args[3])
+			if err != nil {
+				return err
+			}
+
+			rewardChangeInterval, err := time.ParseDuration(args[4])
+			if err != nil {
+				return err
+			}
+
 			from := clientCtx.GetFromAddress()
 
 			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
@@ -134,6 +157,8 @@ func UpdateAlliance() *cobra.Command {
 				args[0],
 				rewardWeight,
 				takeRate,
+				rewardChangeRate,
+				rewardChangeInterval,
 			)
 
 			err = content.ValidateBasic()

@@ -57,6 +57,7 @@ func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsse
 	asset.RewardWeight = newAsset.RewardWeight
 	asset.RewardChangeRate = newAsset.RewardChangeRate
 	asset.RewardChangeInterval = newAsset.RewardChangeInterval
+	asset.LastRewardChangeTime = newAsset.LastRewardChangeTime
 	k.SetAsset(ctx, asset)
 
 	return nil
@@ -75,7 +76,7 @@ func (k Keeper) RebalanceHook(ctx sdk.Context, assets []*types.AllianceAsset) er
 // the difference.
 func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.AllianceAsset) (err error) {
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	allianceBondAmount := k.getAllianceBondedAmount(ctx, moduleAddr)
+	allianceBondAmount := k.GetAllianceBondedAmount(ctx, moduleAddr)
 
 	nativeBondAmount := k.stakingKeeper.TotalBondedTokens(ctx).Sub(allianceBondAmount)
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
@@ -121,7 +122,7 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 
 			bondedValidatorShares := asset.TotalValidatorShares.Sub(unbondedValidatorShares.AmountOf(asset.Denom))
 			if valShares.IsPositive() && bondedValidatorShares.IsPositive() {
-				expectedBondAmount = expectedBondAmount.Add(valShares.Mul(expectedBondAmountForAsset).Quo(bondedValidatorShares))
+				expectedBondAmount = expectedBondAmount.Add(valShares.Quo(bondedValidatorShares).Mul(expectedBondAmountForAsset))
 			}
 		}
 		if expectedBondAmount.GT(currentBondedAmount) {
@@ -237,7 +238,12 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 			// take rate must be < 1 so multiple is also < 1
 			multiplier := sdk.OneDec().Sub(asset.TakeRate).Power(intervalsSinceLastClaim)
 			oldAmount := asset.TotalTokens
-			asset.TotalTokens = multiplier.MulInt(asset.TotalTokens).TruncateInt()
+			newAmount := multiplier.MulInt(asset.TotalTokens)
+			if newAmount.LTE(sdk.OneDec()) {
+				// If the next update reduces the amount of tokens to less than or equal to 1, stop reducing
+				continue
+			}
+			asset.TotalTokens = newAmount.TruncateInt()
 			deductedAmount := oldAmount.Sub(asset.TotalTokens)
 			coins = coins.Add(sdk.NewCoin(asset.Denom, deductedAmount))
 			k.SetAsset(ctx, *asset)
@@ -288,7 +294,7 @@ func (k Keeper) IterateAllWeightChangeSnapshot(ctx sdk.Context, cb func(denom st
 	}
 }
 
-func (k Keeper) RewardWeightDecayHook(ctx sdk.Context, assets []*types.AllianceAsset) {
+func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.AllianceAsset) {
 	for _, asset := range assets {
 		// If no reward changes are required, skip
 		if asset.RewardChangeInterval == 0 || asset.RewardChangeRate.Equal(sdk.OneDec()) {

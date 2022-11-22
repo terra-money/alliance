@@ -629,13 +629,13 @@ func TestRewardWeightDecay(t *testing.T) {
 
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
 	// Running the decay hook now should do nothing
-	app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
+	app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
 
 	// Move block time to after change interval + one year
 	ctx = ctx.WithBlockTime(asset.RewardStartTime.Add(decayInterval))
 
 	// Running the decay hook should update reward weight
-	app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
+	app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
 	updatedAsset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
 	require.Equal(t, types.AllianceAsset{
 		Denom:                ALLIANCE_TOKEN_DENOM,
@@ -760,7 +760,7 @@ func TestRewardWeightDecayOverTime(t *testing.T) {
 		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(blockTime)).WithBlockHeight(ctx.BlockHeight() + 1)
 		assets = app.AllianceKeeper.GetAllAssets(ctx)
 		// Running the decay hook should update reward weight
-		app.AllianceKeeper.RewardWeightDecayHook(ctx, assets)
+		app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
 	}
 
 	// time passed minus reward delay time (rewards and decay only start after the delay)
@@ -856,4 +856,51 @@ func TestClaimTakeRate(t *testing.T) {
 		sdk.NewDecFromInt(coinsClaimed.AmountOf(ALLIANCE_TOKEN_DENOM)),
 		rewards.AmountOf(ALLIANCE_TOKEN_DENOM).Add(community.AmountOf(ALLIANCE_TOKEN_DENOM)),
 	)
+}
+
+func TestClaimTakeRateToZero(t *testing.T) {
+	app, ctx := createTestContext(t)
+	startTime := time.Now().UTC()
+	ctx = ctx.WithBlockTime(startTime)
+	ctx = ctx.WithBlockHeight(1)
+	takeRateInterval := time.Minute * 5
+	asset := types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.NewDec(2), sdk.MustNewDecFromStr("0.8"), startTime)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.Params{
+			RewardDelayTime:       time.Minute * 60,
+			TakeRateClaimInterval: takeRateInterval,
+			LastTakeRateClaimTime: startTime,
+		},
+		Assets: []types.AllianceAsset{
+			asset,
+		},
+	})
+
+	// Accounts
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	valAddr1, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 1, sdk.NewCoins(
+		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000)),
+	))
+	user1 := addrs[0]
+
+	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000)))
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
+	require.NoError(t, err)
+
+	timePassed := time.Minute * 5
+	// Advance block time
+	for i := 0; i < 1000; i++ {
+		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(timePassed))
+		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+		_, err = app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+		require.NoError(t, err)
+	}
+
+	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	require.True(t, asset.TotalTokens.GTE(sdk.OneInt()))
 }
