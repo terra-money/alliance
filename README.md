@@ -28,8 +28,6 @@ By design, x/alliance use the following CosmosSDK modules to implement interchai
 - [x/distribution](https://github.com/cosmos/cosmos-sdk/blob/main/x/distribution/README.md), 
 - [x/gov](https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/README.md).
 
-> **Note**
-> This is module currently in beta and may not suitable for production use yet. Please submit bugs and feature requests through Github Issues. 
 
 # Development environment
 This project uses [Go v1.18](https://go.dev/dl/) and was bootstrapped with [Ignite CLI v0.25.1](https://docs.ignite.com/). 
@@ -86,3 +84,11 @@ ignite chain simulate
 - [Ignite CLI docs](https://docs.ignite.com)
 - [Cosmos SDK docs](https://docs.cosmos.network)
 - [Developer Chat](https://discord.gg/ignite)
+
+## Warning
+
+Please note that this is a beta version of the which still undergoing final testing before its official release. TFL does not give any warranties, whether express or implied, as to the suitability or usability of the software or any of its content.
+
+TFL will not be liable for any loss, whether such loss is direct, indirect, special or consequential, suffered by any party as a result of their use of the software or content.
+
+Should you encounter any bugs, glitches, lack of functionality or other problems on the website, please submit bugs and feature requests through Github Issues. 
