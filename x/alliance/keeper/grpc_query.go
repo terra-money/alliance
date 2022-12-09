@@ -16,6 +16,61 @@ type QueryServer struct {
 	Keeper
 }
 
+func (k QueryServer) AllAlliancesDelegations(c context.Context, req *types.QueryAllAlliancesDelegationsRequest) (*types.QueryAlliancesDelegationsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	res := &types.QueryAlliancesDelegationsResponse{
+		Delegations: nil,
+		Pagination:  nil,
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(k.storeKey)
+	delegationStore := prefix.NewStore(store, types.DelegationKey)
+
+	pageRes, err := query.Paginate(delegationStore, req.Pagination, func(key []byte, value []byte) error {
+		var delegation types.Delegation
+		k.cdc.MustUnmarshal(value, &delegation)
+
+		asset, found := k.GetAssetByDenom(ctx, delegation.Denom)
+		if !found {
+			return types.ErrUnknownAsset
+		}
+
+		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		validator, err := k.GetAllianceValidator(ctx, valAddr)
+		if err != nil {
+			return err
+		}
+		balance := types.GetDelegationTokens(delegation, validator, asset)
+
+		delegationRes := types.DelegationResponse{
+			Delegation: delegation,
+			Balance:    balance,
+		}
+		res.Delegations = append(res.Delegations, delegationRes)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	res.Pagination = pageRes
+	return res, nil
+}
+
+func (k QueryServer) AllianceValidator(ctx context.Context, request *types.QueryAllianceValidatorRequest) (*types.QueryAllianceValidatorResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (k QueryServer) AllAllianceValidators(ctx context.Context, request *types.QueryAllAllianceValidatorsRequest) (*types.QueryAllianceValidatorsResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 var _ types.QueryServer = QueryServer{}
 
 func (k QueryServer) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
