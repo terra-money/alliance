@@ -678,3 +678,69 @@ func TestQueryAllDelegations(t *testing.T) {
 		},
 	}, queryDelegations.Delegations[0])
 }
+
+func TestQueryValidator(t *testing.T) {
+	// GIVEN: THE BLOCKCHAIN WITH ALLIANCES ON GENESIS
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			{
+				Denom:                ALLIANCE_TOKEN_DENOM,
+				RewardWeight:         sdk.NewDec(2),
+				TakeRate:             sdk.NewDec(0),
+				TotalTokens:          sdk.ZeroInt(),
+				TotalValidatorShares: sdk.NewDec(0),
+				RewardChangeRate:     sdk.NewDec(0),
+				RewardChangeInterval: 0,
+			},
+			{
+				Denom:                ALLIANCE_2_TOKEN_DENOM,
+				RewardWeight:         sdk.NewDec(10),
+				TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
+				TotalTokens:          sdk.ZeroInt(),
+				TotalValidatorShares: sdk.NewDec(0),
+				RewardChangeRate:     sdk.NewDec(0),
+				RewardChangeInterval: 0,
+			},
+		},
+	})
+	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
+	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	val, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
+	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(2000_000))))
+	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(2000_000))))
+
+	// WHEN: DELEGATING AND QUERYING ...
+	_, txErr := app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)))
+	require.NoError(t, txErr)
+	_, tx2Err := app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)))
+	require.NoError(t, tx2Err)
+
+	queryVal, queryErr := queryServer.AllianceValidator(ctx, &types.QueryAllianceValidatorRequest{
+		ValidatorAddr: val.GetOperator().String(),
+	})
+
+	require.NoError(t, queryErr)
+	require.Equal(t, &types.QueryAllianceValidatorResponse{
+		ValidatorAddr: val.GetOperator().String(),
+		TotalDelegationShares: sdk.NewDecCoins(
+			sdk.NewDecCoinFromDec(ALLIANCE_TOKEN_DENOM, sdk.NewDec(1000000)),
+			sdk.NewDecCoinFromDec(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(1000000)),
+		),
+		ValidatorShares: sdk.NewDecCoins(
+			sdk.NewDecCoinFromDec(ALLIANCE_TOKEN_DENOM, sdk.NewDec(1000000)),
+			sdk.NewDecCoinFromDec(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(1000000)),
+		),
+		TotalStaked: sdk.NewDecCoins(
+			sdk.NewDecCoinFromDec(ALLIANCE_TOKEN_DENOM, sdk.NewDec(1000_000)),
+			sdk.NewDecCoinFromDec(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(1000_000)),
+		),
+	}, queryVal)
+}

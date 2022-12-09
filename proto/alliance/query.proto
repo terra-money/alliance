@@ -222,10 +222,15 @@ message QueryAllianceValidatorResponse {
   option (gogoproto.goproto_getters) = false;
 
   string validator_addr = 1;
-  repeated cosmos.base.v1beta1.DecCoin total_delegation_shares = 2;
-  repeated cosmos.base.v1beta1.DecCoin validator_shares = 3;
-  repeated cosmos.base.v1beta1.DecCoin total_staked = 4;
-
+  repeated cosmos.base.v1beta1.DecCoin total_delegation_shares = 2 [
+    (gogoproto.nullable)   = false
+  ];
+  repeated cosmos.base.v1beta1.DecCoin validator_shares = 3 [
+    (gogoproto.nullable)   = false
+  ];
+  repeated cosmos.base.v1beta1.DecCoin total_staked = 4 [
+    (gogoproto.nullable)   = false
+  ];
 }
 
 message QueryAllianceValidatorsResponse {

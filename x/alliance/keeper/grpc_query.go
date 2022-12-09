@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -61,9 +62,36 @@ func (k QueryServer) AllAlliancesDelegations(c context.Context, req *types.Query
 	return res, nil
 }
 
-func (k QueryServer) AllianceValidator(ctx context.Context, request *types.QueryAllianceValidatorRequest) (*types.QueryAllianceValidatorResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (k QueryServer) AllianceValidator(c context.Context, req *types.QueryAllianceValidatorRequest) (*types.QueryAllianceValidatorResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	res := types.QueryAllianceValidatorResponse{
+		ValidatorAddr:         req.ValidatorAddr,
+		TotalDelegationShares: nil,
+		ValidatorShares:       nil,
+		TotalStaked:           nil,
+	}
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("validator address %s invalid", req.ValidatorAddr))
+	}
+	val, err := k.GetAllianceValidator(ctx, valAddr)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("validator with address %s not found", req.ValidatorAddr))
+	}
+	res.ValidatorShares = val.ValidatorShares
+	res.TotalDelegationShares = val.TotalDelegatorShares
+
+	for _, share := range val.ValidatorShares {
+		asset, found := k.GetAssetByDenom(ctx, share.Denom)
+		if !found {
+			continue
+		}
+		res.TotalStaked = append(res.TotalStaked, sdk.NewDecCoinFromDec(share.Denom, val.TotalTokensWithAsset(asset)))
+	}
+	return &res, nil
 }
 
 func (k QueryServer) AllAllianceValidators(ctx context.Context, request *types.QueryAllAllianceValidatorsRequest) (*types.QueryAllianceValidatorsResponse, error) {

@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,6 +25,8 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(CmdQueryAlliances())
 	cmd.AddCommand(CmdQueryAlliance())
+
+	cmd.AddCommand(CmdQueryValidator())
 
 	cmd.AddCommand(CmdQueryAllAlliancesDelegations())
 	cmd.AddCommand(CmdQueryAlliancesDelegation())
@@ -82,6 +85,39 @@ func CmdQueryAlliance() *cobra.Command {
 			params := &types.QueryAllianceRequest{Denom: denom}
 
 			res, err := query.Alliance(cmd.Context(), params)
+			if err != nil {
+				return err
+			}
+
+			return ctx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQueryValidator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "validator validator-addr",
+		Short: "Query a specific alliance validator by addr",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+			ctx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			query := types.NewQueryClient(ctx)
+
+			req := &types.QueryAllianceValidatorRequest{ValidatorAddr: valAddr.String()}
+
+			res, err := query.AllianceValidator(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
