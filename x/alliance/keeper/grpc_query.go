@@ -94,9 +94,48 @@ func (k QueryServer) AllianceValidator(c context.Context, req *types.QueryAllian
 	return &res, nil
 }
 
-func (k QueryServer) AllAllianceValidators(ctx context.Context, request *types.QueryAllAllianceValidatorsRequest) (*types.QueryAllianceValidatorsResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (k QueryServer) AllAllianceValidators(c context.Context, req *types.QueryAllAllianceValidatorsRequest) (*types.QueryAllianceValidatorsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	res := &types.QueryAllianceValidatorsResponse{
+		Validators: nil,
+		Pagination: nil,
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.ValidatorInfoKey)
+
+	pageRes, err := query.Paginate(valStore, req.Pagination, func(key []byte, value []byte) error {
+		valAddr := sdk.ValAddress(key[1:]) // Due to length prefix when encoding the key
+		val, err := k.GetAllianceValidator(ctx, valAddr)
+		if err != nil {
+			return err
+		}
+
+		totalStaked := sdk.NewDecCoins()
+		for _, share := range val.ValidatorShares {
+			asset, found := k.GetAssetByDenom(ctx, share.Denom)
+			if !found {
+				continue
+			}
+			totalStaked = append(totalStaked, sdk.NewDecCoinFromDec(share.Denom, val.TotalTokensWithAsset(asset)))
+		}
+
+		res.Validators = append(res.Validators, types.QueryAllianceValidatorResponse{
+			ValidatorAddr:         valAddr.String(),
+			TotalDelegationShares: val.TotalDelegatorShares,
+			ValidatorShares:       val.ValidatorShares,
+			TotalStaked:           totalStaked,
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	res.Pagination = pageRes
+	return res, nil
 }
 
 var _ types.QueryServer = QueryServer{}

@@ -27,6 +27,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd.AddCommand(CmdQueryAlliance())
 
 	cmd.AddCommand(CmdQueryValidator())
+	cmd.AddCommand(CmdQueryValidators())
 
 	cmd.AddCommand(CmdQueryAllAlliancesDelegations())
 	cmd.AddCommand(CmdQueryAlliancesDelegation())
@@ -118,6 +119,41 @@ func CmdQueryValidator() *cobra.Command {
 			req := &types.QueryAllianceValidatorRequest{ValidatorAddr: valAddr.String()}
 
 			res, err := query.AllianceValidator(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return ctx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQueryValidators() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "validators",
+		Short: "Query all alliance validators",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			ctx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			query := types.NewQueryClient(ctx)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			req := &types.QueryAllAllianceValidatorsRequest{
+				Pagination: pageReq,
+			}
+
+			res, err := query.AllAllianceValidators(cmd.Context(), req)
 			if err != nil {
 				return err
 			}

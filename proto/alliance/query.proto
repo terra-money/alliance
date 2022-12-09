@@ -237,6 +237,8 @@ message QueryAllianceValidatorsResponse {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  repeated QueryAllianceValidatorResponse validators = 1;
+  repeated QueryAllianceValidatorResponse validators = 1 [
+    (gogoproto.nullable)   = false
+  ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
