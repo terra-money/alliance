@@ -21,11 +21,6 @@ service Query {
     option (google.api.http).get = "/terra/alliances";
   }
 
-  // Query a specific alliance by denom
-  rpc Alliance(QueryAllianceRequest) returns (QueryAllianceResponse) {
-    option (google.api.http).get = "/terra/alliances/{denom}";
-  }
-
   // Query a specific alliance by ibc hash
   rpc IBCAlliance(QueryIBCAllianceRequest) returns (QueryAllianceResponse) {
     option (google.api.http).get = "/terra/alliances/ibc/{hash}";
@@ -73,6 +68,11 @@ service Query {
   // Query for rewards by delegator addr, validator_addr and denom
   rpc IBCAllianceDelegationRewards(QueryIBCAllianceDelegationRewardsRequest) returns (QueryAllianceDelegationRewardsResponse) {
     option (google.api.http).get = "/terra/alliances/rewards/{delegator_addr}/{validator_addr}/ibc/{hash}";
+  }
+
+  // Query a specific alliance by denom
+  rpc Alliance(QueryAllianceRequest) returns (QueryAllianceResponse) {
+    option (google.api.http).get = "/terra/alliances/{denom}";
   }
 }
 
