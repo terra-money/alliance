@@ -377,8 +377,8 @@ func initGenFiles(
 	var allianceGenState alliancetypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[alliancetypes.ModuleName], &allianceGenState)
 	allianceParams := allianceGenState.GetParams()
-	allianceParams.TakeRateClaimInterval = time.Second * 30
-	allianceParams.RewardDelayTime = time.Second * 30
+	allianceParams.TakeRateClaimInterval = time.Minute
+	allianceParams.RewardDelayTime = time.Hour * 24
 	allianceGenState.Params = allianceParams
 	appGenState[alliancetypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&allianceGenState)
 
@@ -387,7 +387,7 @@ func initGenFiles(
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakingGenState)
 	stakingParams := stakingGenState.GetParams()
 	stakingParams.BondDenom = bondDenom
-	stakingParams.UnbondingTime = time.Hour * 24
+	stakingParams.UnbondingTime = time.Hour
 	stakingGenState.Params = stakingParams
 	appGenState[stakingtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&stakingGenState)
 
@@ -405,10 +405,10 @@ func initGenFiles(
 	var mintGenState minttypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
 	minterParams := mintGenState.GetMinter()
-	minterParams.Inflation = sdk.NewDecWithPrec(50, 2)
+	minterParams.Inflation = sdk.NewDec(10000)
 	mintGenState.Minter = minterParams
 	mintParams := mintGenState.GetParams()
-	mintParams.InflationMax = sdk.NewDec(1)
+	mintParams.InflationMax = sdk.NewDec(10000)
 	mintParams.MintDenom = bondDenom
 	mintGenState.Params = mintParams
 	appGenState[minttypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&mintGenState)
