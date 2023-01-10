@@ -5,6 +5,7 @@ export PATH=$PATH:/allianced/allianced
 BINARY=/allianced/allianced
 ID=${ID:-0}
 LOG=${LOG:-allianced.log}
+LD_LIBRARY_PATH=/lib
 
 if ! [ -f "${BINARY}" ]; then
 	echo "The binary $(basename "${BINARY}") cannot be found."
