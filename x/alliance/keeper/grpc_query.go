@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -14,6 +15,127 @@ import (
 
 type QueryServer struct {
 	Keeper
+}
+
+func (k QueryServer) AllAlliancesDelegations(c context.Context, req *types.QueryAllAlliancesDelegationsRequest) (*types.QueryAlliancesDelegationsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	res := &types.QueryAlliancesDelegationsResponse{
+		Delegations: nil,
+		Pagination:  nil,
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(k.storeKey)
+	delegationStore := prefix.NewStore(store, types.DelegationKey)
+
+	pageRes, err := query.Paginate(delegationStore, req.Pagination, func(key []byte, value []byte) error {
+		var delegation types.Delegation
+		k.cdc.MustUnmarshal(value, &delegation)
+
+		asset, found := k.GetAssetByDenom(ctx, delegation.Denom)
+		if !found {
+			return types.ErrUnknownAsset
+		}
+
+		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		validator, err := k.GetAllianceValidator(ctx, valAddr)
+		if err != nil {
+			return err
+		}
+		balance := types.GetDelegationTokens(delegation, validator, asset)
+
+		delegationRes := types.DelegationResponse{
+			Delegation: delegation,
+			Balance:    balance,
+		}
+		res.Delegations = append(res.Delegations, delegationRes)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	res.Pagination = pageRes
+	return res, nil
+}
+
+func (k QueryServer) AllianceValidator(c context.Context, req *types.QueryAllianceValidatorRequest) (*types.QueryAllianceValidatorResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	res := types.QueryAllianceValidatorResponse{
+		ValidatorAddr:         req.ValidatorAddr,
+		TotalDelegationShares: nil,
+		ValidatorShares:       nil,
+		TotalStaked:           nil,
+	}
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("validator address %s invalid", req.ValidatorAddr))
+	}
+	val, err := k.GetAllianceValidator(ctx, valAddr)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("validator with address %s not found", req.ValidatorAddr))
+	}
+	res.ValidatorShares = val.ValidatorShares
+	res.TotalDelegationShares = val.TotalDelegatorShares
+
+	for _, share := range val.ValidatorShares {
+		asset, found := k.GetAssetByDenom(ctx, share.Denom)
+		if !found {
+			continue
+		}
+		res.TotalStaked = append(res.TotalStaked, sdk.NewDecCoinFromDec(share.Denom, val.TotalTokensWithAsset(asset)))
+	}
+	return &res, nil
+}
+
+func (k QueryServer) AllAllianceValidators(c context.Context, req *types.QueryAllAllianceValidatorsRequest) (*types.QueryAllianceValidatorsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	res := &types.QueryAllianceValidatorsResponse{
+		Validators: nil,
+		Pagination: nil,
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	valStore := prefix.NewStore(store, types.ValidatorInfoKey)
+
+	pageRes, err := query.Paginate(valStore, req.Pagination, func(key []byte, value []byte) error {
+		valAddr := sdk.ValAddress(key[1:]) // Due to length prefix when encoding the key
+		val, err := k.GetAllianceValidator(ctx, valAddr)
+		if err != nil {
+			return err
+		}
+
+		totalStaked := sdk.NewDecCoins()
+		for _, share := range val.ValidatorShares {
+			asset, found := k.GetAssetByDenom(ctx, share.Denom)
+			if !found {
+				continue
+			}
+			totalStaked = append(totalStaked, sdk.NewDecCoinFromDec(share.Denom, val.TotalTokensWithAsset(asset)))
+		}
+
+		res.Validators = append(res.Validators, types.QueryAllianceValidatorResponse{
+			ValidatorAddr:         valAddr.String(),
+			TotalDelegationShares: val.TotalDelegatorShares,
+			ValidatorShares:       val.ValidatorShares,
+			TotalStaked:           totalStaked,
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	res.Pagination = pageRes
+	return res, nil
 }
 
 var _ types.QueryServer = QueryServer{}

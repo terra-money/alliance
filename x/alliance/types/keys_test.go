@@ -79,3 +79,12 @@ func TestRewardSnapshotKey(t *testing.T) {
 	require.Equal(t, valAddr, parsedValAddr)
 	require.Equal(t, height, parsedHeight)
 }
+
+func TestValidatorKey(t *testing.T) {
+	valAddr, err := sdk.ValAddressFromHex("bb")
+	require.NoError(t, err)
+	key := types.GetAllianceValidatorInfoKey(valAddr)
+
+	parseValAddr := types.ParseAllianceValidatorKey(key)
+	require.Equal(t, parseValAddr, valAddr)
+}

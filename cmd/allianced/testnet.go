@@ -35,6 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -54,6 +55,7 @@ var (
 	flagRPCAddress        = "rpc.address"
 	flagAPIAddress        = "api.address"
 	flagPrintMnemonic     = "print-mnemonic"
+	flagBondDenom         = "bond-denom"
 )
 
 type initArgs struct {
@@ -66,6 +68,7 @@ type initArgs struct {
 	numValidators     int
 	outputDir         string
 	startingIPAddress string
+	bondDenom         string
 }
 
 type startArgs struct {
@@ -87,6 +90,7 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
 	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
+	cmd.Flags().String(flagBondDenom, "stake", "Staking bond denom")
 }
 
 // NewTestnetCmd creates a root testnet command with subcommands to run an in-process testnet or initialize
@@ -141,6 +145,7 @@ Example:
 			args.startingIPAddress, _ = cmd.Flags().GetString(flagStartingIPAddress)
 			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyAlgorithm)
+			args.bondDenom, _ = cmd.Flags().GetString(flagBondDenom)
 
 			return initTestnetFiles(clientCtx, cmd, config, mbm, genBalIterator, args)
 		},
@@ -284,11 +289,9 @@ func initTestnetFiles(
 			return err
 		}
 
-		accTokens := sdk.TokensFromConsensusPower(100_000_000, sdk.DefaultPowerReduction)
 		accStakingTokens := sdk.TokensFromConsensusPower(500_000_000, sdk.DefaultPowerReduction)
 		coins := sdk.Coins{
-			sdk.NewCoin("testtoken", accTokens),
-			sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
+			sdk.NewCoin(args.bondDenom, accStakingTokens),
 		}
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
@@ -298,7 +301,7 @@ func initTestnetFiles(
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
+			sdk.NewCoin(args.bondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(
 				sdk.NewDec(1).Quo(sdk.NewDec(100)),
@@ -341,7 +344,7 @@ func initTestnetFiles(
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appConfig)
 	}
 
-	if err := initGenFiles(clientCtx, mbm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators); err != nil {
+	if err := initGenFiles(clientCtx, mbm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators, args.bondDenom); err != nil {
 		return err
 	}
 
@@ -360,16 +363,22 @@ func initTestnetFiles(
 func initGenFiles(
 	clientCtx client.Context, mbm module.BasicManager, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
-	genFiles []string, numValidators int,
+	genFiles []string, numValidators int, bondDenom string,
 ) error {
 	appGenState := mbm.DefaultGenesis(clientCtx.Codec)
+
+	// CRISIS
+	var crisisGenState crisistypes.GenesisState
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState)
+	crisisGenState.ConstantFee.Denom = bondDenom
+	appGenState[crisistypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&crisisGenState)
 
 	// ALLIANCE
 	var allianceGenState alliancetypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[alliancetypes.ModuleName], &allianceGenState)
 	allianceParams := allianceGenState.GetParams()
-	allianceParams.TakeRateClaimInterval = time.Second * 30
-	allianceParams.RewardDelayTime = time.Second * 30
+	allianceParams.TakeRateClaimInterval = time.Minute
+	allianceParams.RewardDelayTime = time.Hour * 24
 	allianceGenState.Params = allianceParams
 	appGenState[alliancetypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&allianceGenState)
 
@@ -377,14 +386,15 @@ func initGenFiles(
 	var stakingGenState stakingtypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[stakingtypes.ModuleName], &stakingGenState)
 	stakingParams := stakingGenState.GetParams()
-	stakingParams.UnbondingTime = time.Hour * 24
+	stakingParams.BondDenom = bondDenom
+	stakingParams.UnbondingTime = time.Hour
 	stakingGenState.Params = stakingParams
 	appGenState[stakingtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&stakingGenState)
 
 	// GOV
 	var govGenState govtypesv1.GenesisState = *govtypesv1.NewGenesisState(
 		1,
-		govtypesv1.NewDepositParams(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000))), time.Minute),
+		govtypesv1.NewDepositParams(sdk.NewCoins(sdk.NewCoin(bondDenom, math.NewInt(1000))), time.Minute),
 		govtypesv1.NewVotingParams(time.Minute),
 		govtypesv1.DefaultTallyParams(),
 	)
@@ -395,10 +405,11 @@ func initGenFiles(
 	var mintGenState minttypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
 	minterParams := mintGenState.GetMinter()
-	minterParams.Inflation = sdk.NewDecWithPrec(50, 2)
+	minterParams.Inflation = sdk.NewDec(10000)
 	mintGenState.Minter = minterParams
 	mintParams := mintGenState.GetParams()
-	mintParams.InflationMax = sdk.NewDec(1)
+	mintParams.InflationMax = sdk.NewDec(10000)
+	mintParams.MintDenom = bondDenom
 	mintGenState.Params = mintParams
 	appGenState[minttypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&mintGenState)
 

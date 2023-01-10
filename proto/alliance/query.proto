@@ -21,14 +21,24 @@ service Query {
     option (google.api.http).get = "/terra/alliances";
   }
 
-  // Query a specific alliance by denom
-  rpc Alliance(QueryAllianceRequest) returns (QueryAllianceResponse) {
-    option (google.api.http).get = "/terra/alliances/{denom}";
-  }
-
   // Query a specific alliance by ibc hash
   rpc IBCAlliance(QueryIBCAllianceRequest) returns (QueryAllianceResponse) {
     option (google.api.http).get = "/terra/alliances/ibc/{hash}";
+  }
+
+  // Query all paginated alliance delegations
+  rpc AllAlliancesDelegations(QueryAllAlliancesDelegationsRequest) returns (QueryAlliancesDelegationsResponse) {
+    option (google.api.http).get = "/terra/alliances/delegations";
+  }
+
+  // Query alliance validator
+  rpc AllianceValidator(QueryAllianceValidatorRequest) returns (QueryAllianceValidatorResponse) {
+    option (google.api.http).get = "/terra/alliances/validators/{validator_addr}";
+  }
+
+  // Query all paginated alliance validators
+  rpc AllAllianceValidators(QueryAllAllianceValidatorsRequest) returns (QueryAllianceValidatorsResponse) {
+    option (google.api.http).get = "/terra/alliances/validators";
   }
 
   // Query all paginated alliance delegations for a delegator addr
@@ -58,6 +68,11 @@ service Query {
   // Query for rewards by delegator addr, validator_addr and denom
   rpc IBCAllianceDelegationRewards(QueryIBCAllianceDelegationRewardsRequest) returns (QueryAllianceDelegationRewardsResponse) {
     option (google.api.http).get = "/terra/alliances/rewards/{delegator_addr}/{validator_addr}/ibc/{hash}";
+  }
+
+  // Query a specific alliance by denom
+  rpc Alliance(QueryAllianceRequest) returns (QueryAllianceResponse) {
+    option (google.api.http).get = "/terra/alliances/{denom}";
   }
 }
 
@@ -89,6 +104,27 @@ message QueryAllianceResponse {
 
 message QueryIBCAllianceRequest {
   string hash = 1;
+}
+
+message QueryAllianceValidatorRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string validator_addr = 1;
+}
+
+message QueryAllAllianceValidatorsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllAlliancesDelegationsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 // AlliancesDelegation
@@ -179,4 +215,30 @@ message QueryAllianceDelegationRewardsResponse {
     (gogoproto.nullable) = false,
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
+}
+
+message QueryAllianceValidatorResponse {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string validator_addr = 1;
+  repeated cosmos.base.v1beta1.DecCoin total_delegation_shares = 2 [
+    (gogoproto.nullable)   = false
+  ];
+  repeated cosmos.base.v1beta1.DecCoin validator_shares = 3 [
+    (gogoproto.nullable)   = false
+  ];
+  repeated cosmos.base.v1beta1.DecCoin total_staked = 4 [
+    (gogoproto.nullable)   = false
+  ];
+}
+
+message QueryAllianceValidatorsResponse {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  repeated QueryAllianceValidatorResponse validators = 1 [
+    (gogoproto.nullable)   = false
+  ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
