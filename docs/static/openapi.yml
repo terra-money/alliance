@@ -38,9 +38,10 @@ paths:
                       type: string
                       title: >-
                         A positive take rate is used for liquid staking
-                        derivatives. It defines an annualized reward rate that
+                        derivatives. It defines an rate that is applied per
+                        take_rate_interval
 
-                        will be redirected to the distribution rewards pool
+                        that will be redirected to the distribution rewards pool
                     total_tokens:
                       type: string
                     total_validator_shares:
@@ -48,7 +49,186 @@ paths:
                     reward_start_time:
                       type: string
                       format: date-time
+                    reward_change_rate:
+                      type: string
+                    reward_change_interval:
+                      type: string
+                    last_reward_change_time:
+                      type: string
+                      format: date-time
                   title: 'key: denom value: AllianceAsset'
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /terra/alliances/delegations:
+    get:
+      summary: Query all paginated alliance delegations
+      operationId: AllianceAllianceAllAlliancesDelegations
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              delegations:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    delegation:
+                      type: object
+                      properties:
+                        delegator_address:
+                          type: string
+                          description: >-
+                            delegator_address is the bech32-encoded address of
+                            the delegator.
+                        validator_address:
+                          type: string
+                          description: >-
+                            validator_address is the bech32-encoded address of
+                            the validator.
+                        denom:
+                          type: string
+                          title: denom of token staked
+                        shares:
+                          type: string
+                          description: shares define the delegation shares received.
+                        reward_history:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              index:
+                                type: string
+                        last_reward_claim_height:
+                          type: string
+                          format: uint64
+                    balance:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  description: >-
+                    DelegationResponse is equivalent to Delegation except that
+                    it contains a
+
+                    balance in addition to shares which is more suitable for
+                    client responses.
               pagination:
                 type: object
                 properties:
@@ -855,14 +1035,22 @@ paths:
                     type: string
                     title: >-
                       A positive take rate is used for liquid staking
-                      derivatives. It defines an annualized reward rate that
+                      derivatives. It defines an rate that is applied per
+                      take_rate_interval
 
-                      will be redirected to the distribution rewards pool
+                      that will be redirected to the distribution rewards pool
                   total_tokens:
                     type: string
                   total_validator_shares:
                     type: string
                   reward_start_time:
+                    type: string
+                    format: date-time
+                  reward_change_rate:
+                    type: string
+                  reward_change_interval:
+                    type: string
+                  last_reward_change_time:
                     type: string
                     format: date-time
                 title: 'key: denom value: AllianceAsset'
@@ -905,12 +1093,12 @@ paths:
                 properties:
                   reward_delay_time:
                     type: string
-                  reward_claim_interval:
+                  take_rate_claim_interval:
                     type: string
                     title: >-
                       Time interval between consecutive applications of
                       `take_rate`
-                  last_reward_claim_time:
+                  last_take_rate_claim_time:
                     type: string
                     format: date-time
                     title: Last application of `take_rate` on assets
@@ -1166,6 +1354,273 @@ paths:
           type: boolean
       tags:
         - Query
+  /terra/alliances/validators:
+    get:
+      summary: Query all paginated alliance validators
+      operationId: AllianceAllianceAllAllianceValidators
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              validators:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    validator_addr:
+                      type: string
+                    total_delegation_shares:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          DecCoin defines a token with a denomination and a
+                          decimal amount.
+
+
+                          NOTE: The amount field is an Dec which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+                    validator_shares:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          DecCoin defines a token with a denomination and a
+                          decimal amount.
+
+
+                          NOTE: The amount field is an Dec which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+                    total_staked:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          DecCoin defines a token with a denomination and a
+                          decimal amount.
+
+
+                          NOTE: The amount field is an Dec which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /terra/alliances/validators/{validator_addr}:
+    get:
+      summary: Query alliance validator
+      operationId: AllianceAllianceAllianceValidator
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              validator_addr:
+                type: string
+              total_delegation_shares:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    DecCoin defines a token with a denomination and a decimal
+                    amount.
+
+
+                    NOTE: The amount field is an Dec which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+              validator_shares:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    DecCoin defines a token with a denomination and a decimal
+                    amount.
+
+
+                    NOTE: The amount field is an Dec which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+              total_staked:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    DecCoin defines a token with a denomination and a decimal
+                    amount.
+
+
+                    NOTE: The amount field is an Dec which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: validator_addr
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /terra/alliances/{denom}:
     get:
       summary: Query a specific alliance by denom
@@ -1197,14 +1652,22 @@ paths:
                     type: string
                     title: >-
                       A positive take rate is used for liquid staking
-                      derivatives. It defines an annualized reward rate that
+                      derivatives. It defines an rate that is applied per
+                      take_rate_interval
 
-                      will be redirected to the distribution rewards pool
+                      that will be redirected to the distribution rewards pool
                   total_tokens:
                     type: string
                   total_validator_shares:
                     type: string
                   reward_start_time:
+                    type: string
+                    format: date-time
+                  reward_change_rate:
+                    type: string
+                  reward_change_interval:
+                    type: string
+                  last_reward_change_time:
                     type: string
                     format: date-time
                 title: 'key: denom value: AllianceAsset'
@@ -45557,14 +46020,21 @@ definitions:
         type: string
         title: >-
           A positive take rate is used for liquid staking derivatives. It
-          defines an annualized reward rate that
+          defines an rate that is applied per take_rate_interval
 
-          will be redirected to the distribution rewards pool
+          that will be redirected to the distribution rewards pool
       total_tokens:
         type: string
       total_validator_shares:
         type: string
       reward_start_time:
+        type: string
+        format: date-time
+      reward_change_rate:
+        type: string
+      reward_change_interval:
+        type: string
+      last_reward_change_time:
         type: string
         format: date-time
     title: 'key: denom value: AllianceAsset'
@@ -45653,10 +46123,10 @@ definitions:
     properties:
       reward_delay_time:
         type: string
-      reward_claim_interval:
+      take_rate_claim_interval:
         type: string
         title: Time interval between consecutive applications of `take_rate`
-      last_reward_claim_time:
+      last_take_rate_claim_time:
         type: string
         format: date-time
         title: Last application of `take_rate` on assets
@@ -45759,9 +46229,9 @@ definitions:
             type: string
             title: >-
               A positive take rate is used for liquid staking derivatives. It
-              defines an annualized reward rate that
+              defines an rate that is applied per take_rate_interval
 
-              will be redirected to the distribution rewards pool
+              that will be redirected to the distribution rewards pool
           total_tokens:
             type: string
           total_validator_shares:
@@ -45769,7 +46239,151 @@ definitions:
           reward_start_time:
             type: string
             format: date-time
+          reward_change_rate:
+            type: string
+          reward_change_interval:
+            type: string
+          last_reward_change_time:
+            type: string
+            format: date-time
         title: 'key: denom value: AllianceAsset'
+  alliance.alliance.QueryAllianceValidatorResponse:
+    type: object
+    properties:
+      validator_addr:
+        type: string
+      total_delegation_shares:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+      validator_shares:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+      total_staked:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+  alliance.alliance.QueryAllianceValidatorsResponse:
+    type: object
+    properties:
+      validators:
+        type: array
+        items:
+          type: object
+          properties:
+            validator_addr:
+              type: string
+            total_delegation_shares:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  DecCoin defines a token with a denomination and a decimal
+                  amount.
+
+
+                  NOTE: The amount field is an Dec which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            validator_shares:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  DecCoin defines a token with a denomination and a decimal
+                  amount.
+
+
+                  NOTE: The amount field is an Dec which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            total_staked:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  DecCoin defines a token with a denomination and a decimal
+                  amount.
+
+
+                  NOTE: The amount field is an Dec which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
   alliance.alliance.QueryAlliancesDelegationsResponse:
     type: object
     properties:
@@ -45882,14 +46496,21 @@ definitions:
               type: string
               title: >-
                 A positive take rate is used for liquid staking derivatives. It
-                defines an annualized reward rate that
+                defines an rate that is applied per take_rate_interval
 
-                will be redirected to the distribution rewards pool
+                that will be redirected to the distribution rewards pool
             total_tokens:
               type: string
             total_validator_shares:
               type: string
             reward_start_time:
+              type: string
+              format: date-time
+            reward_change_rate:
+              type: string
+            reward_change_interval:
+              type: string
+            last_reward_change_time:
               type: string
               format: date-time
           title: 'key: denom value: AllianceAsset'
@@ -45927,10 +46548,10 @@ definitions:
         properties:
           reward_delay_time:
             type: string
-          reward_claim_interval:
+          take_rate_claim_interval:
             type: string
             title: Time interval between consecutive applications of `take_rate`
-          last_reward_claim_time:
+          last_take_rate_claim_time:
             type: string
             format: date-time
             title: Last application of `take_rate` on assets
@@ -46029,6 +46650,18 @@ definitions:
       Coin defines a token with a denomination and an amount.
 
       NOTE: The amount field is an Int which implements the custom method
+      signatures required by gogoproto.
+  cosmos.base.v1beta1.DecCoin:
+    type: object
+    properties:
+      denom:
+        type: string
+      amount:
+        type: string
+    description: |-
+      DecCoin defines a token with a denomination and a decimal amount.
+
+      NOTE: The amount field is an Dec which implements the custom method
       signatures required by gogoproto.
   google.protobuf.Any:
     type: object
@@ -54894,18 +55527,6 @@ definitions:
   cosmos.crisis.v1beta1.MsgVerifyInvariantResponse:
     type: object
     description: MsgVerifyInvariantResponse defines the Msg/VerifyInvariant response type.
-  cosmos.base.v1beta1.DecCoin:
-    type: object
-    properties:
-      denom:
-        type: string
-      amount:
-        type: string
-    description: |-
-      DecCoin defines a token with a denomination and a decimal amount.
-
-      NOTE: The amount field is an Dec which implements the custom method
-      signatures required by gogoproto.
   cosmos.distribution.v1beta1.DelegationDelegatorReward:
     type: object
     properties:
