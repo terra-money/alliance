@@ -9,7 +9,7 @@ accounts:
 - name: alice
   coins:
   - 2000000000token
-  - 200000000stake
+  - 2000000000stake
   mnemonic: wine rich chunk that swim afford found auction travel dentist razor furnace
     fluid hidden happy enroll pilot dragon market broom bus merry salad assume
 - name: bob

@@ -408,7 +408,7 @@ func initGenFiles(
 	minterParams.Inflation = sdk.NewDec(10000)
 	mintGenState.Minter = minterParams
 	mintParams := mintGenState.GetParams()
-	mintParams.InflationMax = sdk.NewDec(10000)
+	mintParams.InflationMax = sdk.NewDec(1)
 	mintParams.MintDenom = bondDenom
 	mintGenState.Params = mintParams
 	appGenState[minttypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&mintGenState)

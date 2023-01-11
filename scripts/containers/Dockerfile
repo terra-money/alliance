@@ -3,6 +3,9 @@ FROM golang:1.18.7-bullseye AS build
 
 RUN apt update && apt install jq build-essential -y
 
+RUN curl https://get.ignite.com/cli@v0.25.1! | bash
+RUN ignite chain build --output . --verbose
+
 WORKDIR /allianced
 COPY . /allianced
 
@@ -11,9 +14,6 @@ ARG BUILDPLATFORM=linux/amd64
 
 RUN sed -i "s/AccountAddressPrefix = \"alliance\"/AccountAddressPrefix = \"${ACC_PREFIX}\"/g" app/app.go
 RUN sed -i "s/Name                 = \"alliance\"/Name                 = \"${ACC_PREFIX}\"/g" app/app.go
-
-RUN curl https://get.ignite.com/cli@v0.25.1! | bash
-RUN ignite chain build --output . --verbose
 
 RUN cp /go/pkg/mod/github.com/\!cosm\!wasm/wasmvm@v*/internal/api/libwasmvm.`uname -m`.so /lib/
 
