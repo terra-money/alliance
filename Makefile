@@ -7,7 +7,7 @@ BOND_DENOM = stake
 localnet-alliance-rmi:
 	docker rmi terra-money/localnet-alliance 2>/dev/null; true
 
-localnet-build-env: localnet-alliance-rmi
+localnet-build-env:
 	docker build --tag terra-money/localnet-alliance -f scripts/containers/Dockerfile --build-arg ACC_PREFIX=$(ACC_PREFIX)\
     		$(shell git rev-parse --show-toplevel)
 
