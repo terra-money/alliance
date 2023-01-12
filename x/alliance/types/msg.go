@@ -20,6 +20,14 @@ var (
 	MsgClaimDelegationRewardsType = "claim_delegation_rewards"
 )
 
+func NewMsgDelegate(delegatorAddress, validatorAddress string, amount sdk.Coin) *MsgDelegate {
+	return &MsgDelegate{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: validatorAddress,
+		Amount:           amount,
+	}
+}
+
 func (m MsgDelegate) ValidateBasic() error {
 	if !m.Amount.Amount.GT(sdk.ZeroInt()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance delegation amount must be more than zero")
@@ -37,6 +45,15 @@ func (m MsgDelegate) GetSigners() []sdk.AccAddress {
 
 func (msg MsgDelegate) Type() string { return MsgDelegateType }
 
+func NewMsgRedelegate(delegatorAddress, validatorSrcAddress, validatorDstAddress string, amount sdk.Coin) *MsgRedelegate {
+	return &MsgRedelegate{
+		DelegatorAddress:    delegatorAddress,
+		ValidatorSrcAddress: validatorSrcAddress,
+		ValidatorDstAddress: validatorDstAddress,
+		Amount:              amount,
+	}
+}
+
 func (m MsgRedelegate) ValidateBasic() error {
 	if m.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance redelegation amount must be more than zero")
@@ -53,6 +70,14 @@ func (m MsgRedelegate) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgRedelegate) Type() string { return MsgRedelegateType }
+
+func NewMsgUndelegate(delegatorAddress, validatorAddress string, amount sdk.Coin) *MsgUndelegate {
+	return &MsgUndelegate{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: validatorAddress,
+		Amount:           amount,
+	}
+}
 
 func (m MsgUndelegate) ValidateBasic() error {
 	if m.Amount.Amount.LTE(sdk.ZeroInt()) {
