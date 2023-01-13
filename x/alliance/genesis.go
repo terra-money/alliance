@@ -26,8 +26,8 @@ func ValidateGenesis(data *types.GenesisState) error {
 func DefaultGenesisState() *types.GenesisState {
 	return &types.GenesisState{
 		Params: types.Params{
-			RewardDelayTime:       24 * 60 * 60 * 1000_000_000,
-			TakeRateClaimInterval: 5 * 60 * 1000_000_000,
+			RewardDelayTime:       time.Hour * 24 * 7,
+			TakeRateClaimInterval: time.Minute * 5,
 			LastTakeRateClaimTime: time.Now(),
 		},
 		Assets:                     []types.AllianceAsset{},
