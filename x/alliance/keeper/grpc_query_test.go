@@ -812,23 +812,44 @@ func TestQueryValidators(t *testing.T) {
 	})
 
 	require.NoError(t, queryErr)
-	require.Equal(t, &types.QueryAllianceValidatorsResponse{
-		Validators: []types.QueryAllianceValidatorResponse{
-			{
-				ValidatorAddr: val.GetOperator().String(),
-				TotalDelegationShares: sdk.NewDecCoins(
-					sdk.NewDecCoinFromDec(ALLIANCE_TOKEN_DENOM, sdk.NewDec(1000000)),
-				),
-				ValidatorShares: sdk.NewDecCoins(
-					sdk.NewDecCoinFromDec(ALLIANCE_TOKEN_DENOM, sdk.NewDec(1000000)),
-				),
-				TotalStaked: sdk.NewDecCoins(
-					sdk.NewDecCoinFromDec(ALLIANCE_TOKEN_DENOM, sdk.NewDec(1000_000)),
-				),
+	// Order in which validators are returned is not deterministic since we randomly generate validator addresses
+	if queryVal.Validators[0].ValidatorAddr == val.GetOperator().String() {
+		require.Equal(t, &types.QueryAllianceValidatorsResponse{
+			Validators: []types.QueryAllianceValidatorResponse{
+				{
+					ValidatorAddr: val.GetOperator().String(),
+					TotalDelegationShares: sdk.NewDecCoins(
+						sdk.NewDecCoinFromDec(ALLIANCE_TOKEN_DENOM, sdk.NewDec(1000000)),
+					),
+					ValidatorShares: sdk.NewDecCoins(
+						sdk.NewDecCoinFromDec(ALLIANCE_TOKEN_DENOM, sdk.NewDec(1000000)),
+					),
+					TotalStaked: sdk.NewDecCoins(
+						sdk.NewDecCoinFromDec(ALLIANCE_TOKEN_DENOM, sdk.NewDec(1000_000)),
+					),
+				},
 			},
-		},
-		Pagination: queryVal.Pagination,
-	}, queryVal)
+			Pagination: queryVal.Pagination,
+		}, queryVal)
+	} else {
+		require.Equal(t, &types.QueryAllianceValidatorsResponse{
+			Validators: []types.QueryAllianceValidatorResponse{
+				{
+					ValidatorAddr: val2.GetOperator().String(),
+					TotalDelegationShares: sdk.NewDecCoins(
+						sdk.NewDecCoinFromDec(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(1000000)),
+					),
+					ValidatorShares: sdk.NewDecCoins(
+						sdk.NewDecCoinFromDec(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(1000000)),
+					),
+					TotalStaked: sdk.NewDecCoins(
+						sdk.NewDecCoinFromDec(ALLIANCE_2_TOKEN_DENOM, sdk.NewDec(1000_000)),
+					),
+				},
+			},
+			Pagination: queryVal.Pagination,
+		}, queryVal)
+	}
 
 	queryVal2, queryErr := queryServer.AllAllianceValidators(ctx, &types.QueryAllAllianceValidatorsRequest{
 		Pagination: &query.PageRequest{
