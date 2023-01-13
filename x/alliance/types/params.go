@@ -47,7 +47,7 @@ func validateTime(i interface{}) error {
 // NewParams creates a new Params instance
 func NewParams() Params {
 	return Params{
-		RewardDelayTime:       time.Hour,
+		RewardDelayTime:       time.Hour * 24 * 7,
 		TakeRateClaimInterval: time.Minute * 5,
 		LastTakeRateClaimTime: time.Now(),
 	}

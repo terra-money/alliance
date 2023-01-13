@@ -228,7 +228,7 @@ func TestQueryParams(t *testing.T) {
 	// THEN: VALIDATE THAT NO ERRORS HAVE BEEN PRODUCED AND OUTPUT IS AS WE EXPECT
 	require.Nil(t, err)
 
-	require.Equal(t, queyParams.Params.RewardDelayTime, time.Hour)
+	require.Equal(t, queyParams.Params.RewardDelayTime, time.Hour*24*7)
 	require.Equal(t, queyParams.Params.TakeRateClaimInterval, time.Minute*5)
 
 	// there is no way to match the exact time when the module is being instantiated
