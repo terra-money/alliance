@@ -172,6 +172,12 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 		false,
 	)
 
+	// When there are no more tokens recorded in the asset, clear all share records that might remain
+	// from rounding errors and to prevent div by zero error when there are new delegations
+	if asset.TotalTokens.IsZero() {
+		k.ResetAssetAndValidators(ctx, asset)
+	}
+
 	// Queue undelegation messages to distribute tokens after undelegation completes in the future
 	completionTime := k.queueUndelegation(ctx, delAddr, validator.GetOperator(), coin)
 	k.QueueAssetRebalanceEvent(ctx)
@@ -372,8 +378,9 @@ func (k Keeper) ValidateDelegatedAmount(delegation types.Delegation, coin sdk.Co
 		return sdk.Dec{}, stakingtypes.ErrInsufficientShares
 	}
 
-	// Account for rounding
-	if delegation.Shares.LT(delegationSharesToUpdate) {
+	// Account for rounding in which shares for a full withdraw is slightly more or less than the number of shares recorded
+	// Withdraw all in that case
+	if delegation.Shares.Sub(delegationSharesToUpdate).Abs().LT(sdk.OneDec()) {
 		delegationSharesToUpdate = delegation.Shares
 	}
 
@@ -534,4 +541,24 @@ func (k Keeper) GetAllianceBondedAmount(ctx sdk.Context, delegator sdk.AccAddres
 		return false
 	})
 	return bonded.TruncateInt()
+}
+
+// ResetAssetAndValidators
+// When an asset has no more tokens being delegated, go through all validators and set
+// validator shares to zero
+func (k Keeper) ResetAssetAndValidators(ctx sdk.Context, asset types.AllianceAsset) (err error) {
+	k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) (stop bool) {
+		updatedShares := sdk.NewDecCoins()
+		for _, share := range info.ValidatorShares {
+			if share.Denom != asset.Denom {
+				updatedShares = append(updatedShares, share)
+			}
+		}
+		info.ValidatorShares = updatedShares
+		k.SetValidatorInfo(ctx, valAddr, info)
+		return false
+	})
+	asset.TotalValidatorShares = sdk.ZeroDec()
+	k.SetAsset(ctx, asset)
+	return nil
 }
