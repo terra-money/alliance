@@ -22,10 +22,9 @@ RUN cp /go/pkg/mod/github.com/\!cosm\!wasm/wasmvm@v*/internal/api/libwasmvm.`una
 FROM debian:bullseye AS run
 COPY ./scripts/containers/build-wrapper.sh /allianced/build-wrapper.sh
 
-VOLUME /allianced
+WORKDIR /allianced
 COPY --from=build /allianced/ /allianced/
 COPY --from=build /lib/ /lib/
-WORKDIR /allianced
 
 EXPOSE 26656 26657
 ENTRYPOINT ["/allianced/build-wrapper.sh"]
