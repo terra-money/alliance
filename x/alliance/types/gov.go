@@ -1,11 +1,12 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"time"
 )
 
 const (
@@ -47,8 +48,8 @@ func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
 
-	if m.RewardWeight.IsNil() || m.RewardWeight.LTE(sdk.ZeroDec()) {
-		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be a positive number")
+	if m.RewardWeight.IsNil() || m.RewardWeight.LT(sdk.ZeroDec()) {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be zero or a positive number")
 	}
 
 	if m.TakeRate.IsNil() || m.TakeRate.IsNegative() || m.TakeRate.GTE(sdk.OneDec()) {
@@ -83,8 +84,8 @@ func (m *MsgUpdateAllianceProposal) ValidateBasic() error {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
 
-	if m.RewardWeight.IsNil() || m.RewardWeight.LTE(sdk.ZeroDec()) {
-		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be a positive number")
+	if m.RewardWeight.IsNil() || m.RewardWeight.LT(sdk.ZeroDec()) {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be zero or a positive number")
 	}
 
 	if m.TakeRate.IsNil() || m.TakeRate.IsNegative() || m.TakeRate.GTE(sdk.OneDec()) {
