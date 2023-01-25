@@ -151,7 +151,7 @@ func UpdateAlliance() *cobra.Command {
 				return err
 			}
 
-			content := types.NewMsgCreateAllianceProposal(
+			content := types.NewMsgUpdateAllianceProposal(
 				title,
 				description,
 				args[0],
