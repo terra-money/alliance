@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	"net"
 	"os"
 	"path/filepath"
@@ -372,6 +373,24 @@ func initGenFiles(
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState)
 	crisisGenState.ConstantFee.Denom = bondDenom
 	appGenState[crisistypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&crisisGenState)
+
+	// ICA HOST
+	var interchainAccountsGenState icatypes.GenesisState
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[icatypes.ModuleName], &interchainAccountsGenState)
+	interchainAccountsGenState.HostGenesisState.Params.AllowMessages = []string{
+		"/cosmos.bank.v1beta1.MsgSend",
+		"/cosmos.bank.v1beta1.MsgMultiSend",
+		"/cosmos.distribution.v1beta1.MsgSetWithdrawAddress",
+		"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+		"/cosmos.gov.v1beta1.MsgVote",
+		"/cosmos.gov.v1beta1.MsgVoteWeighted",
+		"/cosmos.staking.v1beta1.MsgDelegate",
+		"/cosmos.staking.v1beta1.MsgUndelegate",
+		"/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation",
+		"/cosmos.staking.v1beta1.MsgBeginRedelegate",
+		"/ibc.applications.transfer.v1.MsgTransfer",
+	}
+	appGenState[icatypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&interchainAccountsGenState)
 
 	// ALLIANCE
 	var allianceGenState alliancetypes.GenesisState
