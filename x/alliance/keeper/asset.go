@@ -113,7 +113,7 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 		expectedBondAmount := sdk.ZeroDec()
 		for _, asset := range assets {
 			// Ignores assets that were recently added to prevent a small set of stakers from owning too much of the
-			// voting power
+			// voting power at the start. Uses the asset.RewardStartTime to determine when an asset is activated
 			if ctx.BlockTime().Before(asset.RewardStartTime) {
 				// Queue a rebalancing event so that we keep checking if the asset rewards has started in the next block
 				k.QueueAssetRebalanceEvent(ctx)
