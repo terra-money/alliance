@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - feat/wasm/testnets
+      - feat/wasm-testnets
 
 env:
   REGISTRY: ghcr.io
@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        name: [harkonnen corrino ordos atreides]
+        name: [harkonnen, corrino, ordos, atreides]
     
     permissions:
       contents: read
