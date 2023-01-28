@@ -22,7 +22,7 @@ func setupApp(t *testing.T, r *rand.Rand, numValidators int, numDelegators int, 
 	valAccAddrs := test_helpers.AddTestAddrsIncremental(app, ctx, numValidators, sdk.NewCoins())
 	pks := test_helpers.CreateTestPubKeys(numValidators)
 
-	for i := 0; i < numValidators; i += 1 {
+	for i := 0; i < numValidators; i++ {
 		valAddr := sdk.ValAddress(valAccAddrs[i])
 		valAddrs = append(valAddrs, valAddr)
 		_val := teststaking.NewValidator(t, valAddr, pks[i])

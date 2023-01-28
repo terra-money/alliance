@@ -20,7 +20,7 @@ func SetupApp(t *testing.T, r *rand.Rand, numAssets int, numValidators int, numD
 	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime)
-	for i := 0; i < numAssets; i += 1 {
+	for i := 0; i < numAssets; i++ {
 		rewardWeight := simulation.RandomDecAmount(r, sdk.NewDec(1))
 		takeRate := simulation.RandomDecAmount(r, sdk.MustNewDecFromStr("0.0001"))
 		asset := types.NewAllianceAsset(fmt.Sprintf("ASSET%d", i), rewardWeight, takeRate, startTime)
@@ -39,7 +39,7 @@ func SetupApp(t *testing.T, r *rand.Rand, numAssets int, numValidators int, numD
 	valAddrs = test_helpers.AddTestAddrsIncremental(app, ctx, numValidators, sdk.NewCoins())
 	pks := test_helpers.CreateTestPubKeys(numValidators)
 
-	for i := 0; i < numValidators; i += 1 {
+	for i := 0; i < numValidators; i++ {
 		valAddr := sdk.ValAddress(valAddrs[i])
 		_val := teststaking.NewValidator(t, valAddr, pks[i])
 		_val.Commission = stakingtypes.Commission{
@@ -60,8 +60,8 @@ func SetupApp(t *testing.T, r *rand.Rand, numAssets int, numValidators int, numD
 
 func GenerateOperationSlots(operations ...int) func(r *rand.Rand) int {
 	var slots []int
-	for i := 0; i < len(operations); i += 1 {
-		for o := 0; o < operations[i]; o += 1 {
+	for i := 0; i < len(operations); i++ {
+		for o := 0; o < operations[i]; o++ {
 			slots = append(slots, i)
 		}
 	}

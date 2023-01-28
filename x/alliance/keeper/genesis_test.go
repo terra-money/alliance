@@ -71,8 +71,8 @@ func TestExportAndImportGenesis(t *testing.T) {
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 	require.NoError(t, err)
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 3, sdk.NewCoins(
-		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000)),
-		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(1000_000)),
+		sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)),
+		sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(1000_000)),
 	))
 	valAddr2 := sdk.ValAddress(addrs[0])
 	_val2 := teststaking.NewValidator(t, valAddr2, test_helpers.CreateTestPubKeys(1)[0])
@@ -84,7 +84,7 @@ func TestExportAndImportGenesis(t *testing.T) {
 	err = app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
 		Title:                "",
 		Description:          "",
-		Denom:                ALLIANCE_TOKEN_DENOM,
+		Denom:                AllianceDenom,
 		RewardWeight:         sdk.NewDec(1),
 		TakeRate:             sdk.NewDec(0),
 		RewardChangeRate:     sdk.MustNewDecFromStr("0.5"),
@@ -93,7 +93,7 @@ func TestExportAndImportGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	// Delegate
-	delegationCoin := sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000))
+	delegationCoin := sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000_000))
 	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegationCoin))
 	require.NoError(t, err)
 	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(delegationCoin))
@@ -102,16 +102,16 @@ func TestExportAndImportGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	// Redelegate
-	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr, val1, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000_000)))
+	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr, val1, val2, sdk.NewCoin(AllianceDenom, sdk.NewInt(500_000_000)))
 	require.NoError(t, err)
 
 	// Undelegate
-	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(500_000_000)))
+	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(500_000_000)))
 	require.NoError(t, err)
 
 	// Trigger update asset
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 25)).WithBlockHeight(ctx.BlockHeight() + 1)
-	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.NewAllianceAsset(ALLIANCE_TOKEN_DENOM, sdk.MustNewDecFromStr("0.5"), sdk.ZeroDec(), ctx.BlockTime()))
+	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.NewAllianceAsset(AllianceDenom, sdk.MustNewDecFromStr("0.5"), sdk.ZeroDec(), ctx.BlockTime()))
 	require.NoError(t, err)
 
 	genesisState := app.AllianceKeeper.ExportGenesis(ctx)

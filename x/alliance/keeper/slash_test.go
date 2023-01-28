@@ -23,13 +23,13 @@ func TestSlashingEvent(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
+				Denom:        AllianceDenom,
 				RewardWeight: sdk.NewDec(2),
 				TakeRate:     sdk.NewDec(0),
 				TotalTokens:  sdk.ZeroInt(),
 			},
 			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
+				Denom:        AllianceDenomTwo,
 				RewardWeight: sdk.NewDec(10),
 				TakeRate:     sdk.NewDec(0),
 				TotalTokens:  sdk.ZeroInt(),
@@ -46,8 +46,8 @@ func TestSlashingEvent(t *testing.T) {
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
-		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(20_000_000)),
-		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(20_000_000)),
+		sdk.NewCoin(AllianceDenom, sdk.NewInt(20_000_000)),
+		sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(20_000_000)),
 	))
 	pks := test_helpers.CreateTestPubKeys(2)
 
@@ -84,22 +84,22 @@ func TestSlashingEvent(t *testing.T) {
 	user2 := addrs[3]
 
 	// Users add delegations
-	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user1, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val2, sdk.NewCoin(AllianceDenom, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(AllianceDenom, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
 
-	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user1, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val2, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
 
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
@@ -112,10 +112,10 @@ func TestSlashingEvent(t *testing.T) {
 	valConAddr1, _ := val1.GetConsAddr()
 
 	// Tokens should remain the same before slashing
-	asset1, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	asset1, _ := app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	tokens := val1.TotalTokensWithAsset(asset1).TruncateInt()
 	require.Equal(t, sdk.NewInt(20_000_000), tokens)
-	asset2, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
+	asset2, _ := app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenomTwo)
 	tokens = val1.TotalTokensWithAsset(asset2).TruncateInt()
 	require.Equal(t, sdk.NewInt(20_000_000), tokens)
 
@@ -131,19 +131,19 @@ func TestSlashingEvent(t *testing.T) {
 
 	// Expect that total tokens with validator 1 are reduced
 	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
-	asset1, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	asset1, _ = app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	tokens = val1.TotalTokensWithAsset(asset1).TruncateInt()
 	require.Greater(t, sdk.NewInt(20_000_000).Int64(), tokens.Int64())
-	asset2, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
+	asset2, _ = app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenomTwo)
 	tokens = val1.TotalTokensWithAsset(asset2).TruncateInt()
 	require.Greater(t, sdk.NewInt(20_000_000).Int64(), tokens.Int64())
 
 	// Expect that total tokens with validator 2 increased (redistributed from slashing)
 	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
-	asset1, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	asset1, _ = app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	tokens = val2.TotalTokensWithAsset(asset1).TruncateInt()
 	require.Less(t, sdk.NewInt(20_000_000).Int64(), tokens.Int64())
-	asset2, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_2_TOKEN_DENOM)
+	asset2, _ = app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenomTwo)
 	tokens = val2.TotalTokensWithAsset(asset2).TruncateInt()
 	require.Less(t, sdk.NewInt(20_000_000).Int64(), tokens.Int64())
 
@@ -164,13 +164,13 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
+				Denom:        AllianceDenom,
 				RewardWeight: sdk.NewDec(2),
 				TakeRate:     sdk.NewDec(0),
 				TotalTokens:  sdk.ZeroInt(),
 			},
 			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
+				Denom:        AllianceDenomTwo,
 				RewardWeight: sdk.NewDec(10),
 				TakeRate:     sdk.NewDec(0),
 				TotalTokens:  sdk.ZeroInt(),
@@ -187,8 +187,8 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
-		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(20_000_000)),
-		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(20_000_000)),
+		sdk.NewCoin(AllianceDenom, sdk.NewInt(20_000_000)),
+		sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(20_000_000)),
 	))
 	pks := test_helpers.CreateTestPubKeys(2)
 
@@ -225,20 +225,20 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	user2 := addrs[3]
 
 	// Users add delegations
-	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user1, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val2, sdk.NewCoin(AllianceDenom, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(AllianceDenom, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
 
-	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user1, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val2, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
 
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
@@ -246,7 +246,7 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(12_999_999), app.StakingKeeper.TotalBondedTokens(ctx))
 
-	_, err = app.AllianceKeeper.Redelegate(ctx, user1, val1, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Redelegate(ctx, user1, val1, val2, sdk.NewCoin(AllianceDenom, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
 
 	assets = app.AllianceKeeper.GetAllAssets(ctx)
@@ -255,8 +255,8 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	require.Equal(t, sdk.NewInt(13_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
 	// Expect that delegation has increased
-	delegation, _ := app.AllianceKeeper.GetDelegation(ctx, user1, val2, ALLIANCE_TOKEN_DENOM)
-	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	delegation, _ := app.AllianceKeeper.GetDelegation(ctx, user1, val2, AllianceDenom)
+	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	tokens := types.GetDelegationTokens(delegation, val2, asset)
 	require.Equal(t, sdk.NewInt(20_000_000), tokens.Amount)
 
@@ -268,8 +268,8 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
 
 	// Expect that delegation decreased
-	delegation, _ = app.AllianceKeeper.GetDelegation(ctx, user1, val2, ALLIANCE_TOKEN_DENOM)
-	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	delegation, _ = app.AllianceKeeper.GetDelegation(ctx, user1, val2, AllianceDenom)
+	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	tokens = types.GetDelegationTokens(delegation, val2, asset)
 	require.Greater(t, sdk.NewInt(20_000_000).Int64(), tokens.Amount.Int64())
 
@@ -281,8 +281,8 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
 
 	// Expect that delegation stayed the same
-	delegation, _ = app.AllianceKeeper.GetDelegation(ctx, user1, val2, ALLIANCE_TOKEN_DENOM)
-	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, ALLIANCE_TOKEN_DENOM)
+	delegation, _ = app.AllianceKeeper.GetDelegation(ctx, user1, val2, AllianceDenom)
+	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	require.Equal(t, tokens.Amount.Int64(), types.GetDelegationTokens(delegation, val2, asset).Amount.Int64())
 
 	_, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
@@ -298,13 +298,13 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        ALLIANCE_TOKEN_DENOM,
+				Denom:        AllianceDenom,
 				RewardWeight: sdk.NewDec(2),
 				TakeRate:     sdk.NewDec(0),
 				TotalTokens:  sdk.ZeroInt(),
 			},
 			{
-				Denom:        ALLIANCE_2_TOKEN_DENOM,
+				Denom:        AllianceDenomTwo,
 				RewardWeight: sdk.NewDec(10),
 				TakeRate:     sdk.NewDec(0),
 				TotalTokens:  sdk.ZeroInt(),
@@ -321,8 +321,8 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
-		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(20_000_000)),
-		sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(20_000_000)),
+		sdk.NewCoin(AllianceDenom, sdk.NewInt(20_000_000)),
+		sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(20_000_000)),
 	))
 	pks := test_helpers.CreateTestPubKeys(2)
 
@@ -359,20 +359,20 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	user2 := addrs[3]
 
 	// Users add delegations
-	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user1, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val2, sdk.NewCoin(AllianceDenom, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(AllianceDenom, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
 
-	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user1, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val2, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
-	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(ALLIANCE_2_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
 
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
@@ -380,7 +380,7 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(12_999_999), app.StakingKeeper.TotalBondedTokens(ctx))
 
-	_, err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(10_000_000)))
+	_, err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(10_000_000)))
 	require.NoError(t, err)
 
 	// Expect to have undelegation index saved

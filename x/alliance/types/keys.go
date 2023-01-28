@@ -105,26 +105,26 @@ func ParseRedelegationIndexForRedelegationKey(key []byte) ([]byte, time.Time, er
 	offset += len(RedelegationByValidatorIndexKey)
 
 	srcValAddrLen := int(key[offset])
-	offset += 1
+	offset++
 	offset += srcValAddrLen
 
 	timeLen := int(key[offset])
-	offset += 1
+	offset++
 	timeBytes := key[offset : offset+timeLen]
 	offset += timeLen
 
 	denomLen := int(key[offset])
-	offset += 1
+	offset++
 	denomBytes := key[offset : offset+denomLen]
 	offset += denomLen
 
 	dstValAddrLen := int(key[offset])
-	offset += 1
+	offset++
 	dstValAddrBytes := key[offset : offset+dstValAddrLen]
 	offset += dstValAddrLen
 
 	delAddrLen := int(key[offset])
-	offset += 1
+	offset++
 	delAddrBytes := key[offset : offset+delAddrLen]
 
 	newKey := append(RedelegationKey, address.MustLengthPrefix(delAddrBytes)...)
@@ -153,20 +153,20 @@ func ParseUnbondingIndexKeyToUndelegationKey(key []byte) ([]byte, time.Time, err
 	offset += len(UndelegationByValidatorIndexKey)
 
 	valAddrLen := int(key[offset])
-	offset += 1
+	offset++
 	offset += valAddrLen
 
 	timeLen := int(key[offset])
-	offset += 1
+	offset++
 	timeBytes := key[offset : offset+timeLen]
 	offset += timeLen
 
 	denomLen := int(key[offset])
-	offset += 1
+	offset++
 	offset += denomLen
 
 	delAddrLen := int(key[offset])
-	offset += 1
+	offset++
 	delAddrBytes := key[offset : offset+delAddrLen]
 	newKey := append(UndelegationQueueKey, address.MustLengthPrefix(timeBytes)...)
 	newKey = append(newKey, address.MustLengthPrefix(delAddrBytes)...)
@@ -213,7 +213,7 @@ func ParseUndelegationQueueKeyForCompletionTime(key []byte) (time.Time, error) {
 	offset += len(UndelegationQueueKey)
 
 	timeLen := int(key[offset])
-	offset += 1
+	offset++
 	b := key[offset : offset+timeLen]
 	t, err := sdk.ParseTimeBytes(b)
 	return t, err
@@ -251,12 +251,12 @@ func ParseRewardWeightChangeSnapshotKey(key []byte) (denom string, val sdk.ValAd
 	offset := 0
 	offset += len(RewardWeightChangeSnapshotKey)
 	denomLen := int(key[offset])
-	offset += 1
+	offset++
 	denom = string(key[offset : offset+denomLen-1])
 	offset += denomLen
 
 	valLen := int(key[offset])
-	offset += 1
+	offset++
 	val = key[offset : offset+valLen]
 	offset += valLen
 
@@ -279,10 +279,10 @@ func ParseRewardWeightDecayQueueKeyForDenom(key []byte) (triggerTime time.Time, 
 	offset := 0
 	offset += len(RewardWeightDecayQueueKey)
 	timeLen := int(key[offset])
-	offset += 1
+	offset++
 	triggerTime, _ = sdk.ParseTimeBytes(key[offset : offset+timeLen])
 	offset += timeLen
 	denomLen := int(key[offset])
-	offset += 1
+	offset++
 	return triggerTime, string(key[offset : offset+denomLen-1])
 }

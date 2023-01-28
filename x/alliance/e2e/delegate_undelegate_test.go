@@ -34,6 +34,7 @@ func TestDelegateThenTakeRateThenUndelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	val0, err = app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
+	require.NoError(t, err)
 	require.Equal(t, sdk.NewDec(100033333333333333), sdk.DecCoins(val0.TotalDelegatorShares).AmountOf("test"))
 
 	lastClaim := ctx.BlockTime()

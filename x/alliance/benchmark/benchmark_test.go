@@ -41,12 +41,12 @@ func TestRunBenchmarks(t *testing.T) {
 	powerReduction := sdk.OneInt()
 	operations := make(map[string]int)
 
-	for b := 0; b < NUM_OF_BLOCKS; b += 1 {
+	for b := 0; b < NUM_OF_BLOCKS; b++ {
 		t.Logf("Block: %d\n Time: %s", ctx.BlockHeight(), ctx.BlockTime())
 		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(ctx.BlockTime().Add(time.Second * time.Duration(BLOCKTIME_IN_S)))
 		totalVotingPower := int64(0)
 		var voteInfo []abcitypes.VoteInfo
-		for i := 0; i < NUM_OF_VALIDATORS; i += 1 {
+		for i := 0; i < NUM_OF_VALIDATORS; i++ {
 			valAddr := sdk.ValAddress(vals[i])
 			val, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 			require.NoError(t, err)
@@ -73,23 +73,23 @@ func TestRunBenchmarks(t *testing.T) {
 
 		// Delegator Actions
 		operationFunc := benchmark.GenerateOperationSlots(DELEGATION_RATE, REDELEGATION_RATE, UNDELEGATION_RATE, REWARD_CLAIM_RATE)
-		for o := 0; o < OPERATIONS_PER_BLOCK; o += 1 {
+		for o := 0; o < OPERATIONS_PER_BLOCK; o++ {
 			switch operationFunc(r) {
 			case 0:
 				delegateOperation(ctx, app, r, assets, vals, dels)
-				operations["delegate"] += 1
+				operations["delegate"]++
 				break
 			case 1:
 				redelegateOperation(ctx, app, r, assets, vals, dels)
-				operations["redelegate"] += 1
+				operations["redelegate"]++
 				break
 			case 2:
 				undelegateOperation(ctx, app, r)
-				operations["undelegate"] += 1
+				operations["undelegate"]++
 				break
 			case 3:
 				claimRewardsOperation(ctx, app, r)
-				operations["claim"] += 1
+				operations["claim"]++
 				break
 			}
 		}
