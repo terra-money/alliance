@@ -99,10 +99,13 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 FROM alpine:${ALPINE_VERSION} as app
 
 ARG ACC_PREFIX
-ENV APP_BIN="/usr/local/bin/appd"
+ENV APP_BIN="/usr/local/bin/${ACC_PREFIX}d"
 
 COPY --from=app-builder /go/bin/allianced ${APP_BIN}
 
 WORKDIR /app
+
+RUN set -eux &&\
+    ln -s "${APP_BIN}" "/usr/local/bin/appd"
 
 CMD ["/usr/local/bin/appd", "--home", "/app", "start"]
