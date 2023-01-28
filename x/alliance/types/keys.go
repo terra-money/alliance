@@ -96,7 +96,7 @@ func GetRedelegationIndexKey(srcVal sdk.ValAddress, completion time.Time, denom 
 }
 
 func GetRedelegationsIndexOrderedByValidatorKey(srcVal sdk.ValAddress) []byte {
-	key := append(RedelegationByValidatorIndexKey, address.MustLengthPrefix(srcVal)...)
+	key := append(RedelegationByValidatorIndexKey, address.MustLengthPrefix(srcVal)...) //nolint:gocritic // we intend to append this way
 	return key
 }
 
@@ -127,7 +127,7 @@ func ParseRedelegationIndexForRedelegationKey(key []byte) ([]byte, time.Time, er
 	offset++
 	delAddrBytes := key[offset : offset+delAddrLen]
 
-	newKey := append(RedelegationKey, address.MustLengthPrefix(delAddrBytes)...)
+	newKey := append(RedelegationKey, address.MustLengthPrefix(delAddrBytes)...) //nolint:gocritic // we intend to append this way
 	newKey = append(newKey, address.MustLengthPrefix(denomBytes)...)
 	newKey = append(newKey, address.MustLengthPrefix(dstValAddrBytes)...)
 	newKey = append(newKey, timeBytes...)
@@ -144,7 +144,7 @@ func GetUnbondingIndexKey(valAddr sdk.ValAddress, completion time.Time, denom st
 }
 
 func GetUndelegationsIndexOrderedByValidatorKey(valAddr sdk.ValAddress) []byte {
-	key := append(UndelegationByValidatorIndexKey, address.MustLengthPrefix(valAddr)...)
+	key := append(UndelegationByValidatorIndexKey, address.MustLengthPrefix(valAddr)...) //nolint:gocritic // we intend to append this way
 	return key
 }
 
@@ -168,7 +168,7 @@ func ParseUnbondingIndexKeyToUndelegationKey(key []byte) ([]byte, time.Time, err
 	delAddrLen := int(key[offset])
 	offset++
 	delAddrBytes := key[offset : offset+delAddrLen]
-	newKey := append(UndelegationQueueKey, address.MustLengthPrefix(timeBytes)...)
+	newKey := append(UndelegationQueueKey, address.MustLengthPrefix(timeBytes)...) //nolint:gocritic // we intend to append this way
 	newKey = append(newKey, address.MustLengthPrefix(delAddrBytes)...)
 	completionTime, err := sdk.ParseTimeBytes(timeBytes)
 	return newKey, completionTime, err
@@ -221,7 +221,7 @@ func ParseUndelegationQueueKeyForCompletionTime(key []byte) (time.Time, error) {
 
 func GetUndelegationQueueKeyByTime(completion time.Time) (key []byte) {
 	bz := sdk.FormatTimeBytes(completion)
-	key = append(UndelegationQueueKey, address.MustLengthPrefix(bz)...)
+	key = append(UndelegationQueueKey, address.MustLengthPrefix(bz)...) //nolint:gocritic // we intend to append this way
 	return key
 }
 
@@ -241,7 +241,7 @@ func ParseAllianceValidatorKey(key []byte) sdk.ValAddress {
 }
 
 func GetRewardWeightChangeSnapshotKey(denom string, val sdk.ValAddress, height uint64) (key []byte) {
-	key = append(RewardWeightChangeSnapshotKey, address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
+	key = append(RewardWeightChangeSnapshotKey, address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...) //nolint:gocritic // we intend to append this way
 	key = append(key, address.MustLengthPrefix(val)...)
 	key = append(key, sdk.Uint64ToBigEndian(height)...)
 	return
@@ -265,7 +265,7 @@ func ParseRewardWeightChangeSnapshotKey(key []byte) (denom string, val sdk.ValAd
 }
 
 func GetRewardWeightDecayQueueByTimestampKey(triggerTime time.Time) (key []byte) {
-	key = append(RewardWeightDecayQueueKey, address.MustLengthPrefix(sdk.FormatTimeBytes(triggerTime))...)
+	key = append(RewardWeightDecayQueueKey, address.MustLengthPrefix(sdk.FormatTimeBytes(triggerTime))...) //nolint:gocritic // we intend to append this way
 	return
 }
 

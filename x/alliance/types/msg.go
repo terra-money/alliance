@@ -43,7 +43,7 @@ func (m MsgDelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{signer}
 }
 
-func (msg MsgDelegate) Type() string { return MsgDelegateType }
+func (msg MsgDelegate) Type() string { return MsgDelegateType } // TODO: we should figure out how to differentiate this from MsgDelegate above.
 
 func NewMsgRedelegate(delegatorAddress, validatorSrcAddress, validatorDstAddress string, amount sdk.Coin) *MsgRedelegate {
 	return &MsgRedelegate{

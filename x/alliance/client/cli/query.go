@@ -276,8 +276,8 @@ func CmdQueryAllianceDelegation() *cobra.Command {
 		Short: "Query a delegation to an alliance by delegator_addr, validator_addr and denom",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			delegator_addr := args[0]
-			validator_addr := args[1]
+			delegatorAddr := args[0]
+			validatorAddr := args[1]
 			denom := args[2]
 			ctx := client.GetClientContextFromCmd(cmd)
 
@@ -287,8 +287,8 @@ func CmdQueryAllianceDelegation() *cobra.Command {
 			query := types.NewQueryClient(ctx)
 
 			params := &types.QueryAllianceDelegationRequest{
-				DelegatorAddr: delegator_addr,
-				ValidatorAddr: validator_addr,
+				DelegatorAddr: delegatorAddr,
+				ValidatorAddr: validatorAddr,
 				Denom:         denom,
 			}
 
