@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,7 +10,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/spf13/cobra"
 	"github.com/terra-money/alliance/x/alliance/types"
-	"time"
 )
 
 func CreateAlliance() *cobra.Command {
@@ -80,7 +81,6 @@ func CreateAlliance() *cobra.Command {
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
-
 			if err != nil {
 				return err
 			}
@@ -168,7 +168,6 @@ func UpdateAlliance() *cobra.Command {
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
-
 			if err != nil {
 				return err
 			}
@@ -232,7 +231,6 @@ func DeleteAlliance() *cobra.Command {
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
-
 			if err != nil {
 				return err
 			}

@@ -1,6 +1,8 @@
 package simulation
 
 import (
+	"math/rand"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -10,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
-	"math/rand"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights

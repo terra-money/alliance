@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/terra-money/alliance/x/alliance/types"
 
@@ -44,7 +45,6 @@ func CmdQueryAlliances() *cobra.Command {
 		Short: "Query paginated alliances",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err

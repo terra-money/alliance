@@ -40,7 +40,8 @@ type AppModuleBasic struct {
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sk types.StakingKeeper,
-	ak types.AccountKeeper, bk types.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+	ak types.AccountKeeper, bk types.BankKeeper, registry cdctypes.InterfaceRegistry,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, pcdc: codec.NewProtoCodec(registry)},
 		keeper:         keeper,

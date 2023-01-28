@@ -1,6 +1,11 @@
 package benchmark_test
 
 import (
+	"math/rand"
+	"os"
+	"testing"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -10,10 +15,6 @@ import (
 	"github.com/terra-money/alliance/x/alliance"
 	"github.com/terra-money/alliance/x/alliance/benchmark"
 	"github.com/terra-money/alliance/x/alliance/types"
-	"math/rand"
-	"os"
-	"testing"
-	"time"
 )
 
 var (

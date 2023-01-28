@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,9 +26,7 @@ type Keeper struct {
 	acck accountkeeper.AccountKeeper
 }
 
-var (
-	_ bankkeeper.Keeper = Keeper{}
-)
+var _ bankkeeper.Keeper = Keeper{}
 
 func NewBaseKeeper(
 	cdc codec.BinaryCodec,

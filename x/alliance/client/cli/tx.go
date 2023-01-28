@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"github.com/terra-money/alliance/x/alliance/types"
 	"strings"
+
+	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

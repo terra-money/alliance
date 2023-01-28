@@ -1,10 +1,11 @@
 package types_test
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/terra-money/alliance/x/alliance/types"
-	"testing"
 )
 
 func TestSubtractDecCoinsWithRounding(t *testing.T) {

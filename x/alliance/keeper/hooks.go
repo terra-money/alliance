@@ -9,9 +9,7 @@ type Hooks struct {
 	k Keeper
 }
 
-var (
-	_ stakingtypes.StakingHooks = Hooks{}
-)
+var _ stakingtypes.StakingHooks = Hooks{}
 
 func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error {
 	return nil

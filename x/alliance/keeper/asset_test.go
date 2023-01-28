@@ -1,13 +1,14 @@
 package keeper_test
 
 import (
+	"testing"
+	"time"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance"
 	"github.com/terra-money/alliance/x/alliance/types"
-	"testing"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
@@ -131,7 +132,6 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 
 	_, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
 	require.False(t, stop)
-
 }
 
 func TestRebalancingWithUnbondedValidator(t *testing.T) {

@@ -1,12 +1,13 @@
 package e2e
 
 import (
+	"testing"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/rand"
 	"github.com/terra-money/alliance/x/alliance/types"
-	"testing"
-	"time"
 )
 
 // TestDelegateAndUndelegate

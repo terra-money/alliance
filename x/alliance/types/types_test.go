@@ -102,6 +102,5 @@ func TestProposalsContent(t *testing.T) {
 			assert.Equal(t, "alliance", unwrap.Prop.ProposalRoute())
 			assert.Equal(t, tc.str, unwrap.Prop.String())
 		})
-
 	}
 }

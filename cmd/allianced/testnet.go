@@ -476,7 +476,6 @@ func collectGenFiles(
 			*genDoc,
 			genBalIterator,
 		)
-
 		if err != nil {
 			return err
 		}

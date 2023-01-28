@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/terra-money/alliance/app"
 	"testing"
+
+	"github.com/terra-money/alliance/app"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"

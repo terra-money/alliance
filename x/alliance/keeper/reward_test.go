@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
-	test_helpers "github.com/terra-money/alliance/app"
-	"github.com/terra-money/alliance/x/alliance/types"
 	"testing"
 	"time"
+
+	test_helpers "github.com/terra-money/alliance/app"
+	"github.com/terra-money/alliance/x/alliance/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

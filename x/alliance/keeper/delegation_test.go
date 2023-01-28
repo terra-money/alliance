@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
+	"testing"
+	"time"
+
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance"
 	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
-	"testing"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -16,8 +17,10 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-var ALLIANCE_TOKEN_DENOM = "alliance"
-var ALLIANCE_2_TOKEN_DENOM = "alliance2"
+var (
+	ALLIANCE_TOKEN_DENOM   = "alliance"
+	ALLIANCE_2_TOKEN_DENOM = "alliance2"
+)
 
 func TestDelegationWithASingleAsset(t *testing.T) {
 	app, ctx := createTestContext(t)
@@ -151,7 +154,6 @@ func TestDelegationWithASingleAsset(t *testing.T) {
 		ValidatorAddress: valAddr.String(),
 		Shares:           sdk.NewDec(2),
 	}, newDelegation)
-
 }
 
 func TestDelegationWithMultipleAssets(t *testing.T) {
@@ -695,7 +697,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	app.DistrKeeper.SetParams(ctx, distParams)
 
 	// Accounts
-	//mintPoolAddr := app.AccountKeeper.GetModuleAddress(minttypes.ModuleName)
+
 	//rewardsPoolAddr := app.AccountKeeper.GetModuleAddress(types.RewardsPoolName)
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
 		sdk.NewCoin(ALLIANCE_TOKEN_DENOM, sdk.NewInt(1000_000_000)),
@@ -836,7 +838,7 @@ func TestDelegationWithNativeStakingChanges(t *testing.T) {
 	app.DistrKeeper.SetParams(ctx, distParams)
 
 	// Accounts
-	//mintPoolAddr := app.AccountKeeper.GetModuleAddress(minttypes.ModuleName)
+
 	//rewardsPoolAddr := app.AccountKeeper.GetModuleAddress(types.RewardsPoolName)
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(

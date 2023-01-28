@@ -2,6 +2,7 @@ package bank
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	bankmodule "github.com/cosmos/cosmos-sdk/x/bank"

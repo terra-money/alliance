@@ -1,9 +1,10 @@
 package types
 
 import (
+	"time"
+
 	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"time"
 )
 
 func NewAllianceAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec, rewardStartTime time.Time) AllianceAsset {
