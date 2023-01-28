@@ -277,7 +277,8 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(app.StakingKeeper.UnbondingTime(ctx)).Add(time.Second))
 
 	// Now we slash val 1
-	app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	_, err = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
 	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
 
 	// Expect that delegation stayed the same
@@ -412,7 +413,8 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(app.StakingKeeper.UnbondingTime(ctx)).Add(time.Second))
 
 	// Now we slash val 1
-	app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	_, err = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
 	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
 
 	// Expect that delegation stayed the same

@@ -120,7 +120,7 @@ func TestRunBenchmarks(t *testing.T) {
 	state := app.AllianceKeeper.ExportGenesis(ctx)
 	file, _ := os.Create("./benchmark_genesis.json")
 	defer file.Close()
-	file.Write(app.AppCodec().MustMarshalJSON(state))
+	file.Write(app.AppCodec().MustMarshalJSON(state)) //nolint:errcheck
 }
 
 func delegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, assets []types.AllianceAsset, vals []sdk.AccAddress, dels []sdk.AccAddress) {
@@ -142,11 +142,11 @@ func delegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, ass
 	}
 	coins := sdk.NewCoin(asset.Denom, amountToDelegate)
 
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(coins))
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(coins))
+	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(coins))                             //nolint:errcheck
+	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(coins)) //nolint:errcheck
 
 	val, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
-	app.AllianceKeeper.Delegate(ctx, delAddr, val, coins)
+	app.AllianceKeeper.Delegate(ctx, delAddr, val, coins) //nolint:errcheck
 	createdDelegations = append(createdDelegations, types.NewDelegation(ctx, delAddr, valAddr, asset.Denom, sdk.ZeroDec(), []types.RewardHistory{}))
 }
 
@@ -214,7 +214,7 @@ func undelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {
 	if amountToUndelegate.IsZero() {
 		return
 	}
-	app.AllianceKeeper.Undelegate(ctx, delAddr, validator, sdk.NewCoin(asset.Denom, amountToUndelegate))
+	app.AllianceKeeper.Undelegate(ctx, delAddr, validator, sdk.NewCoin(asset.Denom, amountToUndelegate)) //nolint:errcheck
 }
 
 func claimRewardsOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {

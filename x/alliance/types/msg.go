@@ -43,7 +43,7 @@ func (m MsgDelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{signer}
 }
 
-func (msg MsgDelegate) Type() string { return MsgDelegateType } // TODO: we should figure out how to differentiate this from MsgDelegate above.
+func (msg MsgDelegate) Type() string { return MsgDelegateType } //nolint:revive // TODO: we should figure out how to differentiate this from MsgDelegate above.
 
 func NewMsgRedelegate(delegatorAddress, validatorSrcAddress, validatorDstAddress string, amount sdk.Coin) *MsgRedelegate {
 	return &MsgRedelegate{
@@ -69,7 +69,7 @@ func (m MsgRedelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{signer}
 }
 
-func (msg MsgRedelegate) Type() string { return MsgRedelegateType }
+func (msg MsgRedelegate) Type() string { return MsgRedelegateType } //nolint:revive // should make receivers consistent
 
 func NewMsgUndelegate(delegatorAddress, validatorAddress string, amount sdk.Coin) *MsgUndelegate {
 	return &MsgUndelegate{
@@ -94,7 +94,7 @@ func (m MsgUndelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{signer}
 }
 
-func (msg MsgUndelegate) Type() string { return MsgUndelegateType }
+func (msg MsgUndelegate) Type() string { return MsgUndelegateType } //nolint:revive // should make receivers consistent
 
 func (m *MsgClaimDelegationRewards) ValidateBasic() error {
 	if m.Denom == "" {
@@ -111,4 +111,4 @@ func (m *MsgClaimDelegationRewards) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{signer}
 }
 
-func (msg MsgClaimDelegationRewards) Type() string { return MsgClaimDelegationRewardsType }
+func (msg MsgClaimDelegationRewards) Type() string { return MsgClaimDelegationRewardsType } //nolint:revive // should make receivers consistent

@@ -77,7 +77,7 @@ func (a AppModuleBasic) ValidateGenesis(jsonCodec codec.JSONCodec, config client
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {

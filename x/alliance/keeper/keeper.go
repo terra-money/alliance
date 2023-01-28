@@ -21,7 +21,6 @@ type Keeper struct {
 	bankKeeper         types.BankKeeper
 	stakingKeeper      types.StakingKeeper
 	distributionKeeper types.DistributionKeeper
-	authority          string
 }
 
 func NewKeeper(

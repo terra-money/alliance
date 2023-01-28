@@ -331,7 +331,8 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 	require.Equal(t, sdk.NewInt(13_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
 	// Transfer to rewards to fee pool to be distributed
-	app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(4000_000))))
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(4000_000))))
+	require.NoError(t, err)
 
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	// Distribute in the next begin block
@@ -437,8 +438,11 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 	user2 := addrs[3]
 
 	// New delegations
-	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)))
-	app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(1000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)))
+	require.NoError(t, err)
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(1000_000)))
+	require.NoError(t, err)
+
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
@@ -611,7 +615,7 @@ func TestRewardClaimingAfterRatesDecay(t *testing.T) {
 	// Pass a proposal to add a new asset with a huge decay rate
 	decayInterval := time.Minute
 	decayRate := sdk.MustNewDecFromStr("0.5")
-	app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+	err = app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                AllianceDenom,
@@ -620,9 +624,10 @@ func TestRewardClaimingAfterRatesDecay(t *testing.T) {
 		RewardChangeRate:     decayRate,
 		RewardChangeInterval: decayInterval,
 	})
+	require.NoError(t, err)
 
 	// Pass a proposal to add another new asset no decay
-	app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+	err = app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                AllianceDenomTwo,
@@ -631,6 +636,7 @@ func TestRewardClaimingAfterRatesDecay(t *testing.T) {
 		RewardChangeRate:     sdk.OneDec(),
 		RewardChangeInterval: time.Duration(0),
 	})
+	require.NoError(t, err)
 
 	// Delegate to validator
 	_, err = app.AllianceKeeper.Delegate(ctx, addrs[1], val0, sdk.NewCoin(AllianceDenom, sdk.NewInt(5_000_000)))
@@ -645,14 +651,16 @@ func TestRewardClaimingAfterRatesDecay(t *testing.T) {
 
 	// Move block time to trigger 2 decays
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(decayInterval * 2).Add(rewardStartDelay)).WithBlockHeight(ctx.BlockHeight() + 1)
-	app.AllianceKeeper.AddAssetsToRewardPool(ctx, addrs[0], val0, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1000_000))))
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, addrs[0], val0, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1000_000))))
+	require.NoError(t, err)
 	assets = app.AllianceKeeper.GetAllAssets(ctx)
 
 	// Running the decay hook should update reward weight
 	app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	require.Equal(t, sdk.MustNewDecFromStr("0.25"), asset.RewardWeight)
-	app.AllianceKeeper.AddAssetsToRewardPool(ctx, addrs[0], val0, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1000_000))))
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, addrs[0], val0, sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(1000_000))))
+	require.NoError(t, err)
 
 	coins, err := app.AllianceKeeper.ClaimDelegationRewards(ctx, addrs[1], val0, AllianceDenom)
 	require.NoError(t, err)

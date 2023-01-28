@@ -70,8 +70,8 @@ func SimulateMsgDelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types
 		validatorToDelegateTo := validators[idx]
 		coinToDelegate := sdk.NewCoin(assetToDelegate.Denom, amountToDelegate)
 
-		bk.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(coinToDelegate))
-		bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, simAccount.Address, sdk.NewCoins(coinToDelegate))
+		bk.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(coinToDelegate))                                        //nolint:errcheck
+		bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, simAccount.Address, sdk.NewCoins(coinToDelegate)) //nolint:errcheck
 
 		msg := &types.MsgDelegate{
 			DelegatorAddress: simAccount.Address.String(),

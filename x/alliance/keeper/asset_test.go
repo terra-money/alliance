@@ -264,7 +264,8 @@ func TestRebalancingWithUnbondedValidator(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(16_000_000).String(), app.StakingKeeper.TotalBondedTokens(ctx).String())
 
-	app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	_, err = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	require.NoError(t, err)
 
 	// Set max validators to be 3 to trigger rebonding
 	params = app.StakingKeeper.GetParams(ctx)
@@ -418,7 +419,8 @@ func TestRebalancingWithJailedValidator(t *testing.T) {
 	// 11 * 1.6 = 17.6
 	require.Equal(t, sdk.NewInt(17_600_000).String(), app.StakingKeeper.TotalBondedTokens(ctx).String())
 
-	app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	_, err = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
+	require.NoError(t, err)
 
 	// Unjail validator
 	err = app.SlashingKeeper.Unjail(ctx, valAddr2)
@@ -616,7 +618,7 @@ func TestRewardWeightDecay(t *testing.T) {
 
 	// Pass a proposal to add a new asset with a decay rate
 	decayInterval := time.Hour * 24 * 30
-	app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+	err = app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                AllianceDenom,
@@ -625,6 +627,8 @@ func TestRewardWeightDecay(t *testing.T) {
 		RewardChangeRate:     sdk.MustNewDecFromStr("0.5"),
 		RewardChangeInterval: decayInterval,
 	})
+	require.NoError(t, err)
+
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
