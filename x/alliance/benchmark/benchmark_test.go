@@ -18,35 +18,35 @@ import (
 )
 
 var (
-	SEED              = 1
-	NUM_OF_BLOCKS     = 1000
-	BLOCKTIME_IN_S    = 5
-	VOTE_RATE         = 0.8
-	NUM_OF_VALIDATORS = 160
-	NUM_OF_ASSETS     = 20
-	NUM_OF_DELEGATORS = 10
+	SEED               = 1
+	NumOfBlocks        = 1000
+	BlocktimeInSeconds = 5
+	VoteRate           = 0.8
+	NumOfValidators    = 160
+	NumOfAssets        = 20
+	NumOfDelegators    = 10
 
-	OPERATIONS_PER_BLOCK = 30
-	DELEGATION_RATE      = 10
-	REDELEGATION_RATE    = 2
-	UNDELEGATION_RATE    = 2
-	REWARD_CLAIM_RATE    = 2
+	OperationsPerBlock = 30
+	DelegationRate     = 10
+	RedelegationRate   = 2
+	UndelegationRate   = 2
+	RewardClaimRate    = 2
 )
 
 var createdDelegations = []types.Delegation{}
 
 func TestRunBenchmarks(t *testing.T) {
 	r := rand.New(rand.NewSource(1))
-	app, ctx, assets, vals, dels := benchmark.SetupApp(t, r, NUM_OF_ASSETS, NUM_OF_VALIDATORS, NUM_OF_DELEGATORS)
+	app, ctx, assets, vals, dels := benchmark.SetupApp(t, r, NumOfAssets, NumOfValidators, NumOfDelegators)
 	powerReduction := sdk.OneInt()
 	operations := make(map[string]int)
 
-	for b := 0; b < NUM_OF_BLOCKS; b++ {
+	for b := 0; b < NumOfBlocks; b++ {
 		t.Logf("Block: %d\n Time: %s", ctx.BlockHeight(), ctx.BlockTime())
-		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(ctx.BlockTime().Add(time.Second * time.Duration(BLOCKTIME_IN_S)))
+		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(ctx.BlockTime().Add(time.Second * time.Duration(BlocktimeInSeconds)))
 		totalVotingPower := int64(0)
 		var voteInfo []abcitypes.VoteInfo
-		for i := 0; i < NUM_OF_VALIDATORS; i++ {
+		for i := 0; i < NumOfValidators; i++ {
 			valAddr := sdk.ValAddress(vals[i])
 			val, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 			require.NoError(t, err)
@@ -58,7 +58,7 @@ func TestRunBenchmarks(t *testing.T) {
 					Address: cons,
 					Power:   votingPower,
 				},
-				SignedLastBlock: r.Float64() < VOTE_RATE,
+				SignedLastBlock: r.Float64() < VoteRate,
 			})
 		}
 
@@ -72,8 +72,8 @@ func TestRunBenchmarks(t *testing.T) {
 		app.DistrKeeper.AllocateTokens(ctx, totalVotingPower, totalVotingPower, proposerCons, voteInfo)
 
 		// Delegator Actions
-		operationFunc := benchmark.GenerateOperationSlots(DELEGATION_RATE, REDELEGATION_RATE, UNDELEGATION_RATE, REWARD_CLAIM_RATE)
-		for o := 0; o < OPERATIONS_PER_BLOCK; o++ {
+		operationFunc := benchmark.GenerateOperationSlots(DelegationRate, RedelegationRate, UndelegationRate, RewardClaimRate)
+		for o := 0; o < OperationsPerBlock; o++ {
 			switch operationFunc(r) {
 			case 0:
 				delegateOperation(ctx, app, r, assets, vals, dels)
