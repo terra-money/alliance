@@ -1,32 +1,47 @@
-###### Builder
-FROM golang:1.18.7-bullseye AS build
+# syntax=docker/dockerfile:1
 
-RUN apt update && apt install jq build-essential -y
-
-RUN curl https://get.ignite.com/cli@v0.25.1! | bash
-
-WORKDIR /allianced
-COPY . /allianced
-
+ARG GO_VERSION="1.18"
+ARG PLATFORM="bullseye"
+ARG BUILDPLATFORM="linux/amd64"
+ARG BASE_IMAGE="golang:${GO_VERSION}-${PLATFORM}"
 ARG ACC_PREFIX=alliance
-ARG BUILDPLATFORM=linux/amd64
 
-RUN sed -i "s/AccountAddressPrefix = \"alliance\"/AccountAddressPrefix = \"${ACC_PREFIX}\"/g" app/app.go
-RUN sed -i "s/Name                 = \"alliance\"/Name                 = \"${ACC_PREFIX}\"/g" app/app.go
+FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE} as base
 
-RUN ignite chain build --output . --verbose
+###############################################################################
+# Builder
+###############################################################################
 
-RUN cp /go/pkg/mod/github.com/\!cosm\!wasm/wasmvm@v*/internal/api/libwasmvm.`uname -m`.so /lib/
+FROM base as builder
+
+ARG ACC_PREFIX
+ARG BUILDPLATFORM
+
+WORKDIR /go/src
+COPY . .
+
+RUN set -eux &&\
+    apt update &&\
+    apt install build-essential -y &&\
+    curl https://get.ignite.com/cli@v0.25.1! | bash
+
+RUN set -eux && sed \
+    -e "s/AccountAddressPrefix = \"alliance\"/AccountAddressPrefix = \"${ACC_PREFIX}\"/g" \
+    -e "s/Name                 = \"alliance\"/Name                 = \"${ACC_PREFIX}\"/g" \
+    -i app/app.go
+
+RUN set -eux &&\
+    ignite chain build --output /go/bin --verbose
+
+RUN set -eux &&\
+    WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
+    cp /go/pkg/mod/github.com/\!cosm\!wasm/wasmvm@${WASMVM_VERSION}/internal/api/libwasmvm.$(uname -m).so /lib/
 
 ###### Node
-FROM debian:bullseye AS run
-COPY ./scripts/containers/build-wrapper.sh /allianced/build-wrapper.sh
+FROM --platform=${BUILDPLATFORM} ${BASE_IMAGE} AS run
 
-WORKDIR /allianced
-COPY --from=build /allianced/ /allianced/
-COPY --from=build /lib/ /lib/
+COPY --from=builder /go/bin/allianced /usr/local/bin/allianced
+COPY --from=builder /lib/libwasmvm*.so /lib
 
-EXPOSE 26656 26657
-ENTRYPOINT ["/allianced/build-wrapper.sh"]
-CMD ["start", "--log_format", "plain"]
-STOPSIGNAL SIGTERM
+WORKDIR /app
+CMD ["allianced", "start", "--log_format", "plain"]
