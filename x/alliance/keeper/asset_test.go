@@ -658,7 +658,7 @@ func TestRewardWeightDecay(t *testing.T) {
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 10))
 	// Updating the alliance asset through proposal should queue another decay event
-	app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
+	err = app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                AllianceDenom,
@@ -667,9 +667,10 @@ func TestRewardWeightDecay(t *testing.T) {
 		RewardChangeRate:     sdk.ZeroDec(),
 		RewardChangeInterval: 0,
 	})
+	require.NoError(t, err)
 
 	// Updating alliance asset again with a non-zero decay
-	app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
+	err = app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                AllianceDenom,
@@ -678,6 +679,7 @@ func TestRewardWeightDecay(t *testing.T) {
 		RewardChangeRate:     sdk.MustNewDecFromStr("0.1"),
 		RewardChangeInterval: decayInterval,
 	})
+	require.NoError(t, err)
 
 	// Add a new asset with an initial 0 decay
 	err = app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
@@ -738,7 +740,7 @@ func TestRewardWeightDecayOverTime(t *testing.T) {
 	// Pass a proposal to add a new asset with a decay rate
 	decayInterval := time.Minute
 	decayRate := sdk.MustNewDecFromStr("0.99998")
-	app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+	err = app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
 		Title:                "",
 		Description:          "",
 		Denom:                AllianceDenom,
@@ -747,6 +749,7 @@ func TestRewardWeightDecayOverTime(t *testing.T) {
 		RewardChangeRate:     decayRate,
 		RewardChangeInterval: decayInterval,
 	})
+	require.NoError(t, err)
 
 	// Delegate to validator
 	_, err = app.AllianceKeeper.Delegate(ctx, addrs[1], val0, sdk.NewCoin(AllianceDenom, sdk.NewInt(5_000_000)))
@@ -806,8 +809,11 @@ func TestClaimTakeRate(t *testing.T) {
 	))
 	user1 := addrs[0]
 
-	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000_000)))
-	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(1000_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000_000)))
+	require.NoError(t, err)
+
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(1000_000_000)))
+	require.NoError(t, err)
 
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
@@ -891,7 +897,9 @@ func TestClaimTakeRateToZero(t *testing.T) {
 	))
 	user1 := addrs[0]
 
-	app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000_000)))
+	require.NoError(t, err)
+
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)

@@ -315,6 +315,6 @@ func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.Alliance
 		asset.RewardWeight = asset.RewardWeight.Mul(multiplier)
 		asset.LastRewardChangeTime = asset.LastRewardChangeTime.Add(asset.RewardChangeInterval * time.Duration(intervalsSinceLastClaim))
 		k.QueueAssetRebalanceEvent(ctx)
-		k.UpdateAllianceAsset(ctx, *asset)
+		k.UpdateAllianceAsset(ctx, *asset) //nolint:errcheck
 	}
 }

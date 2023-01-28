@@ -282,7 +282,9 @@ func TestClaimQueryReward(t *testing.T) {
 	timePassed := time.Minute*5 + time.Second
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(timePassed))
 	ctx = ctx.WithBlockHeight(2)
-	app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	_, err = app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	require.NoError(t, err)
+
 	app.BankKeeper.GetAllBalances(ctx, feeCollectorAddr)
 	require.Equal(t, startTime.Add(time.Minute*5), app.AllianceKeeper.LastRewardClaimTime(ctx))
 	app.AllianceKeeper.GetAssetByDenom(ctx, ULUNA_ALLIANCE)
@@ -341,8 +343,11 @@ func TestQueryAllianceDelegation(t *testing.T) {
 	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
 	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	val, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
 
 	// WHEN: DELEGATING AND QUERYING ...
 	delegationTxRes, txErr := app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)))
@@ -439,8 +444,11 @@ func TestQueryAlliancesDelegationByValidator(t *testing.T) {
 	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
 	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	val, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
 
 	// WHEN: DELEGATING AND QUERYING ...
 	delegationTxRes, txErr := app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)))
@@ -529,10 +537,17 @@ func TestQueryAlliancesAlliancesDelegation(t *testing.T) {
 	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
 	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	val, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(2000_000))))
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(2000_000))))
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
 
 	// WHEN: DELEGATING AND QUERYING ...
 	delegationTxRes, txErr := app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)))
@@ -618,10 +633,17 @@ func TestQueryAllDelegations(t *testing.T) {
 	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
 	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	val, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(2000_000))))
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(2000_000))))
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
 
 	// WHEN: DELEGATING AND QUERYING ...
 	_, txErr := app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)))
@@ -714,10 +736,17 @@ func TestQueryValidator(t *testing.T) {
 	delAddr, _ := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
 	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	val, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(2000_000))))
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(2000_000))))
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(2000_000))))
+	require.NoError(t, err)
 
 	// WHEN: DELEGATING AND QUERYING ...
 	_, txErr := app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)))

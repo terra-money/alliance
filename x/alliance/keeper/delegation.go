@@ -176,7 +176,7 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 	// When there are no more tokens recorded in the asset, clear all share records that might remain
 	// from rounding errors and to prevent div by zero error when there are new delegations
 	if asset.TotalTokens.IsZero() {
-		k.ResetAssetAndValidators(ctx, asset)
+		k.ResetAssetAndValidators(ctx, asset) //nolint:errcheck
 	}
 
 	// Queue undelegation messages to distribute tokens after undelegation completes in the future
