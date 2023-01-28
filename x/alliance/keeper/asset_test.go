@@ -193,7 +193,7 @@ func TestRebalancingWithUnbondedValidator(t *testing.T) {
 		},
 		UpdateTime: time.Now(),
 	}
-	_val1.Description.Moniker = "val1"
+	_val1.Description.Moniker = "val1" //nolint:goconst
 	test_helpers.RegisterNewValidator(t, app, ctx, _val1)
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
 	require.NoError(t, err)
@@ -208,7 +208,7 @@ func TestRebalancingWithUnbondedValidator(t *testing.T) {
 		},
 		UpdateTime: time.Now(),
 	}
-	_val2.Description.Moniker = "val2"
+	_val2.Description.Moniker = "val2" //nolint:goconst
 	test_helpers.RegisterNewValidator(t, app, ctx, _val2)
 	val2, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
 	require.NoError(t, err)

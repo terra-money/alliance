@@ -21,7 +21,7 @@ import (
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
-var ULUNA_ALLIANCE = "uluna"
+var ULunaAlliance = "uluna"
 
 func TestQueryAlliances(t *testing.T) {
 	// GIVEN: THE BLOCKCHAIN WITH ALLIANCES ON GENESIS
@@ -253,7 +253,7 @@ func TestClaimQueryReward(t *testing.T) {
 		},
 		Assets: []types.AllianceAsset{
 			{
-				Denom:                ULUNA_ALLIANCE,
+				Denom:                ULunaAlliance,
 				RewardWeight:         sdk.NewDec(2),
 				TakeRate:             sdk.MustNewDecFromStr("0.00005"),
 				TotalTokens:          sdk.ZeroInt(),
@@ -268,10 +268,10 @@ func TestClaimQueryReward(t *testing.T) {
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	val1, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
-	delAddr := test_helpers.AddTestAddrsIncremental(app, ctx, 1, sdk.NewCoins(sdk.NewCoin(ULUNA_ALLIANCE, sdk.NewInt(1000_000_000))))[0]
+	delAddr := test_helpers.AddTestAddrsIncremental(app, ctx, 1, sdk.NewCoins(sdk.NewCoin(ULunaAlliance, sdk.NewInt(1000_000_000))))[0]
 
 	// WHEN: DELEGATING ...
-	delRes, delErr := app.AllianceKeeper.Delegate(ctx, delAddr, val1, sdk.NewCoin(ULUNA_ALLIANCE, sdk.NewInt(1000_000_000)))
+	delRes, delErr := app.AllianceKeeper.Delegate(ctx, delAddr, val1, sdk.NewCoin(ULunaAlliance, sdk.NewInt(1000_000_000)))
 	require.Nil(t, delErr)
 	require.Equal(t, sdk.NewDec(1000000000), *delRes)
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
@@ -287,7 +287,7 @@ func TestClaimQueryReward(t *testing.T) {
 
 	app.BankKeeper.GetAllBalances(ctx, feeCollectorAddr)
 	require.Equal(t, startTime.Add(time.Minute*5), app.AllianceKeeper.LastRewardClaimTime(ctx))
-	app.AllianceKeeper.GetAssetByDenom(ctx, ULUNA_ALLIANCE)
+	app.AllianceKeeper.GetAssetByDenom(ctx, ULunaAlliance)
 
 	// ... at the next begin block, tokens will be distributed from the fee pool...
 	cons, _ := val1.GetConsAddr()
@@ -305,7 +305,7 @@ func TestClaimQueryReward(t *testing.T) {
 	queryDelegation, queryErr := queryServer.AllianceDelegationRewards(ctx, &types.QueryAllianceDelegationRewardsRequest{
 		DelegatorAddr: delAddr.String(),
 		ValidatorAddr: valAddr.String(),
-		Denom:         ULUNA_ALLIANCE,
+		Denom:         ULunaAlliance,
 	})
 
 	// ... validate that no error has been produced.
@@ -313,7 +313,7 @@ func TestClaimQueryReward(t *testing.T) {
 	require.Equal(t, &types.QueryAllianceDelegationRewardsResponse{
 		Rewards: []sdk.Coin{
 			{
-				Denom:  ULUNA_ALLIANCE,
+				Denom:  ULunaAlliance,
 				Amount: math.NewInt(32666),
 			},
 		},

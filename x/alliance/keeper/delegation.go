@@ -490,7 +490,7 @@ func (k Keeper) setUnbondingIndexByVal(ctx sdk.Context, valAddr sdk.ValAddress, 
 	store.Set(indexKey, []byte{})
 }
 
-func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) {
+func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) { //nolint:unparam // may wish to investigate
 	newShares := types.GetDelegationSharesFromTokens(validator, asset, coin.Amount)
 	delegation, found := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 	if !found {

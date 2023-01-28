@@ -55,7 +55,7 @@ func SetupApp(t *testing.T, r *rand.Rand, numAssets int, numValidators int, numD
 	}
 
 	delAddrs = test_helpers.AddTestAddrsIncremental(app, ctx, numDelegators, sdk.NewCoins())
-	return
+	return app, ctx, assets, valAddrs, delAddrs
 }
 
 func GenerateOperationSlots(operations ...int) func(r *rand.Rand) int {

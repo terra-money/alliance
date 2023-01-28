@@ -585,6 +585,8 @@ func TestSuccessfulUndelegation(t *testing.T) {
 
 	// Immediately undelegate from the validator
 	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, sdk.NewInt(250_000)))
+	require.NoError(t, err)
+
 	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, sdk.NewInt(250_000)))
 	require.NoError(t, err)
 

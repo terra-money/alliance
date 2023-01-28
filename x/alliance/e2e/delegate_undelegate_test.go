@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/rand"
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
@@ -14,8 +13,7 @@ import (
 // This test makes sure that full undelegation after some take rate has been
 // applied will not cause a division by zero error.
 func TestDelegateThenTakeRateThenUndelegate(t *testing.T) {
-	random := rand.NewRand()
-	app, ctx, vals, dels := setupApp(t, random, 5, 2, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1000000000000000000))))
+	app, ctx, vals, dels := setupApp(t, 5, 2, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1000000000000000000))))
 	err := app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
 		Title:                "",
 		Description:          "",
@@ -43,7 +41,7 @@ func TestDelegateThenTakeRateThenUndelegate(t *testing.T) {
 	_, err = app.AllianceKeeper.DeductAssetsWithTakeRate(ctx, lastClaim, assets)
 	require.NoError(t, err)
 
-	asset, found := app.AllianceKeeper.GetAssetByDenom(ctx, "test")
+	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, "test")
 
 	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], val0, "test")
 	require.True(t, found)
@@ -55,10 +53,9 @@ func TestDelegateThenTakeRateThenUndelegate(t *testing.T) {
 	require.False(t, found)
 
 	val0, err = app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
-	require.Equal(t, sdk.ZeroDec(), sdk.DecCoins(val0.ValidatorShares).AmountOf("test"))
+	require.NoError(t, err)
 
-	tokens = types.GetDelegationTokens(del0, val0, asset)
-	asset, found = app.AllianceKeeper.GetAssetByDenom(ctx, "test")
+	require.Equal(t, sdk.ZeroDec(), sdk.DecCoins(val0.ValidatorShares).AmountOf("test"))
 
 	_, err = app.AllianceKeeper.Delegate(ctx, dels[0], val0, sdk.NewCoin("test", sdk.NewInt(33333)))
 	require.NoError(t, err)

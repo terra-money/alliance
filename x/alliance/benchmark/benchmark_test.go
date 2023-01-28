@@ -78,19 +78,15 @@ func TestRunBenchmarks(t *testing.T) {
 			case 0:
 				delegateOperation(ctx, app, r, assets, vals, dels)
 				operations["delegate"]++
-				break
 			case 1:
 				redelegateOperation(ctx, app, r, assets, vals, dels)
 				operations["redelegate"]++
-				break
 			case 2:
 				undelegateOperation(ctx, app, r)
 				operations["undelegate"]++
-				break
 			case 3:
 				claimRewardsOperation(ctx, app, r)
 				operations["claim"]++
-				break
 			}
 		}
 
@@ -150,7 +146,7 @@ func delegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, ass
 	createdDelegations = append(createdDelegations, types.NewDelegation(ctx, delAddr, valAddr, asset.Denom, sdk.ZeroDec(), []types.RewardHistory{}))
 }
 
-func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, assets []types.AllianceAsset, vals []sdk.AccAddress, dels []sdk.AccAddress) {
+func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, assets []types.AllianceAsset, vals []sdk.AccAddress, dels []sdk.AccAddress) { //nolint:unparam // assets is unused
 	var delegation types.Delegation
 	if len(createdDelegations) == 0 {
 		return

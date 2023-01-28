@@ -205,7 +205,7 @@ func CmdQueryAlliancesDelegation() *cobra.Command {
 		Short: "Query all paginated alliances delegations for a delegator_addr",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			delegator_addr := args[0]
+			delegatorAddr := args[0]
 			ctx := client.GetClientContextFromCmd(cmd)
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
@@ -216,7 +216,7 @@ func CmdQueryAlliancesDelegation() *cobra.Command {
 			query := types.NewQueryClient(ctx)
 
 			params := &types.QueryAlliancesDelegationsRequest{
-				DelegatorAddr: delegator_addr,
+				DelegatorAddr: delegatorAddr,
 				Pagination:    pageReq,
 			}
 
@@ -240,8 +240,8 @@ func CmdQueryAlliancesDelegationByValidator() *cobra.Command {
 		Short: "Query all paginated alliance delegations for a delegator_addr and validator_addr",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			delegator_addr := args[0]
-			validator_addr := args[1]
+			delegatorAddr := args[0]
+			validatorAddr := args[1]
 			ctx := client.GetClientContextFromCmd(cmd)
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
@@ -252,8 +252,8 @@ func CmdQueryAlliancesDelegationByValidator() *cobra.Command {
 
 			params := &types.QueryAlliancesDelegationByValidatorRequest{
 				Pagination:    pageReq,
-				DelegatorAddr: delegator_addr,
-				ValidatorAddr: validator_addr,
+				DelegatorAddr: delegatorAddr,
+				ValidatorAddr: validatorAddr,
 			}
 
 			res, err := query.AlliancesDelegationByValidator(context.Background(), params)
