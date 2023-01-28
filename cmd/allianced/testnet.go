@@ -382,7 +382,7 @@ func initGenFiles(
 	appGenState[stakingtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&stakingGenState)
 
 	// GOV
-	var govGenState govtypesv1.GenesisState = *govtypesv1.NewGenesisState(
+	govGenState := *govtypesv1.NewGenesisState(
 		1,
 		govtypesv1.NewDepositParams(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000))), time.Minute),
 		govtypesv1.NewVotingParams(time.Minute),
