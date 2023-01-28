@@ -85,8 +85,8 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
         -ldflags " \
             -w -s -linkmode=external -extldflags \
             '-L/go/src/mimalloc/build -lmimalloc -Wl,-z,muldefs -static' \
-            -X github.com/cosmos/cosmos-sdk/version.Name='${ACC_PREFIX}' \
-            -X github.com/cosmos/cosmos-sdk/version.AppName='${ACC_PREFIX}d' \
+            -X github.com/cosmos/cosmos-sdk/version.Name=${ACC_PREFIX} \
+            -X github.com/cosmos/cosmos-sdk/version.AppName=${ACC_PREFIX}d \
             #-X github.com/cosmos/cosmos-sdk/version.Version=${GIT_VERSION} \
             #-X github.com/cosmos/cosmos-sdk/version.Commit=${GIT_COMMIT} \
             -X github.com/cosmos/cosmos-sdk/version.BuildTags='netgo,muslc' \
