@@ -23,9 +23,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-
 	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
+
+	"github.com/terra-money/alliance/app"
+	"github.com/terra-money/alliance/app/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -38,15 +39,15 @@ import (
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
-	encodingConfig := simapp.MakeTestEncodingConfig()
+	encodingConfig := app.MakeTestEncodingConfig()
 	initClientCtx := client.Context{}.
-		WithCodec(encodingConfig.Codec).
+		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithHomeDir(simapp.DefaultNodeHome).
+		WithHomeDir(app.DefaultNodeHome).
 		WithViper("") // In simapp, we don't use any prefix for env variables.
 
 	rootCmd := &cobra.Command{
@@ -178,7 +179,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(simapp.DefaultNodeHome),
+		keys.Commands(app.DefaultNodeHome),
 	)
 
 	// add rosetta

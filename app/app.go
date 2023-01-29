@@ -99,10 +99,10 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+	appparams "github.com/terra-money/alliance/app/params"
 	custombankmodule "github.com/terra-money/alliance/custom/bank"
 	custombankkeeper "github.com/terra-money/alliance/custom/bank/keeper"
 
-	"github.com/ignite/cli/ignite/pkg/cosmoscmd"
 	"github.com/terra-money/alliance/app/openapiconsole"
 
 	"github.com/terra-money/alliance/docs"
@@ -190,7 +190,6 @@ var (
 )
 
 var (
-	_ cosmoscmd.App           = (*App)(nil)
 	_ servertypes.Application = (*App)(nil)
 	_ simapp.App              = (*App)(nil)
 )
@@ -266,10 +265,10 @@ func New(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
-	encodingConfig cosmoscmd.EncodingConfig,
+	encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
-) cosmoscmd.App {
+) *App {
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
