@@ -66,7 +66,7 @@ func BenchmarkSimulation(b *testing.B) {
 		simapp.EmptyAppOptions{},
 	)
 
-	simApp, ok := app.App().Simapp
+	simApp := *app
 	require.True(b, ok, "can't use simapp")
 
 	// Run randomized simulations
