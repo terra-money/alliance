@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	app.SetAddressPrefixes()
+	//	app.SetAddressPrefixes() //TODO: either implement or remove
 	rootCmd, _ := cmd.NewRootCmd()
 
 	if err := svrcmd.Execute(rootCmd, "ALLIANCED", app.DefaultNodeHome); err != nil {

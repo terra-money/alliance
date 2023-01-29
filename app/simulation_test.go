@@ -66,24 +66,21 @@ func BenchmarkSimulation(b *testing.B) {
 		simapp.EmptyAppOptions{},
 	)
 
-	simApp := *app
-	require.True(b, ok, "can't use simapp")
-
 	// Run randomized simulations
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
-		simApp.GetBaseApp(),
-		simapp.AppStateFn(simApp.AppCodec(), simApp.SimulationManager()),
+		app.GetBaseApp(),
+		simapp.AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simulationtypes.RandomAccounts,
-		simapp.SimulationOperations(simApp, simApp.AppCodec(), config),
-		simApp.ModuleAccountAddrs(),
+		simapp.SimulationOperations(app, app.AppCodec(), config),
+		app.ModuleAccountAddrs(),
 		config,
-		simApp.AppCodec(),
+		app.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
-	err = simapp.CheckExportSimulation(simApp, config, simParams)
+	err = simapp.CheckExportSimulation(app, config, simParams)
 	require.NoError(b, err)
 	require.NoError(b, simErr)
 
