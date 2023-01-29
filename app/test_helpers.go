@@ -24,7 +24,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ignite/cli/ignite/pkg/cosmoscmd"
+	"github.com/terra-money/alliance/app/params"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -161,19 +161,19 @@ func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
 
-	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{}).(*App)
+	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
 	return app, GenesisState{}
 }
 
-func MakeTestEncodingConfig() cosmoscmd.EncodingConfig {
+func MakeTestEncodingConfig() params.EncodingConfig {
 	cdc := codec.NewLegacyAmino()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	codec := codec.NewProtoCodec(interfaceRegistry)
 
-	encodingConfig := cosmoscmd.EncodingConfig{
+	encodingConfig := params.EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Marshaler:         codec,
 		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
