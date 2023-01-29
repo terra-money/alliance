@@ -1,6 +1,4 @@
-package main
-
-// DONTCOVER
+package cmd
 
 import (
 	"bufio"
