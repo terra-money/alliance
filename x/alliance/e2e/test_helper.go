@@ -8,9 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	test_helpers "github.com/terra-money/alliance/app"
 )
 
+//nolint:golint,unused
 func setupApp(t *testing.T, numValidators int, numDelegators int, initBalance sdk.Coins) (app *test_helpers.App, ctx sdk.Context, valAddrs []sdk.ValAddress, delAddrs []sdk.AccAddress) {
 	app = test_helpers.Setup(t, false)
 	ctx = app.BaseApp.NewContext(false, tmproto.Header{})

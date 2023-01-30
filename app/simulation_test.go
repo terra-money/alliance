@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/app/params"
 )

@@ -8,6 +8,7 @@ import (
 	bankmodule "github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	custombankkeeper "github.com/terra-money/alliance/custom/bank/keeper"
 )
 
