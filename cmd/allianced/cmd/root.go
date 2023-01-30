@@ -23,7 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simapp "github.com/terra-money/alliance/app"
 
 	"github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/app/params"
