@@ -39,6 +39,10 @@ func GetDelegationTokens(del Delegation, val AllianceValidator, asset AllianceAs
 	valTokens := val.TotalDecTokensWithAsset(asset)
 	totalDelegationShares := val.TotalDelegationSharesWithDenom(asset.Denom)
 	delTokens := ConvertNewShareToDecToken(valTokens, totalDelegationShares, del.Shares)
+
+	// We add a small epsilon before rounding down to make sure cases like
+	// 9.999999 get round to 10
+	delTokens = delTokens.Add(sdk.NewDecWithPrec(1, 6))
 	return sdk.NewCoin(asset.Denom, delTokens.TruncateInt())
 }
 
