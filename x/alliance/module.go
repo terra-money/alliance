@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	simulation2 "github.com/terra-money/alliance/x/alliance/tests/simulation"
+
 	// this line is used by starport scaffolding # 1
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -15,7 +17,6 @@ import (
 
 	"github.com/terra-money/alliance/x/alliance/client/cli"
 	"github.com/terra-money/alliance/x/alliance/keeper"
-	"github.com/terra-money/alliance/x/alliance/simulation"
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -138,7 +139,7 @@ func (a AppModule) ConsensusVersion() uint64 {
 }
 
 func (a AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenesisState(simState)
+	simulation2.RandomizedGenesisState(simState)
 }
 
 func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
@@ -146,13 +147,13 @@ func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.
 }
 
 func (a AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
+	return simulation2.ParamChanges(r)
 }
 
 func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
-	registry[types.StoreKey] = simulation.NewDecodeStore(a.cdc)
+	registry[types.StoreKey] = simulation2.NewDecodeStore(a.cdc)
 }
 
 func (a AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(simState.AppParams, a.pcdc, a.accountKeeper, a.bankKeeper, a.stakingKeeper, a.keeper)
+	return simulation2.WeightedOperations(simState.AppParams, a.pcdc, a.accountKeeper, a.bankKeeper, a.stakingKeeper, a.keeper)
 }

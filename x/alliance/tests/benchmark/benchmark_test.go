@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/terra-money/alliance/x/alliance/tests/benchmark"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -14,7 +16,6 @@ import (
 
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance"
-	"github.com/terra-money/alliance/x/alliance/benchmark"
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 

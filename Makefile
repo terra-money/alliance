@@ -87,10 +87,10 @@ install: go.sum
 ###                                Test                                     ###
 ###############################################################################
 
-test: test-unit-keeper
+test: test-unit
 
-test-unit-keeper:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' github.com/terra-money/alliance/x/alliance/keeper github.com/terra-money/alliance/x/alliance/types
+test-unit:
+	@VERSION=$(VERSION) go test -v -mod=readonly -tags='ledger test_ledger_mock' github.com/terra-money/alliance/x/alliance/keeper/tests github.com/terra-money/alliance/x/alliance/types/tests
 
 ###############################################################################
 ###                                Linting                                  ###
