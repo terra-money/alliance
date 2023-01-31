@@ -149,38 +149,45 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 	// Delegation is queried again since it might have been modified when claiming delegation rewards
 	delegation, _ := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 
-	// Calculate how much delegation shares to be undelegated
+	// Calculate how much delegation shares to be undelegated taking into account rounding issues
 	delegationSharesToUndelegate, err := k.ValidateDelegatedAmount(delegation, coin, validator, asset)
 	if err != nil {
 		return nil, err
 	}
-	validatorSharesToRemove := types.GetValidatorShares(asset, coin.Amount)
+
+	// Now we have shares we want to un-delegate, we re-calculate how many tokens to actually un-delegate
+	// Directly using the input amount can result in un-delegating more tokens than expected due to rounding issues
+	coinsToUndelegate := types.GetDelegationTokensWithShares(delegationSharesToUndelegate, validator, asset)
+	if coin.Amount.GT(coinsToUndelegate.Amount) {
+		return nil, types.ErrInsufficientTokens.Wrapf("wanted %s but have %s", coin.Amount, coinsToUndelegate.Amount)
+	}
+	validatorSharesToRemove := types.GetValidatorShares(asset, coinsToUndelegate.Amount)
 
 	// Remove tokens and shares from the alliance asset
-	asset.TotalTokens = asset.TotalTokens.Sub(coin.Amount)
+	asset.TotalTokens = asset.TotalTokens.Sub(coinsToUndelegate.Amount)
 	asset.TotalValidatorShares = asset.TotalValidatorShares.Sub(validatorSharesToRemove)
 	k.SetAsset(ctx, asset)
 
 	// Remove shares from the delegation
-	k.reduceDelegationShares(ctx, delAddr, validator, coin, delegationSharesToUndelegate, delegation)
+	k.reduceDelegationShares(ctx, delAddr, validator, coinsToUndelegate, delegationSharesToUndelegate, delegation)
 
 	// Remove tokens and shares from src validator
 	k.updateValidatorShares(
 		ctx,
 		validator,
-		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, delegationSharesToUndelegate)),
-		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, validatorSharesToRemove)),
+		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coinsToUndelegate.Denom, delegationSharesToUndelegate)),
+		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coinsToUndelegate.Denom, validatorSharesToRemove)),
 		false,
 	)
 
 	// When there are no more tokens recorded in the asset, clear all share records that might remain
-	// from rounding errors and to prevent div by zero error when there are new delegations
+	// from rounding errors to prevent dust amounts from staying in the stores
 	if asset.TotalTokens.IsZero() {
 		k.ResetAssetAndValidators(ctx, asset) //nolint:errcheck
 	}
 
 	// Queue undelegation messages to distribute tokens after undelegation completes in the future
-	completionTime := k.queueUndelegation(ctx, delAddr, validator.GetOperator(), coin)
+	completionTime := k.queueUndelegation(ctx, delAddr, validator.GetOperator(), coinsToUndelegate)
 	k.QueueAssetRebalanceEvent(ctx)
 	return &completionTime, nil
 }
