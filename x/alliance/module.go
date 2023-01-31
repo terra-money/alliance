@@ -40,7 +40,8 @@ type AppModuleBasic struct {
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sk types.StakingKeeper,
-	ak types.AccountKeeper, bk types.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+	ak types.AccountKeeper, bk types.BankKeeper, registry cdctypes.InterfaceRegistry,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, pcdc: codec.NewProtoCodec(registry)},
 		keeper:         keeper,
@@ -76,7 +77,7 @@ func (a AppModuleBasic) ValidateGenesis(jsonCodec codec.JSONCodec, config client
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {

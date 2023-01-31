@@ -1561,31 +1561,31 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"terra", "alliances", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"terra", "alliances", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Alliances_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"terra", "alliances"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Alliances_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"terra", "alliances"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_IBCAlliance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"terra", "alliances", "ibc", "hash"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_IBCAlliance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"terra", "alliances", "ibc", "hash"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AllAlliancesDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"terra", "alliances", "delegations"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllAlliancesDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"terra", "alliances", "delegations"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AllianceValidator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"terra", "alliances", "validators", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllianceValidator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"terra", "alliances", "validators", "validator_addr"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AllAllianceValidators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"terra", "alliances", "validators"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllAllianceValidators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"terra", "alliances", "validators"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AlliancesDelegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"terra", "alliances", "delegations", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AlliancesDelegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"terra", "alliances", "delegations", "delegator_addr"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AlliancesDelegationByValidator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"terra", "alliances", "delegations", "delegator_addr", "validator_addr"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AlliancesDelegationByValidator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"terra", "alliances", "delegations", "delegator_addr", "validator_addr"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AllianceDelegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"terra", "alliances", "delegations", "delegator_addr", "validator_addr", "denom"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllianceDelegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"terra", "alliances", "delegations", "delegator_addr", "validator_addr", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_IBCAllianceDelegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"terra", "alliances", "delegations", "delegator_addr", "validator_addr", "ibc", "hash"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_IBCAllianceDelegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"terra", "alliances", "delegations", "delegator_addr", "validator_addr", "ibc", "hash"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AllianceDelegationRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"terra", "alliances", "rewards", "delegator_addr", "validator_addr", "denom"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllianceDelegationRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"terra", "alliances", "rewards", "delegator_addr", "validator_addr", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_IBCAllianceDelegationRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"terra", "alliances", "rewards", "delegator_addr", "validator_addr", "ibc", "hash"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_IBCAllianceDelegationRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"terra", "alliances", "rewards", "delegator_addr", "validator_addr", "ibc", "hash"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Alliance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"terra", "alliances", "denom"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Alliance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"terra", "alliances", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

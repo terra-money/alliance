@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -182,7 +183,6 @@ func (k QueryServer) Alliances(c context.Context, req *types.QueryAlliancesReque
 
 		return nil
 	})
-
 	// Throw an error if pagination failed
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -314,7 +314,6 @@ func (k QueryServer) AlliancesDelegation(c context.Context, req *types.QueryAlli
 
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -381,7 +380,6 @@ func (k QueryServer) AlliancesDelegationByValidator(c context.Context, req *type
 
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -422,7 +420,8 @@ func (k QueryServer) AllianceDelegation(c context.Context, req *types.QueryAllia
 			Delegation: types.DelegationResponse{
 				Delegation: types.NewDelegation(ctx, delAddr, valAddr, req.Denom, sdk.ZeroDec(), []types.RewardHistory{}),
 				Balance:    sdk.NewCoin(req.Denom, sdk.ZeroInt()),
-			}}, nil
+			},
+		}, nil
 	}
 
 	balance := types.GetDelegationTokens(delegation, validator, asset)
@@ -443,6 +442,7 @@ func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.Que
 	}
 	return k.AllianceDelegation(c, &req)
 }
+
 func NewQueryServerImpl(keeper Keeper) types.QueryServer {
 	return &QueryServer{Keeper: keeper}
 }

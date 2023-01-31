@@ -5,8 +5,7 @@ RUN apt update && apt install jq build-essential -y
 WORKDIR /allianced
 COPY . /allianced
 
-RUN curl https://get.ignite.com/cli@v0.25.1! | bash
-RUN ignite chain build --output . --verbose
+RUN make build
 
 FROM debian:bullseye AS run
 COPY ./scripts/containers/build-wrapper.sh /allianced/build-wrapper.sh

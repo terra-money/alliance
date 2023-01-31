@@ -1,13 +1,15 @@
 package keeper
 
 import (
+	"math"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/terra-money/alliance/x/alliance/types"
-	"math"
-	"time"
 )
 
 // UpdateAllianceAsset updates the alliance asset with new params
@@ -314,6 +316,6 @@ func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.Alliance
 		asset.RewardWeight = asset.RewardWeight.Mul(multiplier)
 		asset.LastRewardChangeTime = asset.LastRewardChangeTime.Add(asset.RewardChangeInterval * time.Duration(intervalsSinceLastClaim))
 		k.QueueAssetRebalanceEvent(ctx)
-		k.UpdateAllianceAsset(ctx, *asset)
+		k.UpdateAllianceAsset(ctx, *asset) //nolint:errcheck
 	}
 }

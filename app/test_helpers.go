@@ -5,6 +5,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -20,8 +24,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ignite/cli/ignite/pkg/cosmoscmd"
-	"strconv"
+
+	"github.com/terra-money/alliance/app/params"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -29,8 +33,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
-	"testing"
-	"time"
 )
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
@@ -160,19 +162,19 @@ func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeTestEncodingConfig()
 
-	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{}).(*App)
+	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
 	return app, GenesisState{}
 }
 
-func MakeTestEncodingConfig() cosmoscmd.EncodingConfig {
+func MakeTestEncodingConfig() params.EncodingConfig {
 	cdc := codec.NewLegacyAmino()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	codec := codec.NewProtoCodec(interfaceRegistry)
 
-	encodingConfig := cosmoscmd.EncodingConfig{
+	encodingConfig := params.EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
 		Marshaler:         codec,
 		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
@@ -318,7 +320,7 @@ func RegisterNewValidator(t *testing.T, app *App, ctx sdk.Context, val stakingty
 	t.Helper()
 	val.Status = stakingtypes.Bonded
 	app.StakingKeeper.SetValidator(ctx, val)
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, val)
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, val) //nolint:errcheck
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
 	err := app.StakingKeeper.AfterValidatorCreated(ctx, val.GetOperator())
 	require.NoError(t, err)

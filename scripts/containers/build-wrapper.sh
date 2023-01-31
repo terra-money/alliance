@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
 set -x
 
-export PATH=$PATH:/allianced/allianced
-BINARY=/allianced/allianced
+export PATH=$PATH:/allianced/build/allianced
+BINARY=/allianced/build/allianced
 ID=${ID:-0}
 LOG=${LOG:-allianced.log}
 
