@@ -3,7 +3,6 @@ package app_test
 import (
 	"os"
 	"testing"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -12,12 +11,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simulationtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/ignite/cli/ignite/pkg/cosmoscmd"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/terra-money/alliance/app"
+	"github.com/terra-money/alliance/app/params"
 )
 
 func init() {
@@ -25,7 +23,7 @@ func init() {
 }
 
 type SimApp interface {
-	cosmoscmd.App
+	app.App
 	GetBaseApp() *baseapp.BaseApp
 	AppCodec() codec.Codec
 	SimulationManager() *module.SimulationManager
@@ -35,23 +33,6 @@ type SimApp interface {
 	BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock
 	EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock
 	InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain
-}
-
-var defaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
-		MaxBytes: 200000,
-		MaxGas:   2000000,
-	},
-	Evidence: &tmproto.EvidenceParams{
-		MaxAgeNumBlocks: 302400,
-		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
-		MaxBytes:        10000,
-	},
-	Validator: &tmproto.ValidatorParams{
-		PubKeyTypes: []string{
-			tmtypes.ABCIPubKeyTypeEd25519,
-		},
-	},
 }
 
 // BenchmarkSimulation run the chain simulation
@@ -72,7 +53,7 @@ func BenchmarkSimulation(b *testing.B) {
 		require.NoError(b, err)
 	})
 
-	encoding := cosmoscmd.MakeEncodingConfig(app.ModuleBasics)
+	encoding := params.MakeEncodingConfig()
 
 	app := app.New(
 		logger,
@@ -86,24 +67,21 @@ func BenchmarkSimulation(b *testing.B) {
 		simapp.EmptyAppOptions{},
 	)
 
-	simApp, ok := app.(SimApp)
-	require.True(b, ok, "can't use simapp")
-
 	// Run randomized simulations
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
-		simApp.GetBaseApp(),
-		simapp.AppStateFn(simApp.AppCodec(), simApp.SimulationManager()),
+		app.GetBaseApp(),
+		simapp.AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simulationtypes.RandomAccounts,
-		simapp.SimulationOperations(simApp, simApp.AppCodec(), config),
-		simApp.ModuleAccountAddrs(),
+		simapp.SimulationOperations(app, app.AppCodec(), config),
+		app.ModuleAccountAddrs(),
 		config,
-		simApp.AppCodec(),
+		app.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
-	err = simapp.CheckExportSimulation(simApp, config, simParams)
+	err = simapp.CheckExportSimulation(app, config, simParams)
 	require.NoError(b, err)
 	require.NoError(b, simErr)
 

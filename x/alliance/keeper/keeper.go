@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/tendermint/tendermint/libs/log"
@@ -20,7 +21,6 @@ type Keeper struct {
 	bankKeeper         types.BankKeeper
 	stakingKeeper      types.StakingKeeper
 	distributionKeeper types.DistributionKeeper
-	authority          string
 }
 
 func NewKeeper(

@@ -9,6 +9,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
@@ -102,6 +103,5 @@ func TestProposalsContent(t *testing.T) {
 			assert.Equal(t, "alliance", unwrap.Prop.ProposalRoute())
 			assert.Equal(t, tc.str, unwrap.Prop.String())
 		})
-
 	}
 }

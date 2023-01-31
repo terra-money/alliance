@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	"github.com/terra-money/alliance/x/alliance/types"
 	"time"
+
+	"github.com/terra-money/alliance/x/alliance/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

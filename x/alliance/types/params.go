@@ -70,7 +70,6 @@ func (r RewardHistories) GetIndexByDenom(denom string) (ri *RewardHistory, found
 	})
 	if idx < 0 {
 		return &RewardHistory{}, false
-	} else {
-		return &r[idx], true
 	}
+	return &r[idx], true
 }

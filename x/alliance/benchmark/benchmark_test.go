@@ -1,51 +1,53 @@
 package benchmark_test
 
 import (
+	"math/rand"
+	"os"
+	"testing"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
+
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance"
 	"github.com/terra-money/alliance/x/alliance/benchmark"
 	"github.com/terra-money/alliance/x/alliance/types"
-	"math/rand"
-	"os"
-	"testing"
-	"time"
 )
 
 var (
-	SEED              = 1
-	NUM_OF_BLOCKS     = 1000
-	BLOCKTIME_IN_S    = 5
-	VOTE_RATE         = 0.8
-	NUM_OF_VALIDATORS = 160
-	NUM_OF_ASSETS     = 20
-	NUM_OF_DELEGATORS = 10
+	SEED               = 1
+	NumOfBlocks        = 1000
+	BlocktimeInSeconds = 5
+	VoteRate           = 0.8
+	NumOfValidators    = 160
+	NumOfAssets        = 20
+	NumOfDelegators    = 10
 
-	OPERATIONS_PER_BLOCK = 30
-	DELEGATION_RATE      = 10
-	REDELEGATION_RATE    = 2
-	UNDELEGATION_RATE    = 2
-	REWARD_CLAIM_RATE    = 2
+	OperationsPerBlock = 30
+	DelegationRate     = 10
+	RedelegationRate   = 2
+	UndelegationRate   = 2
+	RewardClaimRate    = 2
 )
 
 var createdDelegations = []types.Delegation{}
 
 func TestRunBenchmarks(t *testing.T) {
 	r := rand.New(rand.NewSource(1))
-	app, ctx, assets, vals, dels := benchmark.SetupApp(t, r, NUM_OF_ASSETS, NUM_OF_VALIDATORS, NUM_OF_DELEGATORS)
+	app, ctx, assets, vals, dels := benchmark.SetupApp(t, r, NumOfAssets, NumOfValidators, NumOfDelegators)
 	powerReduction := sdk.OneInt()
 	operations := make(map[string]int)
 
-	for b := 0; b < NUM_OF_BLOCKS; b += 1 {
+	for b := 0; b < NumOfBlocks; b++ {
 		t.Logf("Block: %d\n Time: %s", ctx.BlockHeight(), ctx.BlockTime())
-		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(ctx.BlockTime().Add(time.Second * time.Duration(BLOCKTIME_IN_S)))
+		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(ctx.BlockTime().Add(time.Second * time.Duration(BlocktimeInSeconds)))
 		totalVotingPower := int64(0)
 		var voteInfo []abcitypes.VoteInfo
-		for i := 0; i < NUM_OF_VALIDATORS; i += 1 {
+		for i := 0; i < NumOfValidators; i++ {
 			valAddr := sdk.ValAddress(vals[i])
 			val, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 			require.NoError(t, err)
@@ -57,7 +59,7 @@ func TestRunBenchmarks(t *testing.T) {
 					Address: cons,
 					Power:   votingPower,
 				},
-				SignedLastBlock: r.Float64() < VOTE_RATE,
+				SignedLastBlock: r.Float64() < VoteRate,
 			})
 		}
 
@@ -71,25 +73,21 @@ func TestRunBenchmarks(t *testing.T) {
 		app.DistrKeeper.AllocateTokens(ctx, totalVotingPower, totalVotingPower, proposerCons, voteInfo)
 
 		// Delegator Actions
-		operationFunc := benchmark.GenerateOperationSlots(DELEGATION_RATE, REDELEGATION_RATE, UNDELEGATION_RATE, REWARD_CLAIM_RATE)
-		for o := 0; o < OPERATIONS_PER_BLOCK; o += 1 {
+		operationFunc := benchmark.GenerateOperationSlots(DelegationRate, RedelegationRate, UndelegationRate, RewardClaimRate)
+		for o := 0; o < OperationsPerBlock; o++ {
 			switch operationFunc(r) {
 			case 0:
 				delegateOperation(ctx, app, r, assets, vals, dels)
-				operations["delegate"] += 1
-				break
+				operations["delegate"]++
 			case 1:
 				redelegateOperation(ctx, app, r, assets, vals, dels)
-				operations["redelegate"] += 1
-				break
+				operations["redelegate"]++
 			case 2:
 				undelegateOperation(ctx, app, r)
-				operations["undelegate"] += 1
-				break
+				operations["undelegate"]++
 			case 3:
 				claimRewardsOperation(ctx, app, r)
-				operations["claim"] += 1
-				break
+				operations["claim"]++
 			}
 		}
 
@@ -119,7 +117,7 @@ func TestRunBenchmarks(t *testing.T) {
 	state := app.AllianceKeeper.ExportGenesis(ctx)
 	file, _ := os.Create("./benchmark_genesis.json")
 	defer file.Close()
-	file.Write(app.AppCodec().MustMarshalJSON(state))
+	file.Write(app.AppCodec().MustMarshalJSON(state)) //nolint:errcheck
 }
 
 func delegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, assets []types.AllianceAsset, vals []sdk.AccAddress, dels []sdk.AccAddress) {
@@ -141,15 +139,15 @@ func delegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, ass
 	}
 	coins := sdk.NewCoin(asset.Denom, amountToDelegate)
 
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(coins))
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(coins))
+	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(coins))                             //nolint:errcheck
+	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(coins)) //nolint:errcheck
 
 	val, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
-	app.AllianceKeeper.Delegate(ctx, delAddr, val, coins)
+	app.AllianceKeeper.Delegate(ctx, delAddr, val, coins) //nolint:errcheck
 	createdDelegations = append(createdDelegations, types.NewDelegation(ctx, delAddr, valAddr, asset.Denom, sdk.ZeroDec(), []types.RewardHistory{}))
 }
 
-func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, assets []types.AllianceAsset, vals []sdk.AccAddress, dels []sdk.AccAddress) {
+func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, assets []types.AllianceAsset, vals []sdk.AccAddress, dels []sdk.AccAddress) { //nolint:unparam // assets is unused
 	var delegation types.Delegation
 	if len(createdDelegations) == 0 {
 		return
@@ -213,7 +211,7 @@ func undelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {
 	if amountToUndelegate.IsZero() {
 		return
 	}
-	app.AllianceKeeper.Undelegate(ctx, delAddr, validator, sdk.NewCoin(asset.Denom, amountToUndelegate))
+	app.AllianceKeeper.Undelegate(ctx, delAddr, validator, sdk.NewCoin(asset.Denom, amountToUndelegate)) //nolint:errcheck
 }
 
 func claimRewardsOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {

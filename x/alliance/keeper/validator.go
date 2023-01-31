@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
@@ -28,10 +30,9 @@ func (k Keeper) GetAllianceValidatorInfo(ctx sdk.Context, valAddr sdk.ValAddress
 	var info types.AllianceValidatorInfo
 	if vb == nil {
 		return info, false
-	} else {
-		k.cdc.MustUnmarshal(vb, &info)
-		return info, true
 	}
+	k.cdc.MustUnmarshal(vb, &info)
+	return info, true
 }
 
 func (k Keeper) createAllianceValidatorInfo(ctx sdk.Context, valAddr sdk.ValAddress) (val types.AllianceValidatorInfo) {
@@ -66,7 +67,7 @@ func (k Keeper) GetAllAllianceValidatorInfo(ctx sdk.Context) []types.AllianceVal
 	for ; iter.Valid(); iter.Next() {
 		b := iter.Value()
 		var info types.AllianceValidatorInfo
-		k.cdc.UnmarshalInterface(b, &info)
+		k.cdc.UnmarshalInterface(b, &info) //nolint:errcheck
 		infos = append(infos, info)
 	}
 	return infos

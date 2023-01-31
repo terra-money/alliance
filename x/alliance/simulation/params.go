@@ -2,10 +2,12 @@ package simulation
 
 import (
 	"fmt"
+	"math/rand"
+
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/terra-money/alliance/x/alliance/types"
-	"math/rand"
 )
 
 func ParamChanges(r *rand.Rand) []simtypes.ParamChange {

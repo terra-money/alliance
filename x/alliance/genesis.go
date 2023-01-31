@@ -1,8 +1,9 @@
 package alliance
 
 import (
-	"github.com/terra-money/alliance/x/alliance/types"
 	"time"
+
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 // ValidateGenesis

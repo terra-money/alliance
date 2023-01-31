@@ -1,6 +1,8 @@
 package simulation
 
 import (
+	"math/rand"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -8,9 +10,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
-	"math/rand"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -69,8 +71,8 @@ func SimulateMsgDelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types
 		validatorToDelegateTo := validators[idx]
 		coinToDelegate := sdk.NewCoin(assetToDelegate.Denom, amountToDelegate)
 
-		bk.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(coinToDelegate))
-		bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, simAccount.Address, sdk.NewCoins(coinToDelegate))
+		bk.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(coinToDelegate))                                        //nolint:errcheck
+		bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, simAccount.Address, sdk.NewCoins(coinToDelegate)) //nolint:errcheck
 
 		msg := &types.MsgDelegate{
 			DelegatorAddress: simAccount.Address.String(),

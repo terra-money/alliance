@@ -1,14 +1,16 @@
 package cli
 
 import (
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/spf13/cobra"
+
 	"github.com/terra-money/alliance/x/alliance/types"
-	"time"
 )
 
 func CreateAlliance() *cobra.Command {
@@ -21,12 +23,12 @@ func CreateAlliance() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			title, err := cmd.Flags().GetString(govcli.FlagTitle)
+			title, err := cmd.Flags().GetString(govcli.FlagTitle) //nolint:staticcheck // SA1019: govcli.FlagTitle is deprecated
 			if err != nil {
 				return err
 			}
 
-			description, err := cmd.Flags().GetString(govcli.FlagDescription)
+			description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck // SA1019: govcli.FlagDescription is deprecated
 			if err != nil {
 				return err
 			}
@@ -80,7 +82,6 @@ func CreateAlliance() *cobra.Command {
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
-
 			if err != nil {
 				return err
 			}
@@ -93,8 +94,8 @@ func CreateAlliance() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")             //nolint:staticcheck
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	return cmd
 }
@@ -109,12 +110,12 @@ func UpdateAlliance() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			title, err := cmd.Flags().GetString(govcli.FlagTitle)
+			title, err := cmd.Flags().GetString(govcli.FlagTitle) //nolint:staticcheck
 			if err != nil {
 				return err
 			}
 
-			description, err := cmd.Flags().GetString(govcli.FlagDescription)
+			description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck
 			if err != nil {
 				return err
 			}
@@ -168,7 +169,6 @@ func UpdateAlliance() *cobra.Command {
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
-
 			if err != nil {
 				return err
 			}
@@ -181,8 +181,8 @@ func UpdateAlliance() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")             //nolint:staticcheck // SA1019: govcli.FlagTitle is deprecated
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck // SA1019: govcli.FlagDescription is deprecated
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	return cmd
 }
@@ -197,12 +197,12 @@ func DeleteAlliance() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			title, err := cmd.Flags().GetString(govcli.FlagTitle)
+			title, err := cmd.Flags().GetString(govcli.FlagTitle) //nolint:staticcheck // SA1019: govcli.FlagTitle is deprecated
 			if err != nil {
 				return err
 			}
 
-			description, err := cmd.Flags().GetString(govcli.FlagDescription)
+			description, err := cmd.Flags().GetString(govcli.FlagDescription) //nolint:staticcheck // SA1019: govcli.FlagDescription is deprecated
 			if err != nil {
 				return err
 			}
@@ -232,7 +232,6 @@ func DeleteAlliance() *cobra.Command {
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
-
 			if err != nil {
 				return err
 			}
@@ -245,8 +244,8 @@ func DeleteAlliance() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")             //nolint:staticcheck // SA1019: govcli.FlagTitle is deprecated: use FlagTitle instead
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck // SA1019: govcli.FlagDescription is deprecated: use FlagDescription instead
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	return cmd
 }

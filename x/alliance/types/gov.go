@@ -1,11 +1,12 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"time"
 )
 
 const (
@@ -25,6 +26,7 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdateAlliance)
 	govtypes.RegisterProposalType(ProposalTypeDeleteAlliance)
 }
+
 func NewMsgCreateAllianceProposal(title, description, denom string, rewardWeight, takeRate sdk.Dec, rewardChangeRate sdk.Dec, rewardChangeInterval time.Duration) govtypes.Content {
 	return &MsgCreateAllianceProposal{
 		Title:                title,
@@ -42,7 +44,6 @@ func (m *MsgCreateAllianceProposal) ProposalRoute() string  { return RouterKey }
 func (m *MsgCreateAllianceProposal) ProposalType() string   { return ProposalTypeCreateAlliance }
 
 func (m *MsgCreateAllianceProposal) ValidateBasic() error {
-
 	if m.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}

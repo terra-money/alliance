@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"github.com/terra-money/alliance/x/alliance/types"
 	"time"
+
+	"github.com/terra-money/alliance/x/alliance/types"
 
 	"cosmossdk.io/math"
 
@@ -175,7 +176,7 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 	// When there are no more tokens recorded in the asset, clear all share records that might remain
 	// from rounding errors and to prevent div by zero error when there are new delegations
 	if asset.TotalTokens.IsZero() {
-		k.ResetAssetAndValidators(ctx, asset)
+		k.ResetAssetAndValidators(ctx, asset) //nolint:errcheck
 	}
 
 	// Queue undelegation messages to distribute tokens after undelegation completes in the future
@@ -489,7 +490,7 @@ func (k Keeper) setUnbondingIndexByVal(ctx sdk.Context, valAddr sdk.ValAddress, 
 	store.Set(indexKey, []byte{})
 }
 
-func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) {
+func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) { //nolint:unparam // may wish to investigate
 	newShares := types.GetDelegationSharesFromTokens(validator, asset, coin.Amount)
 	delegation, found := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 	if !found {
