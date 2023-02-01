@@ -25,25 +25,42 @@ func (v *AllianceValidator) AddShares(delegationShares sdk.DecCoins, validatorSh
 }
 
 // ReduceShares handles small inaccuracies (~ < 1) when subtracting shares due to rounding errors
-func (v *AllianceValidator) ReduceShares(delegationShares sdk.DecCoins, validatorShares sdk.DecCoins) {
-	newDelegatorShares := SubtractDecCoinsWithRounding(v.TotalDelegatorShares, delegationShares)
+func (v *AllianceValidator) ReduceShares(delegationShares sdk.DecCoins, validatorShares sdk.DecCoins) error {
+	newDelegatorShares, err := SubtractDecCoinsWithRounding(v.TotalDelegatorShares, delegationShares)
+	if err != nil {
+		return err
+	}
 	v.TotalDelegatorShares = newDelegatorShares
-	newValidatorShares := SubtractDecCoinsWithRounding(v.ValidatorShares, validatorShares)
+
+	newValidatorShares, err := SubtractDecCoinsWithRounding(v.ValidatorShares, validatorShares)
+	if err != nil {
+		return err
+	}
 	v.ValidatorShares = newValidatorShares
+
+	return nil
 }
 
-func SubtractDecCoinsWithRounding(d1s sdk.DecCoins, d2s sdk.DecCoins) sdk.DecCoins {
+func SubtractDecCoinsWithRounding(d1s sdk.DecCoins, d2s sdk.DecCoins) (sdk.DecCoins, error) {
 	d1Copy := sdk.NewDecCoins(d1s...)
 	for _, d2 := range d2s {
 		a1 := d1s.AmountOf(d2.Denom)
 		a2 := d2.Amount
+		// check if the result of the SafeSub is negative ...
+		isNegativeResult := false
+
 		if a2.GT(a1) && a2.Sub(a1).LT(sdk.OneDec()) {
-			d1Copy = d1Copy.Sub(sdk.NewDecCoins(sdk.NewDecCoinFromDec(d2.Denom, a1)))
+			d1Copy, isNegativeResult = d1Copy.SafeSub(sdk.NewDecCoins(sdk.NewDecCoinFromDec(d2.Denom, a1)))
 		} else {
-			d1Copy = d1Copy.Sub(sdk.NewDecCoins(d2))
+			d1Copy, isNegativeResult = d1Copy.SafeSub(sdk.NewDecCoins(d2))
+		}
+
+		// ... if the SafeSub returns negative an error should be returned
+		if isNegativeResult {
+			return nil, ErrInsufficientShares
 		}
 	}
-	return d1Copy
+	return d1Copy, nil
 }
 
 func (v AllianceValidator) TotalSharesWithDenom(denom string) sdk.Dec {

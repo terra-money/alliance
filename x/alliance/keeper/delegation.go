@@ -47,11 +47,14 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 	asset.TotalTokens = asset.TotalTokens.Add(coin.Amount)
 	asset.TotalValidatorShares = asset.TotalValidatorShares.Add(newValidatorShares)
 	k.SetAsset(ctx, asset)
-	k.updateValidatorShares(ctx, validator,
+	err = k.updateValidatorShares(ctx, validator,
 		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, newDelegationShares)),
 		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, newValidatorShares)),
 		true,
 	)
+	if err != nil {
+		return nil, err
+	}
 	k.QueueAssetRebalanceEvent(ctx)
 	return &newValidatorShares, nil
 }
@@ -110,23 +113,29 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 
 	// Remove tokens and shares from src validator
 	k.reduceDelegationShares(ctx, delAddr, srcVal, coin, delegationSharesToRemove, srcDelegation)
-	k.updateValidatorShares(
+	err = k.updateValidatorShares(
 		ctx,
 		srcVal,
 		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, delegationSharesToRemove)),
 		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, changedValidatorShares)),
 		false,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	// Add tokens and shares to dst validator
 	_, newDelegationShares := k.upsertDelegationWithNewTokens(ctx, delAddr, dstVal, coin, asset)
-	k.updateValidatorShares(
+	err = k.updateValidatorShares(
 		ctx,
 		dstVal,
 		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, newDelegationShares)),
 		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, changedValidatorShares)),
 		true,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	k.addRedelegation(ctx, delAddr, srcVal.GetOperator(), dstVal.GetOperator(), coin, completionTime)
 
@@ -179,13 +188,16 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 	k.reduceDelegationShares(ctx, delAddr, validator, coin, delegationSharesToUndelegate, delegation)
 
 	// Remove tokens and shares from src validator
-	k.updateValidatorShares(
+	err = k.updateValidatorShares(
 		ctx,
 		validator,
 		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, delegationSharesToUndelegate)),
 		sdk.NewDecCoins(sdk.NewDecCoinFromDec(coin.Denom, validatorSharesToRemove)),
 		false,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	// When there are no more tokens recorded in the asset, clear all share records that might remain
 	// from rounding errors to prevent dust amounts from staying in the stores
@@ -530,13 +542,15 @@ func (k Keeper) reduceDelegationShares(ctx sdk.Context, delAddr sdk.AccAddress, 
 	}
 }
 
-func (k Keeper) updateValidatorShares(ctx sdk.Context, validator types.AllianceValidator, delegationShares sdk.DecCoins, validatorShares sdk.DecCoins, isAdd bool) {
+func (k Keeper) updateValidatorShares(ctx sdk.Context, validator types.AllianceValidator, delegationShares sdk.DecCoins, validatorShares sdk.DecCoins, isAdd bool) error {
 	if isAdd {
 		validator.AddShares(delegationShares, validatorShares)
 	} else {
-		validator.ReduceShares(delegationShares, validatorShares)
+		return validator.ReduceShares(delegationShares, validatorShares)
 	}
 	k.SetValidator(ctx, validator)
+
+	return nil
 }
 
 // GetAllianceBondedAmount returns the total amount of bonded native tokens that are not in the

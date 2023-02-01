@@ -12,6 +12,7 @@ var (
 
 	ErrZeroDelegations    = sdkerrors.Register(ModuleName, 20, "there are no delegations yet")
 	ErrInsufficientTokens = sdkerrors.Register(ModuleName, 21, "insufficient tokens")
+	ErrInsufficientShares = sdkerrors.Register(ModuleName, 22, "insufficient shares")
 
 	ErrUnknownAsset = sdkerrors.Register(ModuleName, 30, "alliance asset is not whitelisted")
 )

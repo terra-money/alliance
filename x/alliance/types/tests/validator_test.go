@@ -21,7 +21,8 @@ func TestSubtractDecCoinsWithRounding(t *testing.T) {
 		sdk.NewDecCoinFromDec("bbb", sdk.MustNewDecFromStr("1000.00")),
 	)
 
-	c := types.SubtractDecCoinsWithRounding(a, b)
+	c, err := types.SubtractDecCoinsWithRounding(a, b)
+	require.NoError(t, err)
 	require.Equal(t, sdk.NewDecCoins(
 		sdk.NewDecCoinFromDec("aaa", sdk.MustNewDecFromStr("600.00")),
 		sdk.NewDecCoinFromDec("bbb", sdk.MustNewDecFromStr("0")),
@@ -40,7 +41,8 @@ func TestSubtractDecCoinsWithRoundingWithSmallErrors(t *testing.T) {
 		sdk.NewDecCoinFromDec("bbb", sdk.MustNewDecFromStr("1000.90")),
 	)
 
-	c := types.SubtractDecCoinsWithRounding(a, b)
+	c, err := types.SubtractDecCoinsWithRounding(a, b)
+	require.NoError(t, err)
 	require.Equal(t, sdk.NewDecCoins(
 		sdk.NewDecCoinFromDec("aaa", sdk.MustNewDecFromStr("600.00")),
 		sdk.NewDecCoinFromDec("bbb", sdk.MustNewDecFromStr("0")),
@@ -49,10 +51,6 @@ func TestSubtractDecCoinsWithRoundingWithSmallErrors(t *testing.T) {
 }
 
 func TestSubtractDecCoinsWithRoundingWithBigErrors(t *testing.T) {
-	defer func() {
-		err := recover()
-		require.NotNil(t, err)
-	}()
 	a := sdk.NewDecCoins(
 		sdk.NewDecCoinFromDec("aaa", sdk.MustNewDecFromStr("1000.00")),
 		sdk.NewDecCoinFromDec("bbb", sdk.MustNewDecFromStr("1000.00")),
@@ -63,10 +61,6 @@ func TestSubtractDecCoinsWithRoundingWithBigErrors(t *testing.T) {
 		sdk.NewDecCoinFromDec("bbb", sdk.MustNewDecFromStr("1010.10")),
 	)
 
-	c := types.SubtractDecCoinsWithRounding(a, b)
-	require.Equal(t, sdk.NewDecCoins(
-		sdk.NewDecCoinFromDec("aaa", sdk.MustNewDecFromStr("600.00")),
-		sdk.NewDecCoinFromDec("bbb", sdk.MustNewDecFromStr("0")),
-		sdk.NewDecCoinFromDec("ccc", sdk.MustNewDecFromStr("1000.00")),
-	), c)
+	_, err := types.SubtractDecCoinsWithRounding(a, b)
+	require.Error(t, err)
 }
