@@ -15,7 +15,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/terra-money/alliance/app"
-	"github.com/terra-money/alliance/app/params"
 )
 
 func init() {
@@ -53,9 +52,9 @@ func BenchmarkSimulation(b *testing.B) {
 		require.NoError(b, err)
 	})
 
-	encoding := params.MakeEncodingConfig()
+	encoding := app.MakeTestEncodingConfig()
 
-	app := app.New(
+	simApp := app.New(
 		logger,
 		db,
 		nil,
@@ -71,17 +70,17 @@ func BenchmarkSimulation(b *testing.B) {
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
-		app.GetBaseApp(),
-		simapp.AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simApp.GetBaseApp(),
+		simapp.AppStateFn(simApp.AppCodec(), simApp.SimulationManager()),
 		simulationtypes.RandomAccounts,
-		simapp.SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		simapp.SimulationOperations(simApp, simApp.AppCodec(), config),
+		simApp.ModuleAccountAddrs(),
 		config,
-		app.AppCodec(),
+		simApp.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
-	err = simapp.CheckExportSimulation(app, config, simParams)
+	err = simapp.CheckExportSimulation(simApp, config, simParams)
 	require.NoError(b, err)
 	require.NoError(b, simErr)
 
