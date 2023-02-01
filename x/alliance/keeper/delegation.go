@@ -389,14 +389,15 @@ func (k Keeper) SetValidatorInfo(ctx sdk.Context, valAddr sdk.ValAddress, val ty
 // Returns the number of shares that represents the amount of staked tokens that was requested
 func (k Keeper) ValidateDelegatedAmount(delegation types.Delegation, coin sdk.Coin, val types.AllianceValidator, asset types.AllianceAsset) (shares sdk.Dec, err error) {
 	delegationSharesToUpdate := types.GetDelegationSharesFromTokens(val, asset, coin.Amount)
-	if delegation.Shares.LT(delegationSharesToUpdate.TruncateDec()) {
-		return sdk.Dec{}, stakingtypes.ErrInsufficientShares
-	}
-
 	// Account for rounding in which shares for a full withdraw is slightly more or less than the number of shares recorded
 	// Withdraw all in that case
-	if delegation.Shares.Sub(delegationSharesToUpdate).Abs().LT(sdk.OneDec()) {
-		delegationSharesToUpdate = delegation.Shares
+	// 1e6 of margin should be enough to handle realistic rounding issues caused by using the fix-point math.
+	if delegation.Shares.Sub(delegationSharesToUpdate).Abs().LT(sdk.NewDecWithPrec(1, 6)) {
+		return delegation.Shares, nil
+	}
+
+	if delegation.Shares.LT(delegationSharesToUpdate.TruncateDec()) {
+		return sdk.Dec{}, stakingtypes.ErrInsufficientShares
 	}
 
 	return delegationSharesToUpdate, nil
