@@ -1,4 +1,4 @@
-FROM golang:1.18.7-bullseye AS build
+FROM golang:1.19-bullseye AS build
 
 RUN apt update && apt install jq build-essential -y
 
