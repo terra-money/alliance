@@ -899,21 +899,42 @@ func TestQueryValidators(t *testing.T) {
 	})
 
 	require.NoError(t, queryErr)
-	require.Equal(t, &types.QueryAllianceValidatorsResponse{
-		Validators: []types.QueryAllianceValidatorResponse{
-			{
-				ValidatorAddr: val2.GetOperator().String(),
-				TotalDelegationShares: sdk.NewDecCoins(
-					sdk.NewDecCoinFromDec(AllianceDenomTwo, sdk.NewDec(1000000)),
-				),
-				ValidatorShares: sdk.NewDecCoins(
-					sdk.NewDecCoinFromDec(AllianceDenomTwo, sdk.NewDec(1000000)),
-				),
-				TotalStaked: sdk.NewDecCoins(
-					sdk.NewDecCoinFromDec(AllianceDenomTwo, sdk.NewDec(1000_000)),
-				),
+	// Order in which validators are returned is not deterministic since we randomly generate validator addresses
+	if queryVal2.Validators[0].ValidatorAddr == val.GetOperator().String() {
+		require.Equal(t, &types.QueryAllianceValidatorsResponse{
+			Validators: []types.QueryAllianceValidatorResponse{
+				{
+					ValidatorAddr: val.GetOperator().String(),
+					TotalDelegationShares: sdk.NewDecCoins(
+						sdk.NewDecCoinFromDec(AllianceDenom, sdk.NewDec(1000000)),
+					),
+					ValidatorShares: sdk.NewDecCoins(
+						sdk.NewDecCoinFromDec(AllianceDenom, sdk.NewDec(1000000)),
+					),
+					TotalStaked: sdk.NewDecCoins(
+						sdk.NewDecCoinFromDec(AllianceDenom, sdk.NewDec(1000_000)),
+					),
+				},
 			},
-		},
-		Pagination: queryVal2.Pagination,
-	}, queryVal2)
+			Pagination: queryVal2.Pagination,
+		}, queryVal2)
+	} else {
+		require.Equal(t, &types.QueryAllianceValidatorsResponse{
+			Validators: []types.QueryAllianceValidatorResponse{
+				{
+					ValidatorAddr: val2.GetOperator().String(),
+					TotalDelegationShares: sdk.NewDecCoins(
+						sdk.NewDecCoinFromDec(AllianceDenomTwo, sdk.NewDec(1000000)),
+					),
+					ValidatorShares: sdk.NewDecCoins(
+						sdk.NewDecCoinFromDec(AllianceDenomTwo, sdk.NewDec(1000000)),
+					),
+					TotalStaked: sdk.NewDecCoins(
+						sdk.NewDecCoinFromDec(AllianceDenomTwo, sdk.NewDec(1000_000)),
+					),
+				},
+			},
+			Pagination: queryVal2.Pagination,
+		}, queryVal2)
+	}
 }
