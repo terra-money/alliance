@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	SEED               = 1
+	SEED               = int64(1)
 	NumOfBlocks        = 1000
 	BlocktimeInSeconds = 5
 	VoteRate           = 0.8
@@ -38,7 +38,7 @@ var (
 var createdDelegations = []types.Delegation{}
 
 func TestRunBenchmarks(t *testing.T) {
-	r := rand.New(rand.NewSource(1))
+	r := rand.New(rand.NewSource(SEED))
 	app, ctx, assets, vals, dels := benchmark.SetupApp(t, r, NumOfAssets, NumOfValidators, NumOfDelegators)
 	powerReduction := sdk.OneInt()
 	operations := make(map[string]int)
@@ -212,7 +212,10 @@ func undelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {
 	if amountToUndelegate.IsZero() {
 		return
 	}
-	app.AllianceKeeper.Undelegate(ctx, delAddr, validator, sdk.NewCoin(asset.Denom, amountToUndelegate)) //nolint:errcheck
+	_, err := app.AllianceKeeper.Undelegate(ctx, delAddr, validator, sdk.NewCoin(asset.Denom, amountToUndelegate))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func claimRewardsOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {

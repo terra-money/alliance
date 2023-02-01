@@ -91,6 +91,13 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 		return nil, err
 	}
 
+	// Now we have shares we want to re-delegate, we re-calculate how many tokens to actually re-delegate
+	// Directly using the input amount can result in un-delegating more tokens than expected due to rounding issues
+	coinsToRedelegate := types.GetDelegationTokensWithShares(delegationSharesToRemove, srcVal, asset)
+	if coin.Amount.GT(coinsToRedelegate.Amount) {
+		return nil, types.ErrInsufficientTokens.Wrapf("wanted %s but have %s", coin.Amount, coinsToRedelegate.Amount)
+	}
+
 	// Prevents transitive re-delegations
 	// e.g. if a redelegation from A -> B is made before another request from B -> C
 	// the latter is blocked until the first redelegation is mature (time > unbonding time)
@@ -149,10 +156,17 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 	// Delegation is queried again since it might have been modified when claiming delegation rewards
 	delegation, _ := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 
-	// Calculate how much delegation shares to be undelegated
+	// Calculate how much delegation shares to be undelegated taking into account rounding issues
 	delegationSharesToUndelegate, err := k.ValidateDelegatedAmount(delegation, coin, validator, asset)
 	if err != nil {
 		return nil, err
+	}
+
+	// Now we have shares we want to un-delegate, we re-calculate how many tokens to actually un-delegate
+	// Directly using the input amount can result in un-delegating more tokens than expected due to rounding issues
+	coinsToUndelegate := types.GetDelegationTokensWithShares(delegationSharesToUndelegate, validator, asset)
+	if coin.Amount.GT(coinsToUndelegate.Amount) {
+		return nil, types.ErrInsufficientTokens.Wrapf("wanted %s but have %s", coin.Amount, coinsToUndelegate.Amount)
 	}
 	validatorSharesToRemove := types.GetValidatorShares(asset, coin.Amount)
 
@@ -174,9 +188,9 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 	)
 
 	// When there are no more tokens recorded in the asset, clear all share records that might remain
-	// from rounding errors and to prevent div by zero error when there are new delegations
+	// from rounding errors to prevent dust amounts from staying in the stores
 	if asset.TotalTokens.IsZero() {
-		k.ResetAssetAndValidators(ctx, asset) //nolint:errcheck
+		k.ResetAssetAndValidators(ctx, asset)
 	}
 
 	// Queue undelegation messages to distribute tokens after undelegation completes in the future
@@ -375,14 +389,15 @@ func (k Keeper) SetValidatorInfo(ctx sdk.Context, valAddr sdk.ValAddress, val ty
 // Returns the number of shares that represents the amount of staked tokens that was requested
 func (k Keeper) ValidateDelegatedAmount(delegation types.Delegation, coin sdk.Coin, val types.AllianceValidator, asset types.AllianceAsset) (shares sdk.Dec, err error) {
 	delegationSharesToUpdate := types.GetDelegationSharesFromTokens(val, asset, coin.Amount)
-	if delegation.Shares.LT(delegationSharesToUpdate.TruncateDec()) {
-		return sdk.Dec{}, stakingtypes.ErrInsufficientShares
-	}
-
 	// Account for rounding in which shares for a full withdraw is slightly more or less than the number of shares recorded
 	// Withdraw all in that case
-	if delegation.Shares.Sub(delegationSharesToUpdate).Abs().LT(sdk.OneDec()) {
-		delegationSharesToUpdate = delegation.Shares
+	// 1e6 of margin should be enough to handle realistic rounding issues caused by using the fix-point math.
+	if delegation.Shares.Sub(delegationSharesToUpdate).Abs().LT(sdk.NewDecWithPrec(1, 6)) {
+		return delegation.Shares, nil
+	}
+
+	if delegation.Shares.LT(delegationSharesToUpdate.TruncateDec()) {
+		return sdk.Dec{}, stakingtypes.ErrInsufficientShares
 	}
 
 	return delegationSharesToUpdate, nil
@@ -547,7 +562,7 @@ func (k Keeper) GetAllianceBondedAmount(ctx sdk.Context, delegator sdk.AccAddres
 // ResetAssetAndValidators
 // When an asset has no more tokens being delegated, go through all validators and set
 // validator shares to zero
-func (k Keeper) ResetAssetAndValidators(ctx sdk.Context, asset types.AllianceAsset) (err error) {
+func (k Keeper) ResetAssetAndValidators(ctx sdk.Context, asset types.AllianceAsset) {
 	k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) (stop bool) {
 		updatedShares := sdk.NewDecCoins()
 		for _, share := range info.ValidatorShares {
@@ -561,5 +576,4 @@ func (k Keeper) ResetAssetAndValidators(ctx sdk.Context, asset types.AllianceAss
 	})
 	asset.TotalValidatorShares = sdk.ZeroDec()
 	k.SetAsset(ctx, asset)
-	return nil
 }

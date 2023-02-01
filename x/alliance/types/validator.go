@@ -1,6 +1,7 @@
 package types
 
 import (
+	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -72,4 +73,8 @@ func (v AllianceValidator) TotalTokensWithAsset(asset AllianceAsset) sdk.Dec {
 func (v AllianceValidator) TotalDecTokensWithAsset(asset AllianceAsset) sdk.Dec {
 	shares := v.ValidatorSharesWithDenom(asset.Denom)
 	return ConvertNewShareToDecToken(sdk.NewDecFromInt(asset.TotalTokens), asset.TotalValidatorShares, shares)
+}
+
+func GetValidatorShares(asset AllianceAsset, token cosmosmath.Int) sdk.Dec {
+	return ConvertNewTokenToShares(sdk.NewDecFromInt(asset.TotalTokens), asset.TotalValidatorShares, token)
 }

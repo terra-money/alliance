@@ -132,9 +132,15 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 		if expectedBondAmount.GT(currentBondedAmount) {
 			// delegate more tokens to increase the weight
 			bondAmount := expectedBondAmount.Sub(currentBondedAmount).TruncateInt()
+			// If bond amount is zero after truncation, then skip delegation
+			// Small delegations to alliance will not change the voting power by a lot. We can accumulate all the small
+			// changes until it is larger than 1 utoken before we update voting power
+			if bondAmount.IsZero() {
+				continue
+			}
 			err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, bondAmount)))
 			if err != nil {
-				return nil
+				return err
 			}
 			_, err = k.stakingKeeper.Delegate(ctx, moduleAddr, bondAmount, stakingtypes.Unbonded, *validator.Validator, true)
 			if err != nil {
@@ -143,6 +149,10 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 		} else if expectedBondAmount.LT(currentBondedAmount) {
 			// undelegate more tokens to reduce the weight
 			unbondAmount := currentBondedAmount.Sub(expectedBondAmount).TruncateInt()
+			// When unbondAmount is < 1 utoken, we ignore the change in voting power since it rounds down to zero.
+			if unbondAmount.IsZero() {
+				continue
+			}
 			sharesToUnbond, err := k.stakingKeeper.ValidateUnbondAmount(ctx, moduleAddr, validator.GetOperator(), unbondAmount)
 			if err != nil {
 				return err
