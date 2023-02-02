@@ -127,6 +127,8 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 		false,
 	)
 
+	k.ClearDustDelegation(ctx, delAddr, srcVal, asset)
+
 	// Add tokens and shares to dst validator
 	_, newDelegationShares := k.upsertDelegationWithNewTokens(ctx, delAddr, dstVal, coin, asset)
 	k.updateValidatorShares(
@@ -206,11 +208,7 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 		false,
 	)
 
-	// When there are no more tokens recorded in the asset, clear all share records that might remain
-	// from rounding errors to prevent dust amounts from staying in the stores
-	if asset.TotalTokens.IsZero() {
-		k.ResetAssetAndValidators(ctx, asset)
-	}
+	k.ClearDustDelegation(ctx, delAddr, validator, asset)
 
 	// Queue undelegation messages to distribute tokens after undelegation completes in the future
 	completionTime := k.queueUndelegation(ctx, delAddr, validator.GetOperator(), coin)
@@ -427,6 +425,14 @@ func (k Keeper) ValidateDelegatedAmount(delegation types.Delegation, coin sdk.Co
 	if delegation.Shares.LT(delegationSharesToUpdate.TruncateDec()) {
 		return sdk.Dec{}, stakingtypes.ErrInsufficientShares
 	}
+	// Cap the shares at the delegation's shares. Shares being greater could occur
+	// due to rounding, however we don't want to truncate the shares or take the
+	// minimum because we want to allow for the full withdraw of shares from a
+	// delegation.
+	// This logic is similar to that found in x/staking
+	if delegationSharesToUpdate.GT(delegation.Shares) {
+		delegationSharesToUpdate = delegation.Shares
+	}
 
 	return delegationSharesToUpdate, nil
 }
@@ -604,4 +610,40 @@ func (k Keeper) ResetAssetAndValidators(ctx sdk.Context, asset types.AllianceAss
 	})
 	asset.TotalValidatorShares = sdk.ZeroDec()
 	k.SetAsset(ctx, asset)
+}
+
+func (k Keeper) ClearDustDelegation(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, asset types.AllianceAsset) {
+	delegation, found := k.GetDelegation(ctx, delAddr, validator, asset.Denom)
+	// If not found then the delegation has already been deleted, do nothing else
+	if !found {
+		return
+	}
+	delegatorSharesToRemove := sdk.NewDecCoinFromDec(asset.Denom, sdk.ZeroDec())
+	validatorSharesToRemove := sdk.NewDecCoinFromDec(asset.Denom, sdk.ZeroDec())
+
+	tokensLeft := types.GetDelegationTokensWithShares(delegation.Shares, validator, asset)
+	// If there are no tokens that can be claimed by the delegation, delete the delegation
+	if tokensLeft.IsZero() {
+		store := ctx.KVStore(k.storeKey)
+		delAddr := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress) // acc address should always be valid here
+		key := types.GetDelegationKey(delAddr, validator.GetOperator(), asset.Denom)
+		store.Delete(key)
+
+		delegatorSharesToRemove = sdk.NewDecCoinFromDec(asset.Denom, delegation.Shares)
+	}
+
+	validatorTokensLeft := validator.TotalTokensWithAsset(asset)
+	if validatorTokensLeft.IsZero() {
+		validatorSharesToRemove = sdk.NewDecCoinFromDec(asset.Denom, validator.ValidatorSharesWithDenom(asset.Denom))
+	}
+
+	// Reduce the dust shares from validator to make sure everything adds up
+	validator.ReduceShares(sdk.NewDecCoins(delegatorSharesToRemove), sdk.NewDecCoins(validatorSharesToRemove))
+	k.SetValidator(ctx, validator)
+
+	// When there are no more tokens recorded in the asset, clear all share records that might remain
+	// from rounding errors to prevent dust amounts from staying in the stores
+	if asset.TotalTokens.IsZero() {
+		k.ResetAssetAndValidators(ctx, asset)
+	}
 }
