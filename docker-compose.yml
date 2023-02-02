@@ -1,8 +1,8 @@
 version: "3"
 
 services:
-  allianced_node:
-    container_name: allianced_node
+  alliance_node:
+    container_name: alliance_node
     image: "alltest:latest"
     entrypoint: /entrypoint.sh
     environment:

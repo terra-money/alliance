@@ -30,7 +30,8 @@ RUN set -eux && sed \
     -i app/app.go
 
 RUN set -eux &&\
-    make build -o .
+    make install &&\
+    make build
 
 RUN set -eux &&\
     WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \

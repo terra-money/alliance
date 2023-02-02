@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	"net"
 	"os"
 	"path/filepath"
 	"time"
+
+	icagenesistypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/genesis/types"
+	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
 
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
@@ -373,7 +375,7 @@ func initGenFiles(
 	appGenState[crisistypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&crisisGenState)
 
 	// ICA HOST
-	var interchainAccountsGenState icatypes.GenesisState
+	var interchainAccountsGenState icagenesistypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[icatypes.ModuleName], &interchainAccountsGenState)
 	interchainAccountsGenState.HostGenesisState.Params.AllowMessages = []string{
 		"/cosmos.bank.v1beta1.MsgSend",
