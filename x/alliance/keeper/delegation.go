@@ -56,6 +56,15 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 		return nil, err
 	}
 	k.QueueAssetRebalanceEvent(ctx)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeDelegate,
+			sdk.NewAttribute(types.AttributeKeyValidator, validator.OperatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, coin.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyNewShares, newValidatorShares.String()),
+		),
+	})
 	return &newValidatorShares, nil
 }
 
@@ -141,6 +150,16 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 
 	k.QueueAssetRebalanceEvent(ctx)
 
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeRedelegate,
+			sdk.NewAttribute(types.AttributeKeySrcValidator, srcVal.OperatorAddress),
+			sdk.NewAttribute(types.AttributeKeyDstValidator, dstVal.OperatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, coin.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
+		),
+	})
+
 	return &completionTime, nil
 }
 
@@ -208,6 +227,15 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 	// Queue undelegation messages to distribute tokens after undelegation completes in the future
 	completionTime := k.queueUndelegation(ctx, delAddr, validator.GetOperator(), coin)
 	k.QueueAssetRebalanceEvent(ctx)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeUndelegate,
+			sdk.NewAttribute(types.AttributeKeyValidator, validator.OperatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, coin.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
+		),
+	})
 	return &completionTime, nil
 }
 
