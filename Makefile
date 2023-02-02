@@ -159,7 +159,7 @@ localnet-build-env:
 
 localnet-init: 
 	$(DOCKER) run --rm -v $(CURDIR)/.testnets:/alliance terra-money/localnet-alliance \
-		testnet init-files --v 3 -o /alliance --starting-ip-address 192.168.5.20 --keyring-backend=test --chain-id=$(CHAIN_ID) --bond-denom=$(BOND_DENOM) --minimum-gas-prices=0$(BOND_DENOM)
+		allianced testnet init-files --v 3 -o /alliance --starting-ip-address 192.168.5.20 --keyring-backend=test --chain-id=$(CHAIN_ID) --bond-denom=$(BOND_DENOM) --minimum-gas-prices=0$(BOND_DENOM)
 
 localnet-up:
 	docker-compose up -d
