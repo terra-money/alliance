@@ -3,18 +3,25 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
+// SlashValidator works by reducing the amount of validator shares for all alliance assets by a `fraction`
+// This effectively reallocates tokens from slashed validators to good validators
+// On top of slashing currently bonded delegations, we also slash re-delegations and un-delegations
+// that are still in the progress of unbonding
 func (k Keeper) SlashValidator(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
 	val, err := k.GetAllianceValidator(ctx, valAddr)
 	if err != nil {
 		return err
 	}
+	// slashedValidatorShares accumulates the final validator shares after slashing
 	slashedValidatorShares := sdk.NewDecCoins()
 	for _, share := range val.ValidatorShares {
 		sharesToSlash := share.Amount.Mul(fraction)
-		slashedValidatorShares = slashedValidatorShares.Add(sdk.NewDecCoinFromDec(share.Denom, share.Amount.Sub(sharesToSlash)))
+		sharesAfterSlashing := sdk.NewDecCoinFromDec(share.Denom, share.Amount.Sub(sharesToSlash))
+		slashedValidatorShares = slashedValidatorShares.Add(sharesAfterSlashing)
 		asset, found := k.GetAssetByDenom(ctx, share.Denom)
 		if !found {
 			return types.ErrUnknownAsset
@@ -88,7 +95,7 @@ func (k Keeper) SlashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, frac
 		if err != nil {
 			return err
 		}
-		dstVal.TotalDelegatorShares = sdk.NewDecCoins(dstVal.TotalDelegatorShares...).Sub(sdk.NewDecCoins(sdk.NewDecCoinFromDec(asset.Denom, sharesToSlash)))
+		dstVal.TotalDelegatorShares = sdk.DecCoins(dstVal.TotalDelegatorShares).Sub(sdk.NewDecCoins(sdk.NewDecCoinFromDec(asset.Denom, sharesToSlash)))
 		k.SetValidator(ctx, dstVal)
 
 		delegation.Shares = delegation.Shares.Sub(sharesToSlash)

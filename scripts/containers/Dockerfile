@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG GO_VERSION="1.18"
+ARG GO_VERSION="1.19"
 ARG PLATFORM="bullseye"
 ARG BUILDPLATFORM="linux/amd64"
 ARG BASE_IMAGE="golang:${GO_VERSION}-${PLATFORM}"
@@ -22,8 +22,7 @@ COPY . .
 
 RUN set -eux &&\
     apt update &&\
-    apt install build-essential -y &&\
-    curl https://get.ignite.com/cli@v0.25.1! | bash
+    apt install build-essential -y
 
 RUN set -eux && sed \
     -e "s/AccountAddressPrefix = \"alliance\"/AccountAddressPrefix = \"${ACC_PREFIX}\"/g" \
@@ -31,7 +30,7 @@ RUN set -eux && sed \
     -i app/app.go
 
 RUN set -eux &&\
-    ignite chain build --output /go/bin --verbose
+    make build -o .
 
 RUN set -eux &&\
     WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
