@@ -1,10 +1,10 @@
 package types
 
 const (
-	EventTypeDelegate               = "delegate"
-	EventTypeUndelegate             = "undelegate"
-	EventTypeRedelegate             = "redelegate"
-	EventTypeClaimDelegationRewards = "claim_delegation_rewards"
+	EventTypeDelegate               = "alliance_delegate"
+	EventTypeUndelegate             = "alliance_undelegate"
+	EventTypeRedelegate             = "alliance_redelegate"
+	EventTypeClaimDelegationRewards = "alliance_claim_delegation_rewards"
 
 	AttributeKeyValidator      = "validator"
 	AttributeKeySrcValidator   = "source_validator"
