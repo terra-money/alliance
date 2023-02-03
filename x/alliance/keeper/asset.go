@@ -1,13 +1,15 @@
 package keeper
 
 import (
+	"math"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/terra-money/alliance/x/alliance/types"
-	"math"
-	"time"
 )
 
 // UpdateAllianceAsset updates the alliance asset with new params
@@ -113,7 +115,7 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 		expectedBondAmount := sdk.ZeroDec()
 		for _, asset := range assets {
 			// Ignores assets that were recently added to prevent a small set of stakers from owning too much of the
-			// voting power
+			// voting power at the start. Uses the asset.RewardStartTime to determine when an asset is activated
 			if ctx.BlockTime().Before(asset.RewardStartTime) {
 				// Queue a rebalancing event so that we keep checking if the asset rewards has started in the next block
 				k.QueueAssetRebalanceEvent(ctx)
@@ -130,9 +132,15 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 		if expectedBondAmount.GT(currentBondedAmount) {
 			// delegate more tokens to increase the weight
 			bondAmount := expectedBondAmount.Sub(currentBondedAmount).TruncateInt()
+			// If bond amount is zero after truncation, then skip delegation
+			// Small delegations to alliance will not change the voting power by a lot. We can accumulate all the small
+			// changes until it is larger than 1 utoken before we update voting power
+			if bondAmount.IsZero() {
+				continue
+			}
 			err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(bondDenom, bondAmount)))
 			if err != nil {
-				return nil
+				return err
 			}
 			_, err = k.stakingKeeper.Delegate(ctx, moduleAddr, bondAmount, stakingtypes.Unbonded, *validator.Validator, true)
 			if err != nil {
@@ -141,6 +149,10 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 		} else if expectedBondAmount.LT(currentBondedAmount) {
 			// undelegate more tokens to reduce the weight
 			unbondAmount := currentBondedAmount.Sub(expectedBondAmount).TruncateInt()
+			// When unbondAmount is < 1 utoken, we ignore the change in voting power since it rounds down to zero.
+			if unbondAmount.IsZero() {
+				continue
+			}
 			sharesToUnbond, err := k.stakingKeeper.ValidateUnbondAmount(ctx, moduleAddr, validator.GetOperator(), unbondAmount)
 			if err != nil {
 				return err
@@ -314,6 +326,6 @@ func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.Alliance
 		asset.RewardWeight = asset.RewardWeight.Mul(multiplier)
 		asset.LastRewardChangeTime = asset.LastRewardChangeTime.Add(asset.RewardChangeInterval * time.Duration(intervalsSinceLastClaim))
 		k.QueueAssetRebalanceEvent(ctx)
-		k.UpdateAllianceAsset(ctx, *asset)
+		k.UpdateAllianceAsset(ctx, *asset) //nolint:errcheck
 	}
 }

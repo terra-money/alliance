@@ -1,9 +1,9 @@
 version: "3"
 
 services:
-  allianced_node:
-    container_name: allianced_node
-    image: "alltest:latest"
+  alliance_node:
+    container_name: alliance_node
+    image: "terra-money/localnet-alliance"
     entrypoint: /entrypoint.sh
     environment:
       - DEBUG=1
@@ -27,7 +27,7 @@ services:
 
   alliance_node_1:
     container_name: alliance_node_1
-    image: "alltest:latest"
+    image: "terra-money/localnet-alliance"
     entrypoint: /entrypoint.sh
     environment:
       - DEBUG=0
@@ -51,7 +51,7 @@ services:
 
   alliance_node_2:
     container_name: alliance_node_2
-    image: "alltest:latest"
+    image: "terra-money/localnet-alliance"
     entrypoint: /entrypoint.sh
     environment:
       - DEBUG=0

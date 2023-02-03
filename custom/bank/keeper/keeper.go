@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,11 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	banktypes "github.com/terra-money/alliance/custom/bank/types"
 	alliancekeeper "github.com/terra-money/alliance/x/alliance/keeper"
 	alliancetypes "github.com/terra-money/alliance/x/alliance/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type Keeper struct {
@@ -25,9 +27,7 @@ type Keeper struct {
 	acck accountkeeper.AccountKeeper
 }
 
-var (
-	_ bankkeeper.Keeper = Keeper{}
-)
+var _ bankkeeper.Keeper = Keeper{}
 
 func NewBaseKeeper(
 	cdc codec.BinaryCodec,
