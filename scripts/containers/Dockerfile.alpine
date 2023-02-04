@@ -103,7 +103,6 @@ ARG ACC_PREFIX
 ENV ACC_PREFIX="${ACC_PREFIX}" \
     APP_BIN="/usr/local/bin/${ACC_PREFIX}d" 
 
-COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY --from=app-builder /go/bin/allianced ${APP_BIN}
 
 RUN set -eux && \
@@ -115,5 +114,4 @@ WORKDIR /app
 RUN set -eux && \
     ln -s "${APP_BIN}" "/usr/local/bin/appd"
 
-ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 CMD ["/usr/local/bin/appd", "--home", "/app", "start"]
