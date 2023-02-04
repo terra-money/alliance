@@ -101,6 +101,10 @@ FROM alpine:${ALPINE_VERSION} as app
 ARG ACC_PREFIX
 ENV APP_BIN="/usr/local/bin/${ACC_PREFIX}d"
 
+RUN set -eux &&\
+    apk update &&\
+    apk add --no-cache jq
+
 COPY --from=app-builder /go/bin/allianced ${APP_BIN}
 
 WORKDIR /app
