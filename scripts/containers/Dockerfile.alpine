@@ -17,8 +17,8 @@ FROM base as builder
 ARG BUILDPLATFORM
 
 # NOTE: add libusb-dev to run with LEDGER_ENABLED=true
-RUN set -eux &&\
-    apk update &&\
+RUN set -eux && \
+    apk update && \
     apk add --no-cache \
     ca-certificates \
     linux-headers \
@@ -28,12 +28,12 @@ RUN set -eux &&\
 
 # install mimalloc for musl
 WORKDIR ${GOPATH}/src/mimalloc
-RUN set -eux &&\
-    git clone --depth 1 https://github.com/microsoft/mimalloc . &&\
-    mkdir -p build &&\
-    cd build &&\
-    cmake .. &&\
-    make -j$(nproc) &&\
+RUN set -eux && \
+    git clone --depth 1 https://github.com/microsoft/mimalloc . && \
+    mkdir -p build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
     make install
 
 
@@ -45,7 +45,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     go mod download -x
 
 # Cosmwasm - Download correct libwasmvm version
-RUN set -eux &&\
+RUN set -eux && \
     WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
     WASMVM_DOWNLOADS="https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}"; \
     wget ${WASMVM_DOWNLOADS}/checksums.txt -O /tmp/checksums.txt; \
@@ -94,22 +94,26 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
         -trimpath \
         ./...
 
-# ###############################################################################
+#################################################################################
 
 FROM alpine:${ALPINE_VERSION} as app
 
 ARG ACC_PREFIX
-ENV APP_BIN="/usr/local/bin/${ACC_PREFIX}d"
 
-RUN set -eux &&\
-    apk update &&\
-    apk add --no-cache jq
+ENV ACC_PREFIX="${ACC_PREFIX}" \
+    APP_BIN="/usr/local/bin/${ACC_PREFIX}d" 
 
+COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY --from=app-builder /go/bin/allianced ${APP_BIN}
+
+RUN set -eux && \
+    apk update && \
+    apk add --no-cache jq
 
 WORKDIR /app
 
-RUN set -eux &&\
+RUN set -eux && \
     ln -s "${APP_BIN}" "/usr/local/bin/appd"
 
+ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 CMD ["/usr/local/bin/appd", "--home", "/app", "start"]
