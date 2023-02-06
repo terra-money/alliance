@@ -7,10 +7,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewAllianceAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec, rewardStartTime time.Time) AllianceAsset {
+func NewAllianceAsset(denom string, rewardWeight sdk.Dec, minRewardWeight sdk.Dec, maxRewardWeight sdk.Dec, takeRate sdk.Dec, rewardStartTime time.Time) AllianceAsset {
 	return AllianceAsset{
-		Denom:                denom,
-		RewardWeight:         rewardWeight,
+		Denom:        denom,
+		RewardWeight: rewardWeight,
+		RewardWeightRange: RewardWeightRange{
+			Min: minRewardWeight,
+			Max: maxRewardWeight,
+		},
 		TakeRate:             takeRate,
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),

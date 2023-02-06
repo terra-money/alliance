@@ -22,6 +22,10 @@ func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsse
 	}
 
 	var err error
+	if newAsset.RewardWeightRange.Min.GT(newAsset.RewardWeight) || newAsset.RewardWeightRange.Max.LT(newAsset.RewardWeight) {
+		err = types.ErrRewardWeightOutOfBound
+		return err
+	}
 	// Only add a snapshot if reward weight changes
 	if !newAsset.RewardWeight.Equal(asset.RewardWeight) {
 		k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) bool {

@@ -62,7 +62,7 @@ func TestCreateAllianceFailWithDuplicatedDenom(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset("uluna", sdk.NewDec(1), sdk.NewDec(0), startTime),
+			types.NewAllianceAsset("uluna", sdk.NewDec(1), sdk.ZeroDec(), sdk.NewDec(2), sdk.NewDec(0), startTime),
 		},
 	})
 

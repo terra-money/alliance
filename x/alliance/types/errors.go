@@ -14,4 +14,6 @@ var (
 	ErrInsufficientTokens = sdkerrors.Register(ModuleName, 21, "insufficient tokens")
 
 	ErrUnknownAsset = sdkerrors.Register(ModuleName, 30, "alliance asset is not whitelisted")
+
+	ErrRewardWeightOutOfBound = sdkerrors.Register(ModuleName, 40, "alliance asset must be between reward_weight_range")
 )

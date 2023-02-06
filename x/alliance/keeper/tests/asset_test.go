@@ -24,8 +24,8 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), startTime),
-			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.ZeroDec(), startTime),
+			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), sdk.NewDec(4), sdk.ZeroDec(), startTime),
+			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.ZeroDec(), startTime),
 		},
 	})
 
@@ -449,8 +449,8 @@ func TestRebalancingWithDelayedRewardsStartTime(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(AllianceDenom, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.1"), startTime.Add(time.Hour*24)),
-			types.NewAllianceAsset(AllianceDenomTwo, sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.1"), startTime.Add(time.Hour*24*2)),
+			types.NewAllianceAsset(AllianceDenom, sdk.MustNewDecFromStr("0.5"), sdk.ZeroDec(), sdk.OneDec(), sdk.MustNewDecFromStr("0.1"), startTime.Add(time.Hour*24)),
+			types.NewAllianceAsset(AllianceDenomTwo, sdk.MustNewDecFromStr("0.2"), sdk.ZeroDec(), sdk.OneDec(), sdk.MustNewDecFromStr("0.1"), startTime.Add(time.Hour*24*2)),
 		},
 	})
 
@@ -572,8 +572,8 @@ func TestConsumingRebalancingEvent(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(AllianceDenom, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.1"), startTime.Add(time.Hour*24)),
-			types.NewAllianceAsset(AllianceDenomTwo, sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.1"), startTime.Add(time.Hour*24*2)),
+			types.NewAllianceAsset(AllianceDenom, sdk.MustNewDecFromStr("0.5"), sdk.ZeroDec(), sdk.OneDec(), sdk.MustNewDecFromStr("0.1"), startTime.Add(time.Hour*24)),
+			types.NewAllianceAsset(AllianceDenomTwo, sdk.MustNewDecFromStr("0.2"), sdk.ZeroDec(), sdk.OneDec(), sdk.MustNewDecFromStr("0.1"), startTime.Add(time.Hour*24*2)),
 		},
 	})
 
@@ -792,8 +792,8 @@ func TestClaimTakeRate(t *testing.T) {
 			LastTakeRateClaimTime: startTime,
 		},
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.MustNewDecFromStr("0.5"), startTime),
-			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(0), startTime),
+			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), sdk.NewDec(5), sdk.MustNewDecFromStr("0.5"), startTime),
+			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.NewDec(0), startTime),
 		},
 	})
 
@@ -875,7 +875,7 @@ func TestClaimTakeRateToZero(t *testing.T) {
 	ctx = ctx.WithBlockTime(startTime)
 	ctx = ctx.WithBlockHeight(1)
 	takeRateInterval := time.Minute * 5
-	asset := types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.MustNewDecFromStr("0.8"), startTime)
+	asset := types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), sdk.NewDec(5), sdk.MustNewDecFromStr("0.8"), startTime)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.Params{
 			RewardDelayTime:       time.Minute * 60,
