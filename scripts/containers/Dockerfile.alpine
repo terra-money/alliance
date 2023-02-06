@@ -68,6 +68,8 @@ FROM builder as app-builder
 
 ARG ACC_PREFIX
 
+ENV ACC_PREFIX="${ACC_PREFIX}"
+
 # Copy the remaining files
 COPY . .
 
