@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"github.com/terra-money/alliance/x/alliance/types"
 	"time"
+
+	"github.com/terra-money/alliance/x/alliance/types"
 
 	"cosmossdk.io/math"
 
@@ -52,6 +53,15 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 		true,
 	)
 	k.QueueAssetRebalanceEvent(ctx)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeDelegate,
+			sdk.NewAttribute(types.AttributeKeyValidator, validator.OperatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, coin.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyNewShares, newValidatorShares.String()),
+		),
+	})
 	return &newValidatorShares, nil
 }
 
@@ -90,6 +100,13 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 		return nil, err
 	}
 
+	// Now we have shares we want to re-delegate, we re-calculate how many tokens to actually re-delegate
+	// Directly using the input amount can result in un-delegating more tokens than expected due to rounding issues
+	coinsToRedelegate := types.GetDelegationTokensWithShares(delegationSharesToRemove, srcVal, asset)
+	if coin.Amount.GT(coinsToRedelegate.Amount) {
+		return nil, types.ErrInsufficientTokens.Wrapf("wanted %s but have %s", coin.Amount, coinsToRedelegate.Amount)
+	}
+
 	// Prevents transitive re-delegations
 	// e.g. if a redelegation from A -> B is made before another request from B -> C
 	// the latter is blocked until the first redelegation is mature (time > unbonding time)
@@ -110,6 +127,8 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 		false,
 	)
 
+	k.ClearDustDelegation(ctx, delAddr, srcVal, asset)
+
 	// Add tokens and shares to dst validator
 	_, newDelegationShares := k.upsertDelegationWithNewTokens(ctx, delAddr, dstVal, coin, asset)
 	k.updateValidatorShares(
@@ -123,6 +142,16 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 	k.addRedelegation(ctx, delAddr, srcVal.GetOperator(), dstVal.GetOperator(), coin, completionTime)
 
 	k.QueueAssetRebalanceEvent(ctx)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeRedelegate,
+			sdk.NewAttribute(types.AttributeKeySrcValidator, srcVal.OperatorAddress),
+			sdk.NewAttribute(types.AttributeKeyDstValidator, dstVal.OperatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, coin.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
+		),
+	})
 
 	return &completionTime, nil
 }
@@ -148,10 +177,17 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 	// Delegation is queried again since it might have been modified when claiming delegation rewards
 	delegation, _ := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 
-	// Calculate how much delegation shares to be undelegated
+	// Calculate how much delegation shares to be undelegated taking into account rounding issues
 	delegationSharesToUndelegate, err := k.ValidateDelegatedAmount(delegation, coin, validator, asset)
 	if err != nil {
 		return nil, err
+	}
+
+	// Now we have shares we want to un-delegate, we re-calculate how many tokens to actually un-delegate
+	// Directly using the input amount can result in un-delegating more tokens than expected due to rounding issues
+	coinsToUndelegate := types.GetDelegationTokensWithShares(delegationSharesToUndelegate, validator, asset)
+	if coin.Amount.GT(coinsToUndelegate.Amount) {
+		return nil, types.ErrInsufficientTokens.Wrapf("wanted %s but have %s", coin.Amount, coinsToUndelegate.Amount)
 	}
 	validatorSharesToRemove := types.GetValidatorShares(asset, coin.Amount)
 
@@ -172,9 +208,20 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 		false,
 	)
 
+	k.ClearDustDelegation(ctx, delAddr, validator, asset)
+
 	// Queue undelegation messages to distribute tokens after undelegation completes in the future
 	completionTime := k.queueUndelegation(ctx, delAddr, validator.GetOperator(), coin)
 	k.QueueAssetRebalanceEvent(ctx)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeUndelegate,
+			sdk.NewAttribute(types.AttributeKeyValidator, validator.OperatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, coin.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
+		),
+	})
 	return &completionTime, nil
 }
 
@@ -368,12 +415,22 @@ func (k Keeper) SetValidatorInfo(ctx sdk.Context, valAddr sdk.ValAddress, val ty
 // Returns the number of shares that represents the amount of staked tokens that was requested
 func (k Keeper) ValidateDelegatedAmount(delegation types.Delegation, coin sdk.Coin, val types.AllianceValidator, asset types.AllianceAsset) (shares sdk.Dec, err error) {
 	delegationSharesToUpdate := types.GetDelegationSharesFromTokens(val, asset, coin.Amount)
+	// Account for rounding in which shares for a full withdraw is slightly more or less than the number of shares recorded
+	// Withdraw all in that case
+	// 1e6 of margin should be enough to handle realistic rounding issues caused by using the fix-point math.
+	if delegation.Shares.Sub(delegationSharesToUpdate).Abs().LT(sdk.NewDecWithPrec(1, 6)) {
+		return delegation.Shares, nil
+	}
+
 	if delegation.Shares.LT(delegationSharesToUpdate.TruncateDec()) {
 		return sdk.Dec{}, stakingtypes.ErrInsufficientShares
 	}
-
-	// Account for rounding
-	if delegation.Shares.LT(delegationSharesToUpdate) {
+	// Cap the shares at the delegation's shares. Shares being greater could occur
+	// due to rounding, however we don't want to truncate the shares or take the
+	// minimum because we want to allow for the full withdraw of shares from a
+	// delegation.
+	// This logic is similar to that found in x/staking
+	if delegationSharesToUpdate.GT(delegation.Shares) {
 		delegationSharesToUpdate = delegation.Shares
 	}
 
@@ -482,7 +539,7 @@ func (k Keeper) setUnbondingIndexByVal(ctx sdk.Context, valAddr sdk.ValAddress, 
 	store.Set(indexKey, []byte{})
 }
 
-func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) {
+func (k Keeper) upsertDelegationWithNewTokens(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, coin sdk.Coin, asset types.AllianceAsset) (types.Delegation, sdk.Dec) { //nolint:unparam // may wish to investigate
 	newShares := types.GetDelegationSharesFromTokens(validator, asset, coin.Amount)
 	delegation, found := k.GetDelegation(ctx, delAddr, validator, coin.Denom)
 	if !found {
@@ -534,4 +591,59 @@ func (k Keeper) GetAllianceBondedAmount(ctx sdk.Context, delegator sdk.AccAddres
 		return false
 	})
 	return bonded.TruncateInt()
+}
+
+// ResetAssetAndValidators
+// When an asset has no more tokens being delegated, go through all validators and set
+// validator shares to zero
+func (k Keeper) ResetAssetAndValidators(ctx sdk.Context, asset types.AllianceAsset) {
+	k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) (stop bool) {
+		updatedShares := sdk.NewDecCoins()
+		for _, share := range info.ValidatorShares {
+			if share.Denom != asset.Denom {
+				updatedShares = append(updatedShares, share)
+			}
+		}
+		info.ValidatorShares = updatedShares
+		k.SetValidatorInfo(ctx, valAddr, info)
+		return false
+	})
+	asset.TotalValidatorShares = sdk.ZeroDec()
+	k.SetAsset(ctx, asset)
+}
+
+func (k Keeper) ClearDustDelegation(ctx sdk.Context, delAddr sdk.AccAddress, validator types.AllianceValidator, asset types.AllianceAsset) {
+	delegation, found := k.GetDelegation(ctx, delAddr, validator, asset.Denom)
+	// If not found then the delegation has already been deleted, do nothing else
+	if !found {
+		return
+	}
+	delegatorSharesToRemove := sdk.NewDecCoinFromDec(asset.Denom, sdk.ZeroDec())
+	validatorSharesToRemove := sdk.NewDecCoinFromDec(asset.Denom, sdk.ZeroDec())
+
+	tokensLeft := types.GetDelegationTokensWithShares(delegation.Shares, validator, asset)
+	// If there are no tokens that can be claimed by the delegation, delete the delegation
+	if tokensLeft.IsZero() {
+		store := ctx.KVStore(k.storeKey)
+		delAddr := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress) // acc address should always be valid here
+		key := types.GetDelegationKey(delAddr, validator.GetOperator(), asset.Denom)
+		store.Delete(key)
+
+		delegatorSharesToRemove = sdk.NewDecCoinFromDec(asset.Denom, delegation.Shares)
+	}
+
+	validatorTokensLeft := validator.TotalTokensWithAsset(asset)
+	if validatorTokensLeft.IsZero() {
+		validatorSharesToRemove = sdk.NewDecCoinFromDec(asset.Denom, validator.ValidatorSharesWithDenom(asset.Denom))
+	}
+
+	// Reduce the dust shares from validator to make sure everything adds up
+	validator.ReduceShares(sdk.NewDecCoins(delegatorSharesToRemove), sdk.NewDecCoins(validatorSharesToRemove))
+	k.SetValidator(ctx, validator)
+
+	// When there are no more tokens recorded in the asset, clear all share records that might remain
+	// from rounding errors to prevent dust amounts from staying in the stores
+	if asset.TotalTokens.IsZero() {
+		k.ResetAssetAndValidators(ctx, asset)
+	}
 }

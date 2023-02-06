@@ -30,21 +30,21 @@ By design, x/alliance use the following CosmosSDK modules to implement interchai
 
 
 # Development environment
-This project uses [Go v1.18](https://go.dev/dl/) and was bootstrapped with [Ignite CLI v0.25.1](https://docs.ignite.com/). 
+This project uses [Go v1.19](https://go.dev/dl/) and was bootstrapped with [Ignite CLI v0.25.1](https://docs.ignite.com/). However, for ease of upgrade, ignite has been removed in favor of manual workflows.
 
 To run the local development environment use:
 ```
-$ ignite chain serve --verbose
+$ make serve
 ```
 
 If you want to build a binary ready to use:
 ```
-$ ignite chain build
+$ make install
 ```
 
 To build the proto files:
 ```
-$ ignite generate proto-go
+$ make proto-gen
 ```
 
 ## Localnet 
@@ -58,11 +58,6 @@ Docker orchestration to create a local network with 3 docker containers:
 
 ## Install
 To install the latest version of your blockchain node's binary, execute the following command on your machine:
-
-```
-curl https://get.ignite.com/username/alliance@latest! | sudo bash
-```
-`username/alliance` should match the `username` and `repo_name` of the Github repository to which the source code was pushed. Learn more about [the install process](https://github.com/allinbits/starport-installer).
 
 ## Join Testnet
 Joining the testnet is a very standardized process cosmos chain. In this case you will have to use **allianced** and follow [Terra documentation](https://docs.terra.money/full-node/manage-a-terra-validator/) since it's the same process but replacing it's genesis with the one that you can find in this repo under the path [docs/testnet/genesis.json](docs/testnet/genesis.json) and the following [seeds](http://3.75.187.158:26657/net_info),

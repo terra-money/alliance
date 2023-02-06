@@ -3,15 +3,13 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
-type RewardsKeeper interface {
-}
+type RewardsKeeper interface{}
 
-var (
-	_ RewardsKeeper = Keeper{}
-)
+var _ RewardsKeeper = Keeper{}
 
 // ClaimValidatorRewards claims the validator rewards (minus commission) from the distribution module
 // This should be called everytime validator delegation changes (e.g. [un/re]delegation) to update the reward claim history
@@ -65,6 +63,13 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeClaimDelegationRewards,
+			sdk.NewAttribute(types.AttributeKeyValidator, val.OperatorAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, coins.String()),
+		),
+	})
 	return coins, nil
 }
 
