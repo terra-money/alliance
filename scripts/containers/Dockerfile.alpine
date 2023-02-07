@@ -76,7 +76,8 @@ COPY . .
 RUN set -eux && sed \
     -e "s/AccountAddressPrefix = \"alliance\"/AccountAddressPrefix = \"${ACC_PREFIX}\"/g" \
     -e "s/Name                 = \"alliance\"/Name                 = \"${ACC_PREFIX}\"/g" \
-    -i app/app.go
+    -i app/app.go && \
+    awk '/^const \(/,/^\)/' app/app.go
 
 # Build app binary
 RUN --mount=type=cache,target=/root/.cache/go-build \
