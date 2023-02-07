@@ -45,7 +45,7 @@ func BenchmarkSimulation(b *testing.B) {
 
 	config, db, dir, logger, _, err := simapp.SetupSimulation("goleveldb-app-sim", "Simulation")
 	require.NoError(b, err, "simulation setup failed")
-
+	
 	b.Cleanup(func() {
 		db.Close()
 		err = os.RemoveAll(dir)

@@ -88,6 +88,7 @@ func TestExportAndImportGenesis(t *testing.T) {
 		Description:          "",
 		Denom:                AllianceDenom,
 		RewardWeight:         sdk.NewDec(1),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             sdk.NewDec(0),
 		RewardChangeRate:     sdk.MustNewDecFromStr("0.5"),
 		RewardChangeInterval: time.Hour * 24,

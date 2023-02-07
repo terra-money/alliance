@@ -328,6 +328,12 @@ func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.Alliance
 		// Compound the weight changes
 		multiplier := asset.RewardChangeRate.Power(intervalsSinceLastClaim)
 		asset.RewardWeight = asset.RewardWeight.Mul(multiplier)
+		if asset.RewardWeight.LT(asset.RewardWeightRange.Min) {
+			asset.RewardWeight = asset.RewardWeightRange.Min
+		}
+		if asset.RewardWeight.GT(asset.RewardWeightRange.Max) {
+			asset.RewardWeight = asset.RewardWeightRange.Max
+		}
 		asset.LastRewardChangeTime = asset.LastRewardChangeTime.Add(asset.RewardChangeInterval * time.Duration(intervalsSinceLastClaim))
 		k.QueueAssetRebalanceEvent(ctx)
 		k.UpdateAllianceAsset(ctx, *asset) //nolint:errcheck

@@ -101,6 +101,7 @@ func TestDelegationWithASingleAsset(t *testing.T) {
 	require.Equal(t, types.AllianceAsset{
 		Denom:                AllianceDenom,
 		RewardWeight:         sdk.NewDec(2),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             sdk.NewDec(0),
 		TotalTokens:          sdk.NewInt(1000_000),
 		TotalValidatorShares: sdk.NewDec(1000_000),
@@ -134,6 +135,7 @@ func TestDelegationWithASingleAsset(t *testing.T) {
 	require.Equal(t, types.AllianceAsset{
 		Denom:                AllianceDenom,
 		RewardWeight:         sdk.NewDec(2),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             sdk.NewDec(0),
 		TotalTokens:          sdk.NewInt(2000_000),
 		TotalValidatorShares: sdk.NewDec(2000_000),

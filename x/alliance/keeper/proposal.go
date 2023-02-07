@@ -18,9 +18,6 @@ func (k Keeper) CreateAlliance(ctx context.Context, req *types.MsgCreateAlliance
 	if found {
 		return status.Errorf(codes.AlreadyExists, "Asset with denom: %s already exists", req.Denom)
 	}
-	if req.RewardWeightRange.Min.GT(req.RewardWeight) || req.RewardWeightRange.Max.LT(req.RewardWeight) {
-		return types.ErrRewardWeightOutOfBound
-	}
 	rewardStartTime := sdkCtx.BlockTime().Add(k.RewardDelayTime(sdkCtx))
 	asset := types.AllianceAsset{
 		Denom:                req.Denom,
@@ -45,7 +42,9 @@ func (k Keeper) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAlliance
 	if !found {
 		return status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", req.Denom)
 	}
-
+	if asset.RewardWeightRange.Min.GT(req.RewardWeight) || asset.RewardWeightRange.Max.LT(req.RewardWeight) {
+		return types.ErrRewardWeightOutOfBound
+	}
 	asset.RewardWeight = req.RewardWeight
 	asset.TakeRate = req.TakeRate
 	asset.RewardChangeRate = req.RewardChangeRate

@@ -483,7 +483,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 		},
 	})
 
-	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.NewDec(0), ctx.BlockTime()))
+	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.NewAllianceAsset(AllianceDenom, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.NewDec(0), ctx.BlockTime()))
 	require.NoError(t, err)
 	assets = app.AllianceKeeper.GetAllAssets(ctx)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
@@ -622,6 +622,7 @@ func TestRewardClaimingAfterRatesDecay(t *testing.T) {
 		Description:          "",
 		Denom:                AllianceDenom,
 		RewardWeight:         sdk.NewDec(1),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             sdk.ZeroDec(),
 		RewardChangeRate:     decayRate,
 		RewardChangeInterval: decayInterval,
@@ -634,6 +635,7 @@ func TestRewardClaimingAfterRatesDecay(t *testing.T) {
 		Description:          "",
 		Denom:                AllianceDenomTwo,
 		RewardWeight:         sdk.NewDec(1),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             sdk.ZeroDec(),
 		RewardChangeRate:     sdk.OneDec(),
 		RewardChangeInterval: time.Duration(0),

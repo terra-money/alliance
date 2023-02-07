@@ -79,6 +79,7 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.AllianceAsset{
 		Denom:                AllianceDenom,
 		RewardWeight:         sdk.NewDec(2),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             sdk.NewDec(10),
 		RewardChangeRate:     sdk.NewDec(0),
 		RewardChangeInterval: 0,
@@ -92,6 +93,7 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.AllianceAsset{
 		Denom:                AllianceDenom,
 		RewardWeight:         sdk.NewDec(20),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(5), Max: sdk.NewDec(25)},
 		TakeRate:             sdk.NewDec(0),
 		RewardChangeRate:     sdk.NewDec(0),
 		RewardChangeInterval: 0,
@@ -115,6 +117,7 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.AllianceAsset{
 		Denom:                AllianceDenom,
 		RewardWeight:         sdk.NewDec(1),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             sdk.NewDec(0),
 		RewardChangeRate:     sdk.NewDec(0),
 		RewardChangeInterval: 0,
@@ -624,6 +627,7 @@ func TestRewardWeightDecay(t *testing.T) {
 		Description:          "",
 		Denom:                AllianceDenom,
 		RewardWeight:         sdk.NewDec(1),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             sdk.ZeroDec(),
 		RewardChangeRate:     sdk.MustNewDecFromStr("0.5"),
 		RewardChangeInterval: decayInterval,
@@ -645,6 +649,7 @@ func TestRewardWeightDecay(t *testing.T) {
 	require.Equal(t, types.AllianceAsset{
 		Denom:                AllianceDenom,
 		RewardWeight:         sdk.MustNewDecFromStr("0.5"),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             asset.TakeRate,
 		TotalTokens:          asset.TotalTokens,
 		TotalValidatorShares: asset.TotalValidatorShares,
@@ -688,6 +693,7 @@ func TestRewardWeightDecay(t *testing.T) {
 		Description:          "",
 		Denom:                AllianceDenomTwo,
 		RewardWeight:         sdk.NewDec(1),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             sdk.ZeroDec(),
 		RewardChangeRate:     sdk.ZeroDec(),
 		RewardChangeInterval: decayInterval,
@@ -746,6 +752,7 @@ func TestRewardWeightDecayOverTime(t *testing.T) {
 		Description:          "",
 		Denom:                AllianceDenom,
 		RewardWeight:         sdk.NewDec(1),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             sdk.ZeroDec(),
 		RewardChangeRate:     decayRate,
 		RewardChangeInterval: decayInterval,
