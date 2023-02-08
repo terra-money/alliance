@@ -60,14 +60,17 @@ Docker orchestration to create a local network with 3 docker containers:
 To install the latest version of your blockchain node's binary, execute the following command on your machine:
 
 ## Join the Game of Alliance Testnet
+> Note: This is only for advanced users. It assumes that you already know how to run a full node.
+
 In order to join the testnet, you will have to build your node to match any one of the running chains. 
 
 1. Pick one chain: `ordos | corrino | harkonnen | atreides`
 2. Run `make build-alliance ACC_PREFIX=ordos` to build the binary for ordos. Replace ordos with other prefixes to build for the other chains.
 3. Run `build/ordosd init <moniker>` to init the chain
-4. Copy the genesis file from the `genesis` folder for the respective chain into `~/.ordos/config/` folder
+4. Copy the genesis file from the `genesis/ordos-1` folder for the respective chain into `~/.ordos/config/` folder
 5. Update the seed from the table below in `~/.ordos/config/config.yaml`
 6. Run the chain with `build/ordosd start`
+7. Follow the instructions on [setting up a validator](https://docs.terra.money/full-node/manage-a-terra-validator/set-up-validator)
 
 | Chain       | Seeds                                                        |
 |-------------|--------------------------------------------------------------|
