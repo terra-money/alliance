@@ -68,7 +68,7 @@ In order to join the testnet, you will have to build your node to match any one 
 2. Run `make build-alliance ACC_PREFIX=ordos` to build the binary for ordos. Replace ordos with other prefixes to build for the other chains.
 3. Run `build/ordosd init <moniker>` to init the chain
 4. Copy the genesis file from the `genesis/ordos-1` folder for the respective chain into `~/.ordos/config/` folder
-5. Update the seed from the table below in `~/.ordos/config/config.yaml`
+5. Update the seed list in `~/.ordos/config/config.yaml` from the table below
 6. Run the chain with `build/ordosd start`
 7. Follow the instructions on [setting up a validator](https://docs.terra.money/full-node/manage-a-terra-validator/set-up-validator)
 
