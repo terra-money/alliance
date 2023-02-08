@@ -59,8 +59,22 @@ Docker orchestration to create a local network with 3 docker containers:
 ## Install
 To install the latest version of your blockchain node's binary, execute the following command on your machine:
 
-## Join Testnet
-Joining the testnet is a very standardized process cosmos chain. In this case you will have to use **allianced** and follow [Terra documentation](https://docs.terra.money/full-node/manage-a-terra-validator/) since it's the same process but replacing it's genesis with the one that you can find in this repo under the path [docs/testnet/genesis.json](docs/testnet/genesis.json) and the following [seeds](http://3.75.187.158:26657/net_info),
+## Join the Game of Alliance Testnet
+In order to join the testnet, you will have to build your node to match any one of the running chains. 
+
+1. Pick one chain: `ordos | corrino | harkonnen | atreides`
+2. Run `make build-alliance ACC_PREFIX=ordos` to build the binary for ordos. Replace ordos with other prefixes to build for the other chains.
+3. Run `build/ordosd init <moniker>` to init the chain
+4. Copy the genesis file from the `genesis` folder for the respective chain into `~/.ordos/config/` folder
+5. Update the seed from the table below in `~/.ordos/config/config.yaml`
+6. Run the chain with `build/ordosd start`
+
+| Chain       | Seeds                                                        |
+|-------------|--------------------------------------------------------------|
+| atreides-1  | 6ebf0000ee85ff987f1d9de3223d605745736ca9@35.168.16.221:41356 |
+| corrino-1   | TBC                                                          |
+| harkonnen-1 | TBC                                                          |
+| ordos-1     | TBC                                                          |
 
 ### Running the simulation
 The simulation app does not run out of the box since the alliance module owns all native stake. The `x/staking` module's operation.go file panics when a delegator does not have a private key.

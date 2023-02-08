@@ -120,7 +120,7 @@ import (
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
-const (
+var (
 	AccountAddressPrefix = "alliance"
 	Name                 = "alliance"
 )

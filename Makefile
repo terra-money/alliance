@@ -7,6 +7,10 @@ SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
 
+ACC_PREFIX = alliance
+CHAIN_ID = alliance-testnet-1
+BOND_DENOM = stake
+
 export GO111MODULE = on
 
 # process build tags
@@ -47,11 +51,13 @@ build_tags_comma_sep := $(subst $(empty),$(comma),$(build_tags))
 
 # process linker flags
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=alliance \
-		  -X github.com/cosmos/cosmos-sdk/version.AppName=allianced \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=${ACC_PREFIX} \
+		  -X github.com/cosmos/cosmos-sdk/version.AppName=${ACC_PREFIX}d \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-		  -X github.com/terra-money/alliance/app.Bech32Prefix=alliance \
+		  -X github.com/terra-money/alliance/app.Bech32Prefix=${ACC_PREFIX} \
+		  -X github.com/terra-money/alliance/app.AccountAddressPrefix=${ACC_PREFIX} \
+		  -X github.com/terra-money/alliance/app.Name=${ACC_PREFIX} \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
 
 ifeq ($(WITH_CLEVELDB),yes)
@@ -82,6 +88,11 @@ endif
 
 install: go.sum
 	go install -mod=readonly $(BUILD_FLAGS) ./cmd/allianced
+
+build-alliance: go.sum
+	go build -mod=readonly $(BUILD_FLAGS) -o build/ ./cmd/allianced
+	mv build/allianced build/$(ACC_PREFIX)d
+
 
 ###############################################################################
 ###                                Test                                     ###
@@ -146,9 +157,6 @@ start:
 ###                                Local Testnet (docker)                   ###
 ###############################################################################
 
-ACC_PREFIX = alliance
-CHAIN_ID = alliance-testnet-1
-BOND_DENOM = stake
 
 localnet-alliance-rmi:
 	$(DOCKER) rmi terra-money/localnet-alliance 2>/dev/null; true
