@@ -74,10 +74,10 @@ In order to join the testnet, you will have to build your node to match any one 
 
 | Chain       | Seeds                                                        |
 |-------------|--------------------------------------------------------------|
-| atreides-1  | 6ebf0000ee85ff987f1d9de3223d605745736ca9@35.168.16.221:41356 |
+| atreides-1  | TBC                                                          |
 | corrino-1   | TBC                                                          |
 | harkonnen-1 | TBC                                                          |
-| ordos-1     | TBC                                                          |
+| ordos-1     | 6ebf0000ee85ff987f1d9de3223d605745736ca9@35.168.16.221:41356 |
 
 ### Running the simulation
 The simulation app does not run out of the box since the alliance module owns all native stake. The `x/staking` module's operation.go file panics when a delegator does not have a private key.
