@@ -5,6 +5,7 @@ set -euxo pipefail
 # This script will join the testnet and start the node
 
 declare GOA_VERSION="v0.0.1-goa"
+declare readonly BIN_PATH=""
 declare readonly GITHUB_REPO="terra-money/alliance"
 declare readonly GITHUB_URL="https://github.com/${GITHUB_REPO}"
 declare readonly GITHUB_RAW="https://raw.githubusercontent.com/${GITHUB_REPO}/${GOA_VERSION}"
@@ -48,9 +49,14 @@ verify_chain_id (){
     esac
 }
 
-get_binary(){
+get_binary_name(){
     local chain_id=$1
     echo "$(cut -d "-" -f1 <<< $chain_id)d"
+}
+
+get_binary_path(){
+    local chain_id=$1
+    echo "$HOME/bin/$(get_binary_name $chain_id)"
 }
 
 get_prefix(){
@@ -124,7 +130,9 @@ main(){
     
     echo "Initializing node"
     
-    $HOME/bin/$BINARY init "${MONIKER}" --chain-id "${CHAIN_ID}" 2>&1 | sed -e 's/{.*}//' 
+    if [ ! -f "$HOM" ]; then 
+        $HOME/bin/$BINARY init "${MONIKER}" --chain-id "${CHAIN_ID}" 2>&1 | sed -e 's/{.*}//' 
+    fi
 
     echo "Downloading genesis file"
     curl -sSL "${GITHUB_RAW}/genesis/${CHAIN_ID}/genesis.json" -o "${HOME}/.${PREFIX}/config/genesis.json"
