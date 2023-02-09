@@ -102,7 +102,7 @@ parse_options(){
                 CHAIN_ID=$(verify_chain_id $2)
                 PREFIX=$(get_prefix $CHAIN_ID)
                 DENOM=$(get_denom $CHAIN_ID)
-                BINARY=$(get_binary $CHAIN_ID)
+                BINARY=$(get_binary_path $CHAIN_ID)
                 shift 2
                 ;;
             -m|--moniker)
@@ -130,9 +130,7 @@ main(){
     
     echo "Initializing node"
     
-    if [ ! -f "$HOM" ]; then 
-        $HOME/bin/$BINARY init "${MONIKER}" --chain-id "${CHAIN_ID}" 2>&1 | sed -e 's/{.*}//' 
-    fi
+    $BINARY init "${MONIKER}" --chain-id "${CHAIN_ID}" 2>&1 | sed -e 's/{.*}//' 
 
     echo "Downloading genesis file"
     curl -sSL "${GITHUB_RAW}/genesis/${CHAIN_ID}/genesis.json" -o "${HOME}/.${PREFIX}/config/genesis.json"
@@ -141,7 +139,7 @@ main(){
     PEERS="$(get_peers)"
 
     echo "Starting node"
-    exec $HOME/bin/$BINARY start \
+    exec $BINARY start \
         --p2p.persistent_peers "$PEERS" 
 }
 
