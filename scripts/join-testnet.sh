@@ -56,7 +56,7 @@ get_binary_name(){
 
 get_binary_path(){
     local chain_id=$1
-    echo "$HOME/bin/$(get_binary_name $chain_id)"
+    echo "${HOME}/bin/$(get_binary_name $chain_id)"
 }
 
 get_prefix(){
@@ -99,10 +99,10 @@ parse_options(){
     while [ $# -gt 0 ]; do
         case "$1" in
             -c|--chain-id)
-                CHAIN_ID=$(verify_chain_id $2)
-                PREFIX=$(get_prefix $CHAIN_ID)
-                DENOM=$(get_denom $CHAIN_ID)
-                BINARY=$(get_binary_path $CHAIN_ID)
+                export CHAIN_ID=$(verify_chain_id $2)
+                export PREFIX=$(get_prefix $CHAIN_ID)
+                export DENOM=$(get_denom $CHAIN_ID)
+                export BINARY=$(get_binary_path $CHAIN_ID)
                 shift 2
                 ;;
             -m|--moniker)
