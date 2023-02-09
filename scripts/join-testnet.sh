@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -euxo pipefail
 
 # This script will join the testnet and start the node
 
@@ -9,13 +9,12 @@ declare readonly GITHUB_REPO="terra-money/alliance"
 declare readonly GITHUB_URL="https://github.com/${GITHUB_REPO}"
 declare readonly GITHUB_RAW="https://raw.githubusercontent.com/${GITHUB_REPO}/${GOA_VERSION}"
 
-# Binaries don't exist so skipping this step
-download_binary (){
+download_binaries (){
     mkdir -p "${HOME}/bin"
-    GOA_GZ="${GOA_VERSION}_$(uname -s  | tr '[:upper:]' '[:lower:]')_$(uname -m).tar.gz"
+    GOA_GZ="testnets-$(uname -s)-$(uname -m).tar.gz"
     GOA_DOWNLOAD="${GITHUB_URL}/releases/download/${GOA_VERSION}/${GOA_GZ}"
     echo "Downloading ${GOA_DOWNLOAD}"
-    curl "${GOA_DOWNLOAD}" | tar -xz -C "${HOME}/bin"
+    curl -sSL "${GOA_DOWNLOAD}" | tar -xz -C "${HOME}/bin"
 }
 
 verify_binary(){
@@ -47,6 +46,11 @@ verify_chain_id (){
             exit 1
         ;;
     esac
+}
+
+get_binary(){
+    local chain_id=$1
+    echo "$(cut -d "-" -f1 <<< $chain_id)d"
 }
 
 get_prefix(){
@@ -88,14 +92,11 @@ get_peers(){
 parse_options(){
     while [ $# -gt 0 ]; do
         case "$1" in
-            -b|--binary)
-                BINARY=$(verify_binary $2)
-                shift 2
-                ;;
             -c|--chain-id)
                 CHAIN_ID=$(verify_chain_id $2)
                 PREFIX=$(get_prefix $CHAIN_ID)
                 DENOM=$(get_denom $CHAIN_ID)
+                BINARY=$(get_binary $CHAIN_ID)
                 shift 2
                 ;;
             -m|--moniker)
@@ -117,9 +118,13 @@ parse_options(){
 main(){
     parse_options $@
     rm -rf /Users/greg/.ordos
+
+    echo "Downloading binaries... This may take some time"
+    download_binaries
     
     echo "Initializing node"
-    $BINARY init "${MONIKER}" --chain-id "${CHAIN_ID}" 2>&1 | sed -e 's/{.*}//' 
+    
+    $HOME/bin/$BINARY init "${MONIKER}" --chain-id "${CHAIN_ID}" 2>&1 | sed -e 's/{.*}//' 
 
     echo "Downloading genesis file"
     curl -sSL "${GITHUB_RAW}/genesis/${CHAIN_ID}/genesis.json" -o "${HOME}/.${PREFIX}/config/genesis.json"
@@ -128,7 +133,7 @@ main(){
     PEERS="$(get_peers)"
 
     echo "Starting node"
-    exec $BINARY start \
+    exec $HOME/bin/$BINARY start \
         --p2p.persistent_peers "$PEERS" 
 }
 
