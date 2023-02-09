@@ -4,8 +4,12 @@ set -euxo pipefail
 
 # This script will join the testnet and start the node
 
+declare CHAIN_ID
+declare PREFIX
+declare DENOM
+declare BINARY
 declare GOA_VERSION="v0.0.1-goa"
-declare readonly BIN_PATH=""
+declare readonly BIN_PATH="${HOME}/bin"
 declare readonly GITHUB_REPO="terra-money/alliance"
 declare readonly GITHUB_URL="https://github.com/${GITHUB_REPO}"
 declare readonly GITHUB_RAW="https://raw.githubusercontent.com/${GITHUB_REPO}/${GOA_VERSION}"
@@ -24,7 +28,6 @@ verify_binary(){
         echo "Binary $binary does not exist"
         exit 1
     fi
-    echo $binary
 }
 
 verify_chain_id (){
@@ -56,7 +59,7 @@ get_binary_name(){
 
 get_binary_path(){
     local chain_id=$1
-    echo "${HOME}/bin/$(get_binary_name $chain_id)"
+    echo "${BIN_PATH}/$(get_binary_name $chain_id)"
 }
 
 get_prefix(){
@@ -99,10 +102,10 @@ parse_options(){
     while [ $# -gt 0 ]; do
         case "$1" in
             -c|--chain-id)
-                export CHAIN_ID=$(verify_chain_id $2)
-                export PREFIX=$(get_prefix $CHAIN_ID)
-                export DENOM=$(get_denom $CHAIN_ID)
-                export BINARY=$(get_binary_path $CHAIN_ID)
+                CHAIN_ID=$(verify_chain_id $2)
+                PREFIX=$(get_prefix $CHAIN_ID)
+                DENOM=$(get_denom $CHAIN_ID)
+                BINARY=$(get_binary_path $CHAIN_ID)
                 shift 2
                 ;;
             -m|--moniker)
@@ -127,6 +130,9 @@ main(){
 
     echo "Downloading binaries... This may take some time"
     download_binaries
+
+    echo "Verify binary exists"
+    verify_binary "${BINARY}"
     
     echo "Initializing node"
     
