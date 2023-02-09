@@ -250,9 +250,13 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 	rewardClaimInterval := k.RewardClaimInterval(ctx)
 	durationSinceLastClaim := ctx.BlockTime().Sub(lastClaim)
 	intervalsSinceLastClaim := uint64(durationSinceLastClaim / rewardClaimInterval)
+
+	assetsWithPositiveTakeRate := 0
+
 	var coins sdk.Coins
 	for _, asset := range assets {
 		if asset.TotalTokens.IsPositive() && asset.TakeRate.IsPositive() {
+			assetsWithPositiveTakeRate++
 			// take rate must be < 1 so multiple is also < 1
 			multiplier := sdk.OneDec().Sub(asset.TakeRate).Power(intervalsSinceLastClaim)
 			oldAmount := asset.TotalTokens
@@ -266,6 +270,12 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 			coins = coins.Add(sdk.NewCoin(asset.Denom, deductedAmount))
 			k.SetAsset(ctx, *asset)
 		}
+	}
+
+	// If there are no assets with positive take rate, continue to update last reward claim time and return
+	if assetsWithPositiveTakeRate == 0 {
+		k.SetLastRewardClaimTime(ctx, lastClaim.Add(rewardClaimInterval*time.Duration(intervalsSinceLastClaim)))
+		return coins, nil
 	}
 
 	if !coins.Empty() && !coins.IsZero() {
