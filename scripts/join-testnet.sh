@@ -59,6 +59,24 @@ get_denom(){
     echo "u$(cut -c-3  <<< $chain_id)"
 }
 
+get_port_prefix(){
+    local chain_id=$1
+    case $chain_id in
+        "atreides-1")
+            echo 414
+        ;;
+        "corrino-1")
+            echo 413
+        ;;
+        "harkonnen-1")
+            echo 411
+        ;;
+        "ordos-1")
+            echo 412
+        ;;
+    esac
+}
+
 get_peers(){
     for (( i=0; i<3; i++ )); do
         curl -sSL "https://${PREFIX}.terra.dev:26657/status" | \
