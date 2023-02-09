@@ -52,5 +52,5 @@ jobs:
           file: scripts/containers/Dockerfile.alpine
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: ACC_PREFIX={{ matrix.name }}
+          build-args: ACC_PREFIX=${{ matrix.name }}
 
