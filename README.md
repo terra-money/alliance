@@ -72,12 +72,12 @@ In order to join the testnet, you will have to build your node to match any one 
 6. Run the chain with `build/ordosd start`
 7. Follow the instructions on [setting up a validator](https://docs.terra.money/full-node/manage-a-terra-validator/set-up-validator)
 
-| Chain       | Seeds                                                        |
-|-------------|--------------------------------------------------------------|
-| atreides-1  | TBC                                                          |
-| corrino-1   | TBC                                                          |
-| harkonnen-1 | TBC                                                          |
-| ordos-1     | 6ebf0000ee85ff987f1d9de3223d605745736ca9@35.168.16.221:41356 |
+| Chain       | Seeds                                                                                                                      |
+|-------------|----------------------------------------------------------------------------------------------------------------------------|
+| atreides-1  | 36b2547e91dbaa1a6196217f25b767a8630fb0b2@54.196.186.174:41456,cd19f4418b3cd10951060aad1c4b4baf82177292@35.168.16.221:41456 |
+| corrino-1   | 5260976afec974fc0dea05be875841b126a6e322@54.196.186.174:41256,b59f1343587f64047ad331fd8ca8382887d34233@35.168.16.221:41256 |
+| harkonnen-1 | eeb02ac1de00fdb83179de62b897b15b27c65a55@54.196.186.174:41156,15e474a5163a3e63d4030c14e6e42cfd6e4d5afc@35.168.16.221:41156 |
+| ordos-1     | 2c66624a7bbecd94e8be4005d0ece19ce284d7c3@54.196.186.174:41356,6ebf0000ee85ff987f1d9de3223d605745736ca9@35.168.16.221:41356 |
 
 ### Running the simulation
 The simulation app does not run out of the box since the alliance module owns all native stake. The `x/staking` module's operation.go file panics when a delegator does not have a private key.
