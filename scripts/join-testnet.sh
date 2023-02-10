@@ -66,9 +66,17 @@ create_binary(){
     export PATH="${tmpdir}/go/bin:${PATH}"
     export GOROOT="${tmpdir}/go"
     echo "Building ${binary}..."
-    make build-alliance ACC_PREFIX="${prefix}" 2>/dev/null
     mkdir -p "${BIN_PATH}"
-    cp "build/${binary}" "${BIN_PATH}"
+    go build -mod=readonly \
+        -tags "netgo,ledger" \
+        -ldflags " \
+        -X github.com/cosmos/cosmos-sdk/version.Name=${prefix} 
+        -X github.com/cosmos/cosmos-sdk/version.AppName=${prefix} 
+        -X github.com/terra-money/alliance/app.Bech32Prefix=${prefix}
+        -X github.com/terra-money/alliance/app.AccountAddressPrefix=${prefix} 
+        -X github.com/terra-money/alliance/app.Name=${prefix}
+        -X 'github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger'" \
+        -trimpath -o ${BIN_PATH}${binary} ./cmd/allianced
     echo "Binary is located at ${BIN_PATH}${binary}"
     rm -rf ${tmpdir}
 }
