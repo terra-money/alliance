@@ -13,7 +13,6 @@ declare readonly GITHUB_REPO="terra-money/alliance"
 declare readonly GITHUB_URL="https://github.com/${GITHUB_REPO}"
 declare readonly GITHUB_RAW="https://raw.githubusercontent.com/${GITHUB_REPO}/${GOA_VERSION}"
 
-declare CHAIN_ID="${CHAIN_ID:-}"
 declare GTMPDIR="${TMPDIR:-/tmp}"
 
 error(){
@@ -38,7 +37,7 @@ download_go (){
     fi
     echo "Extracting ${GO_GZ}"
     # need to check md5sum
-    tar -xz ${GO_GZ} -C "${tmpdir}"
+    tar -xzf ${GO_GZ} -C "${tmpdir}"
     echo
 }
 
@@ -48,27 +47,29 @@ download_source (){
     GOA_DOWNLOAD="${GITHUB_URL}/archive/refs/tags/${GOA_GZ}"
     cd ${GTMPDIR}
     if [ ! -f "${GOA_GZ}" ]; then
-        echo "Downloading alliance from ${GOA_DOWNLOAD}"
-        curl -sSL "${GOA_DOWNLOAD}" 
+        echo "Downloading game of alliance from ${GOA_DOWNLOAD}"
+        curl -sSL "${GOA_DOWNLOAD}" -o ${GOA_GZ}
     fi
     # need to check md5sum
     echo "Extracting ${GOA_GZ}"
-    tar -xz ${GOA_GZ} -C "${tmpdir}"
+    tar -xzf ${GOA_GZ} -C "${tmpdir}"
     echo
 }
 
 create_binary(){
     local prefix=$1
+    local binary="${prefix}d"
     local tmpdir=$(mktemp -d)
     download_go ${tmpdir}
     download_source ${tmpdir}
     cd ${tmpdir}/alliance*
     export PATH="${tmpdir}/go/bin:${PATH}"
     export GOROOT="${tmpdir}/go"
-    make build-alliance ACC_PREFIX="${prefix}"
+    echo "Building ${binary}..."
+    make build-alliance ACC_PREFIX="${prefix}" 2>/dev/null
     mkdir -p "${BIN_PATH}"
-    cp "build/${prefix}d" "${BIN_PATH}"
-    echo "Binary is located at ${BIN_PATH}${prefix}d"
+    cp "build/${binary}" "${BIN_PATH}"
+    echo "Binary is located at ${BIN_PATH}${binary}"
     rm -rf ${tmpdir}
 }
 
@@ -108,8 +109,18 @@ get_prefix(){
 }
 
 get_denom(){
-    local chain_id=$1
-    echo "u$(cut -c-3  <<< $chain_id)"
+    local prefix=$1
+    echo "u$(cut -c-3  <<< $prefix)"
+}
+
+get_moniker(){
+    local prefix=$1
+    local cfgdir="${HOME}/.${prefix}/config"
+    local moniker_txt="${cfgdir}/moniker.txt"
+    if [ ! -f "${moniker_txt}" ]; then
+        echo "${prefix}-$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)" > "${moniker_txt}"
+    fi
+    cat "${moniker_txt}"
 }
 
 get_port_prefix(){
@@ -181,7 +192,10 @@ parse_options(){
         PREFIX=$(get_prefix $CHAIN_ID)
     fi
     if [ -z "${DENOM}" ]; then
-        DENOM=$(get_denom $CHAIN_ID)
+        DENOM=$(get_denom $PREFIX)
+    fi
+    if [ -z "${MONIKER}" ]; then
+        DENOM=$(get_moniker $PREFIX)
     fi
     set -u
 }
