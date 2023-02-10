@@ -3,7 +3,6 @@
 set -euo pipefail
 
 # This script will join the testnet and start the node
-declare GTMPDIR="${TMPDIR:-/tmp}"
 declare readonly OS=$(uname -s)
 declare readonly PLATFORM=$(uname -m)
 declare readonly GO_VERSION="1.19.5"
@@ -14,6 +13,8 @@ declare readonly GITHUB_REPO="terra-money/alliance"
 declare readonly GITHUB_URL="https://github.com/${GITHUB_REPO}"
 declare readonly GITHUB_RAW="https://raw.githubusercontent.com/${GITHUB_REPO}/${GOA_VERSION}"
 
+declare CHAIN_ID="${CHAIN_ID:-}"
+declare GTMPDIR="${TMPDIR:-/tmp}"
 
 error(){
     echo "Error: $1"
@@ -75,20 +76,22 @@ verify_chain_id (){
     local chain_id=$1
     case $chain_id in
         "atreides-1")
-            echo $chain_id
+            echo "Chain ID is set to $chain_id"
         ;;
         "corrino-1")
-            echo $chain_id
+            echo "Chain ID is set to $chain_id"
         ;;
         "harkonnen-1")
-            echo $chain_id
+            echo "Chain ID is set to $chain_id"
         ;;
         "ordos-1")
-            echo $chain_id
+            echo "Chain ID is set to $chain_id"
+        ;;
+        "")
+            error "Chain ID is not set"
         ;;
         *)
-            echo "Chain ID $chain_id is not supported"
-            exit 1
+            error "Chain ID $chain_id is not supported"
         ;;
     esac
 }
@@ -137,6 +140,7 @@ get_peers(){
 
 
 parse_options(){
+    set +u
     while [ $# -gt 0 ]; do
         case "$1" in
             -b|--binary)
@@ -144,7 +148,7 @@ parse_options(){
                 shift 2
                 ;;
             -c|--chain-id)
-                CHAIN_ID=$(verify_chain_id $2)
+                CHAIN_ID=$2
                 shift 2
                 ;;
             -d|--denom)
@@ -169,7 +173,7 @@ parse_options(){
                 ;;
         esac
     done
-    set +u
+    verify_chain_id "${CHAIN_ID}"
     if [ -z "${BINARY}" ]; then
         BINARY=$(get_binary $CHAIN_ID)
     fi
