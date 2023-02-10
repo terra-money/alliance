@@ -20,6 +20,18 @@ error(){
     exit 1
 }
 
+install_prereqs(){
+    if [ -n $(which apt) ]; then 
+        sudo apt update
+        sudo apt install build-essential
+    elif [ -n $(which yum) ]; then
+        sudo yum update
+        sudo yum group install "Development Tools"
+    else
+        echo "WARNING: You may need to install the gcc compiler"
+    fi
+}
+
 download_go (){
     local tmpdir=$1
     if [ $OS == "Linux" ] && [ $PLATFORM == "x86_64" ]; then
