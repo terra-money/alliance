@@ -118,6 +118,7 @@ get_moniker(){
     local cfgdir="${HOME}/.${prefix}/config"
     local moniker_txt="${cfgdir}/moniker.txt"
     if [ ! -f "${moniker_txt}" ]; then
+        mkdir -p "${cfgdir}"
         echo "${prefix}-$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)" > "${moniker_txt}"
     fi
     cat "${moniker_txt}"
