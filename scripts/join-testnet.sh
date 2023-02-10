@@ -275,6 +275,7 @@ docs_validate(){
     echo "  --gas-adjustment=\"1.5\" \\"
     echo "  --gas-prices=\"0.025${DENOM}\" \\"
     echo "  --from=\"${MONIKER}\" \\"
+    echo "  --node=\"https://${PREFIX}.terra.dev\" \\"
     echo "  --yes"
     echo
 }
