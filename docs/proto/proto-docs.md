@@ -141,7 +141,6 @@ key: denom value: AllianceAsset
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  | Denom of the asset. It could either be a native token or an IBC token |
 | `reward_weight` | [string](#string) |  | The reward weight specifies the ratio of rewards that will be given to each alliance asset It does not need to sum to 1. rate = weight / total_weight Native asset is always assumed to have a weight of 1.s |
-| `reward_weight_range` | [RewardWeightRange](#alliance.alliance.RewardWeightRange) |  | set a bound of weight range to limit how much reward weights can scale. |
 | `take_rate` | [string](#string) |  | A positive take rate is used for liquid staking derivatives. It defines an rate that is applied per take_rate_interval that will be redirected to the distribution rewards pool |
 | `total_tokens` | [string](#string) |  |  |
 | `total_validator_shares` | [string](#string) |  |  |
@@ -149,6 +148,7 @@ key: denom value: AllianceAsset
 | `reward_change_rate` | [string](#string) |  |  |
 | `reward_change_interval` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 | `last_reward_change_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `reward_weight_range` | [RewardWeightRange](#alliance.alliance.RewardWeightRange) |  | set a bound of weight range to limit how much reward weights can scale. |
 
 
 
@@ -436,10 +436,10 @@ GenesisState defines the module's genesis state.
 | `description` | [string](#string) |  | the description of the proposal |
 | `denom` | [string](#string) |  | Denom of the asset. It could either be a native token or an IBC token |
 | `reward_weight` | [string](#string) |  | The reward weight specifies the ratio of rewards that will be given to each alliance asset It does not need to sum to 1. rate = weight / total_weight Native asset is always assumed to have a weight of 1. |
-| `reward_weight_range` | [RewardWeightRange](#alliance.alliance.RewardWeightRange) |  | set a bound of weight range to limit how much reward weights can scale. |
 | `take_rate` | [string](#string) |  | A positive take rate is used for liquid staking derivatives. It defines an annualized reward rate that will be redirected to the distribution rewards pool |
 | `reward_change_rate` | [string](#string) |  |  |
 | `reward_change_interval` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `reward_weight_range` | [RewardWeightRange](#alliance.alliance.RewardWeightRange) |  | set a bound of weight range to limit how much reward weights can scale. |
 
 
 

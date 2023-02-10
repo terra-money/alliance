@@ -24,25 +24,26 @@ message MsgCreateAllianceProposal {
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
         (gogoproto.nullable)   = false
     ];
-    // set a bound of weight range to limit how much reward weights can scale. 
-    RewardWeightRange reward_weight_range = 5 [
-      (gogoproto.nullable)   = false
-    ];
     // A positive take rate is used for liquid staking derivatives. It defines an annualized reward rate that
     // will be redirected to the distribution rewards pool
-    string take_rate = 6 [
+    string take_rate = 5 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
       (gogoproto.nullable)   = false
     ];
 
-    string reward_change_rate = 7 [
+    string reward_change_rate = 6 [
       (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
       (gogoproto.nullable)   = false
     ];
 
-    google.protobuf.Duration reward_change_interval = 8 [
+    google.protobuf.Duration reward_change_interval = 7 [
       (gogoproto.nullable)   = false,
       (gogoproto.stdduration) = true
+    ];
+
+    // set a bound of weight range to limit how much reward weights can scale. 
+    RewardWeightRange reward_weight_range = 8 [
+      (gogoproto.nullable)   = false
     ];
 }
   

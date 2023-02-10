@@ -36,39 +36,39 @@ message AllianceAsset {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // set a bound of weight range to limit how much reward weights can scale. 
-  RewardWeightRange reward_weight_range = 3 [(gogoproto.nullable) = false];
   // A positive take rate is used for liquid staking derivatives. It defines an rate that is applied per take_rate_interval
   // that will be redirected to the distribution rewards pool
-  string take_rate = 4 [
+  string take_rate = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  string total_tokens = 5 [
+  string total_tokens = 4 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
-  string total_validator_shares = 6 [
+  string total_validator_shares = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  google.protobuf.Timestamp reward_start_time = 7 [
+  google.protobuf.Timestamp reward_start_time = 6 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable)   = false
   ];
-  string reward_change_rate = 8 [
+  string reward_change_rate = 7 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  google.protobuf.Duration reward_change_interval = 9 [
+  google.protobuf.Duration reward_change_interval = 8 [
     (gogoproto.nullable)   = false,
     (gogoproto.stdduration) = true
   ];
-  google.protobuf.Timestamp last_reward_change_time = 10 [
+  google.protobuf.Timestamp last_reward_change_time = 9 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable)   = false
   ];
+   // set a bound of weight range to limit how much reward weights can scale. 
+  RewardWeightRange reward_weight_range = 10 [(gogoproto.nullable) = false];
 }
 
 message RewardWeightChangeSnapshot {
