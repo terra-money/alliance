@@ -253,7 +253,7 @@ docs_faucet(){
     echo "# To get tokens from the faucet visit:"
     echo "####################################################################"
     echo 
-    echo "visit: https://game-of-alliances.terra.money/faucet"
+    echo "visit: https://game-of-alliance.terra.money/faucet"
     echo
 }
 
