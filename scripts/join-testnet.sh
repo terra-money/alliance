@@ -196,7 +196,7 @@ parse_options(){
         DENOM=$(get_denom $PREFIX)
     fi
     if [ -z "${MONIKER}" ]; then
-        DENOM=$(get_moniker $PREFIX)
+        MONIKER=$(get_moniker $PREFIX)
     fi
     set -u
 }
