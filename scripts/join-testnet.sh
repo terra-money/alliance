@@ -22,11 +22,11 @@ error(){
 
 install_prereqs(){
     if [ -n $(which apt) ]; then 
-        sudo apt update
-        sudo apt install build-essential
+        sudo apt update -y
+        sudo apt install -y build-essential
     elif [ -n $(which yum) ]; then
-        sudo yum update
-        sudo yum group install "Development Tools"
+        sudo yum update -y
+        sudo yum group install -y "Development Tools"
     else
         echo "WARNING: You may need to install the gcc compiler"
     fi
