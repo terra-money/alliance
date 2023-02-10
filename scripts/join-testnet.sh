@@ -21,10 +21,10 @@ error(){
 }
 
 install_prereqs(){
-    if [ -n $(which apt) ]; then 
+    if [ $OS == "Linux" ] && [ -n "$(which apt)" ]; then 
         sudo apt update -y
         sudo apt install -y build-essential
-    elif [ -n $(which yum) ]; then
+    elif [ $OS == "Linux" ] && [ -n "$(which yum)" ]; then
         sudo yum update -y
         sudo yum group install -y "Development Tools"
     else
@@ -139,7 +139,7 @@ get_moniker(){
     local moniker_txt="${cfgdir}/moniker.txt"
     if [ ! -f "${moniker_txt}" ]; then
         mkdir -p "${cfgdir}"
-        echo "${prefix}-$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)" > "${moniker_txt}"
+        echo "${prefix}-$(uuidgen | tr '[:upper:]' '[:lower:]' | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)" > "${moniker_txt}"
     fi
     cat "${moniker_txt}"
 }
@@ -221,6 +221,64 @@ parse_options(){
     set -u
 }
 
+docs_bin_path(){
+    echo "####################################################################"
+    echo "# Binary is located in:"
+    echo "####################################################################"
+    echo
+    echo "${BIN_PATH}${BINARY}"
+    echo
+}
+
+docs_start_chain(){
+    echo "####################################################################"
+    echo "# To start the chain, run the following command:"
+    echo "####################################################################"
+    echo
+    echo "${BIN_PATH}${BINARY} start --p2p.persistent_peers ${PEERS}" 
+    echo
+}
+
+docs_create_wallet(){
+    echo "####################################################################"
+    echo "# To create a wallet run the following command:"
+    echo "####################################################################"
+    echo
+    echo "${BIN_PATH}${BINARY} keys add ${MONIKER}" 
+    echo
+}
+
+docs_faucet(){
+    echo "####################################################################"
+    echo "# To get tokens from the faucet visit:"
+    echo "####################################################################"
+    echo 
+    echo "visit: https://game-of-alliances.terra.money/faucet"
+    echo
+}
+
+docs_validate(){
+    echo "####################################################################"
+    echo "# To create a validator run the following command:"
+    echo "####################################################################"
+    echo
+    echo "${BIN_PATH}${BINARY} tx staking create-validator \\"
+    echo "  --amount=10000000${DENOM} \\"
+    echo "  --pubkey='$(${BINARY} tendermint show-validator)' \\"
+    echo "  --moniker="${MONIKER}" \\"
+    echo "  --chain-id="${CHAIN_ID}" \\"
+    echo "  --commission-rate="0.10" \\"
+    echo "  --commission-max-rate="0.20" \\"
+    echo "  --commission-max-change-rate=\"0.01\" \\"
+    echo "  --min-self-delegation="1" \\"
+    echo "  --gas=\"auto\" \\"
+    echo "  --gas-adjustment=\"1.5\" \\"
+    echo "  --gas-prices=\"0.025${DENOM}\" \\"
+    echo "  --from=\"${MONIKER}\" \\"
+    echo "  --yes"
+    echo
+}
+
 main(){
     parse_options $@
     install_prereqs
@@ -245,9 +303,12 @@ main(){
     echo "Getting peer list"
     PEERS="$(get_peers)"
 
-    echo "Starting node"
-    exec $BINARY start \
-        --p2p.persistent_peers "$PEERS" 
+    echo
+    docs_bin_path
+    docs_create_wallet
+    docs_faucet
+    docs_validate
+    docs_start_chain
 }
 
 main $@
