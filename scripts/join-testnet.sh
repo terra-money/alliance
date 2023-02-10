@@ -223,6 +223,7 @@ parse_options(){
 
 main(){
     parse_options $@
+    install_prereqs
     
     # prepend local path
     PATH="${BIN_PATH}:${PATH}"
