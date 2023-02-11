@@ -58,7 +58,7 @@ func TestProposalsContent(t *testing.T) {
 			title: "Alliance1",
 			desc:  "Alliance with 1",
 			typ:   "msg_create_alliance_proposal",
-			str:   "title:\"Alliance1\" description:\"Alliance with 1\" denom:\"ibc/denom1\" reward_weight:\"1000000000000000000\" reward_weight_range:<min:\"0\" max:\"5000000000000000000\" > take_rate:\"1000000000000000000\" reward_change_rate:\"1000000000000000000\" reward_change_interval:<seconds:1 > ",
+			str:   "title:\"Alliance1\" description:\"Alliance with 1\" denom:\"ibc/denom1\" reward_weight:\"1000000000000000000\" take_rate:\"1000000000000000000\" reward_change_rate:\"1000000000000000000\" reward_change_interval:<seconds:1 > reward_weight_range:<min:\"0\" max:\"5000000000000000000\" > ",
 		},
 		"msg_update_alliance_proposal": {
 			p:     types.NewMsgUpdateAllianceProposal("Alliance2", "Alliance with 2", "ibc/denom2", sdk.NewDec(2), sdk.NewDec(2), sdk.NewDec(2), time.Hour),
