@@ -4,6 +4,7 @@ import (
 	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
 
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -20,7 +21,7 @@ func NewAllianceProposalHandler(k keeper.Keeper) govtypes.Handler {
 			return k.DeleteAlliance(ctx, c)
 
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized alliance proposal content type: %T", c)
+			return cosmoserrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized alliance proposal content type: %T", c)
 		}
 	}
 }

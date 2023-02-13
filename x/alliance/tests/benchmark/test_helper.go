@@ -24,7 +24,7 @@ func SetupApp(t *testing.T, r *rand.Rand, numAssets int, numValidators int, numD
 	for i := 0; i < numAssets; i++ {
 		rewardWeight := simulation.RandomDecAmount(r, sdk.NewDec(1))
 		takeRate := simulation.RandomDecAmount(r, sdk.MustNewDecFromStr("0.0001"))
-		asset := types.NewAllianceAsset(fmt.Sprintf("ASSET%d", i), rewardWeight, takeRate, startTime)
+		asset := types.NewAllianceAsset(fmt.Sprintf("ASSET%d", i), rewardWeight, sdk.ZeroDec(), sdk.NewDec(5), takeRate, startTime)
 		asset.RewardChangeRate = sdk.OneDec().Sub(simulation.RandomDecAmount(r, sdk.MustNewDecFromStr("0.00001")))
 		asset.RewardChangeInterval = time.Minute * 5
 		assets = append(assets, asset)

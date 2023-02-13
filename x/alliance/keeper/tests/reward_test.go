@@ -22,16 +22,18 @@ func TestRewardPoolAndGlobalIndex(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        AllianceDenom,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:             AllianceDenom,
+				RewardWeight:      sdk.NewDec(2),
+				RewardWeightRange: types.RewardWeightRange{Min: sdk.ZeroDec(), Max: sdk.NewDec(5)},
+				TakeRate:          sdk.NewDec(0),
+				TotalTokens:       sdk.ZeroInt(),
 			},
 			{
-				Denom:        AllianceDenomTwo,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:             AllianceDenomTwo,
+				RewardWeight:      sdk.NewDec(10),
+				RewardWeightRange: types.RewardWeightRange{Min: sdk.NewDec(5), Max: sdk.NewDec(15)},
+				TakeRate:          sdk.NewDec(0),
+				TotalTokens:       sdk.ZeroInt(),
 			},
 		},
 	})
@@ -130,8 +132,8 @@ func TestClaimRewards(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
-			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.NewDec(0), ctx.BlockTime()),
 		},
 	})
 
@@ -261,8 +263,8 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.NewDec(0), startTime),
-			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(0), startTime),
+			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.NewDec(0), ctx.BlockTime()),
 		},
 	})
 
@@ -385,8 +387,8 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
-			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.NewDec(0), ctx.BlockTime()),
 		},
 	})
 
@@ -481,7 +483,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 		},
 	})
 
-	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.NewAllianceAsset(AllianceDenom, sdk.NewDec(10), sdk.NewDec(0), ctx.BlockTime()))
+	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.NewAllianceAsset(AllianceDenom, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.NewDec(0), ctx.BlockTime()))
 	require.NoError(t, err)
 	assets = app.AllianceKeeper.GetAllAssets(ctx)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
@@ -620,6 +622,7 @@ func TestRewardClaimingAfterRatesDecay(t *testing.T) {
 		Description:          "",
 		Denom:                AllianceDenom,
 		RewardWeight:         sdk.NewDec(1),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             sdk.ZeroDec(),
 		RewardChangeRate:     decayRate,
 		RewardChangeInterval: decayInterval,
@@ -632,6 +635,7 @@ func TestRewardClaimingAfterRatesDecay(t *testing.T) {
 		Description:          "",
 		Denom:                AllianceDenomTwo,
 		RewardWeight:         sdk.NewDec(1),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 		TakeRate:             sdk.ZeroDec(),
 		RewardChangeRate:     sdk.OneDec(),
 		RewardChangeInterval: time.Duration(0),
