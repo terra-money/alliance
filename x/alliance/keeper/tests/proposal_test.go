@@ -22,11 +22,12 @@ func TestCreateAlliance(t *testing.T) {
 
 	// WHEN
 	createErr := app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
-		Title:        "",
-		Description:  "",
-		Denom:        "uluna",
-		RewardWeight: sdk.OneDec(),
-		TakeRate:     sdk.OneDec(),
+		Title:             "",
+		Description:       "",
+		Denom:             "uluna",
+		RewardWeight:      sdk.OneDec(),
+		RewardWeightRange: types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
+		TakeRate:          sdk.OneDec(),
 	})
 	alliancesRes, alliancesErr := queryServer.Alliances(ctx, &types.QueryAlliancesRequest{})
 
@@ -38,6 +39,7 @@ func TestCreateAlliance(t *testing.T) {
 			{
 				Denom:                "uluna",
 				RewardWeight:         sdk.NewDec(1),
+				RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 				TakeRate:             sdk.NewDec(1),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
@@ -62,7 +64,7 @@ func TestCreateAllianceFailWithDuplicatedDenom(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset("uluna", sdk.NewDec(1), sdk.NewDec(0), startTime),
+			types.NewAllianceAsset("uluna", sdk.NewDec(1), sdk.ZeroDec(), sdk.NewDec(2), sdk.NewDec(0), startTime),
 		},
 	})
 
@@ -90,6 +92,7 @@ func TestUpdateAlliance(t *testing.T) {
 			{
 				Denom:                "uluna",
 				RewardWeight:         sdk.NewDec(2),
+				RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(10)},
 				TakeRate:             sdk.OneDec(),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
@@ -118,6 +121,7 @@ func TestUpdateAlliance(t *testing.T) {
 			{
 				Denom:                "uluna",
 				RewardWeight:         sdk.NewDec(6),
+				RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(10)},
 				TakeRate:             sdk.NewDec(7),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
