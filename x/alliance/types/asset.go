@@ -73,3 +73,8 @@ func GetDelegationSharesFromTokens(val AllianceValidator, asset AllianceAsset, t
 func (a AllianceAsset) HasPositiveDecay() bool {
 	return a.RewardChangeInterval > 0 && a.RewardChangeRate.IsPositive()
 }
+
+// RewardsStarted helper function to check if rewards for the alliance has started
+func (a AllianceAsset) RewardsStarted(blockTime time.Time) bool {
+	return blockTime.After(a.RewardStartTime) || blockTime.Equal(a.RewardStartTime)
+}
