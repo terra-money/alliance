@@ -684,8 +684,10 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	app, ctx := createTestContext(t)
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	params := types.DefaultParams()
+	params.LastTakeRateClaimTime = startTime
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: params,
 		Assets: []types.AllianceAsset{
 			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
 			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.MustNewDecFromStr("0.5"), ctx.BlockTime()),

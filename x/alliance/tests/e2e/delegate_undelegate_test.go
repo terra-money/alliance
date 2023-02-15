@@ -142,8 +142,10 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	))
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	params := types.DefaultParams()
+	params.LastTakeRateClaimTime = startTime
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: params,
 		Assets: []types.AllianceAsset{
 			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
 			types.NewAllianceAsset(allianceAsset2, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
@@ -252,8 +254,10 @@ func TestDelegateAndUndelegateWithSmallAmounts(t *testing.T) {
 	))
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	params := types.DefaultParams()
+	params.LastTakeRateClaimTime = startTime
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: params,
 		Assets: []types.AllianceAsset{
 			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
 			types.NewAllianceAsset(allianceAsset2, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
@@ -317,8 +321,10 @@ func TestUnDelegatingSlightlyMoreCoin(t *testing.T) {
 	))
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	params := types.DefaultParams()
+	params.LastTakeRateClaimTime = startTime
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: params,
 		Assets: []types.AllianceAsset{
 			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
 			types.NewAllianceAsset(allianceAsset2, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
@@ -380,8 +386,10 @@ func TestReDelegatingSlightlyMoreCoin(t *testing.T) {
 	))
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	params := types.DefaultParams()
+	params.LastTakeRateClaimTime = startTime
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: params,
 		Assets: []types.AllianceAsset{
 			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
 			types.NewAllianceAsset(allianceAsset2, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
