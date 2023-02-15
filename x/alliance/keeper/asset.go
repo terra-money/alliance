@@ -120,7 +120,7 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 		for _, asset := range assets {
 			// Ignores assets that were recently added to prevent a small set of stakers from owning too much of the
 			// voting power at the start. Uses the asset.RewardStartTime to determine when an asset is activated
-			if ctx.BlockTime().Before(asset.RewardStartTime) {
+			if !asset.RewardsStarted(ctx.BlockTime()) {
 				// Queue a rebalancing event so that we keep checking if the asset rewards has started in the next block
 				k.QueueAssetRebalanceEvent(ctx)
 				continue
@@ -250,9 +250,13 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 	rewardClaimInterval := k.RewardClaimInterval(ctx)
 	durationSinceLastClaim := ctx.BlockTime().Sub(lastClaim)
 	intervalsSinceLastClaim := uint64(durationSinceLastClaim / rewardClaimInterval)
+
+	assetsWithPositiveTakeRate := 0
+
 	var coins sdk.Coins
 	for _, asset := range assets {
-		if asset.TotalTokens.IsPositive() && asset.TakeRate.IsPositive() {
+		if asset.TotalTokens.IsPositive() && asset.TakeRate.IsPositive() && asset.RewardsStarted(ctx.BlockTime()) {
+			assetsWithPositiveTakeRate++
 			// take rate must be < 1 so multiple is also < 1
 			multiplier := sdk.OneDec().Sub(asset.TakeRate).Power(intervalsSinceLastClaim)
 			oldAmount := asset.TotalTokens
@@ -266,6 +270,12 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 			coins = coins.Add(sdk.NewCoin(asset.Denom, deductedAmount))
 			k.SetAsset(ctx, *asset)
 		}
+	}
+
+	// If there are no assets with positive take rate, continue to update last reward claim time and return
+	if assetsWithPositiveTakeRate == 0 {
+		k.SetLastRewardClaimTime(ctx, lastClaim.Add(rewardClaimInterval*time.Duration(intervalsSinceLastClaim)))
+		return coins, nil
 	}
 
 	if !coins.Empty() && !coins.IsZero() {
