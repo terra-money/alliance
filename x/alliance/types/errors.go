@@ -16,4 +16,6 @@ var (
 	ErrUnknownAsset = sdkerrors.Register(ModuleName, 30, "alliance asset is not whitelisted")
 
 	ErrRewardWeightOutOfBound = sdkerrors.Register(ModuleName, 40, "alliance asset must be between reward_weight_range")
+
+	ErrRewardsStartTimeNotMature = sdkerrors.Register(ModuleName, 50, "alliance is not generating rewards yet because reward_start_time is in the future")
 )

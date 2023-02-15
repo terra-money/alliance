@@ -231,9 +231,15 @@ func (k QueryServer) AllianceDelegationRewards(context context.Context, request 
 	if err != nil {
 		return nil, err
 	}
-	_, found := k.GetAssetByDenom(ctx, request.Denom)
+	asset, found := k.GetAssetByDenom(ctx, request.Denom)
 	if !found {
 		return nil, types.ErrUnknownAsset
+	}
+
+	if ctx.BlockTime().Before(asset.RewardStartTime) {
+		return &types.QueryAllianceDelegationRewardsResponse{
+			Rewards: sdk.NewCoins(),
+		}, nil
 	}
 
 	val, err := k.GetAllianceValidator(ctx, valAddr)

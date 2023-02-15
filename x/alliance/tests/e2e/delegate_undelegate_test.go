@@ -24,6 +24,11 @@ var (
 // applied will not cause a division by zero error.
 func TestDelegateThenTakeRateThenUndelegate(t *testing.T) {
 	app, ctx, vals, dels := setupApp(t, 5, 2, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1000000000000000000))))
+	app.AllianceKeeper.SetParams(ctx, types.Params{
+		RewardDelayTime:       0,
+		TakeRateClaimInterval: time.Minute * 5,
+		LastTakeRateClaimTime: ctx.BlockTime(),
+	})
 	err := app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
 		Title:                "",
 		Description:          "",
@@ -80,6 +85,11 @@ func TestDelegateThenTakeRateThenUndelegate(t *testing.T) {
 // applied will not cause a division by zero error. Also ensure that dust delegations are not kept around
 func TestDelegateThenTakeRateThenRedelegate(t *testing.T) {
 	app, ctx, vals, dels := setupApp(t, 5, 2, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1000000000000000000))))
+	app.AllianceKeeper.SetParams(ctx, types.Params{
+		RewardDelayTime:       0,
+		TakeRateClaimInterval: time.Minute * 5,
+		LastTakeRateClaimTime: ctx.BlockTime(),
+	})
 	err := app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
 		Title:                "",
 		Description:          "",

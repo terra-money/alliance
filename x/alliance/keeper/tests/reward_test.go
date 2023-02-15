@@ -255,6 +255,31 @@ func TestClaimRewards(t *testing.T) {
 	require.Equal(t, indices, types.NewRewardHistories(delegation.RewardHistory))
 }
 
+func TestClaimRewardsBeforeRewardsStartTime(t *testing.T) {
+	app, ctx := createTestContext(t)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), time.Now().Add(time.Hour)),
+		},
+	})
+
+	// Accounts
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	valAddr1, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 2, sdk.NewCoins(
+		sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)),
+	))
+	user1 := addrs[0]
+
+	_, err = app.AllianceKeeper.ClaimDelegationRewards(ctx, user1, val1, AllianceDenom)
+
+	require.Error(t, err)
+}
+
 func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 	var err error
 	app, ctx := createTestContext(t)

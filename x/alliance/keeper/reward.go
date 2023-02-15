@@ -39,6 +39,11 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 	if !found {
 		return nil, types.ErrUnknownAsset
 	}
+
+	if ctx.BlockTime().Before(asset.RewardStartTime) {
+		return nil, types.ErrRewardsStartTimeNotMature
+	}
+
 	delegation, found := k.GetDelegation(ctx, delAddr, val, denom)
 	if !found {
 		return sdk.Coins{}, stakingtypes.ErrNoDelegatorForAddress

@@ -21,7 +21,7 @@ import (
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
-var ULunaAlliance = "uluna"
+var LunaDenom = "uluna"
 
 func TestQueryAlliances(t *testing.T) {
 	// GIVEN: THE BLOCKCHAIN WITH ALLIANCES ON GENESIS
@@ -262,7 +262,7 @@ func TestClaimQueryReward(t *testing.T) {
 		},
 		Assets: []types.AllianceAsset{
 			{
-				Denom:                ULunaAlliance,
+				Denom:                LunaDenom,
 				RewardWeight:         sdk.NewDec(2),
 				TakeRate:             sdk.MustNewDecFromStr("0.00005"),
 				TotalTokens:          sdk.ZeroInt(),
@@ -277,10 +277,10 @@ func TestClaimQueryReward(t *testing.T) {
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	val1, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
-	delAddr := test_helpers.AddTestAddrsIncremental(app, ctx, 1, sdk.NewCoins(sdk.NewCoin(ULunaAlliance, sdk.NewInt(1000_000_000))))[0]
+	delAddr := test_helpers.AddTestAddrsIncremental(app, ctx, 1, sdk.NewCoins(sdk.NewCoin(LunaDenom, sdk.NewInt(1000_000_000))))[0]
 
 	// WHEN: DELEGATING ...
-	delRes, delErr := app.AllianceKeeper.Delegate(ctx, delAddr, val1, sdk.NewCoin(ULunaAlliance, sdk.NewInt(1000_000_000)))
+	delRes, delErr := app.AllianceKeeper.Delegate(ctx, delAddr, val1, sdk.NewCoin(LunaDenom, sdk.NewInt(1000_000_000)))
 	require.Nil(t, delErr)
 	require.Equal(t, sdk.NewDec(1000000000), *delRes)
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
@@ -296,7 +296,7 @@ func TestClaimQueryReward(t *testing.T) {
 
 	app.BankKeeper.GetAllBalances(ctx, feeCollectorAddr)
 	require.Equal(t, startTime.Add(time.Minute*5), app.AllianceKeeper.LastRewardClaimTime(ctx))
-	app.AllianceKeeper.GetAssetByDenom(ctx, ULunaAlliance)
+	app.AllianceKeeper.GetAssetByDenom(ctx, LunaDenom)
 
 	// ... at the next begin block, tokens will be distributed from the fee pool...
 	cons, _ := val1.GetConsAddr()
@@ -314,7 +314,7 @@ func TestClaimQueryReward(t *testing.T) {
 	queryDelegation, queryErr := queryServer.AllianceDelegationRewards(ctx, &types.QueryAllianceDelegationRewardsRequest{
 		DelegatorAddr: delAddr.String(),
 		ValidatorAddr: valAddr.String(),
-		Denom:         ULunaAlliance,
+		Denom:         LunaDenom,
 	})
 
 	// ... validate that no error has been produced.
@@ -322,10 +322,83 @@ func TestClaimQueryReward(t *testing.T) {
 	require.Equal(t, &types.QueryAllianceDelegationRewardsResponse{
 		Rewards: []sdk.Coin{
 			{
-				Denom:  ULunaAlliance,
+				Denom:  LunaDenom,
 				Amount: math.NewInt(32666),
 			},
 		},
+	}, queryDelegation)
+}
+
+func TestClaimQueryRewardsWithTimeInFuture(t *testing.T) {
+	// GIVEN: THE BLOCKCHAIN WITH ACCOUNTS
+	app, ctx := createTestContext(t)
+	startTime := time.Now().UTC()
+	ctx = ctx.WithBlockTime(startTime)
+	ctx = ctx.WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.Params{
+			RewardDelayTime:       time.Minute * 60,
+			TakeRateClaimInterval: time.Minute * 5,
+			LastTakeRateClaimTime: startTime,
+		},
+		Assets: []types.AllianceAsset{
+			{
+				Denom:                LunaDenom,
+				RewardWeight:         sdk.NewDec(2),
+				TakeRate:             sdk.MustNewDecFromStr("0.00005"),
+				TotalTokens:          sdk.ZeroInt(),
+				TotalValidatorShares: sdk.NewDec(0),
+				RewardChangeRate:     sdk.NewDec(0),
+				RewardChangeInterval: 0,
+				RewardStartTime:      startTime.Add(time.Minute * 60),
+			},
+		},
+	})
+
+	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	valAddr, _ := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	val1, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
+	delAddr := test_helpers.AddTestAddrsIncremental(app, ctx, 1, sdk.NewCoins(sdk.NewCoin(LunaDenom, sdk.NewInt(1000_000_000))))[0]
+
+	// WHEN: DELEGATING ...
+	delRes, delErr := app.AllianceKeeper.Delegate(ctx, delAddr, val1, sdk.NewCoin(LunaDenom, sdk.NewInt(1000_000_000)))
+	require.Nil(t, delErr)
+	require.Equal(t, sdk.NewDec(1000000000), *delRes)
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err := app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
+	require.NoError(t, err)
+
+	// ...and advance block...
+	timePassed := time.Minute*5 + time.Second
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(timePassed))
+	ctx = ctx.WithBlockHeight(2)
+	_, err = app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	require.NoError(t, err)
+
+	// ... at the next begin block, tokens will be distributed from the fee pool...
+	cons, _ := val1.GetConsAddr()
+	app.DistrKeeper.AllocateTokens(ctx, 1, 1, cons, []abcitypes.VoteInfo{
+		{
+			Validator: abcitypes.Validator{
+				Address: cons,
+				Power:   1,
+			},
+			SignedLastBlock: true,
+		},
+	})
+
+	// THEN: Query the delegation rewards ...
+	queryDelegation, queryErr := queryServer.AllianceDelegationRewards(ctx, &types.QueryAllianceDelegationRewardsRequest{
+		DelegatorAddr: delAddr.String(),
+		ValidatorAddr: valAddr.String(),
+		Denom:         LunaDenom,
+	})
+
+	// ... validate that no error has been produced.
+	require.Nil(t, queryErr)
+	require.Equal(t, &types.QueryAllianceDelegationRewardsResponse{
+		Rewards: sdk.NewCoins(),
 	}, queryDelegation)
 }
 
