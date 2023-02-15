@@ -790,5 +790,6 @@ func TestClaimRewardsAfterRebalancing(t *testing.T) {
 
 	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
 	rewards, err := app.AllianceKeeper.ClaimDelegationRewards(ctx, user1, val1, AllianceDenom)
+	require.NoError(t, err)
 	require.Len(t, rewards, 1)
 }
