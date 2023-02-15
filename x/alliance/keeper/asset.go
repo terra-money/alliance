@@ -247,13 +247,20 @@ func (k Keeper) DeductAssetsHook(ctx sdk.Context, assets []*types.AllianceAsset)
 // DeductAssetsWithTakeRate Deducts an alliance asset using the take_rate
 // The deducted asset is distributed to the fee_collector module account to be redistributed to stakers
 func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, assets []*types.AllianceAsset) (sdk.Coins, error) {
+	var coins sdk.Coins
+
+	// If start time has not been set, set the start time and do nothing for this block
+	if lastClaim.Equal(time.Time{}) {
+		k.SetLastRewardClaimTime(ctx, ctx.BlockTime())
+		return coins, nil
+	}
+
 	rewardClaimInterval := k.RewardClaimInterval(ctx)
 	durationSinceLastClaim := ctx.BlockTime().Sub(lastClaim)
 	intervalsSinceLastClaim := uint64(durationSinceLastClaim / rewardClaimInterval)
 
 	assetsWithPositiveTakeRate := 0
 
-	var coins sdk.Coins
 	for _, asset := range assets {
 		if asset.TotalTokens.IsPositive() && asset.TakeRate.IsPositive() && asset.RewardsStarted(ctx.BlockTime()) {
 			assetsWithPositiveTakeRate++
@@ -274,7 +281,7 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 
 	// If there are no assets with positive take rate, continue to update last reward claim time and return
 	if assetsWithPositiveTakeRate == 0 {
-		k.SetLastRewardClaimTime(ctx, lastClaim.Add(rewardClaimInterval*time.Duration(intervalsSinceLastClaim)))
+		k.SetLastRewardClaimTime(ctx, ctx.BlockTime())
 		return coins, nil
 	}
 

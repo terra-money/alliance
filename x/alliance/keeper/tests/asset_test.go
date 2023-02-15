@@ -1042,9 +1042,7 @@ func TestClaimTakeRateForNewlyAddedAssets(t *testing.T) {
 
 	// Last take rate claim time should be updated even though nothing has been taxed
 	lastClaimTime := app.AllianceKeeper.LastRewardClaimTime(ctx)
-
-	// Adding a second here since last claim time always increments by the claim time interval
-	require.Equal(t, blockTime, lastClaimTime.Add(time.Second))
+	require.Equal(t, blockTime, lastClaimTime)
 
 	err = app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
 		Title:                "New alliance",
