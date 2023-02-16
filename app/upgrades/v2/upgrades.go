@@ -6,9 +6,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-var (
-	UpgradeName = "v2"
-)
+var UpgradeName = "v2"
 
 func CreateUpgradeHandler(
 	mm *module.Manager,
