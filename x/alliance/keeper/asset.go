@@ -146,6 +146,10 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 			if err != nil {
 				return err
 			}
+			_, err = k.ClaimValidatorRewards(ctx, validator)
+			if err != nil {
+				return err
+			}
 			_, err = k.stakingKeeper.Delegate(ctx, moduleAddr, bondAmount, stakingtypes.Unbonded, *validator.Validator, true)
 			if err != nil {
 				return err
@@ -158,6 +162,10 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 				continue
 			}
 			sharesToUnbond, err := k.stakingKeeper.ValidateUnbondAmount(ctx, moduleAddr, validator.GetOperator(), unbondAmount)
+			if err != nil {
+				return err
+			}
+			_, err = k.ClaimValidatorRewards(ctx, validator)
 			if err != nil {
 				return err
 			}
