@@ -39,6 +39,14 @@ func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, 
 }
 
 func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+	val, err := h.k.GetAllianceValidator(ctx, valAddr)
+	if err != nil {
+		return err
+	}
+	_, err = h.k.ClaimValidatorRewards(ctx, val)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

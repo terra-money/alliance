@@ -1,8 +1,6 @@
 package alliance
 
 import (
-	"time"
-
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
@@ -26,11 +24,7 @@ func ValidateGenesis(data *types.GenesisState) error {
 
 func DefaultGenesisState() *types.GenesisState {
 	return &types.GenesisState{
-		Params: types.Params{
-			RewardDelayTime:       time.Hour * 24 * 7,
-			TakeRateClaimInterval: time.Minute * 5,
-			LastTakeRateClaimTime: time.Now(),
-		},
+		Params:                     types.DefaultParams(),
 		Assets:                     []types.AllianceAsset{},
 		ValidatorInfos:             []types.ValidatorInfoState{},
 		RewardWeightChangeSnaphots: []types.RewardWeightChangeSnapshotState{},
