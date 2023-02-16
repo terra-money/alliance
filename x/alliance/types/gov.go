@@ -74,6 +74,10 @@ func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeRate must be strictly a positive number")
 	}
 
+	if m.RewardChangeInterval < 0 {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeInterval must be strictly a positive number")
+	}
+
 	return nil
 }
 
@@ -108,6 +112,10 @@ func (m *MsgUpdateAllianceProposal) ValidateBasic() error {
 
 	if m.RewardChangeRate.IsZero() || m.RewardChangeRate.IsNegative() {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeRate must be strictly a positive number")
+	}
+
+	if m.RewardChangeInterval < 0 {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeInterval must be strictly a positive number")
 	}
 
 	return nil
