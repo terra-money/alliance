@@ -5,6 +5,7 @@ import (
 	"time"
 
 	test_helpers "github.com/terra-money/alliance/app"
+	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -253,6 +254,114 @@ func TestClaimRewards(t *testing.T) {
 	delegation, found = app.AllianceKeeper.GetDelegation(ctx, user2, val1, AllianceDenomTwo)
 	require.True(t, found)
 	require.Equal(t, indices, types.NewRewardHistories(delegation.RewardHistory))
+}
+
+func TestClaimRewardsBeforeRewardsIssuance(t *testing.T) {
+	app, ctx := createTestContext(t)
+	ctx = ctx.WithBlockTime(time.Now())
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime().Add(-time.Hour)),
+			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.NewDec(0), ctx.BlockTime().Add(time.Hour)),
+		},
+	})
+	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
+
+	// Accounts
+	mintPoolAddr := app.AccountKeeper.GetModuleAddress(minttypes.ModuleName)
+	rewardsPoolAddr := app.AccountKeeper.GetModuleAddress(types.RewardsPoolName)
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	valAddr1, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 2, sdk.NewCoins(
+		sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)),
+		sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(1000_000)),
+	))
+	user1 := addrs[0]
+	user2 := addrs[1]
+
+	// Mint tokens
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(4000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin("stake2", sdk.NewInt(4000_000))))
+	require.NoError(t, err)
+
+	// New delegation from user 1
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)))
+	require.NoError(t, err)
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
+	require.NoError(t, err)
+
+	// Transfer to reward pool
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	// New delegation from user 2
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(1000_000)))
+	require.NoError(t, err)
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
+	require.NoError(t, err)
+
+	// Transfer to reward pool
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	// The rewards should have been distributed to the alliance onee ...
+	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
+	require.Equal(t, sdk.NewInt(2000_000), val1.TotalTokensWithAsset(asset).TruncateInt())
+
+	// ... alliance two should have no rewards yet because rewards start time is in the future
+	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenomTwo)
+	require.Equal(t, sdk.ZeroInt(), val1.TotalTokensWithAsset(asset).TruncateInt())
+
+	// Transfer another token to reward pool
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val1, sdk.NewCoins(sdk.NewCoin("stake2", sdk.NewInt(4000_000))))
+	require.NoError(t, err)
+
+	// before claiming, there should be tokens in rewards pool
+	coins := app.BankKeeper.GetAllBalances(ctx, rewardsPoolAddr)
+	require.Equal(t,
+		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(4000_000)), sdk.NewCoin("stake2", sdk.NewInt(4000_000))),
+		coins,
+	)
+
+	// User 1 claims rewards
+	coins, err = app.AllianceKeeper.ClaimDelegationRewards(ctx, user1, val1, AllianceDenom)
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(4_666_666)), sdk.NewCoin("stake2", sdk.NewInt(1_333_332))), coins)
+
+	// SInce user 1 claimed rewards, there should be no tokens in rewards pool
+	res, err := queryServer.AllianceDelegationRewards(ctx, &types.QueryAllianceDelegationRewardsRequest{
+		DelegatorAddr: user1.String(),
+		ValidatorAddr: val1.OperatorAddress,
+		Denom:         AllianceDenom,
+	})
+	require.NoError(t, err)
+	require.Equal(t, []sdk.Coin(nil), res.Rewards)
+
+	// User 2 shouldn't have staking rewards
+	// because RewardStartTime is in the future
+	// for the AllianceDenomTwo.
+	coins, err = app.AllianceKeeper.ClaimDelegationRewards(ctx, user2, val1, AllianceDenomTwo)
+	require.NoError(t, err)
+	require.Equal(t, sdk.NewCoins(), coins)
+
+	// User 2 claims rewards query should also
+	// return empty rewards because RewardStartTime
+	// is in the future for the AllianceDenomTwo
+	res, err = queryServer.AllianceDelegationRewards(ctx, &types.QueryAllianceDelegationRewardsRequest{
+		DelegatorAddr: user2.String(),
+		ValidatorAddr: val1.OperatorAddress,
+		Denom:         AllianceDenomTwo,
+	})
+	require.NoError(t, err)
+	require.Equal(t, []sdk.Coin(nil), res.Rewards)
+
 }
 
 func TestClaimRewardsWithMultipleValidators(t *testing.T) {
