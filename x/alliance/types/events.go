@@ -6,6 +6,7 @@ const (
 	EventTypeRedelegate             = "alliance_redelegate"
 	EventTypeClaimDelegationRewards = "alliance_claim_delegation_rewards"
 
+	AttributeKeySender         = "alliance_sender"
 	AttributeKeyValidator      = "validator"
 	AttributeKeySrcValidator   = "source_validator"
 	AttributeKeyDstValidator   = "destination_validator"
