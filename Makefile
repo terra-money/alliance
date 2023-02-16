@@ -4,6 +4,7 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
+PWD := $(shell pwd)
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
 
@@ -113,7 +114,7 @@ lint: format-tools
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*pb.gw.go" | xargs gofumpt -d
 
 lint-docker:
-	docker run --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.49.0-alpine golangci-lint run
+	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.49.0-alpine golangci-lint run
 
 format: format-tools
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*pb.gw.go" | xargs gofumpt -w
