@@ -349,17 +349,6 @@ func (k Keeper) IterateWeightChangeSnapshot(ctx sdk.Context, denom string, valAd
 	return store.Iterator(key, end)
 }
 
-func (k Keeper) LastWeightChangeSnapshot(ctx sdk.Context, denom string, valAddr sdk.ValAddress) (snapshot types.RewardWeightChangeSnapshot, found bool) {
-	store := ctx.KVStore(k.storeKey)
-	key := types.GetRewardWeightChangeSnapshotKey(denom, valAddr, 0)
-	end := types.GetRewardWeightChangeSnapshotKey(denom, valAddr, math.MaxUint64)
-	iter := store.ReverseIterator(end, key)
-	if !iter.Valid() {
-		return snapshot, false
-	}
-	k.cdc.MustUnmarshal(iter.Value(), &snapshot)
-	return snapshot, true
-}
 
 func (k Keeper) IterateAllWeightChangeSnapshot(ctx sdk.Context, cb func(denom string, valAddr sdk.ValAddress, lastClaimHeight uint64, snapshot types.RewardWeightChangeSnapshot) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
