@@ -349,7 +349,6 @@ func (k Keeper) IterateWeightChangeSnapshot(ctx sdk.Context, denom string, valAd
 	return store.Iterator(key, end)
 }
 
-
 func (k Keeper) IterateAllWeightChangeSnapshot(ctx sdk.Context, cb func(denom string, valAddr sdk.ValAddress, lastClaimHeight uint64, snapshot types.RewardWeightChangeSnapshot) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.RewardWeightChangeSnapshotKey)
