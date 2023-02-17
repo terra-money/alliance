@@ -29,7 +29,8 @@ func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsse
 	// Only add a snapshot if reward weight changes
 	if !newAsset.RewardWeight.Equal(asset.RewardWeight) {
 		k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) bool {
-			validator, err := k.GetAllianceValidator(ctx, valAddr)
+			var validator types.AllianceValidator
+			validator, err = k.GetAllianceValidator(ctx, valAddr)
 			if err != nil {
 				return true
 			}
@@ -146,6 +147,10 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 			if err != nil {
 				return err
 			}
+			_, err = k.ClaimValidatorRewards(ctx, validator)
+			if err != nil {
+				return err
+			}
 			_, err = k.stakingKeeper.Delegate(ctx, moduleAddr, bondAmount, stakingtypes.Unbonded, *validator.Validator, true)
 			if err != nil {
 				return err
@@ -158,6 +163,10 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 				continue
 			}
 			sharesToUnbond, err := k.stakingKeeper.ValidateUnbondAmount(ctx, moduleAddr, validator.GetOperator(), unbondAmount)
+			if err != nil {
+				return err
+			}
+			_, err = k.ClaimValidatorRewards(ctx, validator)
 			if err != nil {
 				return err
 			}
