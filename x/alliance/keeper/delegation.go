@@ -24,6 +24,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 		return nil, status.Errorf(codes.NotFound, "asset with denom: %s does not exist in alliance whitelist", coin.Denom)
 	}
 
+	// for the AllianceDenomTwo.
 	// Check and send delegated tokens into the alliance module address
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, delAddr, types.ModuleName, sdk.NewCoins(coin))
 	if err != nil {

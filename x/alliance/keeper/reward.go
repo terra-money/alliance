@@ -39,6 +39,11 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 	if !found {
 		return nil, types.ErrUnknownAsset
 	}
+
+	if !asset.RewardsStarted(ctx.BlockTime()) {
+		return sdk.NewCoins(), nil
+	}
+
 	delegation, found := k.GetDelegation(ctx, delAddr, val, denom)
 	if !found {
 		return sdk.Coins{}, stakingtypes.ErrNoDelegatorForAddress
@@ -77,7 +82,7 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 // CalculateDelegationRewards calculates the rewards that can be claimed for a delegation
 // It takes past reward_rate changes into account by using the RewardRateChangeSnapshot entry
 func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Delegation, val types.AllianceValidator, asset types.AllianceAsset) (sdk.Coins, types.RewardHistories, error) {
-	var totalRewards sdk.Coins
+	totalRewards := sdk.NewCoins()
 	currentRewardHistory := types.NewRewardHistories(val.GlobalRewardHistory)
 	delegationRewardHistories := types.NewRewardHistories(delegation.RewardHistory)
 	// If there are reward rate changes between last and current claim, sequentially claim with the help of the snapshots
@@ -159,6 +164,9 @@ func (k Keeper) totalAssetWeight(ctx sdk.Context, val types.AllianceValidator) s
 	for _, token := range val.TotalDelegatorShares {
 		asset, found := k.GetAssetByDenom(ctx, token.Denom)
 		if !found {
+			continue
+		}
+		if !asset.RewardsStarted(ctx.BlockTime()) {
 			continue
 		}
 		totalValTokens := val.TotalDecTokensWithAsset(asset)
