@@ -12,6 +12,23 @@ import (
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
+// InitializeAllianceAssets this hooks adds a reward change snapshot when time > asset.RewardStartTime
+// A reward change snapshot of 0 weight is added to signify that the asset did not accrue any rewards during the
+// warm up period so we can calculate the correct rewards when claiming
+func (k Keeper) InitializeAllianceAssets(ctx sdk.Context, assets []*types.AllianceAsset) {
+	for _, asset := range assets {
+		if asset.IsInitialized || !asset.RewardsStarted(ctx.BlockTime()) {
+			continue
+		}
+		asset.IsInitialized = true
+		k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) bool {
+			k.CreateInitialRewardWeightChangeSnapshot(ctx, asset.Denom, valAddr, info)
+			return false
+		})
+		k.SetAsset(ctx, *asset)
+	}
+}
+
 // UpdateAllianceAsset updates the alliance asset with new params
 // Also saves a snapshot whenever rewards weight changes to make sure delegation reward calculation has reference to
 // historical reward rates
@@ -310,6 +327,14 @@ func (k Keeper) SetRewardWeightChangeSnapshot(ctx sdk.Context, asset types.Allia
 	k.setRewardWeightChangeSnapshot(ctx, asset.Denom, val.GetOperator(), uint64(ctx.BlockHeight()), snapshot)
 }
 
+func (k Keeper) CreateInitialRewardWeightChangeSnapshot(ctx sdk.Context, denom string, valAddr sdk.ValAddress, info types.AllianceValidatorInfo) {
+	snapshot := types.RewardWeightChangeSnapshot{
+		PrevRewardWeight: sdk.ZeroDec(),
+		RewardHistories:  info.GlobalRewardHistory,
+	}
+	k.setRewardWeightChangeSnapshot(ctx, denom, valAddr, uint64(ctx.BlockHeight()), snapshot)
+}
+
 func (k Keeper) setRewardWeightChangeSnapshot(ctx sdk.Context, denom string, valAddr sdk.ValAddress, height uint64, snapshot types.RewardWeightChangeSnapshot) {
 	key := types.GetRewardWeightChangeSnapshotKey(denom, valAddr, height)
 	store := ctx.KVStore(k.storeKey)
@@ -322,6 +347,18 @@ func (k Keeper) IterateWeightChangeSnapshot(ctx sdk.Context, denom string, valAd
 	key := types.GetRewardWeightChangeSnapshotKey(denom, valAddr, lastClaimHeight)
 	end := types.GetRewardWeightChangeSnapshotKey(denom, valAddr, math.MaxUint64)
 	return store.Iterator(key, end)
+}
+
+func (k Keeper) LastWeightChangeSnapshot(ctx sdk.Context, denom string, valAddr sdk.ValAddress) (snapshot types.RewardWeightChangeSnapshot, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetRewardWeightChangeSnapshotKey(denom, valAddr, 0)
+	end := types.GetRewardWeightChangeSnapshotKey(denom, valAddr, math.MaxUint64)
+	iter := store.ReverseIterator(end, key)
+	if !iter.Valid() {
+		return snapshot, false
+	}
+	k.cdc.MustUnmarshal(iter.Value(), &snapshot)
+	return snapshot, true
 }
 
 func (k Keeper) IterateAllWeightChangeSnapshot(ctx sdk.Context, cb func(denom string, valAddr sdk.ValAddress, lastClaimHeight uint64, snapshot types.RewardWeightChangeSnapshot) (stop bool)) {

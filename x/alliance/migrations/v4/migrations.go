@@ -26,6 +26,9 @@ func migrateAssetsWithDefaultRewardWeightRange(ctx sdk.Context, k alliancekeeper
 			Min: sdk.ZeroDec(),
 			Max: sdk.NewDec(math.MaxInt),
 		}
+		if asset.RewardsStarted(ctx.BlockTime()) {
+			asset.IsInitialized = true
+		}
 		k.SetAsset(ctx, *asset)
 	}
 	return nil
