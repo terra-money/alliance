@@ -20,6 +20,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	}
 
 	assets := k.GetAllAssets(ctx)
+	k.InitializeAllianceAssets(ctx, assets)
 	if _, err := k.DeductAssetsHook(ctx, assets); err != nil {
 		panic(fmt.Errorf("failed to deduct take rate from alliance in x/alliance module: %s", err))
 	}

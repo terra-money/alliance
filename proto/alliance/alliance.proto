@@ -67,8 +67,10 @@ message AllianceAsset {
     (gogoproto.stdtime) = true,
     (gogoproto.nullable)   = false
   ];
-   // set a bound of weight range to limit how much reward weights can scale. 
+  // set a bound of weight range to limit how much reward weights can scale.
   RewardWeightRange reward_weight_range = 10 [(gogoproto.nullable) = false];
+  // flag to check if an asset has completed the initialization process after the reward delay
+  bool is_initialized = 11;
 }
 
 message RewardWeightChangeSnapshot {

@@ -149,6 +149,7 @@ key: denom value: AllianceAsset
 | `reward_change_interval` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 | `last_reward_change_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `reward_weight_range` | [RewardWeightRange](#alliance.alliance.RewardWeightRange) |  | set a bound of weight range to limit how much reward weights can scale. |
+| `is_initialized` | [bool](#bool) |  | flag to check if an asset has completed the initialization process after the reward delay |
 
 
 
