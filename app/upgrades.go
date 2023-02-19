@@ -6,6 +6,6 @@ func (app *App) setupUpgradeHandlers() {
 	// v2 upgrade handler
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v2.UpgradeName,
-		v2.CreateUpgradeHandler(app.mm, app.configurator),
+		v2.CreateUpgradeHandler(app.mm, app.configurator, app.BankKeeper, app.StakingKeeper),
 	)
 }
