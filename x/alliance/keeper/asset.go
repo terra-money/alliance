@@ -363,7 +363,7 @@ func (k Keeper) IterateAllWeightChangeSnapshot(ctx sdk.Context, cb func(denom st
 	}
 }
 
-func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.AllianceAsset) {
+func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.AllianceAsset) error {
 	for _, asset := range assets {
 		// If no reward changes are required, skip
 		if asset.RewardChangeInterval == 0 || asset.RewardChangeRate.Equal(sdk.OneDec()) {
@@ -387,6 +387,10 @@ func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.Alliance
 		}
 		asset.LastRewardChangeTime = asset.LastRewardChangeTime.Add(asset.RewardChangeInterval * time.Duration(intervalsSinceLastClaim))
 		k.QueueAssetRebalanceEvent(ctx)
-		k.UpdateAllianceAsset(ctx, *asset) //nolint:errcheck
+		err := k.UpdateAllianceAsset(ctx, *asset)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
