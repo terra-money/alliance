@@ -1080,3 +1080,38 @@ func TestClaimTakeRateForNewlyAddedAssets(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, tax, 1)
 }
+
+func TestRewardWeightRateChange(t *testing.T) {
+	app, ctx := createTestContext(t)
+	startTime := time.Now().UTC()
+	ctx = ctx.WithBlockTime(startTime)
+	ctx = ctx.WithBlockHeight(1)
+	takeRateInterval := time.Minute * 5
+	alliance := types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), sdk.NewDec(5), sdk.ZeroDec(), startTime)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.Params{
+			RewardDelayTime:       time.Minute * 60,
+			TakeRateClaimInterval: takeRateInterval,
+			LastTakeRateClaimTime: startTime,
+		},
+		Assets: []types.AllianceAsset{
+			alliance,
+		},
+	})
+
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 10))
+
+	err := app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
+		Title:                "Update",
+		Description:          "",
+		Denom:                alliance.Denom,
+		RewardWeight:         alliance.RewardWeight,
+		TakeRate:             alliance.TakeRate,
+		RewardChangeRate:     sdk.MustNewDecFromStr("1.001"),
+		RewardChangeInterval: time.Minute * 5,
+	})
+	require.NoError(t, err)
+
+	alliance, _ = app.AllianceKeeper.GetAssetByDenom(ctx, alliance.Denom)
+	require.Equal(t, alliance.LastRewardChangeTime, ctx.BlockTime())
+}
