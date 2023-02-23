@@ -44,7 +44,7 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 		return sdk.NewCoins(), nil
 	}
 
-	delegation, found := k.GetDelegation(ctx, delAddr, val, denom)
+	delegation, found := k.GetDelegation(ctx, delAddr, val.GetOperator(), denom)
 	if !found {
 		return sdk.Coins{}, stakingtypes.ErrNoDelegatorForAddress
 	}
