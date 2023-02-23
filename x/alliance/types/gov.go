@@ -49,6 +49,10 @@ func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
 
+	if err := sdk.ValidateDenom(m.Denom); err != nil {
+		return err
+	}
+
 	if m.RewardWeight.IsNil() || m.RewardWeight.LT(sdk.ZeroDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be zero or a positive number")
 	}
