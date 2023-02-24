@@ -12,6 +12,9 @@ import (
 func (k Keeper) InitGenesis(ctx sdk.Context, g *types.GenesisState) []abci.ValidatorUpdate {
 	k.SetParams(ctx, g.Params)
 	for _, asset := range g.Assets {
+		if err := sdk.ValidateDenom(asset.Denom); err != nil {
+			panic(err)
+		}
 		k.SetAsset(ctx, asset)
 	}
 
