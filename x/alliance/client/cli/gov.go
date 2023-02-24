@@ -33,32 +33,34 @@ func CreateAlliance() *cobra.Command {
 				return err
 			}
 
+			denom := args[0]
+
 			rewardWeight, err := sdk.NewDecFromStr(args[1])
 			if err != nil {
 				return err
 			}
 
-			rewardWeightMin, err := sdk.NewDecFromStr(args[1])
+			rewardWeightMin, err := sdk.NewDecFromStr(args[2])
 			if err != nil {
 				return err
 			}
 
-			rewardWeightMax, err := sdk.NewDecFromStr(args[1])
+			rewardWeightMax, err := sdk.NewDecFromStr(args[3])
 			if err != nil {
 				return err
 			}
 
-			takeRate, err := sdk.NewDecFromStr(args[2])
+			takeRate, err := sdk.NewDecFromStr(args[4])
 			if err != nil {
 				return err
 			}
 
-			rewardChangeRate, err := sdk.NewDecFromStr(args[3])
+			rewardChangeRate, err := sdk.NewDecFromStr(args[5])
 			if err != nil {
 				return err
 			}
 
-			rewardChangeInterval, err := time.ParseDuration(args[4])
+			rewardChangeInterval, err := time.ParseDuration(args[6])
 			if err != nil {
 				return err
 			}
@@ -78,7 +80,7 @@ func CreateAlliance() *cobra.Command {
 			content := types.NewMsgCreateAllianceProposal(
 				title,
 				description,
-				args[0],
+				denom,
 				rewardWeight,
 				types.RewardWeightRange{
 					Min: rewardWeightMin,
@@ -134,6 +136,8 @@ func UpdateAlliance() *cobra.Command {
 				return err
 			}
 
+			denom := args[0]
+
 			rewardWeight, err := sdk.NewDecFromStr(args[1])
 			if err != nil {
 				return err
@@ -169,7 +173,7 @@ func UpdateAlliance() *cobra.Command {
 			content := types.NewMsgUpdateAllianceProposal(
 				title,
 				description,
-				args[0],
+				denom,
 				rewardWeight,
 				takeRate,
 				rewardChangeRate,
@@ -223,6 +227,8 @@ func DeleteAlliance() *cobra.Command {
 
 			from := clientCtx.GetFromAddress()
 
+			denom := args[0]
+
 			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
 			if err != nil {
 				return err
@@ -236,7 +242,7 @@ func DeleteAlliance() *cobra.Command {
 			content := types.NewMsgDeleteAllianceProposal(
 				title,
 				description,
-				args[0],
+				denom,
 			)
 
 			err = content.ValidateBasic()
