@@ -247,11 +247,11 @@ func TestClaimRewards(t *testing.T) {
 	indices := types.NewRewardHistories(val1.GlobalRewardHistory)
 
 	// Check that all delegations have updated local indices
-	delegation, found := app.AllianceKeeper.GetDelegation(ctx, user1, val1, AllianceDenom)
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, user1, valAddr1, AllianceDenom)
 	require.True(t, found)
 	require.Equal(t, indices, types.NewRewardHistories(delegation.RewardHistory))
 
-	delegation, found = app.AllianceKeeper.GetDelegation(ctx, user2, val1, AllianceDenomTwo)
+	delegation, found = app.AllianceKeeper.GetDelegation(ctx, user2, valAddr1, AllianceDenomTwo)
 	require.True(t, found)
 	require.Equal(t, indices, types.NewRewardHistories(delegation.RewardHistory))
 }

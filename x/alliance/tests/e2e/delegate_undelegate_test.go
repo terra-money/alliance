@@ -54,13 +54,13 @@ func TestDelegateThenTakeRateThenUndelegate(t *testing.T) {
 
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, "test")
 
-	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], val0, "test")
+	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], val0.GetOperator(), "test")
 	require.True(t, found)
 	tokens := types.GetDelegationTokens(del0, val0, asset)
 	_, err = app.AllianceKeeper.Undelegate(ctx, dels[0], val0, tokens)
 	require.NoError(t, err)
 
-	_, found = app.AllianceKeeper.GetDelegation(ctx, dels[0], val0, "test")
+	_, found = app.AllianceKeeper.GetDelegation(ctx, dels[0], val0.GetOperator(), "test")
 	require.False(t, found)
 
 	val0, err = app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
@@ -112,13 +112,13 @@ func TestDelegateThenTakeRateThenRedelegate(t *testing.T) {
 
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, "test")
 
-	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], val0, "test")
+	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], val0.GetOperator(), "test")
 	require.True(t, found)
 	tokens := types.GetDelegationTokens(del0, val0, asset)
 	_, err = app.AllianceKeeper.Redelegate(ctx, dels[0], val0, val1, tokens)
 	require.NoError(t, err)
 
-	_, found = app.AllianceKeeper.GetDelegation(ctx, dels[0], val0, "test")
+	_, found = app.AllianceKeeper.GetDelegation(ctx, dels[0], val0.GetOperator(), "test")
 	require.False(t, found)
 
 	val0, err = app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
@@ -198,7 +198,7 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	// User should have everything withdrawn
-	_, found := app.AllianceKeeper.GetDelegation(ctx, user1, val1, allianceAsset2)
+	_, found := app.AllianceKeeper.GetDelegation(ctx, user1, val1.GetOperator(), allianceAsset2)
 	require.False(t, found)
 
 	// Delegate again
@@ -230,7 +230,7 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	// User should have everything withdrawn
-	_, found = app.AllianceKeeper.GetDelegation(ctx, user1, val1, allianceAsset2)
+	_, found = app.AllianceKeeper.GetDelegation(ctx, user1, val1.GetOperator(), allianceAsset2)
 	require.False(t, found)
 
 	res, err = queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{

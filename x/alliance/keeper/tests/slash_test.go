@@ -255,7 +255,7 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	require.Equal(t, sdk.NewInt(13_000_000), app.StakingKeeper.TotalBondedTokens(ctx))
 
 	// Expect that delegation has increased
-	delegation, _ := app.AllianceKeeper.GetDelegation(ctx, user1, val2, AllianceDenom)
+	delegation, _ := app.AllianceKeeper.GetDelegation(ctx, user1, valAddr2, AllianceDenom)
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	tokens := types.GetDelegationTokens(delegation, val2, asset)
 	require.Equal(t, sdk.NewInt(20_000_000), tokens.Amount)
@@ -268,7 +268,7 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
 
 	// Expect that delegation decreased
-	delegation, _ = app.AllianceKeeper.GetDelegation(ctx, user1, val2, AllianceDenom)
+	delegation, _ = app.AllianceKeeper.GetDelegation(ctx, user1, valAddr2, AllianceDenom)
 	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	tokens = types.GetDelegationTokens(delegation, val2, asset)
 	require.Greater(t, sdk.NewInt(20_000_000).Int64(), tokens.Amount.Int64())
@@ -282,7 +282,7 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
 
 	// Expect that delegation stayed the same
-	delegation, _ = app.AllianceKeeper.GetDelegation(ctx, user1, val2, AllianceDenom)
+	delegation, _ = app.AllianceKeeper.GetDelegation(ctx, user1, valAddr2, AllianceDenom)
 	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	require.Equal(t, tokens.Amount.Int64(), types.GetDelegationTokens(delegation, val2, asset).Amount.Int64())
 

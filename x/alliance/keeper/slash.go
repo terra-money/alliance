@@ -79,7 +79,7 @@ func (k Keeper) SlashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, frac
 			return err
 		}
 
-		delegation, found := k.GetDelegation(ctx, delAddr, dstVal, redelegation.Balance.Denom)
+		delegation, found := k.GetDelegation(ctx, delAddr, dstVal.GetOperator(), redelegation.Balance.Denom)
 		if !found {
 			continue
 		}
