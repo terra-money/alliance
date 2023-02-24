@@ -69,7 +69,7 @@ func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsse
 	if !newAsset.RewardChangeRate.Equal(asset.RewardChangeRate) || newAsset.RewardChangeInterval != asset.RewardChangeInterval {
 		// And if there were no reward changes scheduled previously, start the counter from now
 		if asset.RewardChangeRate.Equal(sdk.OneDec()) || asset.RewardChangeInterval == 0 {
-			asset.LastRewardChangeTime = ctx.BlockTime()
+			newAsset.LastRewardChangeTime = ctx.BlockTime()
 		}
 		// Else do nothing since there is already a change that was scheduled.
 		// The next trigger will use the new reward change and reward interval
@@ -363,7 +363,7 @@ func (k Keeper) IterateAllWeightChangeSnapshot(ctx sdk.Context, cb func(denom st
 	}
 }
 
-func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.AllianceAsset) {
+func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.AllianceAsset) error {
 	for _, asset := range assets {
 		// If no reward changes are required, skip
 		if asset.RewardChangeInterval == 0 || asset.RewardChangeRate.Equal(sdk.OneDec()) {
@@ -387,6 +387,10 @@ func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.Alliance
 		}
 		asset.LastRewardChangeTime = asset.LastRewardChangeTime.Add(asset.RewardChangeInterval * time.Duration(intervalsSinceLastClaim))
 		k.QueueAssetRebalanceEvent(ctx)
-		k.UpdateAllianceAsset(ctx, *asset) //nolint:errcheck
+		err := k.UpdateAllianceAsset(ctx, *asset)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }

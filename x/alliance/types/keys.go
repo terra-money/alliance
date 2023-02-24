@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	// ModuleName is the name of the staking module
+	// ModuleName is the name of the alliance module
 	ModuleName = "alliance"
 
 	// RewardsPoolName is the name of the module account for rewards
@@ -17,10 +17,10 @@ const (
 	// StoreKey is the string store representation
 	StoreKey = ModuleName
 
-	// QuerierRoute is the querier route for the staking module
+	// QuerierRoute is the querier route for the alliance module
 	QuerierRoute = ModuleName
 
-	// RouterKey is the msg router key for the staking module
+	// RouterKey is the msg router key for the alliance module
 	RouterKey = ModuleName
 
 	// MemStoreKey defines the in-memory store key
