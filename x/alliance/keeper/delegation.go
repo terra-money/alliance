@@ -55,7 +55,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 	)
 	k.QueueAssetRebalanceEvent(ctx)
 
-	ctx.EventManager().EmitTypedEvent(
+	_ = ctx.EventManager().EmitTypedEvent(
 		&types.DelegateAllianceEvent{
 			AllianceSender: delAddr.String(),
 			Validator:      validator.OperatorAddress,
@@ -145,7 +145,7 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 
 	k.QueueAssetRebalanceEvent(ctx)
 
-	ctx.EventManager().EmitTypedEvent(
+	_ = ctx.EventManager().EmitTypedEvent(
 		&types.RedelegateAllianceEvent{
 			AllianceSender:       delAddr.String(),
 			SourceValidator:      srcVal.OperatorAddress,
@@ -216,7 +216,7 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 	completionTime := k.queueUndelegation(ctx, delAddr, validator.GetOperator(), coin)
 	k.QueueAssetRebalanceEvent(ctx)
 
-	ctx.EventManager().EmitTypedEvent(
+	_ = ctx.EventManager().EmitTypedEvent(
 		&types.UndelegateAllianceEvent{
 			AllianceSender: delAddr.String(),
 			Validator:      validator.OperatorAddress,

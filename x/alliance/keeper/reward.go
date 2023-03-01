@@ -68,7 +68,7 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 		return nil, err
 	}
 
-	ctx.EventManager().EmitTypedEvent(
+	_ = ctx.EventManager().EmitTypedEvent(
 		&types.ClaimAllianceRewardsEvent{
 			AllianceSender: delAddr.String(),
 			Validator:      val.OperatorAddress,
