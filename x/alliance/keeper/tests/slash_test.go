@@ -429,3 +429,46 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	_, stop := alliance.RunAllInvariants(ctx, app.AllianceKeeper)
 	require.False(t, stop)
 }
+
+func TestSlashingIncorrectAmount(t *testing.T) {
+	// SETUP
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			{
+				Denom:        AllianceDenom,
+				RewardWeight: sdk.NewDec(2),
+				TakeRate:     sdk.NewDec(0),
+				TotalTokens:  sdk.ZeroInt(),
+			},
+		},
+	})
+
+	// Create and register the validator
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
+		sdk.NewCoin(AllianceDenom, sdk.NewInt(20_000_000)),
+	))
+	pks := test_helpers.CreateTestPubKeys(2)
+	valAddr1 := sdk.ValAddress(addrs[0])
+
+	_val1 := teststaking.NewValidator(t, valAddr1, pks[0])
+	_val1.Commission = stakingtypes.Commission{
+		CommissionRates: stakingtypes.CommissionRates{
+			Rate:          sdk.NewDec(0),
+			MaxRate:       sdk.NewDec(0),
+			MaxChangeRate: sdk.NewDec(0),
+		},
+		UpdateTime: time.Now(),
+	}
+	test_helpers.RegisterNewValidator(t, app, ctx, _val1)
+
+	// Slash validator with incorrect amounts
+	err := app.AllianceKeeper.SlashValidator(ctx, sdk.ValAddress(addrs[0]), sdk.NewDec(2))
+	require.EqualErrorf(t, err, "slashed fraction must be greater than 0 and less than or equal to 1: 2.000000000000000000", "")
+
+	err = app.AllianceKeeper.SlashValidator(ctx, sdk.ValAddress(addrs[0]), sdk.NewDec(-1))
+	require.EqualErrorf(t, err, "slashed fraction must be greater than 0 and less than or equal to 1: -1.000000000000000000", "")
+}

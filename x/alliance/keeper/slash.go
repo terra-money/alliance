@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -12,6 +14,11 @@ import (
 // On top of slashing currently bonded delegations, we also slash re-delegations and un-delegations
 // that are still in the progress of unbonding
 func (k Keeper) SlashValidator(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+	// Slashing must be checked otherwise we can end up slashing incorrect amounts
+	if fraction.LTE(sdk.ZeroDec()) || fraction.GT(sdk.OneDec()) {
+		return fmt.Errorf("slashed fraction must be greater than 0 and less than or equal to 1: %d", fraction)
+	}
+
 	val, err := k.GetAllianceValidator(ctx, valAddr)
 	if err != nil {
 		return err
@@ -32,19 +39,19 @@ func (k Keeper) SlashValidator(ctx sdk.Context, valAddr sdk.ValAddress, fraction
 	val.ValidatorShares = slashedValidatorShares
 	k.SetValidator(ctx, val)
 
-	err = k.SlashRedelegations(ctx, valAddr, fraction)
+	err = k.slashRedelegations(ctx, valAddr, fraction)
 	if err != nil {
 		return err
 	}
 
-	err = k.SlashUndelegations(ctx, valAddr, fraction)
+	err = k.slashUndelegations(ctx, valAddr, fraction)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (k Keeper) SlashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+func (k Keeper) slashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
 	store := ctx.KVStore(k.storeKey)
 	// Slash all immature re-delegations
 	redelegationIterator := k.IterateRedelegationsBySrcValidator(ctx, valAddr)
@@ -104,7 +111,7 @@ func (k Keeper) SlashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, frac
 	return nil
 }
 
-func (k Keeper) SlashUndelegations(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+func (k Keeper) slashUndelegations(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
 	store := ctx.KVStore(k.storeKey)
 	// Slash all immature re-delegations
 	undelegationIterator := k.IterateUndelegationsBySrcValidator(ctx, valAddr)
