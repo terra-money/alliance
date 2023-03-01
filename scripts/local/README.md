@@ -1,13 +1,10 @@
-# Scripts
+# Example Scripts
 
-Folder containing some scripts to test or/and demo the functionality. Before executing any script you must have the `allianced` installed.
+The following scripts are prepared to interact with the alliance localnet. To start the localnet run `make localnet-start` inside the alliance root folder. 
 
-1. **init.sh** create the chain with the initial values
-2. **start.sh** start the chain
-3. **gov.sh** submit the gov.json governance proposal, votes on favor and query the created alliance
-4. **delegate.sh** delegate to the previously create alliance and query the modified alliance
-5. **rewards.sh** claim rewards and query information about the evidences of the process
-6. **undelegate.sh** undelegante the tokens from the alliance and query the evidences
-7. **gov-del.sh** with the file gov-delete.json deletes the alliance created in third step.
+> If you are using linux take in consideration to change the `.testnets` folder owner to your host machine user by using `sudo chown [HOST_USER_NAME]:[HOST_USER_NAME] -R .testnets/` because the folder may be owned by the root user.
 
-> This scripts must be executed in the specified order since they have dependencies on each other.
+1. Create Alliance: create an alliance with the default token `stake` and vote for the proposal to pass
+2. Delegate: delegate to the first validator
+3. Undelegate: undelegate from the first validator
+4. Redelegate: redelegate from the first validator to the second validator
