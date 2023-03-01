@@ -169,7 +169,7 @@ func (k Keeper) totalAssetWeight(ctx sdk.Context, val types.AllianceValidator) s
 		if !asset.RewardsStarted(ctx.BlockTime()) {
 			continue
 		}
-		totalValTokens := val.TotalDecTokensWithAsset(asset)
+		totalValTokens := val.TotalTokensWithAsset(asset)
 		total = total.Add(asset.RewardWeight.Mul(totalValTokens))
 	}
 	return total
