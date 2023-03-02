@@ -105,6 +105,8 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Del
 func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistories types.RewardHistories, asset types.AllianceAsset, rewardWeight sdk.Dec, delegation types.Delegation, validator types.AllianceValidator) (sdk.Coins, types.RewardHistories) {
 	// Go through each reward denom and accumulate rewards
 	var rewards sdk.Coins
+
+	delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, validator, asset).Amount)
 	for _, history := range latestRewardHistories {
 		rewardHistory, found := rewardHistories.GetIndexByDenom(history.Denom)
 		if !found {
@@ -114,8 +116,6 @@ func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistor
 		if rewardHistory.Index.GTE(history.Index) {
 			continue
 		}
-		delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, validator, asset).Amount)
-
 		claimWeight := delegationTokens.Mul(rewardWeight)
 		totalClaimable := (history.Index.Sub(rewardHistory.Index)).Mul(claimWeight)
 		rewardHistory.Index = history.Index
