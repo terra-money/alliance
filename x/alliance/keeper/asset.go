@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -235,7 +236,15 @@ func (k Keeper) GetAssetByDenom(ctx sdk.Context, denom string) (asset types.Alli
 	return asset, true
 }
 
-func (k Keeper) DeleteAsset(ctx sdk.Context, denom string) {
+func (k Keeper) DeleteAsset(ctx sdk.Context, asset types.AllianceAsset) error {
+	if asset.TotalTokens.GT(sdk.ZeroInt()) {
+		return fmt.Errorf("cannot delete alliance assets that still have tokens")
+	}
+	k.deleteAsset(ctx, asset.Denom)
+	return nil
+}
+
+func (k Keeper) deleteAsset(ctx sdk.Context, denom string) {
 	store := ctx.KVStore(k.storeKey)
 	assetKey := types.GetAssetKey(denom)
 	store.Delete(assetKey)

@@ -601,6 +601,11 @@ func (k Keeper) GetAllianceBondedAmount(ctx sdk.Context, delegator sdk.AccAddres
 // When an asset has no more tokens being delegated, go through all validators and set
 // validator shares to zero
 func (k Keeper) ResetAssetAndValidators(ctx sdk.Context, asset types.AllianceAsset) {
+	// When there are no more tokens recorded in the asset, clear all share records that might remain
+	// from rounding errors to prevent dust amounts from staying in the stores
+	if !asset.TotalTokens.IsZero() {
+		return
+	}
 	k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) (stop bool) {
 		updatedShares := sdk.NewDecCoins()
 		for _, share := range info.ValidatorShares {
@@ -644,9 +649,5 @@ func (k Keeper) ClearDustDelegation(ctx sdk.Context, delAddr sdk.AccAddress, val
 	validator.ReduceShares(sdk.NewDecCoins(delegatorSharesToRemove), sdk.NewDecCoins(validatorSharesToRemove))
 	k.SetValidator(ctx, validator)
 
-	// When there are no more tokens recorded in the asset, clear all share records that might remain
-	// from rounding errors to prevent dust amounts from staying in the stores
-	if asset.TotalTokens.IsZero() {
-		k.ResetAssetAndValidators(ctx, asset)
-	}
+	k.ResetAssetAndValidators(ctx, asset)
 }
