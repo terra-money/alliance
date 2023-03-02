@@ -41,7 +41,7 @@ func ConvertNewShareToDecToken(totalTokens sdk.Dec, totalShares sdk.Dec, shares 
 }
 
 func GetDelegationTokens(del Delegation, val AllianceValidator, asset AllianceAsset) sdk.Coin {
-	valTokens := val.TotalDecTokensWithAsset(asset)
+	valTokens := val.TotalTokensWithAsset(asset)
 	totalDelegationShares := val.TotalDelegationSharesWithDenom(asset.Denom)
 	delTokens := ConvertNewShareToDecToken(valTokens, totalDelegationShares, del.Shares)
 
@@ -52,7 +52,7 @@ func GetDelegationTokens(del Delegation, val AllianceValidator, asset AllianceAs
 }
 
 func GetDelegationTokensWithShares(delegatorShares sdk.Dec, val AllianceValidator, asset AllianceAsset) sdk.Coin {
-	valTokens := val.TotalDecTokensWithAsset(asset)
+	valTokens := val.TotalTokensWithAsset(asset)
 	totalDelegationShares := val.TotalDelegationSharesWithDenom(asset.Denom)
 	delTokens := ConvertNewShareToDecToken(valTokens, totalDelegationShares, delegatorShares)
 
