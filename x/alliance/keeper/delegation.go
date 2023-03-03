@@ -55,15 +55,15 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 	)
 	k.QueueAssetRebalanceEvent(ctx)
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeDelegate,
-			sdk.NewAttribute(types.AttributeKeySender, delAddr.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, validator.OperatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, coin.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyNewShares, newValidatorShares.String()),
-		),
-	})
+	_ = ctx.EventManager().EmitTypedEvent(
+		&types.DelegateAllianceEvent{
+			AllianceSender: delAddr.String(),
+			Validator:      validator.OperatorAddress,
+			Coin:           coin,
+			NewShares:      newValidatorShares,
+		},
+	)
+
 	return &newValidatorShares, nil
 }
 
@@ -145,16 +145,15 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 
 	k.QueueAssetRebalanceEvent(ctx)
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeRedelegate,
-			sdk.NewAttribute(types.AttributeKeySender, delAddr.String()),
-			sdk.NewAttribute(types.AttributeKeySrcValidator, srcVal.OperatorAddress),
-			sdk.NewAttribute(types.AttributeKeyDstValidator, dstVal.OperatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, coin.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-		),
-	})
+	_ = ctx.EventManager().EmitTypedEvent(
+		&types.RedelegateAllianceEvent{
+			AllianceSender:       delAddr.String(),
+			SourceValidator:      srcVal.OperatorAddress,
+			DestinationValidator: dstVal.OperatorAddress,
+			Coin:                 coin,
+			CompletionTime:       completionTime,
+		},
+	)
 
 	return &completionTime, nil
 }
@@ -217,15 +216,15 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, validator ty
 	completionTime := k.queueUndelegation(ctx, delAddr, validator.GetOperator(), coin)
 	k.QueueAssetRebalanceEvent(ctx)
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeUndelegate,
-			sdk.NewAttribute(types.AttributeKeySender, delAddr.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, validator.OperatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, coin.Amount.String()),
-			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-		),
-	})
+	_ = ctx.EventManager().EmitTypedEvent(
+		&types.UndelegateAllianceEvent{
+			AllianceSender: delAddr.String(),
+			Validator:      validator.OperatorAddress,
+			Coin:           coin,
+			CompletionTime: completionTime,
+		},
+	)
+
 	return &completionTime, nil
 }
 

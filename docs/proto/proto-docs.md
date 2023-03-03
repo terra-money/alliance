@@ -21,6 +21,12 @@
     - [Redelegation](#alliance.alliance.Redelegation)
     - [Undelegation](#alliance.alliance.Undelegation)
   
+- [alliance/events.proto](#alliance/events.proto)
+    - [ClaimAllianceRewardsEvent](#alliance.alliance.ClaimAllianceRewardsEvent)
+    - [DelegateAllianceEvent](#alliance.alliance.DelegateAllianceEvent)
+    - [RedelegateAllianceEvent](#alliance.alliance.RedelegateAllianceEvent)
+    - [UndelegateAllianceEvent](#alliance.alliance.UndelegateAllianceEvent)
+  
 - [alliance/genesis.proto](#alliance/genesis.proto)
     - [GenesisState](#alliance.alliance.GenesisState)
     - [RedelegationState](#alliance.alliance.RedelegationState)
@@ -300,6 +306,94 @@ key: denom value: AllianceAsset
 | `delegator_address` | [string](#string) |  |  |
 | `validator_address` | [string](#string) |  |  |
 | `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="alliance/events.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## alliance/events.proto
+
+
+
+<a name="alliance.alliance.ClaimAllianceRewardsEvent"></a>
+
+### ClaimAllianceRewardsEvent
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `allianceSender` | [string](#string) |  |  |
+| `validator` | [string](#string) |  |  |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="alliance.alliance.DelegateAllianceEvent"></a>
+
+### DelegateAllianceEvent
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `allianceSender` | [string](#string) |  |  |
+| `validator` | [string](#string) |  |  |
+| `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `newShares` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="alliance.alliance.RedelegateAllianceEvent"></a>
+
+### RedelegateAllianceEvent
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `allianceSender` | [string](#string) |  |  |
+| `sourceValidator` | [string](#string) |  |  |
+| `destinationValidator` | [string](#string) |  |  |
+| `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `completionTime` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+
+
+
+
+
+
+<a name="alliance.alliance.UndelegateAllianceEvent"></a>
+
+### UndelegateAllianceEvent
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `allianceSender` | [string](#string) |  |  |
+| `validator` | [string](#string) |  |  |
+| `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `completionTime` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 
 
 
