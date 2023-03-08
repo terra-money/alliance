@@ -15,8 +15,8 @@ import (
 
 func CreateAlliance() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-alliance denom rewards-weight take-rate reward-change-rate reward-change-interval",
-		Args:  cobra.ExactArgs(5),
+		Use:   "create-alliance denom rewards-weight rewards-weight-min rewards-weight-max take-rate reward-change-rate reward-change-interval",
+		Args:  cobra.ExactArgs(7),
 		Short: "Create an alliance with the specified parameters",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -34,6 +34,16 @@ func CreateAlliance() *cobra.Command {
 			}
 
 			rewardWeight, err := sdk.NewDecFromStr(args[1])
+			if err != nil {
+				return err
+			}
+
+			rewardWeightMin, err := sdk.NewDecFromStr(args[1])
+			if err != nil {
+				return err
+			}
+
+			rewardWeightMax, err := sdk.NewDecFromStr(args[1])
 			if err != nil {
 				return err
 			}
@@ -70,6 +80,10 @@ func CreateAlliance() *cobra.Command {
 				description,
 				args[0],
 				rewardWeight,
+				types.RewardWeightRange{
+					Min: rewardWeightMin,
+					Max: rewardWeightMax,
+				},
 				takeRate,
 				rewardChangeRate,
 				rewardChangeInterval,

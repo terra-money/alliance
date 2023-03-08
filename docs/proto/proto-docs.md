@@ -11,6 +11,7 @@
 - [alliance/alliance.proto](#alliance/alliance.proto)
     - [AllianceAsset](#alliance.alliance.AllianceAsset)
     - [RewardWeightChangeSnapshot](#alliance.alliance.RewardWeightChangeSnapshot)
+    - [RewardWeightRange](#alliance.alliance.RewardWeightRange)
   
 - [alliance/delegations.proto](#alliance/delegations.proto)
     - [AllianceValidatorInfo](#alliance.alliance.AllianceValidatorInfo)
@@ -147,6 +148,7 @@ key: denom value: AllianceAsset
 | `reward_change_rate` | [string](#string) |  |  |
 | `reward_change_interval` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 | `last_reward_change_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+| `reward_weight_range` | [RewardWeightRange](#alliance.alliance.RewardWeightRange) |  | set a bound of weight range to limit how much reward weights can scale. |
 
 
 
@@ -163,6 +165,22 @@ key: denom value: AllianceAsset
 | ----- | ---- | ----- | ----------- |
 | `prev_reward_weight` | [string](#string) |  |  |
 | `reward_histories` | [RewardHistory](#alliance.alliance.RewardHistory) | repeated |  |
+
+
+
+
+
+
+<a name="alliance.alliance.RewardWeightRange"></a>
+
+### RewardWeightRange
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `min` | [string](#string) |  |  |
+| `max` | [string](#string) |  |  |
 
 
 
@@ -421,6 +439,7 @@ GenesisState defines the module's genesis state.
 | `take_rate` | [string](#string) |  | A positive take rate is used for liquid staking derivatives. It defines an annualized reward rate that will be redirected to the distribution rewards pool |
 | `reward_change_rate` | [string](#string) |  |  |
 | `reward_change_interval` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `reward_weight_range` | [RewardWeightRange](#alliance.alliance.RewardWeightRange) |  | set a bound of weight range to limit how much reward weights can scale. |
 
 
 
