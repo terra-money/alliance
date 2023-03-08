@@ -30,5 +30,3 @@ cd ..
 # move proto files to the right places
 cp -r github.com/terra-money/alliance/* ./
 rm -rf github.com
-
-go mod tidy

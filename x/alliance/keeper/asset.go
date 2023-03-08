@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -11,6 +12,23 @@ import (
 
 	"github.com/terra-money/alliance/x/alliance/types"
 )
+
+// InitializeAllianceAssets this hooks adds a reward change snapshot when time > asset.RewardStartTime
+// A reward change snapshot of 0 weight is added to signify that the asset did not accrue any rewards during the
+// warm up period so we can calculate the correct rewards when claiming
+func (k Keeper) InitializeAllianceAssets(ctx sdk.Context, assets []*types.AllianceAsset) {
+	for _, asset := range assets {
+		if asset.IsInitialized || !asset.RewardsStarted(ctx.BlockTime()) {
+			continue
+		}
+		asset.IsInitialized = true
+		k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) bool {
+			k.CreateInitialRewardWeightChangeSnapshot(ctx, asset.Denom, valAddr, info)
+			return false
+		})
+		k.SetAsset(ctx, *asset)
+	}
+}
 
 // UpdateAllianceAsset updates the alliance asset with new params
 // Also saves a snapshot whenever rewards weight changes to make sure delegation reward calculation has reference to
@@ -29,7 +47,8 @@ func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsse
 	// Only add a snapshot if reward weight changes
 	if !newAsset.RewardWeight.Equal(asset.RewardWeight) {
 		k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) bool {
-			validator, err := k.GetAllianceValidator(ctx, valAddr)
+			var validator types.AllianceValidator
+			validator, err = k.GetAllianceValidator(ctx, valAddr)
 			if err != nil {
 				return true
 			}
@@ -51,7 +70,7 @@ func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsse
 	if !newAsset.RewardChangeRate.Equal(asset.RewardChangeRate) || newAsset.RewardChangeInterval != asset.RewardChangeInterval {
 		// And if there were no reward changes scheduled previously, start the counter from now
 		if asset.RewardChangeRate.Equal(sdk.OneDec()) || asset.RewardChangeInterval == 0 {
-			asset.LastRewardChangeTime = ctx.BlockTime()
+			newAsset.LastRewardChangeTime = ctx.BlockTime()
 		}
 		// Else do nothing since there is already a change that was scheduled.
 		// The next trigger will use the new reward change and reward interval
@@ -120,7 +139,7 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 		for _, asset := range assets {
 			// Ignores assets that were recently added to prevent a small set of stakers from owning too much of the
 			// voting power at the start. Uses the asset.RewardStartTime to determine when an asset is activated
-			if ctx.BlockTime().Before(asset.RewardStartTime) {
+			if !asset.RewardsStarted(ctx.BlockTime()) {
 				// Queue a rebalancing event so that we keep checking if the asset rewards has started in the next block
 				k.QueueAssetRebalanceEvent(ctx)
 				continue
@@ -146,6 +165,10 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 			if err != nil {
 				return err
 			}
+			_, err = k.ClaimValidatorRewards(ctx, validator)
+			if err != nil {
+				return err
+			}
 			_, err = k.stakingKeeper.Delegate(ctx, moduleAddr, bondAmount, stakingtypes.Unbonded, *validator.Validator, true)
 			if err != nil {
 				return err
@@ -158,6 +181,10 @@ func (k Keeper) RebalanceBondTokenWeights(ctx sdk.Context, assets []*types.Allia
 				continue
 			}
 			sharesToUnbond, err := k.stakingKeeper.ValidateUnbondAmount(ctx, moduleAddr, validator.GetOperator(), unbondAmount)
+			if err != nil {
+				return err
+			}
+			_, err = k.ClaimValidatorRewards(ctx, validator)
 			if err != nil {
 				return err
 			}
@@ -209,7 +236,15 @@ func (k Keeper) GetAssetByDenom(ctx sdk.Context, denom string) (asset types.Alli
 	return asset, true
 }
 
-func (k Keeper) DeleteAsset(ctx sdk.Context, denom string) {
+func (k Keeper) DeleteAsset(ctx sdk.Context, asset types.AllianceAsset) error {
+	if asset.TotalTokens.GT(sdk.ZeroInt()) {
+		return fmt.Errorf("cannot delete alliance assets that still have tokens")
+	}
+	k.deleteAsset(ctx, asset.Denom)
+	return nil
+}
+
+func (k Keeper) deleteAsset(ctx sdk.Context, denom string) {
 	store := ctx.KVStore(k.storeKey)
 	assetKey := types.GetAssetKey(denom)
 	store.Delete(assetKey)
@@ -247,12 +282,23 @@ func (k Keeper) DeductAssetsHook(ctx sdk.Context, assets []*types.AllianceAsset)
 // DeductAssetsWithTakeRate Deducts an alliance asset using the take_rate
 // The deducted asset is distributed to the fee_collector module account to be redistributed to stakers
 func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, assets []*types.AllianceAsset) (sdk.Coins, error) {
+	var coins sdk.Coins
+
+	// If start time has not been set, set the start time and do nothing for this block
+	if lastClaim.Equal(time.Time{}) {
+		k.SetLastRewardClaimTime(ctx, ctx.BlockTime())
+		return coins, nil
+	}
+
 	rewardClaimInterval := k.RewardClaimInterval(ctx)
 	durationSinceLastClaim := ctx.BlockTime().Sub(lastClaim)
 	intervalsSinceLastClaim := uint64(durationSinceLastClaim / rewardClaimInterval)
-	var coins sdk.Coins
+
+	assetsWithPositiveTakeRate := 0
+
 	for _, asset := range assets {
-		if asset.TotalTokens.IsPositive() && asset.TakeRate.IsPositive() {
+		if asset.TotalTokens.IsPositive() && asset.TakeRate.IsPositive() && asset.RewardsStarted(ctx.BlockTime()) {
+			assetsWithPositiveTakeRate++
 			// take rate must be < 1 so multiple is also < 1
 			multiplier := sdk.OneDec().Sub(asset.TakeRate).Power(intervalsSinceLastClaim)
 			oldAmount := asset.TotalTokens
@@ -266,6 +312,12 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 			coins = coins.Add(sdk.NewCoin(asset.Denom, deductedAmount))
 			k.SetAsset(ctx, *asset)
 		}
+	}
+
+	// If there are no assets with positive take rate, continue to update last reward claim time and return
+	if assetsWithPositiveTakeRate == 0 {
+		k.SetLastRewardClaimTime(ctx, ctx.BlockTime())
+		return coins, nil
 	}
 
 	if !coins.Empty() && !coins.IsZero() {
@@ -282,6 +334,14 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 func (k Keeper) SetRewardWeightChangeSnapshot(ctx sdk.Context, asset types.AllianceAsset, val types.AllianceValidator) {
 	snapshot := types.NewRewardWeightChangeSnapshot(asset, val)
 	k.setRewardWeightChangeSnapshot(ctx, asset.Denom, val.GetOperator(), uint64(ctx.BlockHeight()), snapshot)
+}
+
+func (k Keeper) CreateInitialRewardWeightChangeSnapshot(ctx sdk.Context, denom string, valAddr sdk.ValAddress, info types.AllianceValidatorInfo) {
+	snapshot := types.RewardWeightChangeSnapshot{
+		PrevRewardWeight: sdk.ZeroDec(),
+		RewardHistories:  info.GlobalRewardHistory,
+	}
+	k.setRewardWeightChangeSnapshot(ctx, denom, valAddr, uint64(ctx.BlockHeight()), snapshot)
 }
 
 func (k Keeper) setRewardWeightChangeSnapshot(ctx sdk.Context, denom string, valAddr sdk.ValAddress, height uint64, snapshot types.RewardWeightChangeSnapshot) {
@@ -312,7 +372,7 @@ func (k Keeper) IterateAllWeightChangeSnapshot(ctx sdk.Context, cb func(denom st
 	}
 }
 
-func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.AllianceAsset) {
+func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.AllianceAsset) error {
 	for _, asset := range assets {
 		// If no reward changes are required, skip
 		if asset.RewardChangeInterval == 0 || asset.RewardChangeRate.Equal(sdk.OneDec()) {
@@ -336,6 +396,10 @@ func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.Alliance
 		}
 		asset.LastRewardChangeTime = asset.LastRewardChangeTime.Add(asset.RewardChangeInterval * time.Duration(intervalsSinceLastClaim))
 		k.QueueAssetRebalanceEvent(ctx)
-		k.UpdateAllianceAsset(ctx, *asset) //nolint:errcheck
+		err := k.UpdateAllianceAsset(ctx, *asset)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }

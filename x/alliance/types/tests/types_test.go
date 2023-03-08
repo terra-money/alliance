@@ -105,3 +105,45 @@ func TestProposalsContent(t *testing.T) {
 		})
 	}
 }
+
+func TestInvalidProposalsContent(t *testing.T) {
+	byteArray := []byte{'a', 'l', 'l', 'i', 'a', 'n', 'c', 'e', 0, '2'}
+	invalidDenom := string(byteArray)
+	cases := map[string]struct {
+		p     govtypes.Content
+		title string
+		desc  string
+		typ   string
+		str   string
+	}{
+		"msg_create_alliance_proposal": {
+			p:     types.NewMsgCreateAllianceProposal("Alliance1", "Alliance with 1", "ibc/denom1", sdk.NewDec(1), types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)}, sdk.NewDec(1), sdk.NewDec(1), -time.Second),
+			title: "Alliance1",
+			desc:  "Alliance with 1",
+			typ:   "msg_create_alliance_proposal",
+		},
+		"msg_create_alliance_proposal_invalid_denom": {
+			p:     types.NewMsgCreateAllianceProposal("Alliance1", "Alliance with 1", invalidDenom, sdk.NewDec(1), types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)}, sdk.NewDec(1), sdk.NewDec(1), time.Second),
+			title: "Alliance1",
+			desc:  "Alliance with 1",
+			typ:   "msg_create_alliance_proposal",
+		},
+		"msg_update_alliance_proposal": {
+			p:     types.NewMsgUpdateAllianceProposal("Alliance2", "Alliance with 2", "ibc/denom2", sdk.NewDec(2), sdk.NewDec(2), sdk.NewDec(2), -time.Hour),
+			title: "Alliance2",
+			desc:  "Alliance with 2",
+			typ:   "msg_update_alliance_proposal",
+		},
+	}
+
+	cdc := codec.NewLegacyAmino()
+	govtypes.RegisterLegacyAminoCodec(cdc)
+	types.RegisterLegacyAminoCodec(cdc)
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			err := tc.p.ValidateBasic()
+			require.Error(t, err)
+		})
+	}
+}

@@ -86,7 +86,7 @@ func TestDelegationWithASingleAsset(t *testing.T) {
 	}, newDelegation)
 
 	// Check delegation in alliance module
-	allianceDelegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, val, AllianceDenom)
+	allianceDelegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, valAddr, AllianceDenom)
 	require.True(t, found)
 	require.Equal(t, types.Delegation{
 		DelegatorAddress: delAddr.String(),
@@ -120,7 +120,7 @@ func TestDelegationWithASingleAsset(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check delegation in alliance module
-	allianceDelegation, found = app.AllianceKeeper.GetDelegation(ctx, delAddr, val, AllianceDenom)
+	allianceDelegation, found = app.AllianceKeeper.GetDelegation(ctx, delAddr, valAddr, AllianceDenom)
 	require.True(t, found)
 	require.Equal(t, types.Delegation{
 		DelegatorAddress: delAddr.String(),
@@ -333,9 +333,9 @@ func TestSuccessfulRedelegation(t *testing.T) {
 	}
 
 	// Check if the delegation objects are correct
-	_, found := app.AllianceKeeper.GetDelegation(ctx, delAddr1, val1, AllianceDenom)
+	_, found := app.AllianceKeeper.GetDelegation(ctx, delAddr1, valAddr1, AllianceDenom)
 	require.False(t, found)
-	dstDelegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr1, val2, AllianceDenom)
+	dstDelegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr1, valAddr2, AllianceDenom)
 	require.Equal(t, types.Delegation{
 		DelegatorAddress: delAddr1.String(),
 		ValidatorAddress: val2.GetOperator().String(),
@@ -684,8 +684,10 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	app, ctx := createTestContext(t)
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	params := types.DefaultParams()
+	params.LastTakeRateClaimTime = startTime
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: params,
 		Assets: []types.AllianceAsset{
 			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
 			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.MustNewDecFromStr("0.5"), ctx.BlockTime()),
@@ -776,7 +778,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	require.NoError(t, err)
 
 	// User should have everything withdrawn
-	_, found := app.AllianceKeeper.GetDelegation(ctx, user1, val1, AllianceDenomTwo)
+	_, found := app.AllianceKeeper.GetDelegation(ctx, user1, valAddr1, AllianceDenomTwo)
 	require.False(t, found)
 
 	// Delegate again
@@ -808,7 +810,7 @@ func TestUndelegateAfterClaimingTakeRate(t *testing.T) {
 	require.NoError(t, err)
 
 	// User should have everything withdrawn
-	_, found = app.AllianceKeeper.GetDelegation(ctx, user1, val1, AllianceDenomTwo)
+	_, found = app.AllianceKeeper.GetDelegation(ctx, user1, valAddr1, AllianceDenomTwo)
 	require.False(t, found)
 
 	res, err = queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{

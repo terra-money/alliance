@@ -103,7 +103,10 @@ func TestRunBenchmarks(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+		err = app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+		if err != nil {
+			panic(err)
+		}
 		err = app.AllianceKeeper.RebalanceHook(ctx, assets)
 		if err != nil {
 			panic(err)
@@ -173,7 +176,7 @@ func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, a
 	}
 	dstValidator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, dstValAddr)
 
-	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, srcValidator, asset.Denom)
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, srcValidator.GetOperator(), asset.Denom)
 	if !found {
 		return
 	}
@@ -204,7 +207,7 @@ func undelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {
 	validator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, delegation.Denom)
 
-	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, validator, asset.Denom)
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, validator.GetOperator(), asset.Denom)
 	if !found {
 		return
 	}
@@ -232,7 +235,7 @@ func claimRewardsOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand)
 	valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 	validator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 
-	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, validator, delegation.Denom)
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, validator.GetOperator(), delegation.Denom)
 	if !found {
 		return
 	}

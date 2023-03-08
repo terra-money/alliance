@@ -143,3 +143,18 @@ func TestExportAndImportGenesis(t *testing.T) {
 		iter2.Next()
 	}
 }
+
+func TestGenesisLastRewardClaimTime(t *testing.T) {
+	app, ctx := createTestContext(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(1)
+	params := types.DefaultParams()
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: params,
+		Assets: []types.AllianceAsset{},
+	})
+
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	_, err := app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	require.NoError(t, err)
+	require.Equal(t, app.AllianceKeeper.LastRewardClaimTime(ctx), ctx.BlockTime())
+}

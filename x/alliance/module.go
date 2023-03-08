@@ -17,6 +17,7 @@ import (
 
 	"github.com/terra-money/alliance/x/alliance/client/cli"
 	"github.com/terra-money/alliance/x/alliance/keeper"
+	migrationsv4 "github.com/terra-money/alliance/x/alliance/migrations/v4"
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -132,10 +133,14 @@ func (a AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 func (a AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(a.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(a.keeper))
+	err := cfg.RegisterMigration(types.ModuleName, 3, migrationsv4.Migrate(a.keeper))
+	if err != nil {
+		panic(fmt.Sprintf("failed to migrate x/alliance from version 3 to 4: %v", err))
+	}
 }
 
 func (a AppModule) ConsensusVersion() uint64 {
-	return 3
+	return 4
 }
 
 func (a AppModule) GenerateGenesisState(simState *module.SimulationState) {

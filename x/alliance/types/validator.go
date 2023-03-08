@@ -46,10 +46,6 @@ func SubtractDecCoinsWithRounding(d1s sdk.DecCoins, d2s sdk.DecCoins) sdk.DecCoi
 	return d1Copy
 }
 
-func (v AllianceValidator) TotalSharesWithDenom(denom string) sdk.Dec {
-	return sdk.DecCoins(v.TotalDelegatorShares).AmountOf(denom)
-}
-
 func (v AllianceValidator) ValidatorSharesWithDenom(denom string) sdk.Dec {
 	// This is used instead of coins.AmountOf to reduce the need for regex matching to speed up the query
 	for _, c := range v.ValidatorShares {
@@ -68,11 +64,6 @@ func (v AllianceValidator) TotalTokensWithAsset(asset AllianceAsset) sdk.Dec {
 	shares := v.ValidatorSharesWithDenom(asset.Denom)
 	dec := ConvertNewShareToDecToken(sdk.NewDecFromInt(asset.TotalTokens), asset.TotalValidatorShares, shares)
 	return dec
-}
-
-func (v AllianceValidator) TotalDecTokensWithAsset(asset AllianceAsset) sdk.Dec {
-	shares := v.ValidatorSharesWithDenom(asset.Denom)
-	return ConvertNewShareToDecToken(sdk.NewDecFromInt(asset.TotalTokens), asset.TotalValidatorShares, shares)
 }
 
 func GetValidatorShares(asset AllianceAsset, token cosmosmath.Int) sdk.Dec {

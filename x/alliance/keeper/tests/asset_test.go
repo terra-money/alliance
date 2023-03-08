@@ -622,13 +622,16 @@ func TestRewardRangeWithChangeRateOverTime(t *testing.T) {
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
 	// Running the decay hook now should do nothing
-	app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+	err := app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+	require.NoError(t, err)
 
 	// Move block time to after change interval + one year
 	ctx = ctx.WithBlockTime(asset.RewardStartTime.Add(decayInterval * 2))
 
 	// Running the decay hook should update reward weight
-	app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+	err = app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+	require.NoError(t, err)
+
 	updatedAsset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	require.Equal(t, types.AllianceAsset{
 		Denom:                AllianceDenom,
@@ -704,13 +707,15 @@ func TestRewardWeightDecay(t *testing.T) {
 
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
 	// Running the decay hook now should do nothing
-	app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+	err = app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+	require.NoError(t, err)
 
 	// Move block time to after change interval + one year
 	ctx = ctx.WithBlockTime(asset.RewardStartTime.Add(decayInterval))
 
 	// Running the decay hook should update reward weight
-	app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+	err = app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+	require.NoError(t, err)
 	updatedAsset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	require.Equal(t, types.AllianceAsset{
 		Denom:                AllianceDenom,
@@ -841,7 +846,8 @@ func TestRewardWeightDecayOverTime(t *testing.T) {
 		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(blockTime)).WithBlockHeight(ctx.BlockHeight() + 1)
 		assets = app.AllianceKeeper.GetAllAssets(ctx)
 		// Running the decay hook should update reward weight
-		app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+		err = app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+		require.NoError(t, err)
 	}
 
 	// time passed minus reward delay time (rewards and decay only start after the delay)
@@ -989,4 +995,129 @@ func TestClaimTakeRateToZero(t *testing.T) {
 
 	asset, _ = app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	require.True(t, asset.TotalTokens.GTE(sdk.OneInt()))
+}
+
+func TestClaimTakeRateForNewlyAddedAssets(t *testing.T) {
+	app, ctx := createTestContext(t)
+	startTime := time.Now().UTC()
+	ctx = ctx.WithBlockTime(startTime)
+	ctx = ctx.WithBlockHeight(1)
+	takeRateInterval := time.Minute * 5
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.Params{
+			RewardDelayTime:       time.Minute * 60,
+			TakeRateClaimInterval: takeRateInterval,
+			LastTakeRateClaimTime: startTime,
+		},
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec(), startTime),
+		},
+	})
+
+	// Accounts
+	// feeCollectorAddr := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	valAddr1, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
+	require.NoError(t, err)
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
+	require.NoError(t, err)
+	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 1, sdk.NewCoins(
+		sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000_000)),
+		sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(1000_000_000)),
+	))
+	user1 := addrs[0]
+
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000_000)))
+	require.NoError(t, err)
+
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
+	require.NoError(t, err)
+
+	// Calling it immediately will not update anything
+	coins, err := app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	require.Nil(t, coins)
+	require.Nil(t, err)
+
+	// Advance block time
+	blockTime := ctx.BlockTime().Add(time.Minute*5 + time.Second)
+	ctx = ctx.WithBlockTime(blockTime)
+	ctx = ctx.WithBlockHeight(2)
+	_, err = app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	require.NoError(t, err)
+
+	// Last take rate claim time should be updated even though nothing has been taxed
+	lastClaimTime := app.AllianceKeeper.LastRewardClaimTime(ctx)
+	require.Equal(t, blockTime, lastClaimTime)
+
+	err = app.AllianceKeeper.CreateAlliance(ctx, &types.MsgCreateAllianceProposal{
+		Title:                "New alliance",
+		Description:          "",
+		Denom:                AllianceDenomTwo,
+		RewardWeight:         sdk.NewDec(1),
+		TakeRate:             sdk.MustNewDecFromStr("0.1"),
+		RewardChangeRate:     sdk.ZeroDec(),
+		RewardChangeInterval: 0,
+		RewardWeightRange:    types.RewardWeightRange{},
+	})
+	require.NoError(t, err)
+	tax, err := app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	require.NoError(t, err)
+
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(1000_000_000)))
+	require.NoError(t, err)
+	require.Len(t, tax, 0)
+
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+
+	// Advance block time but not yet reward delay time
+	blockTime = ctx.BlockTime().Add(time.Minute*5 + time.Second)
+	ctx = ctx.WithBlockTime(blockTime)
+	ctx = ctx.WithBlockHeight(3)
+	tax, err = app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	require.NoError(t, err)
+	require.Len(t, tax, 0)
+
+	// Advance block time after reward delay time
+	blockTime = ctx.BlockTime().Add(time.Minute * 60)
+	ctx = ctx.WithBlockTime(blockTime)
+	ctx = ctx.WithBlockHeight(4)
+	tax, err = app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	require.NoError(t, err)
+	require.Len(t, tax, 1)
+}
+
+func TestRewardWeightRateChange(t *testing.T) {
+	app, ctx := createTestContext(t)
+	startTime := time.Now().UTC()
+	ctx = ctx.WithBlockTime(startTime)
+	ctx = ctx.WithBlockHeight(1)
+	takeRateInterval := time.Minute * 5
+	alliance := types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), sdk.NewDec(5), sdk.ZeroDec(), startTime)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.Params{
+			RewardDelayTime:       time.Minute * 60,
+			TakeRateClaimInterval: takeRateInterval,
+			LastTakeRateClaimTime: startTime,
+		},
+		Assets: []types.AllianceAsset{
+			alliance,
+		},
+	})
+
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 10))
+
+	err := app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
+		Title:                "Update",
+		Description:          "",
+		Denom:                alliance.Denom,
+		RewardWeight:         alliance.RewardWeight,
+		TakeRate:             alliance.TakeRate,
+		RewardChangeRate:     sdk.MustNewDecFromStr("1.001"),
+		RewardChangeInterval: time.Minute * 5,
+	})
+	require.NoError(t, err)
+
+	alliance, _ = app.AllianceKeeper.GetAssetByDenom(ctx, alliance.Denom)
+	require.Equal(t, alliance.LastRewardChangeTime, ctx.BlockTime())
 }

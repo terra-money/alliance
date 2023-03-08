@@ -70,7 +70,10 @@ func (k Keeper) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAlliance
 		return status.Errorf(codes.Internal, "Asset cannot be deleted because there are still %s delegations associated with it", asset.TotalTokens)
 	}
 
-	k.DeleteAsset(sdkCtx, req.Denom)
+	err := k.DeleteAsset(sdkCtx, asset)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
