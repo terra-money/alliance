@@ -64,14 +64,8 @@ func TestRunBenchmarks(t *testing.T) {
 			})
 		}
 
-		idx := simulation.RandIntBetween(r, 0, len(vals)-1)
-		proposerAddr := sdk.ValAddress(vals[idx])
-		proposer, err := app.AllianceKeeper.GetAllianceValidator(ctx, proposerAddr)
-		require.NoError(t, err)
-		proposerCons, _ := proposer.GetConsAddr()
-
 		// Begin block
-		app.DistrKeeper.AllocateTokens(ctx, totalVotingPower, totalVotingPower, proposerCons, voteInfo)
+		app.DistrKeeper.AllocateTokens(ctx, totalVotingPower, voteInfo)
 
 		// Delegator Actions
 		operationFunc := benchmark.GenerateOperationSlots(DelegationRate, RedelegationRate, UndelegationRate, RewardClaimRate)
@@ -95,7 +89,7 @@ func TestRunBenchmarks(t *testing.T) {
 		// Endblock
 		assets := app.AllianceKeeper.GetAllAssets(ctx)
 		app.AllianceKeeper.CompleteRedelegations(ctx)
-		err = app.AllianceKeeper.CompleteUndelegations(ctx)
+		err := app.AllianceKeeper.CompleteUndelegations(ctx)
 		if err != nil {
 			panic(err)
 		}

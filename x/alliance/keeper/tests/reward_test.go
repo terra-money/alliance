@@ -451,7 +451,7 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 	cons1, _ := val1.GetConsAddr()
 	cons2, _ := val2.GetConsAddr()
 	var votingPower int64 = 12
-	app.DistrKeeper.AllocateTokens(ctx, votingPower, votingPower, cons1, []abcitypes.VoteInfo{
+	app.DistrKeeper.AllocateTokens(ctx, votingPower, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
