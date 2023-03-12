@@ -13,6 +13,7 @@ import (
 	tmrand "github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/types"
 	tmtime "github.com/cometbft/cometbft/types/time"
+	"github.com/notional-labs/nursery/app"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/math"
@@ -534,7 +535,7 @@ func writeFile(name string, dir string, contents []byte) error {
 
 // startTestnet starts an in-process testnet
 func startTestnet(cmd *cobra.Command, args startArgs) error {
-	networkConfig := network.DefaultConfig()
+	networkConfig := network.DefaultConfig(app.NewTestNetworkFixture)
 
 	// Default networkConfig.ChainID is random, and we should only override it if chainID provided
 	// is non-empty

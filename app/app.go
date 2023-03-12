@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/simapp"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -18,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -197,8 +197,8 @@ var (
 )
 
 var (
+	_ runtime.AppI            = (*App)(nil)
 	_ servertypes.Application = (*App)(nil)
-	_ simapp.App              = (*App)(nil)
 )
 
 func init() {

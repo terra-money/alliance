@@ -5,21 +5,26 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 	"time"
 
 	cosmoserrors "cosmossdk.io/errors"
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -65,11 +70,12 @@ func Setup(t *testing.T, isCheckTx bool) *App {
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit in the default token of the simapp from first genesis
 // account. A Nop logger is set in SimApp.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	t.Helper()
 
 	app, genesisState := setup(true, 5)
-	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, genAccs, balances...)
+	genesisState, err := simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, genAccs, balances...)
+	require.NoError(t, err)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	require.NoError(t, err)
@@ -78,7 +84,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	app.InitChain(
 		abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
+			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)
@@ -93,70 +99,6 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	}})
 
 	return app
-}
-
-func genesisStateWithValSet(t *testing.T,
-	app *App, genesisState GenesisState,
-	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
-	balances ...banktypes.Balance,
-) GenesisState {
-	// set genesis accounts
-	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
-	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
-
-	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
-	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
-
-	bondAmt := sdk.DefaultPowerReduction
-
-	for _, val := range valSet.Validators {
-		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
-		require.NoError(t, err)
-		pkAny, err := codectypes.NewAnyWithValue(pk)
-		require.NoError(t, err)
-		validator := stakingtypes.Validator{
-			OperatorAddress:   sdk.ValAddress(val.Address).String(),
-			ConsensusPubkey:   pkAny,
-			Jailed:            false,
-			Status:            stakingtypes.Bonded,
-			Tokens:            bondAmt,
-			DelegatorShares:   sdk.OneDec(),
-			Description:       stakingtypes.Description{},
-			UnbondingHeight:   int64(0),
-			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-			MinSelfDelegation: sdk.ZeroInt(),
-		}
-		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
-
-	}
-	// set validators and delegations
-	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
-	genesisState[stakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(stakingGenesis)
-
-	totalSupply := sdk.NewCoins()
-	for _, b := range balances {
-		// add genesis acc tokens to total supply
-		totalSupply = totalSupply.Add(b.Coins...)
-	}
-
-	for range delegations {
-		// add delegated tokens to total supply
-		totalSupply = totalSupply.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))
-	}
-
-	// add bonded amount to bonded pool module account
-	balances = append(balances, banktypes.Balance{
-		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
-		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt)},
-	})
-
-	// update total supply
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
-	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
-
-	return genesisState
 }
 
 func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
@@ -323,6 +265,37 @@ func RegisterNewValidator(t *testing.T, app *App, ctx sdk.Context, val stakingty
 	app.StakingKeeper.SetValidator(ctx, val)
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, val) //nolint:errcheck
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
-	err := app.StakingKeeper.AfterValidatorCreated(ctx, val.GetOperator())
+	err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
 	require.NoError(t, err)
+}
+
+// NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests
+func NewTestNetworkFixture() network.TestFixture {
+	dir, err := os.MkdirTemp("", "simapp")
+	if err != nil {
+		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
+	}
+	defer os.RemoveAll(dir)
+
+	app := NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
+
+	appCtr := func(val network.ValidatorI) servertypes.Application {
+		return NewSimApp(
+			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
+			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
+			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
+			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
+		)
+	}
+
+	return network.TestFixture{
+		AppConstructor: appCtr,
+		GenesisState:   app.DefaultGenesis(),
+		EncodingConfig: testutil.TestEncodingConfig{
+			InterfaceRegistry: app.InterfaceRegistry(),
+			Codec:             app.AppCodec(),
+			TxConfig:          app.TxConfig(),
+			Amino:             app.LegacyAmino(),
+		},
+	}
 }

@@ -63,5 +63,6 @@ func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, f
 func (h Hooks) AfterValidatorSlashed(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress, fraction sdk.Dec) {
 }
 
-func (h Hooks) AfterUnbodingInitiated(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h Hooks) AfterUnbodingInitiated(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error {
+	return nil
 }
