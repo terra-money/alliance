@@ -300,7 +300,7 @@ func TestClaimQueryReward(t *testing.T) {
 
 	// ... at the next begin block, tokens will be distributed from the fee pool...
 	cons, _ := val1.GetConsAddr()
-	app.DistrKeeper.AllocateTokens(ctx, 1, 1, cons, []abcitypes.VoteInfo{
+	app.DistrKeeper.AllocateTokens(ctx, 1, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons,

@@ -575,7 +575,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 	cons2, _ := val2.GetConsAddr()
 	power2 := val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
 
-	app.DistrKeeper.AllocateTokens(ctx, power1+power2, power1+power2, cons1, []abcitypes.VoteInfo{
+	app.DistrKeeper.AllocateTokens(ctx, power1+power2, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
@@ -622,7 +622,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 
 	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
 	power2 = val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
-	app.DistrKeeper.AllocateTokens(ctx, power1+power2, power1+power2, cons1, []abcitypes.VoteInfo{
+	app.DistrKeeper.AllocateTokens(ctx, power1+power2, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
@@ -659,7 +659,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 
 	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
 	power2 = val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
-	app.DistrKeeper.AllocateTokens(ctx, power1+power2, power1+power2, cons1, []abcitypes.VoteInfo{
+	app.DistrKeeper.AllocateTokens(ctx, power1+power2, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
@@ -877,7 +877,7 @@ func TestClaimRewardsAfterRebalancing(t *testing.T) {
 	cons1, _ := val1.GetConsAddr()
 	cons2, _ := val2.GetConsAddr()
 	var votingPower int64 = 3
-	app.DistrKeeper.AllocateTokens(ctx, votingPower, votingPower, cons1, []abcitypes.VoteInfo{
+	app.DistrKeeper.AllocateTokens(ctx, votingPower, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,

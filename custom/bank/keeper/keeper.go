@@ -35,9 +35,10 @@ func NewBaseKeeper(
 	ak accountkeeper.AccountKeeper,
 	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
+	authority string,
 ) Keeper {
 	keeper := Keeper{
-		BaseKeeper: bankkeeper.NewBaseKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
+		BaseKeeper: bankkeeper.NewBaseKeeper(cdc, storeKey, ak, blockedAddrs, authority), // TODO: how to set authority?
 		ak:         alliancekeeper.Keeper{},
 		sk:         stakingkeeper.Keeper{},
 		acck:       ak,

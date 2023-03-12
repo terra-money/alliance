@@ -59,3 +59,9 @@ func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, f
 	h.k.QueueAssetRebalanceEvent(ctx)
 	return nil
 }
+
+func (h Hooks) AfterValidatorSlashed(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress, fraction sdk.Dec) {
+}
+
+func (h Hooks) AfterUnbodingInitiated(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+}
