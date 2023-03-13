@@ -19,6 +19,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -70,7 +71,7 @@ func Setup(t *testing.T, isCheckTx bool) *App {
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit in the default token of the simapp from first genesis
 // account. A Nop logger is set in SimApp.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *App {
 	t.Helper()
 
 	app, genesisState := setup(true, 5)
@@ -140,17 +141,17 @@ func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
 }
 
-var DefaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
+var DefaultConsensusParams = tmtypes.ConsensusParams{
+	Block: tmtypes.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
-	Evidence: &tmproto.EvidenceParams{
+	Evidence: tmtypes.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
 		MaxBytes:        10000,
 	},
-	Validator: &tmproto.ValidatorParams{
+	Validator: tmtypes.ValidatorParams{
 		PubKeyTypes: []string{
 			tmtypes.ABCIPubKeyTypeEd25519,
 		},
@@ -277,12 +278,22 @@ func NewTestNetworkFixture() network.TestFixture {
 	}
 	defer os.RemoveAll(dir)
 
-	app := NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
-
+	app := New(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		map[int64]bool{},
+		dir,
+		0,
+		MakeTestEncodingConfig(),
+		EmptyAppOptions{},
+	)
 	appCtr := func(val network.ValidatorI) servertypes.Application {
-		return NewSimApp(
-			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
-			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
+		return New(
+			val.GetCtx().Logger, dbm.NewMemDB(), nil, true, map[int64]bool{},
+			val.GetCtx().Config.RootDir, 0, MakeTestEncodingConfig(),
+			EmptyAppOptions{},
 			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 		)
@@ -290,7 +301,7 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	return network.TestFixture{
 		AppConstructor: appCtr,
-		GenesisState:   app.DefaultGenesis(),
+		GenesisState:   NewDefaultGenesisState(app.AppCodec()),
 		EncodingConfig: testutil.TestEncodingConfig{
 			InterfaceRegistry: app.InterfaceRegistry(),
 			Codec:             app.AppCodec(),

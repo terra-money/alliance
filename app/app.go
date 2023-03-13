@@ -14,8 +14,8 @@ import (
 	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -218,6 +218,7 @@ type App struct {
 
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
+	txConfig          client.TxConfig
 	interfaceRegistry types.InterfaceRegistry
 
 	invCheckPeriod uint
@@ -279,11 +280,13 @@ func New(
 ) *App {
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
+	txConfig := encodingConfig.TxConfig
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	bApp := baseapp.NewBaseApp(Name, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
+	bApp.SetTxEncoder(txConfig.TxEncoder())
 
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, authz.ModuleName, banktypes.StoreKey, stakingtypes.StoreKey,
@@ -300,6 +303,7 @@ func New(
 		BaseApp:           bApp,
 		cdc:               cdc,
 		appCodec:          appCodec,
+		txConfig:          txConfig,
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
 		keys:              keys,
@@ -420,7 +424,7 @@ func New(
 		keys[feegrant.StoreKey],
 		app.AccountKeeper,
 	)
-	
+
 	app.UpgradeKeeper = *upgradekeeper.NewKeeper(skipUpgradeHeights,
 		keys[upgradetypes.StoreKey],
 		appCodec,
@@ -794,6 +798,11 @@ func (app *App) InterfaceRegistry() types.InterfaceRegistry {
 // NOTE: This is solely to be used for testing purposes.
 func (app *App) GetKey(storeKey string) *storetypes.KVStoreKey {
 	return app.keys[storeKey]
+}
+
+// TxConfig returns WasmApp's TxConfig
+func (app *App) TxConfig() client.TxConfig {
+	return app.txConfig
 }
 
 // GetTKey returns the TransientStoreKey for the provided store key.
