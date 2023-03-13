@@ -13,8 +13,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/simapp"
-	simcmd "cosmossdk.io/simapp/simd/cmd"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -22,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
+	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
@@ -73,7 +73,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 			require.NoError(t, err)
 
-			appCodec := simapp.MakeTestEncodingConfig().Codec
+			appCodec := moduletestutil.MakeTestEncodingConfig().Codec
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
@@ -93,7 +93,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmd := simcmd.AddGenesisAccountCmd(home)
+			cmd := genutilcli.AddGenesisAccountCmd(home)
 			cmd.SetArgs([]string{
 				tc.addr,
 				tc.denom,
