@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -21,7 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
-	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	alliancecmd "github.com/terra-money/alliance/cmd/allianced/cmd"
+	"github.com/terra-money/alliance/app"
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
@@ -52,7 +52,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 		{
 			name:        "multiple denoms",
 			addr:        addr1.String(),
-			denom:       "1000atom, 2000stake",
+			denom:       "1000atom, 2000bbn",
 			withKeyring: false,
 			expectErr:   false,
 		},
@@ -73,7 +73,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 			require.NoError(t, err)
 
-			appCodec := moduletestutil.MakeTestEncodingConfig().Codec
+			appCodec := app.GetEncodingConfig().Marshaler
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
@@ -82,7 +82,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 
 			if tc.withKeyring {
 				path := hd.CreateHDPath(118, 0, 0).String()
-				kr, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, home, nil, appCodec)
+				kr, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendMemory, home, nil, clientCtx.Codec)
 				require.NoError(t, err)
 				_, _, err = kr.NewMnemonic(tc.addr, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 				require.NoError(t, err)
@@ -93,12 +93,11 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 			ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-			cmd := genutilcli.AddGenesisAccountCmd(home)
+			cmd := alliancecmd.AddGenesisAccountCmd(home)
 			cmd.SetArgs([]string{
 				tc.addr,
 				tc.denom,
-				fmt.Sprintf("--%s=home", flags.FlagHome),
-			})
+				fmt.Sprintf("--%s=home", flags.FlagHome)})
 
 			if tc.expectErr {
 				require.Error(t, cmd.ExecuteContext(ctx))
