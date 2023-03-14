@@ -332,7 +332,7 @@ func TestClaimRewardsBeforeRewardsIssuance(t *testing.T) {
 		Denom:         AllianceDenom,
 	})
 	require.NoError(t, err)
-	require.Equal(t, []sdk.Coin(nil), res.Rewards)
+	require.Equal(t, []sdk.Coin{}, res.Rewards)
 
 	// User 2 shouldn't have staking rewards
 	// because RewardStartTime is in the future
