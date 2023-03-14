@@ -69,8 +69,8 @@ This project uses [Go v1.19](https://go.dev/dl/).
 
 To build a ready-to-use binary, run the following:
 
-```
-$ make install
+```sh
+make install
 ```
 
 ### Localnet
@@ -89,7 +89,7 @@ The simulation app does not run out of the box because the Alliance module owns 
 
 Use the following command to update the `x/staking` module directly before compiling the simulation app.
 
-```shell
+```sh
 go mod vendor
 sed -i '' 's/fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)/nil/g' vendor/github.com/cosmos/cosmos-sdk/x/staking/simulation/operations.go
 go test -benchmem -run=^$ -bench ^BenchmarkSimulation ./app -NumBlocks=200 -BlockSize 50 -Commit=true -Verbose=true -Enabled=true
