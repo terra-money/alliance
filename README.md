@@ -38,7 +38,6 @@ Alliance is an open-source Cosmos SDK module that leverages interchain staking t
     - [Integrate the Alliance module](https://alliance.terra.money/guides/get-started)
     - [Create, update, or delete an Alliance](https://alliance.terra.money/guides/create)
     - [Interact with an Alliance](https://alliance.terra.money/guides/how-to)
-    - [Join the testnet](https://alliance.terra.money/guides/join-the-testnet)
 - Technical specifications:
     - [Module parameters](https://alliance.terra.money/tech/parameters) and [Alliance asset properties](https://alliance.terra.money/tech/asset)
     - [Txs and queries](https://alliance.terra.money/tech/tx-queries)
@@ -47,10 +46,9 @@ Alliance is an open-source Cosmos SDK module that leverages interchain staking t
     - [Invariants](https://alliance.terra.money/tech/invariants)
     - [Benchmarks](https://alliance.terra.money/tech/benchmarks)
 
-## The `x/alliance` module
+## Integrate the `x/alliance` module
 
 The Alliance module can be [added to any compatible Cosmos chain](https://alliance.terra.money/guides/get-started) and does not require any changes to consensus or major changes to common core modules. This module wraps around a chain’s native staking module, allowing whitelisted assets to be staked and earn rewards. Alliance assets can be staked with the Alliance module, and the chain's native staking module is used for native stakers. 
-
 
 Chains that want to add `x/alliance` must enable the following modules:
 
@@ -61,52 +59,40 @@ Chains that want to add `x/alliance` must enable the following modules:
 - [x/distribution](https://github.com/cosmos/cosmos-sdk/blob/main/x/distribution/README.md)
 - [x/gov](https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/README.md)
 
+For an in-depth guide on integrating `x/alliance`, visit the [Alliance Module Integration Guide](https://alliance.terra.money/guides/get-started). 
+
 ## Development environment
 
-This project uses [Go v1.19](https://go.dev/dl/) and was originally bootstrapped using [Ignite CLI v0.25.1](https://docs.ignite.com/). However, for ease of upgrade, ignite has been removed in favor of manual workflows.
+The following sections are for developers working on the  `x/alliance` module. 
 
-To set up the local development environment, clone this repo and run the following command:
+This project uses [Go v1.19](https://go.dev/dl/).
 
-```
-$ make serve
-```
-
-If you want to build a ready-to-use binary, run the following:
+To build a ready-to-use binary, run the following:
 
 ```
 $ make install
 ```
 
-To build the proto files:
-```
-$ make proto-gen
-```
+### Localnet
 
-## Localnet 
+The Localnet is a development environment that uses a Docker orchestration to create a local network with 3 Docker containers:
 
-You can use a Docker orchestration to create a local network with 3 Docker containers:
-
-- **localnet-start**: stop the testnet if running, build the terra-money/localnet-alliance image and start the nodes.
-- **localnet-alliance-rmi**: removes the previously created terra-money/localnet-alliance image.
-- **localnet-build-env**: delete and rebuild the terra-money/localnet-alliance
-- **localnet-build-nodes**: using the terra-money/localnet-alliance starts a 3 docker containers testnet.
-- **localnet-stop**: stop the testnet if running.
-
-## Join the testnet
-
-Joining the testnet is a very standardized process cosmos chain. In this case you will have to use **allianced** and follow [Terra documentation](https://docs.terra.money/full-node/manage-a-terra-validator/) since it's the same process but replacing it's genesis with the one that you can find in this repo under the path [docs/testnet/genesis.json](docs/testnet/genesis.json) and the following [seeds](http://3.75.187.158:26657/net_info),
-
+- **make localnet-start**: stop the testnet if running, build the `terra-money/localnet-alliance` image and start the nodes.
+- **make localnet-alliance-rmi**: remove the previously created `terra-money/localnet-alliance` image.
+- **make localnet-build-env**: delete and rebuild the `terra-money/localnet-alliance`
+- **make localnet-build-nodes**: using the `terra-money/localnet-alliance` starts a 3 docker containers testnet.
+- **make localnet-stop**: stop the testnet if running.
 
 ### Running the simulation
 
-The simulation app does not run out of the box because the Alliance module owns all native stake. The `x/staking` module's operation.go file panics when a delegator does not have a private key.
+The simulation app does not run out of the box because the Alliance module owns all the native stake. The `x/staking` module's `operation.go` file panics when a delegator does not have a private key.
 
-In order to run the simulation, update the `x/staking` module directly before compiling the simulation app using the following command. 
+Use the following command to update the `x/staking` module directly before compiling the simulation app.
 
 ```shell
 go mod vendor
 sed -i '' 's/fmt.Errorf("delegation addr: %s does not exist in simulation accounts", delAddr)/nil/g' vendor/github.com/cosmos/cosmos-sdk/x/staking/simulation/operations.go
-ignite chain simulate
+go test -benchmem -run=^$ -bench ^BenchmarkSimulation ./app -NumBlocks=200 -BlockSize 50 -Commit=true -Verbose=true -Enabled=true
 ```
 
 ## Warning
@@ -115,4 +101,4 @@ Please note that Alliance is still undergoing final testing before its official 
 
 TFL will not be liable for any loss, whether such loss is direct, indirect, special or consequential, suffered by any party as a result of their use of the software or content.
 
-Should you encounter any bugs, glitches, lack of functionality or other problems on the website, please submit bugs and feature requests through Github Issues. 
+Should you encounter any bugs, glitches, lack of functionality or other problems on the website, please submit bugs and feature requests through Github Issues.
