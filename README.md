@@ -77,11 +77,11 @@ $ make install
 
 The Localnet is a development environment that uses a Docker orchestration to create a local network with 3 Docker containers:
 
-- **make localnet-start**: stop the testnet if running, build the `terra-money/localnet-alliance` image and start the nodes.
-- **make localnet-alliance-rmi**: remove the previously created `terra-money/localnet-alliance` image.
-- **make localnet-build-env**: delete and rebuild the `terra-money/localnet-alliance`
-- **make localnet-build-nodes**: using the `terra-money/localnet-alliance` starts a 3 docker containers testnet.
-- **make localnet-stop**: stop the testnet if running.
+- `make localnet-start` : stop the testnet if running, build the `terra-money/localnet-alliance` image and start the nodes.
+- `make localnet-alliance-rmi`: remove the previously created `terra-money/localnet-alliance` image.
+- `make localnet-build-env`: delete and rebuild the `terra-money/localnet-alliance`
+- `make localnet-build-nodes`: using the `terra-money/localnet-alliance` starts a 3 docker containers testnet.
+- `make localnet-stop`: stop the testnet if running.
 
 ### Running the simulation
 
