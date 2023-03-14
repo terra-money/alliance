@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"encoding/json"
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -803,6 +804,11 @@ func (app *App) GetKey(storeKey string) *storetypes.KVStoreKey {
 // TxConfig returns WasmApp's TxConfig
 func (app *App) TxConfig() client.TxConfig {
 	return app.txConfig
+}
+
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+func (a *App) DefaultGenesis() map[string]json.RawMessage {
+	return ModuleBasics.DefaultGenesis(a.appCodec)
 }
 
 // GetTKey returns the TransientStoreKey for the provided store key.
