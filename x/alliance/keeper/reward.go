@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -22,6 +24,7 @@ func (k Keeper) ClaimValidatorRewards(ctx sdk.Context, val types.AllianceValidat
 	}
 
 	coins, err := k.distributionKeeper.WithdrawDelegationRewards(ctx, moduleAddr, val.GetOperator())
+	fmt.Println("")
 	if err != nil || coins.IsZero() {
 		return nil, err
 	}
