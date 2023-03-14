@@ -22,6 +22,7 @@ import (
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	alliancecmd "github.com/terra-money/alliance/cmd/allianced/cmd"
 	"github.com/terra-money/alliance/app"
+
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
@@ -73,7 +74,7 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
 			require.NoError(t, err)
 
-			appCodec := app.GetEncodingConfig().Marshaler
+			appCodec := app.MakeTestEncodingConfig().Marshaler
 			err = genutiltest.ExecInitCmd(testMbm, home, appCodec)
 			require.NoError(t, err)
 
