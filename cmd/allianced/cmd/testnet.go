@@ -13,7 +13,6 @@ import (
 	tmrand "github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/types"
 	tmtime "github.com/cometbft/cometbft/types/time"
-	"github.com/notional-labs/nursery/app"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/math"
@@ -37,9 +36,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/terra-money/alliance/app"
 )
 
 var (
@@ -474,6 +474,7 @@ func collectGenFiles(
 			initCfg,
 			*genDoc,
 			genBalIterator,
+			genutiltypes.DefaultMessageValidator,
 		)
 		if err != nil {
 			return err
