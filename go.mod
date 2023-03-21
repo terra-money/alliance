@@ -12,7 +12,6 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/cosmos/cosmos-sdk v0.47.0
 	github.com/cosmos/ibc-go/v7 v7.0.0-rc1
-	// github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -167,8 +166,3 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// use cosmos-flavored protobuf
-// github.com/gogo/protobuf => github.com/cosmos/gogoproto v1.4.6
-
-replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
