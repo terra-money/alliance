@@ -641,7 +641,7 @@ func (k Keeper) ClearDustDelegation(ctx sdk.Context, delAddr sdk.AccAddress, val
 		}
 	}
 
-	validatorTokensLeft := validator.TotalTokensWithAsset(asset)
+	validatorTokensLeft := validator.TotalTokensWithAsset(asset).TruncateInt()
 	if validatorTokensLeft.IsZero() {
 		validatorSharesToRemove = sdk.NewDecCoinFromDec(asset.Denom, validator.ValidatorSharesWithDenom(asset.Denom))
 	}
@@ -650,5 +650,13 @@ func (k Keeper) ClearDustDelegation(ctx sdk.Context, delAddr sdk.AccAddress, val
 	validator.ReduceShares(sdk.NewDecCoins(delegatorSharesToRemove), sdk.NewDecCoins(validatorSharesToRemove))
 	k.SetValidator(ctx, validator)
 
+	// Reduce validator shares from assets as well
+	if validatorSharesToRemove.Amount.GT(asset.TotalValidatorShares) {
+		asset.TotalValidatorShares = sdk.ZeroDec()
+	} else {
+		asset.TotalValidatorShares = asset.TotalValidatorShares.Sub(validatorSharesToRemove.Amount)
+	}
+
+	k.SetAsset(ctx, asset)
 	k.ResetAssetAndValidators(ctx, asset)
 }
