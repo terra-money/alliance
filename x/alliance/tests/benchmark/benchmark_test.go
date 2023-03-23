@@ -81,7 +81,7 @@ func TestRunBenchmarks(t *testing.T) {
 				delegateOperation(ctx, app, r, assets, vals, dels)
 				operations["delegate"]++
 			case 1:
-				redelegateOperation(ctx, app, r, assets, vals, dels)
+				redelegateOperation(ctx, app, r, vals)
 				operations["redelegate"]++
 			case 2:
 				undelegateOperation(ctx, app, r)
@@ -151,7 +151,7 @@ func delegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, ass
 	createdDelegations = append(createdDelegations, types.NewDelegation(ctx, delAddr, valAddr, asset.Denom, sdk.ZeroDec(), []types.RewardHistory{}))
 }
 
-func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, assets []types.AllianceAsset, vals []sdk.AccAddress, dels []sdk.AccAddress) { //nolint:unparam // assets is unused
+func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, vals []sdk.AccAddress) {
 	var delegation types.Delegation
 	if len(createdDelegations) == 0 {
 		return
@@ -172,7 +172,8 @@ func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, a
 	}
 
 	dstValAddr := sdk.ValAddress(vals[r.Intn(len(vals)-1)])
-	for ; dstValAddr.Equals(srcValAddr); dstValAddr = sdk.ValAddress(vals[r.Intn(len(vals)-1)]) {
+	for dstValAddr.Equals(srcValAddr) {
+		dstValAddr = sdk.ValAddress(vals[r.Intn(len(vals)-1)])
 	}
 	dstValidator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, dstValAddr)
 

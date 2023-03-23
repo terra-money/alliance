@@ -17,7 +17,7 @@ import (
 )
 
 func SetupApp(t *testing.T, r *rand.Rand, numAssets int, numValidators int, numDelegators int) (app *test_helpers.App, ctx sdk.Context, assets []types.AllianceAsset, valAddrs []sdk.AccAddress, delAddrs []sdk.AccAddress) {
-	app = test_helpers.Setup(t, false)
+	app = test_helpers.Setup(t)
 	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime)
