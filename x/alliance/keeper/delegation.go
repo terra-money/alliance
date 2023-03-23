@@ -607,6 +607,8 @@ func (k Keeper) ResetAssetAndValidators(ctx sdk.Context, asset types.AllianceAss
 	}
 	k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) (stop bool) {
 		updatedShares := sdk.NewDecCoins()
+		// Set shares for asset that is zero to be zero
+		// Copy the rest of the asset that did not change
 		for _, share := range info.ValidatorShares {
 			if share.Denom != asset.Denom {
 				updatedShares = append(updatedShares, share)

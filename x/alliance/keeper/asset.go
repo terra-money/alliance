@@ -303,8 +303,11 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 			multiplier := sdk.OneDec().Sub(asset.TakeRate).Power(intervalsSinceLastClaim)
 			oldAmount := asset.TotalTokens
 			newAmount := multiplier.MulInt(asset.TotalTokens)
-			if newAmount.LTE(sdk.OneDec()) {
-				// If the next update reduces the amount of tokens to less than or equal to 1, stop reducing
+			if newAmount.LT(sdk.OneDec()) {
+				// If the next update reduces the amount of tokens to less than 1,
+				// Reset assets and clear all shares in validators
+				asset.TotalTokens = sdk.ZeroInt()
+				k.ResetAssetAndValidators(ctx, *asset)
 				continue
 			}
 			asset.TotalTokens = newAmount.TruncateInt()
