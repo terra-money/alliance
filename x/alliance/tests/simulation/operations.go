@@ -16,8 +16,7 @@ import (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(
-	appParams simtypes.AppParams, cdc *codec.ProtoCodec,
+func WeightedOperations(cdc *codec.ProtoCodec,
 	ak types.AccountKeeper, bk types.BankKeeper,
 	sk types.StakingKeeper, k keeper.Keeper,
 ) simulation.WeightedOperations {
@@ -44,11 +43,11 @@ func WeightedOperations(
 		),
 		simulation.NewWeightedOperation(
 			weightMsgUndelegate,
-			SimulateMsgUndelegate(cdc, ak, bk, sk, k),
+			SimulateMsgUndelegate(cdc, ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgClaimRewards,
-			SimulateMsgClaimRewards(cdc, ak, bk, sk, k),
+			SimulateMsgClaimRewards(cdc, ak, bk, k),
 		),
 	}
 }
@@ -169,7 +168,7 @@ func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 	}
 }
 
-func SimulateMsgUndelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgUndelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainId string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		var delegations []types.Delegation
 		k.IterateDelegations(ctx, func(d types.Delegation) bool {
@@ -230,7 +229,7 @@ func SimulateMsgUndelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 	}
 }
 
-func SimulateMsgClaimRewards(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgClaimRewards(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainId string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		var delegations []types.Delegation
 		k.IterateDelegations(ctx, func(d types.Delegation) bool {

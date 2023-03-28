@@ -68,7 +68,7 @@ func (a AppModuleBasic) DefaultGenesis(jsonCodec codec.JSONCodec) json.RawMessag
 	return jsonCodec.MustMarshalJSON(DefaultGenesisState())
 }
 
-func (a AppModuleBasic) ValidateGenesis(jsonCodec codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
+func (a AppModuleBasic) ValidateGenesis(jsonCodec codec.JSONCodec, _ client.TxEncodingConfig, message json.RawMessage) error {
 	var genesis types.GenesisState
 	if err := jsonCodec.UnmarshalJSON(message, &genesis); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -108,7 +108,7 @@ func (a AppModule) InitGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec, messa
 	return a.keeper.InitGenesis(ctx, &genesis)
 }
 
-func (a AppModule) ExportGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec) json.RawMessage {
+func (a AppModule) ExportGenesis(ctx sdk.Context, _ codec.JSONCodec) json.RawMessage {
 	genesis := a.keeper.ExportGenesis(ctx)
 	return a.cdc.MustMarshalJSON(genesis)
 }
@@ -135,7 +135,7 @@ func (a AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation2.RandomizedGenesisState(simState)
 }
 
-func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+func (a AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
 }
 
@@ -143,6 +143,6 @@ func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
 	registry[types.StoreKey] = simulation2.NewDecodeStore(a.cdc)
 }
 
-func (a AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation2.WeightedOperations(simState.AppParams, a.pcdc, a.accountKeeper, a.bankKeeper, a.stakingKeeper, a.keeper)
+func (a AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+	return simulation2.WeightedOperations(a.pcdc, a.accountKeeper, a.bankKeeper, a.stakingKeeper, a.keeper)
 }

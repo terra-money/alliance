@@ -10,7 +10,7 @@ import (
 )
 
 func createTestContext(t *testing.T) (*app.App, sdk.Context) {
-	app := app.Setup(t, false)
+	app := app.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	return app, ctx
 }
