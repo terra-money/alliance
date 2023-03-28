@@ -135,7 +135,7 @@ func (a AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation2.RandomizedGenesisState(simState)
 }
 
-func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalMsg {
 	return nil
 }
 
