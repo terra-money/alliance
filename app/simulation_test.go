@@ -7,13 +7,14 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simulationtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/stretchr/testify/require"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
+	"github.com/stretchr/testify/require"
+
 	"github.com/terra-money/alliance/app"
 )
 

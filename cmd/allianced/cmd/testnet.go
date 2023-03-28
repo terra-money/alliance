@@ -39,6 +39,7 @@ import (
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/terra-money/alliance/app"
 )
 

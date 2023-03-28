@@ -271,9 +271,9 @@ func TestClaimRewardsBeforeRewardsIssuance(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	mintPoolAddr := app.AccountKeeper.GetModuleAddress(minttypes.ModuleName)
@@ -380,9 +380,9 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
@@ -504,9 +504,9 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
@@ -700,9 +700,9 @@ func TestRewardClaimingAfterRatesDecay(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 5, sdk.NewCoins(
@@ -802,9 +802,9 @@ func TestClaimRewardsAfterRebalancing(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(

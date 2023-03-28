@@ -32,9 +32,8 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
@@ -165,9 +164,9 @@ func TestRebalancingWithUnbondedValidator(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 5, sdk.NewCoins(
@@ -254,7 +253,8 @@ func TestRebalancingWithUnbondedValidator(t *testing.T) {
 	// Set max validators to be 2 to trigger unbonding
 	params := app.StakingKeeper.GetParams(ctx)
 	params.MaxValidators = 2
-	app.StakingKeeper.SetParams(ctx, params)
+	err = app.StakingKeeper.SetParams(ctx, params)
+	require.NoError(t, err)
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(13_100_000), app.StakingKeeper.TotalBondedTokens(ctx))
@@ -274,7 +274,8 @@ func TestRebalancingWithUnbondedValidator(t *testing.T) {
 	// Set max validators to be 3 to trigger rebonding
 	params = app.StakingKeeper.GetParams(ctx)
 	params.MaxValidators = 3
-	app.StakingKeeper.SetParams(ctx, params)
+	err = app.StakingKeeper.SetParams(ctx, params)
+	require.NoError(t, err)
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.NoError(t, err)
 	require.Equal(t, sdk.NewInt(18_900_000), app.StakingKeeper.TotalBondedTokens(ctx))
@@ -315,9 +316,9 @@ func TestRebalancingWithJailedValidator(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 5, sdk.NewCoins(
@@ -460,9 +461,9 @@ func TestRebalancingWithDelayedRewardsStartTime(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 5, sdk.NewCoins(

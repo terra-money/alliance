@@ -18,7 +18,7 @@ import (
 // It modifies the TotalSupply and SupplyOf GRPC queries
 type AppModule struct {
 	bankmodule.AppModule
-	keeper custombankkeeper.Keeper
+	keeper   custombankkeeper.Keeper
 	subspace exported.Subspace
 }
 

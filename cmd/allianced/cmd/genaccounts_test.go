@@ -20,9 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
-	alliancecmd "github.com/terra-money/alliance/cmd/allianced/cmd"
-	"github.com/terra-money/alliance/app"
 
+	"github.com/terra-money/alliance/app"
+	alliancecmd "github.com/terra-money/alliance/cmd/allianced/cmd"
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})
@@ -98,7 +98,8 @@ func TestAddGenesisAccountCmd(t *testing.T) {
 			cmd.SetArgs([]string{
 				tc.addr,
 				tc.denom,
-				fmt.Sprintf("--%s=home", flags.FlagHome)})
+				fmt.Sprintf("--%s=home", flags.FlagHome),
+			})
 
 			if tc.expectErr {
 				require.Error(t, cmd.ExecuteContext(ctx))

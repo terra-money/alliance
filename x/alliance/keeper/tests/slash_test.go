@@ -40,9 +40,9 @@ func TestSlashingEvent(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
@@ -181,9 +181,9 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
@@ -291,7 +291,6 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 }
 
 func TestSlashingAfterUndelegation(t *testing.T) {
-	var err error
 	app, ctx := createTestContext(t)
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
@@ -316,9 +315,9 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
