@@ -9,7 +9,6 @@ import (
 	accountkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -33,7 +32,6 @@ func NewBaseKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	ak accountkeeper.AccountKeeper,
-	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
 	authority string,
 ) Keeper {

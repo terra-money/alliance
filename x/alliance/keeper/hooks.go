@@ -60,9 +60,9 @@ func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, f
 	return nil
 }
 
-func (h Hooks) AfterValidatorSlashed(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress, fraction sdk.Dec) {
+func (h Hooks) AfterValidatorSlashed(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress, _ sdk.Dec) {
 }
 
-func (h Hooks) AfterUnbondingInitiated(ctx sdk.Context, id uint64) error {
+func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
 	return nil
 }
