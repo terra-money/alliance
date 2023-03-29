@@ -8,13 +8,13 @@ import (
 	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestRewardPoolAndGlobalIndex(t *testing.T) {
@@ -271,9 +271,9 @@ func TestClaimRewardsBeforeRewardsIssuance(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	mintPoolAddr := app.AccountKeeper.GetModuleAddress(minttypes.ModuleName)
@@ -332,7 +332,7 @@ func TestClaimRewardsBeforeRewardsIssuance(t *testing.T) {
 		Denom:         AllianceDenom,
 	})
 	require.NoError(t, err)
-	require.Equal(t, []sdk.Coin(nil), res.Rewards)
+	require.Equal(t, []sdk.Coin{}, res.Rewards)
 
 	// User 2 shouldn't have staking rewards
 	// because RewardStartTime is in the future
@@ -380,9 +380,9 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
@@ -451,7 +451,7 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 	cons1, _ := val1.GetConsAddr()
 	cons2, _ := val2.GetConsAddr()
 	var votingPower int64 = 12
-	app.DistrKeeper.AllocateTokens(ctx, votingPower, votingPower, cons1, []abcitypes.VoteInfo{
+	app.DistrKeeper.AllocateTokens(ctx, votingPower, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
@@ -504,9 +504,9 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
@@ -575,7 +575,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 	cons2, _ := val2.GetConsAddr()
 	power2 := val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
 
-	app.DistrKeeper.AllocateTokens(ctx, power1+power2, power1+power2, cons1, []abcitypes.VoteInfo{
+	app.DistrKeeper.AllocateTokens(ctx, power1+power2, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
@@ -622,7 +622,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 
 	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
 	power2 = val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
-	app.DistrKeeper.AllocateTokens(ctx, power1+power2, power1+power2, cons1, []abcitypes.VoteInfo{
+	app.DistrKeeper.AllocateTokens(ctx, power1+power2, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
@@ -659,7 +659,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 
 	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
 	power2 = val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
-	app.DistrKeeper.AllocateTokens(ctx, power1+power2, power1+power2, cons1, []abcitypes.VoteInfo{
+	app.DistrKeeper.AllocateTokens(ctx, power1+power2, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
@@ -700,9 +700,9 @@ func TestRewardClaimingAfterRatesDecay(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 5, sdk.NewCoins(
@@ -802,9 +802,9 @@ func TestClaimRewardsAfterRebalancing(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err = app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	// Accounts
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 4, sdk.NewCoins(
@@ -877,7 +877,7 @@ func TestClaimRewardsAfterRebalancing(t *testing.T) {
 	cons1, _ := val1.GetConsAddr()
 	cons2, _ := val2.GetConsAddr()
 	var votingPower int64 = 3
-	app.DistrKeeper.AllocateTokens(ctx, votingPower, votingPower, cons1, []abcitypes.VoteInfo{
+	app.DistrKeeper.AllocateTokens(ctx, votingPower, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,

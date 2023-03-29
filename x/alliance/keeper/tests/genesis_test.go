@@ -5,7 +5,7 @@ import (
 	"time"
 
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance/types"

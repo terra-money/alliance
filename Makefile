@@ -125,7 +125,7 @@ format: format-tools
 ###############################################################################
 ###                                Protobuf                                 ###
 ###############################################################################
-PROTO_BUILDER_IMAGE=tendermintdev/sdk-proto-gen:v0.7
+PROTO_BUILDER_IMAGE=ghcr.io/cosmos/proto-builder
 
 proto-gen:
 	@echo "Generating Protobuf files"

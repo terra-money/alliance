@@ -156,9 +156,8 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	user1 := dels[0]
 	user2 := dels[1]
@@ -268,9 +267,9 @@ func TestDelegateAndUndelegateWithSmallAmounts(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
 	require.NoError(t, err)
@@ -335,9 +334,9 @@ func TestUnDelegatingSlightlyMoreCoin(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
 	require.NoError(t, err)
@@ -400,9 +399,9 @@ func TestReDelegatingSlightlyMoreCoin(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
 	require.NoError(t, err)
@@ -460,9 +459,9 @@ func TestDustValidatorSharesAfterUndelegationError(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
 	require.NoError(t, err)
@@ -529,9 +528,9 @@ func TestDustValidatorSharesAfterRedelegationError(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
 	require.NoError(t, err)

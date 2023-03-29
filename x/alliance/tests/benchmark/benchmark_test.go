@@ -8,11 +8,11 @@ import (
 
 	"github.com/terra-money/alliance/x/alliance/tests/benchmark"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance"
@@ -64,14 +64,8 @@ func TestRunBenchmarks(t *testing.T) {
 			})
 		}
 
-		idx := simulation.RandIntBetween(r, 0, len(vals)-1)
-		proposerAddr := sdk.ValAddress(vals[idx])
-		proposer, err := app.AllianceKeeper.GetAllianceValidator(ctx, proposerAddr)
-		require.NoError(t, err)
-		proposerCons, _ := proposer.GetConsAddr()
-
 		// Begin block
-		app.DistrKeeper.AllocateTokens(ctx, totalVotingPower, totalVotingPower, proposerCons, voteInfo)
+		app.DistrKeeper.AllocateTokens(ctx, totalVotingPower, voteInfo)
 
 		// Delegator Actions
 		operationFunc := benchmark.GenerateOperationSlots(DelegationRate, RedelegationRate, UndelegationRate, RewardClaimRate)
@@ -95,7 +89,7 @@ func TestRunBenchmarks(t *testing.T) {
 		// Endblock
 		assets := app.AllianceKeeper.GetAllAssets(ctx)
 		app.AllianceKeeper.CompleteRedelegations(ctx)
-		err = app.AllianceKeeper.CompleteUndelegations(ctx)
+		err := app.AllianceKeeper.CompleteUndelegations(ctx)
 		if err != nil {
 			panic(err)
 		}

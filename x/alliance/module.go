@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	simulation2 "github.com/terra-money/alliance/x/alliance/tests/simulation"
 
@@ -13,7 +12,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/terra-money/alliance/x/alliance/client/cli"
 	"github.com/terra-money/alliance/x/alliance/keeper"
@@ -118,17 +117,6 @@ func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {
 	RegisterInvariants(registry, a.keeper)
 }
 
-// Deprecated: use RegisterServices
-func (a AppModule) Route() sdk.Route { return sdk.Route{} }
-
-// Deprecated: use RegisterServices
-func (AppModule) QuerierRoute() string { return types.RouterKey }
-
-// Deprecated: use RegisterServices
-func (a AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
-
 // RegisterServices registers a gRPC query service to respond to the module-specific gRPC queries
 func (a AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(a.keeper))
@@ -147,12 +135,8 @@ func (a AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation2.RandomizedGenesisState(simState)
 }
 
-func (a AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+func (a AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return nil
-}
-
-func (a AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return simulation2.ParamChanges()
 }
 
 func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
