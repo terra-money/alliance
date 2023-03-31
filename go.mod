@@ -25,7 +25,7 @@ require (
 	google.golang.org/protobuf v1.29.1
 )
 
-require github.com/cosmos/gogoproto v1.4.6
+require github.com/cosmos/gogoproto v1.4.7
 
 require (
 	cloud.google.com/go v0.110.0 // indirect
