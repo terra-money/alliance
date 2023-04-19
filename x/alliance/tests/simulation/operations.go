@@ -3,7 +3,8 @@ package simulation
 import (
 	"math/rand"
 
-	simappparams "cosmossdk.io/simapp/params"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -82,7 +83,7 @@ func SimulateMsgDelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types
 		txCtx := simulation.OperationInput{
 			R:               r,
 			App:             app,
-			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:           tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:             cdc,
 			Msg:             msg,
 			MsgType:         msg.Type(),
@@ -153,7 +154,7 @@ func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 		txCtx := simulation.OperationInput{
 			R:             r,
 			App:           app,
-			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:         tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:           cdc,
 			Msg:           msg,
 			MsgType:       msg.Type(),
@@ -214,7 +215,7 @@ func SimulateMsgUndelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 		txCtx := simulation.OperationInput{
 			R:             r,
 			App:           app,
-			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:         tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:           cdc,
 			Msg:           msg,
 			MsgType:       msg.Type(),
@@ -262,7 +263,7 @@ func SimulateMsgClaimRewards(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk t
 		txCtx := simulation.OperationInput{
 			R:             r,
 			App:           app,
-			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			TxGen:         tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:           cdc,
 			Msg:           msg,
 			MsgType:       msg.Type(),

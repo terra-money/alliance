@@ -5,7 +5,6 @@ go 1.20
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0
-	cosmossdk.io/simapp v0.0.0-20230224204036-a6adb0821462
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/cometbft/cometbft v0.37.0
 	github.com/cometbft/cometbft-db v0.7.0
