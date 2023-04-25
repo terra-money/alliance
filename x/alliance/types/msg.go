@@ -28,6 +28,10 @@ func NewMsgDelegate(delegatorAddress, validatorAddress string, amount sdk.Coin) 
 	}
 }
 
+func (msg MsgDelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
 func (m MsgDelegate) ValidateBasic() error {
 	if !m.Amount.Amount.GT(sdk.ZeroInt()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance delegation amount must be more than zero")
@@ -52,6 +56,10 @@ func NewMsgRedelegate(delegatorAddress, validatorSrcAddress, validatorDstAddress
 		ValidatorDstAddress: validatorDstAddress,
 		Amount:              amount,
 	}
+}
+
+func (msg MsgRedelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (m MsgRedelegate) ValidateBasic() error {
@@ -79,6 +87,10 @@ func NewMsgUndelegate(delegatorAddress, validatorAddress string, amount sdk.Coin
 	}
 }
 
+func (msg MsgUndelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
 func (m MsgUndelegate) ValidateBasic() error {
 	if m.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance undelegate amount must be more than zero")
@@ -101,6 +113,10 @@ func (m *MsgClaimDelegationRewards) ValidateBasic() error {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
 	return nil
+}
+
+func (msg MsgClaimDelegationRewards) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (m *MsgClaimDelegationRewards) GetSigners() []sdk.AccAddress {

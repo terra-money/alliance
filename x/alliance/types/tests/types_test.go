@@ -147,3 +147,16 @@ func TestInvalidProposalsContent(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgSendGetSignBytes(t *testing.T) {
+	coins := sdk.NewCoin("uluna", sdk.OneInt())
+	msg := types.NewMsgDelegate(
+		"terra...delegator",
+		"terra...validator",
+		coins,
+	)
+	res := msg.GetSignBytes()
+
+	expected := `{"type":"alliance/MsgDelegate","value":{"amount":{"amount":"1","denom":"uluna"},"delegator_address":"terra...delegator","validator_address":"terra...validator"}}`
+	require.Equal(t, expected, string(res))
+}
