@@ -11,7 +11,7 @@ import (
 )
 
 func TestAppExportAndBlockedAddrs(t *testing.T) {
-	app := Setup(t, false)
+	app := Setup(t)
 	_, err := app.ExportAppStateAndValidators(true, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 
