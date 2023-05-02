@@ -5,8 +5,8 @@ import (
 
 	"github.com/terra-money/alliance/app"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func createTestContext(t *testing.T) (*app.App, sdk.Context) {

@@ -3,16 +3,16 @@ package app
 import (
 	"testing"
 
+	db "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	db "github.com/tendermint/tm-db"
 )
 
 func TestAppExportAndBlockedAddrs(t *testing.T) {
 	app := Setup(t)
-	_, err := app.ExportAppStateAndValidators(true, []string{})
+	_, err := app.ExportAppStateAndValidators(true, []string{}, nil)
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 
 	app = New(
