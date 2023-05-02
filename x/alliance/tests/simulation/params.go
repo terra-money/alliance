@@ -10,7 +10,7 @@ import (
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
-func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
+func ParamChanges() []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, string(types.RewardDelayTime),
 			func(r *rand.Rand) string {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -146,4 +147,30 @@ func TestInvalidProposalsContent(t *testing.T) {
 			require.Error(t, err)
 		})
 	}
+}
+
+func TestAminoJSON(t *testing.T) {
+	msgDelegate := types.NewMsgDelegate("delegator", "validator", sdk.NewCoin("Alliance", sdk.NewInt(1000000000000000000)))
+	require.Equal(t,
+		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"alliance/MsgDelegate","value":{"amount":{"amount":"1000000000000000000","denom":"Alliance"},"delegator_address":"delegator","validator_address":"validator"}}],"sequence":"1","timeout_height":"1"}`,
+		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgDelegate}, "memo", nil)),
+	)
+
+	msgUndelegate := types.NewMsgUndelegate("delegator", "validator", sdk.NewCoin("Alliance", sdk.NewInt(1000000000000000000)))
+	require.Equal(t,
+		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"alliance/MsgUndelegate","value":{"amount":{"amount":"1000000000000000000","denom":"Alliance"},"delegator_address":"delegator","validator_address":"validator"}}],"sequence":"1","timeout_height":"1"}`,
+		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgUndelegate}, "memo", nil)),
+	)
+
+	msgRedelegate := types.NewMsgRedelegate("delegator", "validator", "validator1", sdk.NewCoin("Alliance", sdk.NewInt(1000000000000000000)))
+	require.Equal(t,
+		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"alliance/MsgRedelegate","value":{"amount":{"amount":"1000000000000000000","denom":"Alliance"},"delegator_address":"delegator","validator_dst_address":"validator1","validator_src_address":"validator"}}],"sequence":"1","timeout_height":"1"}`,
+		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgRedelegate}, "memo", nil)),
+	)
+
+	msgClaimDelegationRewards := types.NewMsgClaimDelegationRewards("delegator", "validator", "Alliance")
+	require.Equal(t,
+		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"alliance/MsgClaimDelegationRewards","value":{"delegator_address":"delegator","denom":"Alliance","validator_address":"validator"}}],"sequence":"1","timeout_height":"1"}`,
+		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgClaimDelegationRewards}, "memo", nil)),
+	)
 }

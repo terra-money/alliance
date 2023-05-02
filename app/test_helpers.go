@@ -37,7 +37,7 @@ import (
 )
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
-func Setup(t *testing.T, isCheckTx bool) *App {
+func Setup(t *testing.T) *App {
 	t.Helper()
 
 	privVal := mock.NewPV()
@@ -194,7 +194,7 @@ func MakeTestEncodingConfig() params.EncodingConfig {
 type EmptyAppOptions struct{}
 
 // Get implements AppOptions
-func (ao EmptyAppOptions) Get(o string) interface{} {
+func (ao EmptyAppOptions) Get(_ string) interface{} {
 	return nil
 }
 
