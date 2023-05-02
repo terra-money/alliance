@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -11,6 +12,11 @@ var (
 	_ sdk.Msg = &MsgRedelegate{}
 	_ sdk.Msg = &MsgUndelegate{}
 	_ sdk.Msg = &MsgClaimDelegationRewards{}
+
+	_ legacytx.LegacyMsg = &MsgDelegate{}
+	_ legacytx.LegacyMsg = &MsgRedelegate{}
+	_ legacytx.LegacyMsg = &MsgUndelegate{}
+	_ legacytx.LegacyMsg = &MsgClaimDelegationRewards{}
 )
 
 var (
@@ -28,22 +34,30 @@ func NewMsgDelegate(delegatorAddress, validatorAddress string, amount sdk.Coin) 
 	}
 }
 
-func (m MsgDelegate) ValidateBasic() error {
-	if !m.Amount.Amount.GT(sdk.ZeroInt()) {
+func (msg MsgDelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgDelegate) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+func (msg MsgDelegate) ValidateBasic() error {
+	if !msg.Amount.Amount.GT(sdk.ZeroInt()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance delegation amount must be more than zero")
 	}
 	return nil
 }
 
-func (m MsgDelegate) GetSigners() []sdk.AccAddress {
-	signer, err := sdk.AccAddressFromBech32(m.DelegatorAddress)
+func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		panic("DelegatorAddress signer from MsgDelegate is not valid")
 	}
 	return []sdk.AccAddress{signer}
 }
 
-func (msg MsgDelegate) Type() string { return MsgDelegateType } //nolint:revive // TODO: we should figure out how to differentiate this from MsgDelegate above.
+func (msg MsgDelegate) Type() string { return MsgDelegateType }
 
 func NewMsgRedelegate(delegatorAddress, validatorSrcAddress, validatorDstAddress string, amount sdk.Coin) *MsgRedelegate {
 	return &MsgRedelegate{
@@ -54,22 +68,30 @@ func NewMsgRedelegate(delegatorAddress, validatorSrcAddress, validatorDstAddress
 	}
 }
 
-func (m MsgRedelegate) ValidateBasic() error {
-	if m.Amount.Amount.LTE(sdk.ZeroInt()) {
+func (msg MsgRedelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgRedelegate) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+func (msg MsgRedelegate) ValidateBasic() error {
+	if msg.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance redelegation amount must be more than zero")
 	}
 	return nil
 }
 
-func (m MsgRedelegate) GetSigners() []sdk.AccAddress {
-	signer, err := sdk.AccAddressFromBech32(m.DelegatorAddress)
+func (msg MsgRedelegate) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		panic("DelegatorAddress signer from MsgRedelegate is not valid")
 	}
 	return []sdk.AccAddress{signer}
 }
 
-func (msg MsgRedelegate) Type() string { return MsgRedelegateType } //nolint:revive // should make receivers consistent
+func (msg MsgRedelegate) Type() string { return MsgRedelegateType }
 
 func NewMsgUndelegate(delegatorAddress, validatorAddress string, amount sdk.Coin) *MsgUndelegate {
 	return &MsgUndelegate{
@@ -79,36 +101,60 @@ func NewMsgUndelegate(delegatorAddress, validatorAddress string, amount sdk.Coin
 	}
 }
 
-func (m MsgUndelegate) ValidateBasic() error {
-	if m.Amount.Amount.LTE(sdk.ZeroInt()) {
+func (msg MsgUndelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgUndelegate) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+func (msg MsgUndelegate) ValidateBasic() error {
+	if msg.Amount.Amount.LTE(sdk.ZeroInt()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance undelegate amount must be more than zero")
 	}
 	return nil
 }
 
-func (m MsgUndelegate) GetSigners() []sdk.AccAddress {
-	signer, err := sdk.AccAddressFromBech32(m.DelegatorAddress)
+func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		panic("DelegatorAddress signer from MsgUndelegate is not valid")
 	}
 	return []sdk.AccAddress{signer}
 }
 
-func (msg MsgUndelegate) Type() string { return MsgUndelegateType } //nolint:revive // should make receivers consistent
+func (msg MsgUndelegate) Type() string { return MsgUndelegateType }
 
-func (m *MsgClaimDelegationRewards) ValidateBasic() error {
-	if m.Denom == "" {
+func NewMsgClaimDelegationRewards(delegatorAddress, validatorAddress, denom string) *MsgClaimDelegationRewards {
+	return &MsgClaimDelegationRewards{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: validatorAddress,
+		Denom:            denom,
+	}
+}
+
+func (msg *MsgClaimDelegationRewards) ValidateBasic() error {
+	if msg.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
 	return nil
 }
 
-func (m *MsgClaimDelegationRewards) GetSigners() []sdk.AccAddress {
-	signer, err := sdk.AccAddressFromBech32(m.DelegatorAddress)
+func (msg MsgClaimDelegationRewards) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+func (msg MsgClaimDelegationRewards) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg *MsgClaimDelegationRewards) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		panic("DelegatorAddress signer from MsgClaimDelegationRewards is not valid")
 	}
 	return []sdk.AccAddress{signer}
 }
 
-func (msg MsgClaimDelegationRewards) Type() string { return MsgClaimDelegationRewardsType } //nolint:revive // should make receivers consistent
+func (msg MsgClaimDelegationRewards) Type() string { return MsgClaimDelegationRewardsType }
