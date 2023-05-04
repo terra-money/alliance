@@ -220,7 +220,7 @@ func (k QueryServer) Alliance(c context.Context, req *types.QueryAllianceRequest
 	}, nil
 }
 
-func (k QueryServer) IBCAlliance(c context.Context, request *types.QueryIBCAllianceRequest) (*types.QueryAllianceResponse, error) {
+func (k QueryServer) IBCAlliance(c context.Context, request *types.QueryIBCAllianceRequest) (*types.QueryAllianceResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceRequest is deprecated
 	req := types.QueryAllianceRequest{
 		Denom: "ibc/" + request.Hash,
 	}
@@ -265,7 +265,7 @@ func (k QueryServer) AllianceDelegationRewards(context context.Context, req *typ
 	}, nil
 }
 
-func (k QueryServer) IBCAllianceDelegationRewards(context context.Context, request *types.QueryIBCAllianceDelegationRewardsRequest) (*types.QueryAllianceDelegationRewardsResponse, error) {
+func (k QueryServer) IBCAllianceDelegationRewards(context context.Context, request *types.QueryIBCAllianceDelegationRewardsRequest) (*types.QueryAllianceDelegationRewardsResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRewardsRequest is deprecated
 	req := types.QueryAllianceDelegationRewardsRequest{
 		DelegatorAddr: request.DelegatorAddr,
 		ValidatorAddr: request.ValidatorAddr,
@@ -447,7 +447,7 @@ func (k QueryServer) AllianceDelegation(c context.Context, req *types.QueryAllia
 	}, nil
 }
 
-func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.QueryIBCAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) {
+func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.QueryIBCAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRequest is deprecated
 	req := types.QueryAllianceDelegationRequest{
 		DelegatorAddr: request.DelegatorAddr,
 		ValidatorAddr: request.ValidatorAddr,

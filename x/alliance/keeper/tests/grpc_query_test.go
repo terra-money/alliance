@@ -160,7 +160,7 @@ func TestQueryAnUniqueIBCAlliance(t *testing.T) {
 	alliances, err := queryServer.Alliance(ctx, &types.QueryAllianceRequest{
 		Denom: "ibc%2Falliance2",
 	})
-	alliancesIbcEndpoint, err2 := queryServer.IBCAlliance(ctx, &types.QueryIBCAllianceRequest{
+	alliancesIbcEndpoint, err2 := queryServer.IBCAlliance(ctx, &types.QueryIBCAllianceRequest{ //nolint:staticcheck // SA1019: types.types.QueryIBCAllianceRequest is deprecated
 		Hash: "alliance2",
 	})
 
