@@ -1,5 +1,5 @@
 syntax = "proto3";
-package alliance.alliance;
+package alliance;
 
 import "alliance/alliance.proto";
 import "gogoproto/gogo.proto";
