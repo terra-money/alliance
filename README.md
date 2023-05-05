@@ -28,6 +28,12 @@ By design, x/alliance use the following CosmosSDK modules to implement interchai
 - [x/distribution](https://github.com/cosmos/cosmos-sdk/blob/main/x/distribution/README.md), 
 - [x/gov](https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/README.md).
 
+Compatibility matrix:
+
+| Release | Branch         | CosmosSDK |
+|---------|----------------|-----------|
+| v0.2.0  | release/v0.2.x | 0.47      |
+| v0.1.0  | release/v0.1.x | 0.46      |
 
 # Development environment
 This project uses [Go v1.19](https://go.dev/dl/) and was bootstrapped with [Ignite CLI v0.25.1](https://docs.ignite.com/). However, for ease of upgrade, ignite has been removed in favor of manual workflows.
