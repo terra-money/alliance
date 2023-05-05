@@ -22,7 +22,12 @@ service Query {
   }
 
   // Query a specific alliance by ibc hash
+  // @deprecated: this endpoint will be replaced for by the encoded version
+  // of the denom e.g.: GET:/terra/alliances/ibc%2Falliance
   rpc IBCAlliance(QueryIBCAllianceRequest) returns (QueryAllianceResponse) {
+    // Deprecated. Please use the default endpoint 
+    // with the encoded denom e.g from ibc/alliance to ibc%2Falliance
+    option deprecated = true;
     option (google.api.http).get = "/terra/alliances/ibc/{hash}";
   }
 
@@ -57,7 +62,12 @@ service Query {
   }
 
   // Query a delegation to an alliance by delegator addr, validator_addr and denom
+  // @deprecated: this endpoint will be replaced for by the encoded version
+  // of the denom e.g.: GET:/terra/alliances/terradr1231/terravaloper41234/ibc%2Falliance
   rpc IBCAllianceDelegation(QueryIBCAllianceDelegationRequest) returns (QueryAllianceDelegationResponse) {
+    // Deprecated. Please use the default endpoint 
+    // with the encoded denom e.g from ibc/alliance to ibc%2Falliance
+    option deprecated = true;
     option (google.api.http).get = "/terra/alliances/delegations/{delegator_addr}/{validator_addr}/ibc/{hash}";
   }
 
@@ -66,7 +76,12 @@ service Query {
     option (google.api.http).get = "/terra/alliances/rewards/{delegator_addr}/{validator_addr}/{denom}";
   }
   // Query for rewards by delegator addr, validator_addr and denom
+  // @deprecated: this endpoint will be replaced for by the encoded version
+  // of the denom e.g.: GET:/terra/alliances/terradr1231/terravaloper41234/ibc%2Falliance
   rpc IBCAllianceDelegationRewards(QueryIBCAllianceDelegationRewardsRequest) returns (QueryAllianceDelegationRewardsResponse) {
+    // Deprecated. Please use the default endpoint 
+    // with the encoded denom e.g from ibc/alliance to ibc%2Falliance
+    option deprecated = true;
     option (google.api.http).get = "/terra/alliances/rewards/{delegator_addr}/{validator_addr}/ibc/{hash}";
   }
 
@@ -103,6 +118,9 @@ message QueryAllianceResponse {
 }
 
 message QueryIBCAllianceRequest {
+  // Deprecated. Please use the default endpoint 
+  // with the encoded denom e.g from 
+  option deprecated = true;
   string hash = 1;
 }
 
@@ -173,6 +191,9 @@ message QueryAllianceDelegationRequest {
 }
 
 message QueryIBCAllianceDelegationRequest {
+  // Deprecated. Please use the default endpoint 
+  // with the encoded denom e.g from 
+  option deprecated = true;
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -198,6 +219,9 @@ message QueryAllianceDelegationRewardsRequest {
 }
 
 message QueryIBCAllianceDelegationRewardsRequest {
+  // Deprecated. Please use the default endpoint 
+  // with the encoded denom e.g from 
+  option deprecated = true;
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
