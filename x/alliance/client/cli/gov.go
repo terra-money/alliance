@@ -15,7 +15,7 @@ import (
 
 func CreateAlliance() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-alliance denom rewards-weight rewards-weight-min rewards-weight-max take-rate reward-change-rate reward-change-interval",
+		Use:   "create-alliance denom reward-weight reward-weight-min reward-weight-max take-rate reward-change-rate reward-change-interval",
 		Args:  cobra.ExactArgs(7),
 		Short: "Create an alliance with the specified parameters",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -118,7 +118,7 @@ func CreateAlliance() *cobra.Command {
 
 func UpdateAlliance() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-alliance denom rewards-weight take-rate reward-change-rate reward-change-interval",
+		Use:   "update-alliance denom reward-weight take-rate reward-change-rate reward-change-interval",
 		Args:  cobra.ExactArgs(5),
 		Short: "Update an alliance with the specified parameters",
 		RunE: func(cmd *cobra.Command, args []string) error {
