@@ -99,6 +99,7 @@ test-e2e:
 test-benchmark:
 	@VERSION=$(VERSION) go test -v -mod=readonly -tags='ledger test_ledger_mock' github.com/terra-money/alliance/x/alliance/tests/benchmark
 
+.PHONY: test test-unit test-e2e test-benchmark
 ###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
@@ -121,30 +122,14 @@ format: format-tools
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*pb.gw.go" | xargs misspell -w
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*pb.gw.go" | xargs goimports -w -local github.com/terra-money/alliance
 
-
 ###############################################################################
 ###                                Protobuf                                 ###
 ###############################################################################
-PROTO_BUILDER_IMAGE=tendermintdev/sdk-proto-gen:v0.7
-
-proto-all: proto-swagger-gen proto-gen
+PROTO_BUILDER_IMAGE=ghcr.io/cosmos/proto-builder
 
 proto-gen:
 	@echo "Generating Protobuf files"
 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) sh ./scripts/protocgen.sh
-
-
-###############################################################################
-###                           Local Testnet (Single Node)                   ###
-###############################################################################
-
-serve: install init start
-
-init:
-	cd scripts/local && bash init.sh
-
-start:
-	cd scripts/local && bash start.sh
 
 ###############################################################################
 ###                                Local Testnet (docker)                   ###
