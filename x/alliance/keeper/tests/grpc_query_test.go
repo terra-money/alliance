@@ -157,7 +157,10 @@ func TestQueryAnUniqueIBCAlliance(t *testing.T) {
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// WHEN: QUERYING THE ALLIANCES LIST
-	alliances, err := queryServer.IBCAlliance(ctx, &types.QueryIBCAllianceRequest{
+	alliances, err := queryServer.Alliance(ctx, &types.QueryAllianceRequest{
+		Denom: "ibc%2Falliance2",
+	})
+	alliancesIbcEndpoint, err2 := queryServer.IBCAlliance(ctx, &types.QueryIBCAllianceRequest{ //nolint:staticcheck // SA1019: types.types.QueryIBCAllianceRequest is deprecated
 		Hash: "alliance2",
 	})
 
@@ -175,6 +178,20 @@ func TestQueryAnUniqueIBCAlliance(t *testing.T) {
 			RewardChangeInterval: 0,
 		},
 	}, alliances)
+
+	require.Nil(t, err2)
+	require.Equal(t, &types.QueryAllianceResponse{
+		Alliance: &types.AllianceAsset{
+			Denom:                "ibc/alliance2",
+			RewardWeight:         sdk.NewDec(10),
+			RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(2), Max: sdk.NewDec(12)},
+			TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
+			TotalTokens:          sdk.ZeroInt(),
+			TotalValidatorShares: sdk.NewDec(0),
+			RewardChangeRate:     sdk.NewDec(0),
+			RewardChangeInterval: 0,
+		},
+	}, alliancesIbcEndpoint)
 }
 
 func TestQueryAllianceNotFound(t *testing.T) {

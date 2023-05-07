@@ -165,10 +165,7 @@ func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, v
 		return
 	}
 
-	dstValAddr := sdk.ValAddress(vals[r.Intn(len(vals)-1)])
-	for dstValAddr.Equals(srcValAddr) {
-		dstValAddr = sdk.ValAddress(vals[r.Intn(len(vals)-1)])
-	}
+	dstValAddr := getRandomValAddress(r, vals, srcValAddr)
 	dstValidator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, dstValAddr)
 
 	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, srcValidator.GetOperator(), asset.Denom)
@@ -183,6 +180,22 @@ func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, v
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getRandomValAddress(r *rand.Rand, vals []sdk.AccAddress, srcValAddr sdk.ValAddress) sdk.ValAddress {
+	var dstValAddr sdk.ValAddress
+
+	for {
+		// Get a random destination validator address
+		dstValAddr = sdk.ValAddress(vals[r.Intn(len(vals)-1)])
+
+		// Break the loop if the destination validator address is different from the source validator address
+		if !dstValAddr.Equals(srcValAddr) {
+			break
+		}
+	}
+
+	return dstValAddr
 }
 
 func undelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {

@@ -15,7 +15,7 @@ import (
 
 func CreateAlliance() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-alliance denom rewards-weight rewards-weight-min rewards-weight-max take-rate reward-change-rate reward-change-interval",
+		Use:   "create-alliance denom reward-weight reward-weight-min reward-weight-max take-rate reward-change-rate reward-change-interval",
 		Args:  cobra.ExactArgs(7),
 		Short: "Create an alliance with the specified parameters",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -23,7 +23,7 @@ func CreateAlliance() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			title, err := cmd.Flags().GetString(govcli.FlagTitle) //nolint:staticcheck // SA1019: govcli.FlagTitle is deprecated
+			title, err := cmd.Flags().GetString(govcli.FlagTitle)
 			if err != nil {
 				return err
 			}
@@ -110,7 +110,7 @@ func CreateAlliance() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")             //nolint:staticcheck
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	return cmd
@@ -118,7 +118,7 @@ func CreateAlliance() *cobra.Command {
 
 func UpdateAlliance() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-alliance denom rewards-weight take-rate reward-change-rate reward-change-interval",
+		Use:   "update-alliance denom reward-weight take-rate reward-change-rate reward-change-interval",
 		Args:  cobra.ExactArgs(5),
 		Short: "Update an alliance with the specified parameters",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -126,7 +126,7 @@ func UpdateAlliance() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			title, err := cmd.Flags().GetString(govcli.FlagTitle) //nolint:staticcheck
+			title, err := cmd.Flags().GetString(govcli.FlagTitle)
 			if err != nil {
 				return err
 			}
@@ -199,7 +199,7 @@ func UpdateAlliance() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")             //nolint:staticcheck // SA1019: govcli.FlagTitle is deprecated
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck // SA1019: govcli.FlagDescription is deprecated
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	return cmd
@@ -215,7 +215,7 @@ func DeleteAlliance() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			title, err := cmd.Flags().GetString(govcli.FlagTitle) //nolint:staticcheck // SA1019: govcli.FlagTitle is deprecated
+			title, err := cmd.Flags().GetString(govcli.FlagTitle)
 			if err != nil {
 				return err
 			}
@@ -264,7 +264,7 @@ func DeleteAlliance() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")             //nolint:staticcheck // SA1019: govcli.FlagTitle is deprecated: use FlagTitle instead
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal") //nolint:staticcheck // SA1019: govcli.FlagDescription is deprecated: use FlagDescription instead
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	return cmd
