@@ -9,7 +9,7 @@ require (
 	github.com/cometbft/cometbft v0.37.1
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2
-	github.com/cosmos/cosmos-sdk v0.47.3-0.20230513170018-83d600596f5d
+	github.com/cosmos/cosmos-sdk v0.47.2
 	github.com/cosmos/ibc-go/v7 v7.0.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
@@ -164,4 +164,12 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
+)
+
+replace (
+	// Using the latest branch for cosmos-sdk 47 for a fix regarding simulations not allowing non EOA accounts to stake
+	// To remove after a new release of cosmos-sdk 47
+	github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.47.3-0.20230513170018-83d600596f5d
+	// Golevel DB fix
+	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
