@@ -19,6 +19,8 @@ type QueryServer struct {
 	Keeper
 }
 
+var _ types.QueryServer = QueryServer{}
+
 func (k QueryServer) AllAlliancesDelegations(c context.Context, req *types.QueryAllAlliancesDelegationsRequest) (*types.QueryAlliancesDelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -139,8 +141,6 @@ func (k QueryServer) AllAllianceValidators(c context.Context, req *types.QueryAl
 	res.Pagination = pageRes
 	return res, nil
 }
-
-var _ types.QueryServer = QueryServer{}
 
 func (k QueryServer) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	// Define a variable that will store the params
@@ -447,6 +447,27 @@ func (k QueryServer) AllianceDelegation(c context.Context, req *types.QueryAllia
 	}, nil
 }
 
+func (k QueryServer) AllianceUnbondingDelegations(c context.Context, req *types.QueryAllianceDelegationsUnbondingsRequest) (*types.QueryAllianceDelegationsUnbondingsResponse, error) {
+	// ctx := sdk.UnwrapSDKContext(c)
+	// decodedDenom, err := url.QueryUnescape(req.Denom)
+	// if err == nil {
+	// 	req.Denom = decodedDenom
+	// }
+	//
+	// delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	//
+	// valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	return &types.QueryAllianceDelegationsUnbondingsResponse{
+		Unbondings: []types.UnbondingDelegation{},
+	}, nil
+}
+
 func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.QueryIBCAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRequest is deprecated
 	req := types.QueryAllianceDelegationRequest{
 		DelegatorAddr: request.DelegatorAddr,
@@ -458,5 +479,7 @@ func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.Que
 }
 
 func NewQueryServerImpl(keeper Keeper) types.QueryServer {
-	return &QueryServer{Keeper: keeper}
+	return &QueryServer{
+		Keeper: keeper,
+	}
 }

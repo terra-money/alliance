@@ -1,6 +1,8 @@
 package types
 
 import (
+	"bytes"
+	"errors"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -143,6 +145,42 @@ func GetUnbondingIndexKey(valAddr sdk.ValAddress, completion time.Time, denom st
 	return key
 }
 
+func GetUnbondingKeySuffix(denom string, delAddress sdk.AccAddress) (key []byte) {
+	key = append(key, address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
+	key = append(key, address.MustLengthPrefix(delAddress)...)
+	return key
+}
+
+func ParseUndelegationKey(key []byte) (
+	valAddr sdk.ValAddress,
+	unbondingCompletionTime time.Time,
+	delAddr sdk.AccAddress,
+	err error,
+) {
+	offset := len(UndelegationByValidatorIndexKey)
+	if !bytes.HasPrefix(key, UndelegationByValidatorIndexKey) {
+		return valAddr, unbondingCompletionTime, delAddr, errors.New("invalid undelegation key prefix")
+	}
+
+	valAddrBytes := int(key[offset])
+	offset++
+	if len(key) < offset+valAddrBytes {
+		return valAddr, unbondingCompletionTime, delAddr, errors.New("invalid undelegation key corrupted validator address")
+	}
+	valAddr = sdk.ValAddress(key[offset : offset+valAddrBytes])
+
+	unbondingCompletionTimeBytes := int(key[offset])
+	offset++
+	if len(key) < offset+unbondingCompletionTimeBytes {
+		return valAddr, unbondingCompletionTime, delAddr, errors.New("invalid undelegation key corrupted validator address")
+	}
+	unbondingCompletionTime, err = sdk.ParseTimeBytes(key[offset : offset+unbondingCompletionTimeBytes])
+	if err != nil {
+		return valAddr, unbondingCompletionTime, delAddr, err
+	}
+	return valAddr, unbondingCompletionTime, delAddr, nil
+}
+
 func GetUndelegationsIndexOrderedByValidatorKey(valAddr sdk.ValAddress) []byte {
 	key := append(UndelegationByValidatorIndexKey, address.MustLengthPrefix(valAddr)...) //nolint:gocritic // we intend to append this way
 	return key
@@ -223,6 +261,10 @@ func GetUndelegationQueueKeyByTime(completion time.Time) (key []byte) {
 	bz := sdk.FormatTimeBytes(completion)
 	key = append(UndelegationQueueKey, address.MustLengthPrefix(bz)...) //nolint:gocritic // we intend to append this way
 	return key
+}
+
+func GetUndelegationDelAddressKey(delAddr sdk.AccAddress) (key []byte) {
+	return append(key, address.MustLengthPrefix(delAddr)...)
 }
 
 func GetUndelegationQueueKey(completion time.Time, delAddr sdk.AccAddress) (key []byte) {

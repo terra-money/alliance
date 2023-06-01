@@ -39,6 +39,9 @@
     - [MsgDeleteAllianceProposal](#alliance.MsgDeleteAllianceProposal)
     - [MsgUpdateAllianceProposal](#alliance.MsgUpdateAllianceProposal)
   
+- [alliance/unbonding.proto](#alliance/unbonding.proto)
+    - [UnbondingDelegation](#alliance.UnbondingDelegation)
+  
 - [alliance/query.proto](#alliance/query.proto)
     - [DelegationResponse](#alliance.DelegationResponse)
     - [QueryAllAllianceValidatorsRequest](#alliance.QueryAllAllianceValidatorsRequest)
@@ -47,6 +50,8 @@
     - [QueryAllianceDelegationResponse](#alliance.QueryAllianceDelegationResponse)
     - [QueryAllianceDelegationRewardsRequest](#alliance.QueryAllianceDelegationRewardsRequest)
     - [QueryAllianceDelegationRewardsResponse](#alliance.QueryAllianceDelegationRewardsResponse)
+    - [QueryAllianceDelegationsUnbondingsRequest](#alliance.QueryAllianceDelegationsUnbondingsRequest)
+    - [QueryAllianceDelegationsUnbondingsResponse](#alliance.QueryAllianceDelegationsUnbondingsResponse)
     - [QueryAllianceRequest](#alliance.QueryAllianceRequest)
     - [QueryAllianceResponse](#alliance.QueryAllianceResponse)
     - [QueryAllianceValidatorRequest](#alliance.QueryAllianceValidatorRequest)
@@ -588,6 +593,39 @@ GenesisState defines the module's genesis state.
 
 
 
+<a name="alliance/unbonding.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## alliance/unbonding.proto
+
+
+
+<a name="alliance.UnbondingDelegation"></a>
+
+### UnbondingDelegation
+UnbondingDelegation defines an unbonding object with relevant metadata.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time is the unix time for unbonding completion. |
+| `initial_balance` | [string](#string) |  | initial_balance defines the tokens initially scheduled to receive at completion. |
+| `balance` | [string](#string) |  | balance defines the tokens to receive at completion. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="alliance/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -702,6 +740,40 @@ AllianceDelegation
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `rewards` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="alliance.QueryAllianceDelegationsUnbondingsRequest"></a>
+
+### QueryAllianceDelegationsUnbondingsRequest
+AllianceDelegation
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator_addr` | [string](#string) |  |  |
+| `validator_addr` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+
+
+
+
+
+
+<a name="alliance.QueryAllianceDelegationsUnbondingsResponse"></a>
+
+### QueryAllianceDelegationsUnbondingsResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `unbondings` | [UnbondingDelegation](#alliance.UnbondingDelegation) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
 
 
@@ -968,6 +1040,7 @@ Params
 | `IBCAllianceDelegation` | [QueryIBCAllianceDelegationRequest](#alliance.QueryIBCAllianceDelegationRequest) | [QueryAllianceDelegationResponse](#alliance.QueryAllianceDelegationResponse) | Query a delegation to an alliance by delegator addr, validator_addr and denom @deprecated: this endpoint will be replaced for by the encoded version of the denom e.g.: GET:/terra/alliances/terradr1231/terravaloper41234/ibc%2Falliance | GET|/terra/alliances/delegations/{delegator_addr}/{validator_addr}/ibc/{hash}|
 | `AllianceDelegationRewards` | [QueryAllianceDelegationRewardsRequest](#alliance.QueryAllianceDelegationRewardsRequest) | [QueryAllianceDelegationRewardsResponse](#alliance.QueryAllianceDelegationRewardsResponse) | Query for rewards by delegator addr, validator_addr and denom | GET|/terra/alliances/rewards/{delegator_addr}/{validator_addr}/{denom}|
 | `IBCAllianceDelegationRewards` | [QueryIBCAllianceDelegationRewardsRequest](#alliance.QueryIBCAllianceDelegationRewardsRequest) | [QueryAllianceDelegationRewardsResponse](#alliance.QueryAllianceDelegationRewardsResponse) | Query for rewards by delegator addr, validator_addr and denom @deprecated: this endpoint will be replaced for by the encoded version of the denom e.g.: GET:/terra/alliances/terradr1231/terravaloper41234/ibc%2Falliance | GET|/terra/alliances/rewards/{delegator_addr}/{validator_addr}/ibc/{hash}|
+| `AllianceUnbondingDelegations` | [QueryAllianceDelegationsUnbondingsRequest](#alliance.QueryAllianceDelegationsUnbondingsRequest) | [QueryAllianceDelegationsUnbondingsResponse](#alliance.QueryAllianceDelegationsUnbondingsResponse) | Query for rewards by delegator addr, validator_addr and denom | GET|/terra/alliances/unbondings/{delegator_addr}/{validator_addr}/{denom}|
 | `Alliance` | [QueryAllianceRequest](#alliance.QueryAllianceRequest) | [QueryAllianceResponse](#alliance.QueryAllianceResponse) | Query a specific alliance by denom | GET|/terra/alliances/{denom}|
 
  <!-- end services -->

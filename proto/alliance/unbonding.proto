@@ -1,0 +1,29 @@
+syntax = "proto3";
+package alliance;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/terra-money/alliance/x/alliance/types";
+
+// UnbondingDelegation defines an unbonding object with relevant metadata.
+message UnbondingDelegation {
+    option (gogoproto.equal)            = true;
+    
+    // completion_time is the unix time for unbonding completion.
+    google.protobuf.Timestamp completion_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+    // initial_balance defines the tokens initially scheduled to receive at completion.
+    string initial_balance = 2 [
+      (cosmos_proto.scalar)  = "cosmos.Int",
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+      (gogoproto.nullable)   = false
+    ];
+    // balance defines the tokens to receive at completion.
+    string balance = 3 [
+      (cosmos_proto.scalar)  = "cosmos.Int",
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+      (gogoproto.nullable)   = false
+    ];
+  }

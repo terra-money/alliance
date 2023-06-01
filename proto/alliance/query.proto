@@ -8,6 +8,7 @@ import "alliance/params.proto";
 import "alliance/alliance.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "alliance/delegations.proto";
+import "alliance/unbonding.proto";
 
 option go_package = "github.com/terra-money/alliance/x/alliance/types";
 
@@ -83,6 +84,11 @@ service Query {
     // with the encoded denom e.g from ibc/alliance to ibc%2Falliance
     option deprecated = true;
     option (google.api.http).get = "/terra/alliances/rewards/{delegator_addr}/{validator_addr}/ibc/{hash}";
+  }
+
+  // Query for rewards by delegator addr, validator_addr and denom
+  rpc AllianceUnbondingDelegations(QueryAllianceDelegationsUnbondingsRequest) returns (QueryAllianceDelegationsUnbondingsResponse) {
+    option (google.api.http).get = "/terra/alliances/unbondings/{delegator_addr}/{validator_addr}/{denom}";
   }
 
   // Query a specific alliance by denom
@@ -264,5 +270,26 @@ message QueryAllianceValidatorsResponse {
   repeated QueryAllianceValidatorResponse validators = 1 [
     (gogoproto.nullable)   = false
   ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// AllianceDelegation
+message QueryAllianceDelegationsUnbondingsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_addr  = 1;
+  string validator_addr  = 2;
+  string denom           = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+message QueryAllianceDelegationsUnbondingsResponse {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  repeated UnbondingDelegation unbondings = 1 [(gogoproto.nullable) = false];
+
+  // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

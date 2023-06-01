@@ -4,6 +4,7 @@ deps:
   - buf.build/cosmos/cosmos-sdk
   - buf.build/cosmos/cosmos-proto
   - buf.build/googleapis/googleapis
+  - buf.build/cosmos/gogo-proto
 breaking:
   use:
     - FILE
