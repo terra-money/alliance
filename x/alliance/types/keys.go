@@ -1,8 +1,6 @@
 package types
 
 import (
-	"bytes"
-	"errors"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -154,31 +152,35 @@ func GetUnbondingKeySuffix(denom string, delAddress sdk.AccAddress) (key []byte)
 func ParseUndelegationKey(key []byte) (
 	valAddr sdk.ValAddress,
 	unbondingCompletionTime time.Time,
+	denom string,
 	delAddr sdk.AccAddress,
 	err error,
 ) {
 	offset := len(UndelegationByValidatorIndexKey)
-	if !bytes.HasPrefix(key, UndelegationByValidatorIndexKey) {
-		return valAddr, unbondingCompletionTime, delAddr, errors.New("invalid undelegation key prefix")
-	}
 
-	valAddrBytes := int(key[offset])
+	valAddrLen := int(key[offset])
 	offset++
-	if len(key) < offset+valAddrBytes {
-		return valAddr, unbondingCompletionTime, delAddr, errors.New("invalid undelegation key corrupted validator address")
-	}
-	valAddr = sdk.ValAddress(key[offset : offset+valAddrBytes])
+	valAddr = sdk.ValAddress(key[offset : offset+valAddrLen])
+	offset += valAddrLen
 
-	unbondingCompletionTimeBytes := int(key[offset])
+	timeLen := int(key[offset])
 	offset++
-	if len(key) < offset+unbondingCompletionTimeBytes {
-		return valAddr, unbondingCompletionTime, delAddr, errors.New("invalid undelegation key corrupted validator address")
-	}
-	unbondingCompletionTime, err = sdk.ParseTimeBytes(key[offset : offset+unbondingCompletionTimeBytes])
-	if err != nil {
-		return valAddr, unbondingCompletionTime, delAddr, err
-	}
-	return valAddr, unbondingCompletionTime, delAddr, nil
+	timeBytes := key[offset : offset+timeLen]
+	offset += timeLen
+
+	denomLen := int(key[offset])
+	offset++
+	denom = string(key[offset : offset+denomLen])
+	offset += denomLen
+
+	delAddrLen := int(key[offset])
+	offset++
+	delAddrBytes := key[offset : offset+delAddrLen]
+	delAddr = sdk.AccAddress(delAddrBytes)
+
+	unbondingCompletionTime, err = sdk.ParseTimeBytes(timeBytes)
+
+	return valAddr, unbondingCompletionTime, denom, delAddr, err
 }
 
 func GetUndelegationsIndexOrderedByValidatorKey(valAddr sdk.ValAddress) []byte {

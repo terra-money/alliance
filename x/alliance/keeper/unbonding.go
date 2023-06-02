@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/terra-money/alliance/x/alliance/types"
@@ -23,14 +24,14 @@ func (k Keeper) GetAllUnbondings(ctx sdk.Context, denom string, delegator sdk.Ac
 			continue // Skip keys that don't have the desired suffix
 		}
 
-		_, time, _, err := types.ParseUndelegationKey(key)
+		valAddr, unbondingCompletionTime, denom, delAddr, err := types.ParseUndelegationKey(key)
 		if err != nil {
 			return nil, err
 		}
-
+		fmt.Printf("%s, %s, %s, %s", valAddr, unbondingCompletionTime, denom, delAddr)
 		// Process and append item to the results
 		item := types.UnbondingDelegation{
-			CompletionTime: time,
+			CompletionTime: unbondingCompletionTime,
 		}
 		items = append(items, item)
 	}
