@@ -247,49 +247,6 @@ func (k Keeper) CompleteRedelegations(ctx sdk.Context) int {
 	return deleted
 }
 
-// CompleteUndelegations Go through all queued undelegations and send the tokens to the delegators
-func (k Keeper) CompleteUndelegations(ctx sdk.Context) error {
-	store := ctx.KVStore(k.storeKey)
-	iter := k.IterateUndelegationsByCompletionTime(ctx, ctx.BlockTime())
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		var queued types.QueuedUndelegation
-		completionTime, err := types.ParseUndelegationQueueKeyForCompletionTime(iter.Key())
-		if err != nil {
-			return err
-		}
-		k.cdc.MustUnmarshal(iter.Value(), &queued)
-		for _, undel := range queued.Entries {
-			delAddr, err := sdk.AccAddressFromBech32(undel.DelegatorAddress)
-			if err != nil {
-				return err
-			}
-			err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, delAddr, sdk.NewCoins(undel.Balance))
-			if err != nil {
-				return err
-			}
-			valAddr, err := sdk.ValAddressFromBech32(undel.ValidatorAddress)
-			if err != nil {
-				return err
-			}
-			indexKey := types.GetUnbondingIndexKey(valAddr, completionTime, undel.Balance.Denom, delAddr)
-			store.Delete(indexKey)
-		}
-		store.Delete(iter.Key())
-	}
-
-	// Burn all "virtual" staking tokens in the module account
-	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	coin := k.bankKeeper.GetBalance(ctx, moduleAddr, k.stakingKeeper.BondDenom(ctx))
-	if !coin.IsZero() {
-		err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coin))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (k Keeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string) (d types.Delegation, found bool) {
 	key := types.GetDelegationKey(delAddr, valAddr, denom)
 	b := ctx.KVStore(k.storeKey).Get(key)

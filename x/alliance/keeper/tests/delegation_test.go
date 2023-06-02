@@ -627,7 +627,7 @@ func TestSuccessfulUndelegation(t *testing.T) {
 	}, d)
 
 	// Immediately try to complete undelegation
-	err = app.AllianceKeeper.CompleteUndelegations(ctx)
+	err = app.AllianceKeeper.CompleteUnbondings(ctx)
 	require.NoError(t, err)
 
 	// Check that balance stayed the same
@@ -637,7 +637,7 @@ func TestSuccessfulUndelegation(t *testing.T) {
 	// Advance time to after unbonding period
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(app.StakingKeeper.UnbondingTime(ctx)).Add(time.Minute))
 
-	err = app.AllianceKeeper.CompleteUndelegations(ctx)
+	err = app.AllianceKeeper.CompleteUnbondings(ctx)
 	require.NoError(t, err)
 
 	// Check that balance increased
@@ -645,7 +645,7 @@ func TestSuccessfulUndelegation(t *testing.T) {
 	require.Equal(t, sdk.NewCoin(AllianceDenom, sdk.NewInt(1500_000)), coin)
 
 	// Completing again should not process anymore undelegations
-	err = app.AllianceKeeper.CompleteUndelegations(ctx)
+	err = app.AllianceKeeper.CompleteUnbondings(ctx)
 	require.NoError(t, err)
 }
 

@@ -143,17 +143,15 @@ func GetUnbondingIndexKey(valAddr sdk.ValAddress, completion time.Time, denom st
 	return key
 }
 
-func GetUnbondingKeySuffix(denom string, delAddress sdk.AccAddress) (key []byte) {
+func GetPartialUnbondingKeySuffix(denom string, delAddress sdk.AccAddress) (key []byte) {
 	key = append(key, address.MustLengthPrefix(CreateDenomAddressPrefix(denom))...)
 	key = append(key, address.MustLengthPrefix(delAddress)...)
 	return key
 }
 
-func ParseUndelegationKey(key []byte) (
+func PartiallyParseUndelegationKeyBytes(key []byte) (
 	valAddr sdk.ValAddress,
 	unbondingCompletionTime time.Time,
-	denom string,
-	delAddr sdk.AccAddress,
 	err error,
 ) {
 	offset := len(UndelegationByValidatorIndexKey)
@@ -168,19 +166,22 @@ func ParseUndelegationKey(key []byte) (
 	timeBytes := key[offset : offset+timeLen]
 	offset += timeLen
 
-	denomLen := int(key[offset])
-	offset++
-	denom = string(key[offset : offset+denomLen])
-	offset += denomLen
+	// In case it's needed in the future to parse
+	// all thee properties from the key here is the code:
 
-	delAddrLen := int(key[offset])
-	offset++
-	delAddrBytes := key[offset : offset+delAddrLen]
-	delAddr = sdk.AccAddress(delAddrBytes)
+	// denomLen := int(key[offset])
+	// offset++
+	// denom = string(key[offset : offset+denomLen])
+	// offset += denomLen
+	//
+	// delAddrLen := int(key[offset])
+	// offset++
+	// delAddrBytes := key[offset : offset+delAddrLen]
+	// delAddr = sdk.AccAddress(delAddrBytes)
 
 	unbondingCompletionTime, err = sdk.ParseTimeBytes(timeBytes)
 
-	return valAddr, unbondingCompletionTime, denom, delAddr, err
+	return valAddr, unbondingCompletionTime, err
 }
 
 func GetUndelegationsIndexOrderedByValidatorKey(valAddr sdk.ValAddress) []byte {

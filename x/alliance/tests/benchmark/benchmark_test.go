@@ -89,7 +89,7 @@ func TestRunBenchmarks(t *testing.T) {
 		// Endblock
 		assets := app.AllianceKeeper.GetAllAssets(ctx)
 		app.AllianceKeeper.CompleteRedelegations(ctx)
-		err := app.AllianceKeeper.CompleteUndelegations(ctx)
+		err := app.AllianceKeeper.CompleteUnbondings(ctx)
 		if err != nil {
 			panic(err)
 		}

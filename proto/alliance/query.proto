@@ -87,8 +87,13 @@ service Query {
   }
 
   // Query for rewards by delegator addr, validator_addr and denom
-  rpc AllianceUnbondingDelegations(QueryAllianceDelegationsUnbondingsRequest) returns (QueryAllianceDelegationsUnbondingsResponse) {
-    option (google.api.http).get = "/terra/alliances/unbondings/{delegator_addr}/{validator_addr}/{denom}";
+  rpc AllianceUnbondingsByDenomAndDelegator(QueryAllianceUnbondingsByDenomAndDelegatorRequest) returns (QueryAllianceUnbondingsByDenomAndDelegatorResponse) {
+    option (google.api.http).get = "/terra/alliances/unbondings/{denom}/{delegator_addr}";
+  }
+
+  // Query for rewards by delegator addr, validator_addr and denom
+  rpc AllianceUnbondings(QueryAllianceUnbondingsRequest) returns (QueryAllianceUnbondingsResponse) {
+    option (google.api.http).get = "/terra/alliances/unbondings/{denom}/{delegator_addr}/{validator_addr}";
   }
 
   // Query a specific alliance by denom
@@ -274,22 +279,34 @@ message QueryAllianceValidatorsResponse {
 }
 
 // AllianceDelegation
-message QueryAllianceDelegationsUnbondingsRequest {
+
+message QueryAllianceUnbondingsByDenomAndDelegatorRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_addr  = 1;
-  string validator_addr  = 2;
-  string denom           = 3;
-  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+  string denom           = 1;
+  string delegator_addr  = 2;
 }
 
-message QueryAllianceDelegationsUnbondingsResponse {
+message QueryAllianceUnbondingsByDenomAndDelegatorResponse {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   repeated UnbondingDelegation unbondings = 1 [(gogoproto.nullable) = false];
+}
 
-  // pagination defines the pagination in the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+message QueryAllianceUnbondingsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string denom           = 1;
+  string delegator_addr  = 2;
+  string validator_addr  = 3;
+}
+
+message QueryAllianceUnbondingsResponse {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  repeated UnbondingDelegation unbondings = 1 [(gogoproto.nullable) = false];
 }

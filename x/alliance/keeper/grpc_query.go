@@ -447,27 +447,49 @@ func (k QueryServer) AllianceDelegation(c context.Context, req *types.QueryAllia
 	}, nil
 }
 
-func (k QueryServer) AllianceUnbondingDelegations(c context.Context, req *types.QueryAllianceDelegationsUnbondingsRequest) (*types.QueryAllianceDelegationsUnbondingsResponse, error) {
-	// ctx := sdk.UnwrapSDKContext(c)
-	// decodedDenom, err := url.QueryUnescape(req.Denom)
-	// if err == nil {
-	// 	req.Denom = decodedDenom
-	// }
-	//
-	// delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	//
-	// valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	return &types.QueryAllianceDelegationsUnbondingsResponse{
-		Unbondings: []types.UnbondingDelegation{},
-	}, nil
+func (k QueryServer) AllianceUnbondingsByDenomAndDelegator(c context.Context, req *types.QueryAllianceUnbondingsByDenomAndDelegatorRequest) (*types.QueryAllianceUnbondingsByDenomAndDelegatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	decodedDenom, err := url.QueryUnescape(req.Denom)
+	if err == nil {
+		req.Denom = decodedDenom
+	}
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := k.GetUnbondingsByDenomAndDelegator(ctx, req.Denom, delAddr)
+
+	return &types.QueryAllianceUnbondingsByDenomAndDelegatorResponse{
+		Unbondings: res,
+	}, err
 }
 
+func (k QueryServer) AllianceUnbondings(c context.Context, req *types.QueryAllianceUnbondingsRequest) (*types.QueryAllianceUnbondingsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	decodedDenom, err := url.QueryUnescape(req.Denom)
+	if err == nil {
+		req.Denom = decodedDenom
+	}
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := k.GetUnbondings(ctx, req.Denom, delAddr, valAddr)
+
+	return &types.QueryAllianceUnbondingsResponse{
+		Unbondings: res,
+	}, err
+}
 func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.QueryIBCAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRequest is deprecated
 	req := types.QueryAllianceDelegationRequest{
 		DelegatorAddr: request.DelegatorAddr,
