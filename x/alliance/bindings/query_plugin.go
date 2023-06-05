@@ -31,10 +31,22 @@ func CustomQuerier(q *QueryPlugin) func(ctx sdk.Context, request json.RawMessage
 			return q.GetAlliance(ctx, AllianceRequest.Alliance.Denom)
 		}
 		if AllianceRequest.Delegation != nil {
-			return q.GetDelegation(ctx, AllianceRequest.Delegation.Denom, AllianceRequest.Delegation.Delegator, AllianceRequest.Delegation.Validator)
+			denom := AllianceRequest.Delegation.Denom
+			delegator := AllianceRequest.Delegation.Delegator
+			validator := AllianceRequest.Delegation.Validator
+
+			return q.GetDelegation(ctx, denom, delegator, validator)
 		}
 		if AllianceRequest.DelegationRewards != nil {
-			return q.GetDelegationRewards(ctx, AllianceRequest.DelegationRewards.Denom, AllianceRequest.DelegationRewards.Delegator, AllianceRequest.DelegationRewards.Validator)
+			denom := AllianceRequest.DelegationRewards.Denom
+			delegator := AllianceRequest.DelegationRewards.Delegator
+			validator := AllianceRequest.DelegationRewards.Validator
+
+			return q.GetDelegationRewards(ctx,
+				denom,
+				delegator,
+				validator,
+			)
 		}
 		return nil, nil
 	}
@@ -98,7 +110,11 @@ func (q *QueryPlugin) GetDelegation(ctx sdk.Context, denom string, delegator str
 	return res, err
 }
 
-func (q *QueryPlugin) GetDelegationRewards(ctx sdk.Context, denom string, delegator string, validator string) (res []byte, err error) {
+func (q *QueryPlugin) GetDelegationRewards(ctx sdk.Context,
+	denom string,
+	delegator string,
+	validator string,
+) (res []byte, err error) {
 	delegatorAddr, err := sdk.AccAddressFromBech32(delegator)
 	if err != nil {
 		return

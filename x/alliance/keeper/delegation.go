@@ -247,7 +247,12 @@ func (k Keeper) CompleteRedelegations(ctx sdk.Context) int {
 	return deleted
 }
 
-func (k Keeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string) (d types.Delegation, found bool) {
+func (k Keeper) GetDelegation(
+	ctx sdk.Context,
+	delAddr sdk.AccAddress,
+	valAddr sdk.ValAddress,
+	denom string,
+) (d types.Delegation, found bool) {
 	key := types.GetDelegationKey(delAddr, valAddr, denom)
 	b := ctx.KVStore(k.storeKey).Get(key)
 	if b == nil {

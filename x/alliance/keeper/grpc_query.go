@@ -490,6 +490,7 @@ func (k QueryServer) AllianceUnbondings(c context.Context, req *types.QueryAllia
 		Unbondings: res,
 	}, err
 }
+
 func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.QueryIBCAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRequest is deprecated
 	req := types.QueryAllianceDelegationRequest{
 		DelegatorAddr: request.DelegatorAddr,

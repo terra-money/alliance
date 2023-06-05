@@ -101,8 +101,7 @@ func GetRedelegationsIndexOrderedByValidatorKey(srcVal sdk.ValAddress) []byte {
 }
 
 func ParseRedelegationIndexForRedelegationKey(key []byte) ([]byte, time.Time, error) {
-	offset := 0
-	offset += len(RedelegationByValidatorIndexKey)
+	offset := len(RedelegationByValidatorIndexKey)
 
 	srcValAddrLen := int(key[offset])
 	offset++
@@ -164,11 +163,11 @@ func PartiallyParseUndelegationKeyBytes(key []byte) (
 	timeLen := int(key[offset])
 	offset++
 	timeBytes := key[offset : offset+timeLen]
-	offset += timeLen
 
 	// In case it's needed in the future to parse
 	// all thee properties from the key here is the code:
 
+	// offset += timeLen
 	// denomLen := int(key[offset])
 	// offset++
 	// denom = string(key[offset : offset+denomLen])
@@ -190,8 +189,7 @@ func GetUndelegationsIndexOrderedByValidatorKey(valAddr sdk.ValAddress) []byte {
 }
 
 func ParseUnbondingIndexKeyToUndelegationKey(key []byte) ([]byte, time.Time, error) {
-	offset := 0
-	offset += len(UndelegationByValidatorIndexKey)
+	offset := len(UndelegationByValidatorIndexKey)
 
 	valAddrLen := int(key[offset])
 	offset++
@@ -216,8 +214,7 @@ func ParseUnbondingIndexKeyToUndelegationKey(key []byte) ([]byte, time.Time, err
 }
 
 func ParseRedelegationQueueKey(key []byte) time.Time {
-	offset := 0
-	offset += len(RedelegationQueueKey)
+	offset := len(RedelegationQueueKey)
 	b := key[offset:]
 	t, err := sdk.ParseTimeBytes(b)
 	if err != nil {
@@ -236,8 +233,7 @@ func CreateDenomAddressPrefix(denom string) []byte {
 
 // ParseRedelegationKeyForCompletionTime key is in the format of RedelegationKey|delegator|denom|destination|timestamp
 func ParseRedelegationKeyForCompletionTime(key []byte) time.Time {
-	offset := 0
-	offset += len(RedelegationKey)
+	offset := len(RedelegationKey)
 	offset += int(key[offset]) + 1
 	offset += int(key[offset]) + 1
 	offset += int(key[offset]) + 1
@@ -250,8 +246,7 @@ func ParseRedelegationKeyForCompletionTime(key []byte) time.Time {
 }
 
 func ParseUndelegationQueueKeyForCompletionTime(key []byte) (time.Time, error) {
-	offset := 0
-	offset += len(UndelegationQueueKey)
+	offset := len(UndelegationQueueKey)
 
 	timeLen := int(key[offset])
 	offset++
@@ -293,8 +288,7 @@ func GetRewardWeightChangeSnapshotKey(denom string, val sdk.ValAddress, height u
 }
 
 func ParseRewardWeightChangeSnapshotKey(key []byte) (denom string, val sdk.ValAddress, height uint64) {
-	offset := 0
-	offset += len(RewardWeightChangeSnapshotKey)
+	offset := len(RewardWeightChangeSnapshotKey)
 	denomLen := int(key[offset])
 	offset++
 	denom = string(key[offset : offset+denomLen-1])
@@ -321,8 +315,7 @@ func GetRewardWeightDecayQueueKey(triggerTime time.Time, denom string) (key []by
 }
 
 func ParseRewardWeightDecayQueueKeyForDenom(key []byte) (triggerTime time.Time, denom string) {
-	offset := 0
-	offset += len(RewardWeightDecayQueueKey)
+	offset := len(RewardWeightDecayQueueKey)
 	timeLen := int(key[offset])
 	offset++
 	triggerTime, _ = sdk.ParseTimeBytes(key[offset : offset+timeLen])

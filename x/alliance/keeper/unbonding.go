@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
