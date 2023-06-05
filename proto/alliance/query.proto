@@ -9,6 +9,7 @@ import "alliance/alliance.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "alliance/delegations.proto";
 import "alliance/unbonding.proto";
+import "alliance/redelegations.proto";
 
 option go_package = "github.com/terra-money/alliance/x/alliance/types";
 
@@ -94,6 +95,11 @@ service Query {
   // Query for rewards by delegator addr, validator_addr and denom
   rpc AllianceUnbondings(QueryAllianceUnbondingsRequest) returns (QueryAllianceUnbondingsResponse) {
     option (google.api.http).get = "/terra/alliances/unbondings/{denom}/{delegator_addr}/{validator_addr}";
+  }
+
+  // Query for rewards by delegator addr, validator_addr and denom
+  rpc AllianceRedelegations(QueryAllianceRedelegationsRequest) returns (QueryAllianceRedelegationsResponse) {
+    option (google.api.http).get = "/terra/alliances/redelegations/{denom}/{delegator_addr}";
   }
 
   // Query a specific alliance by denom
@@ -309,4 +315,20 @@ message QueryAllianceUnbondingsResponse {
   option (gogoproto.goproto_getters) = false;
 
   repeated UnbondingDelegation unbondings = 1 [(gogoproto.nullable) = false];
+}
+
+// Redelegations
+message QueryAllianceRedelegationsRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string denom           = 1;
+  string delegator_addr  = 2;
+}
+
+message QueryAllianceRedelegationsResponse {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  repeated RedelegationEntry redelegations = 1 [(gogoproto.nullable) = false];
 }

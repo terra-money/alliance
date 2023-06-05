@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "alliance/alliance.proto";
 import "alliance/params.proto";
 import "alliance/delegations.proto";
+import "alliance/redelegations.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/terra-money/alliance/x/alliance/types";

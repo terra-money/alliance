@@ -491,6 +491,25 @@ func (k QueryServer) AllianceUnbondings(c context.Context, req *types.QueryAllia
 	}, err
 }
 
+func (k QueryServer) AllianceRedelegations(c context.Context, req *types.QueryAllianceRedelegationsRequest) (*types.QueryAllianceRedelegationsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	decodedDenom, err := url.QueryUnescape(req.Denom)
+	if err == nil {
+		req.Denom = decodedDenom
+	}
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := k.GetRedelegations(ctx, req.Denom, delAddr)
+
+	return &types.QueryAllianceRedelegationsResponse{
+		Redelegations: res,
+	}, err
+}
+
 func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.QueryIBCAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRequest is deprecated
 	req := types.QueryAllianceDelegationRequest{
 		DelegatorAddr: request.DelegatorAddr,
