@@ -28,6 +28,7 @@ func NewAppModule(cdc codec.Codec, keeper custombankkeeper.Keeper, accountKeeper
 	return AppModule{
 		AppModule: bankModule,
 		keeper:    keeper,
+		subspace:  ss,
 	}
 }
 
