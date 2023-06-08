@@ -99,7 +99,10 @@ test-e2e:
 test-benchmark:
 	@VERSION=$(VERSION) go test -v -mod=readonly -tags='ledger test_ledger_mock' github.com/terra-money/alliance/x/alliance/tests/benchmark
 
-.PHONY: test test-unit test-e2e test-benchmark
+test-simulate:
+	@VERSION=$(VERSION) go test -v -run=TestFullAppSimulation ./app -NumBlocks 200 -BlockSize 10 -Commit -Enabled -Period 1
+
+.PHONY: test test-unit test-e2e test-benchmark test-simulate
 ###############################################################################
 ###                                Linting                                  ###
 ###############################################################################

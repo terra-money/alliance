@@ -21,7 +21,7 @@ import (
 
 var (
 	SEED               = int64(1)
-	NumOfBlocks        = 1000
+	NumOfBlocks        = 200
 	BlocktimeInSeconds = 5
 	VoteRate           = 0.8
 	NumOfValidators    = 160
