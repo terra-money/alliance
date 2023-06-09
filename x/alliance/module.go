@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	simulation2 "github.com/terra-money/alliance/x/alliance/tests/simulation"
 
@@ -13,10 +12,11 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/terra-money/alliance/x/alliance/client/cli"
 	"github.com/terra-money/alliance/x/alliance/keeper"
+	migrationsv4 "github.com/terra-money/alliance/x/alliance/migrations/v4"
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -68,7 +68,7 @@ func (a AppModuleBasic) DefaultGenesis(jsonCodec codec.JSONCodec) json.RawMessag
 	return jsonCodec.MustMarshalJSON(DefaultGenesisState())
 }
 
-func (a AppModuleBasic) ValidateGenesis(jsonCodec codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
+func (a AppModuleBasic) ValidateGenesis(jsonCodec codec.JSONCodec, _ client.TxEncodingConfig, message json.RawMessage) error {
 	var genesis types.GenesisState
 	if err := jsonCodec.UnmarshalJSON(message, &genesis); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -108,7 +108,7 @@ func (a AppModule) InitGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec, messa
 	return a.keeper.InitGenesis(ctx, &genesis)
 }
 
-func (a AppModule) ExportGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec) json.RawMessage {
+func (a AppModule) ExportGenesis(ctx sdk.Context, _ codec.JSONCodec) json.RawMessage {
 	genesis := a.keeper.ExportGenesis(ctx)
 	return a.cdc.MustMarshalJSON(genesis)
 }
@@ -117,43 +117,32 @@ func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {
 	RegisterInvariants(registry, a.keeper)
 }
 
-// Deprecated: use RegisterServices
-func (a AppModule) Route() sdk.Route { return sdk.Route{} }
-
-// Deprecated: use RegisterServices
-func (AppModule) QuerierRoute() string { return types.RouterKey }
-
-// Deprecated: use RegisterServices
-func (a AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
-
 // RegisterServices registers a gRPC query service to respond to the module-specific gRPC queries
 func (a AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(a.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(a.keeper))
+	err := cfg.RegisterMigration(types.ModuleName, 3, migrationsv4.Migrate(a.keeper))
+	if err != nil {
+		panic(fmt.Sprintf("failed to migrate x/alliance from version 3 to 4: %v", err))
+	}
 }
 
 func (a AppModule) ConsensusVersion() uint64 {
-	return 3
+	return 4
 }
 
 func (a AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation2.RandomizedGenesisState(simState)
 }
 
-func (a AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+func (a AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return nil
-}
-
-func (a AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation2.ParamChanges(r)
 }
 
 func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
 	registry[types.StoreKey] = simulation2.NewDecodeStore(a.cdc)
 }
 
-func (a AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation2.WeightedOperations(simState.AppParams, a.pcdc, a.accountKeeper, a.bankKeeper, a.stakingKeeper, a.keeper)
+func (a AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+	return simulation2.WeightedOperations(a.pcdc, a.accountKeeper, a.bankKeeper, a.stakingKeeper, a.keeper)
 }

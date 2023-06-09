@@ -7,10 +7,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewAllianceAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec, rewardStartTime time.Time) AllianceAsset {
+func NewAllianceAsset(denom string, rewardWeight sdk.Dec, minRewardWeight sdk.Dec, maxRewardWeight sdk.Dec, takeRate sdk.Dec, rewardStartTime time.Time) AllianceAsset {
 	return AllianceAsset{
-		Denom:                denom,
-		RewardWeight:         rewardWeight,
+		Denom:        denom,
+		RewardWeight: rewardWeight,
+		RewardWeightRange: RewardWeightRange{
+			Min: minRewardWeight,
+			Max: maxRewardWeight,
+		},
 		TakeRate:             takeRate,
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
@@ -18,6 +22,7 @@ func NewAllianceAsset(denom string, rewardWeight sdk.Dec, takeRate sdk.Dec, rewa
 		RewardChangeRate:     sdk.OneDec(),
 		RewardChangeInterval: time.Duration(0),
 		LastRewardChangeTime: rewardStartTime,
+		IsInitialized:        false,
 	}
 }
 
@@ -36,7 +41,7 @@ func ConvertNewShareToDecToken(totalTokens sdk.Dec, totalShares sdk.Dec, shares 
 }
 
 func GetDelegationTokens(del Delegation, val AllianceValidator, asset AllianceAsset) sdk.Coin {
-	valTokens := val.TotalDecTokensWithAsset(asset)
+	valTokens := val.TotalTokensWithAsset(asset)
 	totalDelegationShares := val.TotalDelegationSharesWithDenom(asset.Denom)
 	delTokens := ConvertNewShareToDecToken(valTokens, totalDelegationShares, del.Shares)
 
@@ -47,7 +52,7 @@ func GetDelegationTokens(del Delegation, val AllianceValidator, asset AllianceAs
 }
 
 func GetDelegationTokensWithShares(delegatorShares sdk.Dec, val AllianceValidator, asset AllianceAsset) sdk.Coin {
-	valTokens := val.TotalDecTokensWithAsset(asset)
+	valTokens := val.TotalTokensWithAsset(asset)
 	totalDelegationShares := val.TotalDelegationSharesWithDenom(asset.Denom)
 	delTokens := ConvertNewShareToDecToken(valTokens, totalDelegationShares, delegatorShares)
 
@@ -68,4 +73,9 @@ func GetDelegationSharesFromTokens(val AllianceValidator, asset AllianceAsset, t
 
 func (a AllianceAsset) HasPositiveDecay() bool {
 	return a.RewardChangeInterval > 0 && a.RewardChangeRate.IsPositive()
+}
+
+// RewardsStarted helper function to check if rewards for the alliance has started
+func (a AllianceAsset) RewardsStarted(blockTime time.Time) bool {
+	return blockTime.After(a.RewardStartTime) || blockTime.Equal(a.RewardStartTime)
 }

@@ -8,11 +8,11 @@ import (
 
 	"github.com/terra-money/alliance/x/alliance/tests/benchmark"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance"
@@ -21,7 +21,7 @@ import (
 
 var (
 	SEED               = int64(1)
-	NumOfBlocks        = 1000
+	NumOfBlocks        = 200
 	BlocktimeInSeconds = 5
 	VoteRate           = 0.8
 	NumOfValidators    = 160
@@ -64,14 +64,8 @@ func TestRunBenchmarks(t *testing.T) {
 			})
 		}
 
-		idx := simulation.RandIntBetween(r, 0, len(vals)-1)
-		proposerAddr := sdk.ValAddress(vals[idx])
-		proposer, err := app.AllianceKeeper.GetAllianceValidator(ctx, proposerAddr)
-		require.NoError(t, err)
-		proposerCons, _ := proposer.GetConsAddr()
-
 		// Begin block
-		app.DistrKeeper.AllocateTokens(ctx, totalVotingPower, totalVotingPower, proposerCons, voteInfo)
+		app.DistrKeeper.AllocateTokens(ctx, totalVotingPower, voteInfo)
 
 		// Delegator Actions
 		operationFunc := benchmark.GenerateOperationSlots(DelegationRate, RedelegationRate, UndelegationRate, RewardClaimRate)
@@ -81,7 +75,7 @@ func TestRunBenchmarks(t *testing.T) {
 				delegateOperation(ctx, app, r, assets, vals, dels)
 				operations["delegate"]++
 			case 1:
-				redelegateOperation(ctx, app, r, assets, vals, dels)
+				redelegateOperation(ctx, app, r, vals)
 				operations["redelegate"]++
 			case 2:
 				undelegateOperation(ctx, app, r)
@@ -95,7 +89,7 @@ func TestRunBenchmarks(t *testing.T) {
 		// Endblock
 		assets := app.AllianceKeeper.GetAllAssets(ctx)
 		app.AllianceKeeper.CompleteRedelegations(ctx)
-		err = app.AllianceKeeper.CompleteUndelegations(ctx)
+		err := app.AllianceKeeper.CompleteUndelegations(ctx)
 		if err != nil {
 			panic(err)
 		}
@@ -103,7 +97,10 @@ func TestRunBenchmarks(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+		err = app.AllianceKeeper.RewardWeightChangeHook(ctx, assets)
+		if err != nil {
+			panic(err)
+		}
 		err = app.AllianceKeeper.RebalanceHook(ctx, assets)
 		if err != nil {
 			panic(err)
@@ -148,7 +145,7 @@ func delegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, ass
 	createdDelegations = append(createdDelegations, types.NewDelegation(ctx, delAddr, valAddr, asset.Denom, sdk.ZeroDec(), []types.RewardHistory{}))
 }
 
-func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, assets []types.AllianceAsset, vals []sdk.AccAddress, dels []sdk.AccAddress) { //nolint:unparam // assets is unused
+func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, vals []sdk.AccAddress) {
 	var delegation types.Delegation
 	if len(createdDelegations) == 0 {
 		return
@@ -168,12 +165,10 @@ func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, a
 		return
 	}
 
-	dstValAddr := sdk.ValAddress(vals[r.Intn(len(vals)-1)])
-	for ; dstValAddr.Equals(srcValAddr); dstValAddr = sdk.ValAddress(vals[r.Intn(len(vals)-1)]) {
-	}
+	dstValAddr := getRandomValAddress(r, vals, srcValAddr)
 	dstValidator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, dstValAddr)
 
-	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, srcValidator, asset.Denom)
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, srcValidator.GetOperator(), asset.Denom)
 	if !found {
 		return
 	}
@@ -185,6 +180,22 @@ func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, a
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getRandomValAddress(r *rand.Rand, vals []sdk.AccAddress, srcValAddr sdk.ValAddress) sdk.ValAddress {
+	var dstValAddr sdk.ValAddress
+
+	for {
+		// Get a random destination validator address
+		dstValAddr = sdk.ValAddress(vals[r.Intn(len(vals)-1)])
+
+		// Break the loop if the destination validator address is different from the source validator address
+		if !dstValAddr.Equals(srcValAddr) {
+			break
+		}
+	}
+
+	return dstValAddr
 }
 
 func undelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {
@@ -204,7 +215,7 @@ func undelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {
 	validator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, delegation.Denom)
 
-	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, validator, asset.Denom)
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, validator.GetOperator(), asset.Denom)
 	if !found {
 		return
 	}
@@ -232,7 +243,7 @@ func claimRewardsOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand)
 	valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 	validator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 
-	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, validator, delegation.Denom)
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, validator.GetOperator(), delegation.Denom)
 	if !found {
 		return
 	}

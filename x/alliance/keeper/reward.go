@@ -39,7 +39,12 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 	if !found {
 		return nil, types.ErrUnknownAsset
 	}
-	delegation, found := k.GetDelegation(ctx, delAddr, val, denom)
+
+	if !asset.RewardsStarted(ctx.BlockTime()) {
+		return sdk.NewCoins(), nil
+	}
+
+	delegation, found := k.GetDelegation(ctx, delAddr, val.GetOperator(), denom)
 	if !found {
 		return sdk.Coins{}, stakingtypes.ErrNoDelegatorForAddress
 	}
@@ -63,20 +68,21 @@ func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, 
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeClaimDelegationRewards,
-			sdk.NewAttribute(types.AttributeKeyValidator, val.OperatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, coins.String()),
-		),
-	})
+	_ = ctx.EventManager().EmitTypedEvent(
+		&types.ClaimAllianceRewardsEvent{
+			AllianceSender: delAddr.String(),
+			Validator:      val.OperatorAddress,
+			Coins:          coins,
+		},
+	)
+
 	return coins, nil
 }
 
 // CalculateDelegationRewards calculates the rewards that can be claimed for a delegation
 // It takes past reward_rate changes into account by using the RewardRateChangeSnapshot entry
 func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Delegation, val types.AllianceValidator, asset types.AllianceAsset) (sdk.Coins, types.RewardHistories, error) {
-	var totalRewards sdk.Coins
+	totalRewards := sdk.NewCoins()
 	currentRewardHistory := types.NewRewardHistories(val.GlobalRewardHistory)
 	delegationRewardHistories := types.NewRewardHistories(delegation.RewardHistory)
 	// If there are reward rate changes between last and current claim, sequentially claim with the help of the snapshots
@@ -99,6 +105,8 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Del
 func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistories types.RewardHistories, asset types.AllianceAsset, rewardWeight sdk.Dec, delegation types.Delegation, validator types.AllianceValidator) (sdk.Coins, types.RewardHistories) {
 	// Go through each reward denom and accumulate rewards
 	var rewards sdk.Coins
+
+	delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, validator, asset).Amount)
 	for _, history := range latestRewardHistories {
 		rewardHistory, found := rewardHistories.GetIndexByDenom(history.Denom)
 		if !found {
@@ -108,8 +116,6 @@ func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistor
 		if rewardHistory.Index.GTE(history.Index) {
 			continue
 		}
-		delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, validator, asset).Amount)
-
 		claimWeight := delegationTokens.Mul(rewardWeight)
 		totalClaimable := (history.Index.Sub(rewardHistory.Index)).Mul(claimWeight)
 		rewardHistory.Index = history.Index
@@ -125,10 +131,15 @@ func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistor
 // To calculate the number of rewards claimable, take reward_history * alliance_token_amount * reward_weight
 func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val types.AllianceValidator, coins sdk.Coins) error {
 	rewardHistories := types.NewRewardHistories(val.GlobalRewardHistory)
+	// We need some delegations before we can split rewards. Else rewards belong to no one and do nothing
+	if len(val.TotalDelegatorShares) == 0 {
+		return nil
+	}
+
 	totalAssetWeight := k.totalAssetWeight(ctx, val)
-	// We need some delegations before we can split rewards. Else rewards belong to no one
 	if totalAssetWeight.IsZero() {
-		return types.ErrZeroDelegations
+		// Do nothing since there are no assets to distribute rewards to
+		return nil
 	}
 
 	for _, c := range coins {
@@ -160,7 +171,10 @@ func (k Keeper) totalAssetWeight(ctx sdk.Context, val types.AllianceValidator) s
 		if !found {
 			continue
 		}
-		totalValTokens := val.TotalDecTokensWithAsset(asset)
+		if !asset.RewardsStarted(ctx.BlockTime()) {
+			continue
+		}
+		totalValTokens := val.TotalTokensWithAsset(asset)
 		total = total.Add(asset.RewardWeight.Mul(totalValTokens))
 	}
 	return total

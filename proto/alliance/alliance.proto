@@ -1,5 +1,5 @@
 syntax = "proto3";
-package alliance.alliance;
+package alliance;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
@@ -9,6 +9,19 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/terra-money/alliance/x/alliance/types";
 
+message RewardWeightRange {
+  option (gogoproto.equal)            = false;
+  option (gogoproto.goproto_getters)  = false;
+
+  string min = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  string max = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}
 // key: denom value: AllianceAsset
 message AllianceAsset {
   option (gogoproto.equal)            = false;
@@ -54,6 +67,10 @@ message AllianceAsset {
     (gogoproto.stdtime) = true,
     (gogoproto.nullable)   = false
   ];
+  // set a bound of weight range to limit how much reward weights can scale.
+  RewardWeightRange reward_weight_range = 10 [(gogoproto.nullable) = false];
+  // flag to check if an asset has completed the initialization process after the reward delay
+  bool is_initialized = 11;
 }
 
 message RewardWeightChangeSnapshot {

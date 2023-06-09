@@ -3,8 +3,8 @@ package keeper
 import (
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/terra-money/alliance/x/alliance/types"
 )
@@ -12,6 +12,9 @@ import (
 func (k Keeper) InitGenesis(ctx sdk.Context, g *types.GenesisState) []abci.ValidatorUpdate {
 	k.SetParams(ctx, g.Params)
 	for _, asset := range g.Assets {
+		if err := sdk.ValidateDenom(asset.Denom); err != nil {
+			panic(err)
+		}
 		k.SetAsset(ctx, asset)
 	}
 

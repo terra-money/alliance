@@ -4,16 +4,16 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	test_helpers "github.com/terra-money/alliance/app"
 )
 
 func setupApp(t *testing.T, numValidators int, numDelegators int, initBalance sdk.Coins) (app *test_helpers.App, ctx sdk.Context, valAddrs []sdk.ValAddress, delAddrs []sdk.AccAddress) {
-	app = test_helpers.Setup(t, false)
+	app = test_helpers.Setup(t)
 	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime)

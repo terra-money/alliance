@@ -29,6 +29,7 @@ func TestDelegateThenTakeRateThenUndelegate(t *testing.T) {
 		Description:          "",
 		Denom:                "test",
 		RewardWeight:         sdk.MustNewDecFromStr("0.03"),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.ZeroDec(), Max: sdk.MustNewDecFromStr("0.1")},
 		TakeRate:             sdk.MustNewDecFromStr("0.02"),
 		RewardChangeRate:     sdk.MustNewDecFromStr("0.01"),
 		RewardChangeInterval: time.Second * 60,
@@ -53,13 +54,13 @@ func TestDelegateThenTakeRateThenUndelegate(t *testing.T) {
 
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, "test")
 
-	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], val0, "test")
+	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], val0.GetOperator(), "test")
 	require.True(t, found)
 	tokens := types.GetDelegationTokens(del0, val0, asset)
 	_, err = app.AllianceKeeper.Undelegate(ctx, dels[0], val0, tokens)
 	require.NoError(t, err)
 
-	_, found = app.AllianceKeeper.GetDelegation(ctx, dels[0], val0, "test")
+	_, found = app.AllianceKeeper.GetDelegation(ctx, dels[0], val0.GetOperator(), "test")
 	require.False(t, found)
 
 	val0, err = app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
@@ -84,6 +85,7 @@ func TestDelegateThenTakeRateThenRedelegate(t *testing.T) {
 		Description:          "",
 		Denom:                "test",
 		RewardWeight:         sdk.MustNewDecFromStr("0.03"),
+		RewardWeightRange:    types.RewardWeightRange{Min: sdk.ZeroDec(), Max: sdk.MustNewDecFromStr("0.1")},
 		TakeRate:             sdk.MustNewDecFromStr("0.02"),
 		RewardChangeRate:     sdk.MustNewDecFromStr("0.01"),
 		RewardChangeInterval: time.Second * 60,
@@ -110,13 +112,13 @@ func TestDelegateThenTakeRateThenRedelegate(t *testing.T) {
 
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, "test")
 
-	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], val0, "test")
+	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], val0.GetOperator(), "test")
 	require.True(t, found)
 	tokens := types.GetDelegationTokens(del0, val0, asset)
 	_, err = app.AllianceKeeper.Redelegate(ctx, dels[0], val0, val1, tokens)
 	require.NoError(t, err)
 
-	_, found = app.AllianceKeeper.GetDelegation(ctx, dels[0], val0, "test")
+	_, found = app.AllianceKeeper.GetDelegation(ctx, dels[0], val0.GetOperator(), "test")
 	require.False(t, found)
 
 	val0, err = app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
@@ -140,11 +142,13 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	))
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	params := types.DefaultParams()
+	params.LastTakeRateClaimTime = startTime
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: params,
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
-			types.NewAllianceAsset(allianceAsset2, sdk.NewDec(10), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
+			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(allianceAsset2, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
 		},
 	})
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
@@ -152,9 +156,8 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	user1 := dels[0]
 	user2 := dels[1]
@@ -194,7 +197,7 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	// User should have everything withdrawn
-	_, found := app.AllianceKeeper.GetDelegation(ctx, user1, val1, allianceAsset2)
+	_, found := app.AllianceKeeper.GetDelegation(ctx, user1, val1.GetOperator(), allianceAsset2)
 	require.False(t, found)
 
 	// Delegate again
@@ -226,7 +229,7 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	// User should have everything withdrawn
-	_, found = app.AllianceKeeper.GetDelegation(ctx, user1, val1, allianceAsset2)
+	_, found = app.AllianceKeeper.GetDelegation(ctx, user1, val1.GetOperator(), allianceAsset2)
 	require.False(t, found)
 
 	res, err = queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
@@ -250,11 +253,13 @@ func TestDelegateAndUndelegateWithSmallAmounts(t *testing.T) {
 	))
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	params := types.DefaultParams()
+	params.LastTakeRateClaimTime = startTime
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: params,
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
-			types.NewAllianceAsset(allianceAsset2, sdk.NewDec(10), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
+			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(allianceAsset2, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
 		},
 	})
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
@@ -262,9 +267,9 @@ func TestDelegateAndUndelegateWithSmallAmounts(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
 	require.NoError(t, err)
@@ -315,11 +320,13 @@ func TestUnDelegatingSlightlyMoreCoin(t *testing.T) {
 	))
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	params := types.DefaultParams()
+	params.LastTakeRateClaimTime = startTime
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: params,
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
-			types.NewAllianceAsset(allianceAsset2, sdk.NewDec(10), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
+			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(allianceAsset2, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
 		},
 	})
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
@@ -327,9 +334,9 @@ func TestUnDelegatingSlightlyMoreCoin(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
 	require.NoError(t, err)
@@ -378,11 +385,13 @@ func TestReDelegatingSlightlyMoreCoin(t *testing.T) {
 	))
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	params := types.DefaultParams()
+	params.LastTakeRateClaimTime = startTime
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: params,
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), ctx.BlockTime()),
-			types.NewAllianceAsset(allianceAsset2, sdk.NewDec(10), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
+			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(allianceAsset2, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
 		},
 	})
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
@@ -390,9 +399,9 @@ func TestReDelegatingSlightlyMoreCoin(t *testing.T) {
 	// Set tax and rewards to be zero for easier calculation
 	distParams := app.DistrKeeper.GetParams(ctx)
 	distParams.CommunityTax = sdk.ZeroDec()
-	distParams.BaseProposerReward = sdk.ZeroDec()
-	distParams.BonusProposerReward = sdk.ZeroDec()
-	app.DistrKeeper.SetParams(ctx, distParams)
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
 	require.NoError(t, err)
@@ -429,4 +438,142 @@ func TestReDelegatingSlightlyMoreCoin(t *testing.T) {
 	// Undelegate token with more than current amount should fail
 	_, err = app.AllianceKeeper.Redelegate(ctx, user1, val1, val2, sdk.NewCoin(allianceAsset2, del.Balance.Amount.AddRaw(1)))
 	require.Error(t, err)
+}
+
+func TestDustValidatorSharesAfterUndelegationError(t *testing.T) {
+	app, ctx, vals, addrs := setupApp(t, 5, 2, sdk.NewCoins(
+		sdk.NewCoin(allianceAsset1, sdk.NewInt(1000000000000000000)),
+		sdk.NewCoin(allianceAsset2, sdk.NewInt(1000000000000000000)),
+	))
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(allianceAsset2, sdk.MustNewDecFromStr("10"), sdk.NewDec(5), sdk.NewDec(0), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
+		},
+	})
+	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
+
+	// Set tax and rewards to be zero for easier calculation
+	distParams := app.DistrKeeper.GetParams(ctx)
+	distParams.CommunityTax = sdk.ZeroDec()
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
+
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
+	require.NoError(t, err)
+	val2, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[1])
+	require.NoError(t, err)
+
+	user1 := addrs[0]
+	user2 := addrs[1]
+
+	// Delegate token with non-zero take_rate
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(allianceAsset2, sdk.NewInt(1000)))
+	require.NoError(t, err)
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(allianceAsset2, sdk.NewInt(0)))
+	require.NoError(t, err)
+
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
+
+	require.NoError(t, err)
+
+	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 6)).WithBlockHeight(2)
+	_, err = app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	require.NoError(t, err)
+
+	res, err := queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
+		DelegatorAddr: user1.String(),
+		ValidatorAddr: val1.GetOperator().String(),
+		Denom:         allianceAsset2,
+		Pagination:    nil,
+	})
+	require.NoError(t, err)
+	del := res.GetDelegation()
+
+	_, err = app.AllianceKeeper.Undelegate(ctx, user1, val1, sdk.NewCoin(allianceAsset2, del.Balance.Amount))
+	require.NoError(t, err)
+
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
+
+	require.NoError(t, err)
+
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(allianceAsset2, sdk.NewInt(200)))
+	require.NoError(t, err)
+}
+
+func TestDustValidatorSharesAfterRedelegationError(t *testing.T) {
+	app, ctx, vals, addrs := setupApp(t, 5, 2, sdk.NewCoins(
+		sdk.NewCoin(allianceAsset1, sdk.NewInt(1000000000000000000)),
+		sdk.NewCoin(allianceAsset2, sdk.NewInt(1000000000000000000)),
+	))
+	startTime := time.Now()
+	ctx = ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(allianceAsset1, sdk.NewDec(2), sdk.NewDec(0), sdk.NewDec(5), sdk.NewDec(0), ctx.BlockTime()),
+			types.NewAllianceAsset(allianceAsset2, sdk.MustNewDecFromStr("10"), sdk.NewDec(5), sdk.NewDec(0), sdk.MustNewDecFromStr("0.1"), ctx.BlockTime()),
+		},
+	})
+	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
+
+	// Set tax and rewards to be zero for easier calculation
+	distParams := app.DistrKeeper.GetParams(ctx)
+	distParams.CommunityTax = sdk.ZeroDec()
+
+	err := app.DistrKeeper.SetParams(ctx, distParams)
+	require.NoError(t, err)
+
+	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
+	require.NoError(t, err)
+	val2, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[1])
+	require.NoError(t, err)
+
+	user1 := addrs[0]
+	user2 := addrs[1]
+
+	// Delegate token with non-zero take_rate
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(allianceAsset2, sdk.NewInt(1000)))
+	require.NoError(t, err)
+	_, err = app.AllianceKeeper.Delegate(ctx, user2, val2, sdk.NewCoin(allianceAsset2, sdk.NewInt(0)))
+	require.NoError(t, err)
+
+	assets := app.AllianceKeeper.GetAllAssets(ctx)
+
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
+
+	require.NoError(t, err)
+
+	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 6)).WithBlockHeight(2)
+	_, err = app.AllianceKeeper.DeductAssetsHook(ctx, assets)
+	require.NoError(t, err)
+
+	res, err := queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
+		DelegatorAddr: user1.String(),
+		ValidatorAddr: val1.GetOperator().String(),
+		Denom:         allianceAsset2,
+		Pagination:    nil,
+	})
+	require.NoError(t, err)
+	del := res.GetDelegation()
+
+	_, err = app.AllianceKeeper.Redelegate(ctx, user1, val1, val2, sdk.NewCoin(allianceAsset2, del.Balance.Amount))
+	require.NoError(t, err)
+
+	assets = app.AllianceKeeper.GetAllAssets(ctx)
+
+	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
+
+	require.NoError(t, err)
+
+	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(allianceAsset2, sdk.NewInt(200)))
+	require.NoError(t, err)
 }

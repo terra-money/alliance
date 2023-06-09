@@ -1,6 +1,7 @@
 syntax = "proto3";
-package alliance.alliance;
+package alliance;
 
+import "alliance/alliance.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 
@@ -19,7 +20,7 @@ message MsgCreateAllianceProposal {
     // The reward weight specifies the ratio of rewards that will be given to each alliance asset
     // It does not need to sum to 1. rate = weight / total_weight
     // Native asset is always assumed to have a weight of 1.
-    string reward_weight =4 [
+    string reward_weight = 4 [
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
         (gogoproto.nullable)   = false
     ];
@@ -38,6 +39,11 @@ message MsgCreateAllianceProposal {
     google.protobuf.Duration reward_change_interval = 7 [
       (gogoproto.nullable)   = false,
       (gogoproto.stdduration) = true
+    ];
+
+    // set a bound of weight range to limit how much reward weights can scale. 
+    RewardWeightRange reward_weight_range = 8 [
+      (gogoproto.nullable)   = false
     ];
 }
   

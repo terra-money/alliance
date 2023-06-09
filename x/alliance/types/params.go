@@ -49,7 +49,7 @@ func NewParams() Params {
 	return Params{
 		RewardDelayTime:       time.Hour * 24 * 7,
 		TakeRateClaimInterval: time.Minute * 5,
-		LastTakeRateClaimTime: time.Now(),
+		LastTakeRateClaimTime: time.Time{},
 	}
 }
 

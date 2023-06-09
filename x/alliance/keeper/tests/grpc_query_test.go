@@ -4,15 +4,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 
 	"cosmossdk.io/math"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -32,16 +32,18 @@ func TestQueryAlliances(t *testing.T) {
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
 			{
-				Denom:        AllianceDenom,
-				RewardWeight: sdk.NewDec(2),
-				TakeRate:     sdk.NewDec(0),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:             AllianceDenom,
+				RewardWeight:      sdk.NewDec(2),
+				RewardWeightRange: types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
+				TakeRate:          sdk.NewDec(0),
+				TotalTokens:       sdk.ZeroInt(),
 			},
 			{
-				Denom:        AllianceDenomTwo,
-				RewardWeight: sdk.NewDec(10),
-				TakeRate:     sdk.MustNewDecFromStr("0.14159265359"),
-				TotalTokens:  sdk.ZeroInt(),
+				Denom:             AllianceDenomTwo,
+				RewardWeight:      sdk.NewDec(10),
+				RewardWeightRange: types.RewardWeightRange{Min: sdk.NewDec(2), Max: sdk.NewDec(12)},
+				TakeRate:          sdk.MustNewDecFromStr("0.14159265359"),
+				TotalTokens:       sdk.ZeroInt(),
 			},
 		},
 	})
@@ -57,6 +59,7 @@ func TestQueryAlliances(t *testing.T) {
 			{
 				Denom:                "alliance",
 				RewardWeight:         sdk.NewDec(2),
+				RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 				TakeRate:             sdk.NewDec(0),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
@@ -66,6 +69,7 @@ func TestQueryAlliances(t *testing.T) {
 			{
 				Denom:                "alliance2",
 				RewardWeight:         sdk.NewDec(10),
+				RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(2), Max: sdk.NewDec(12)},
 				TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),
@@ -91,6 +95,7 @@ func TestQueryAnUniqueAlliance(t *testing.T) {
 			{
 				Denom:                AllianceDenom,
 				RewardWeight:         sdk.NewDec(2),
+				RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
 				TakeRate:             sdk.NewDec(0),
 				TotalTokens:          sdk.ZeroInt(),
 				RewardChangeRate:     sdk.NewDec(0),
@@ -99,6 +104,7 @@ func TestQueryAnUniqueAlliance(t *testing.T) {
 			{
 				Denom:                AllianceDenomTwo,
 				RewardWeight:         sdk.NewDec(10),
+				RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(2), Max: sdk.NewDec(12)},
 				TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
 				TotalTokens:          sdk.ZeroInt(),
 				RewardChangeRate:     sdk.NewDec(0),
@@ -119,6 +125,7 @@ func TestQueryAnUniqueAlliance(t *testing.T) {
 		Alliance: &types.AllianceAsset{
 			Denom:                "alliance2",
 			RewardWeight:         sdk.NewDec(10),
+			RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(2), Max: sdk.NewDec(12)},
 			TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
 			TotalTokens:          sdk.ZeroInt(),
 			TotalValidatorShares: sdk.NewDec(0),
@@ -139,6 +146,7 @@ func TestQueryAnUniqueIBCAlliance(t *testing.T) {
 			{
 				Denom:                "ibc/" + AllianceDenomTwo,
 				RewardWeight:         sdk.NewDec(10),
+				RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(2), Max: sdk.NewDec(12)},
 				TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
 				TotalTokens:          sdk.ZeroInt(),
 				RewardChangeRate:     sdk.NewDec(0),
@@ -149,7 +157,10 @@ func TestQueryAnUniqueIBCAlliance(t *testing.T) {
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// WHEN: QUERYING THE ALLIANCES LIST
-	alliances, err := queryServer.IBCAlliance(ctx, &types.QueryIBCAllianceRequest{
+	alliances, err := queryServer.Alliance(ctx, &types.QueryAllianceRequest{
+		Denom: "ibc%2Falliance2",
+	})
+	alliancesIbcEndpoint, err2 := queryServer.IBCAlliance(ctx, &types.QueryIBCAllianceRequest{ //nolint:staticcheck // SA1019: types.types.QueryIBCAllianceRequest is deprecated
 		Hash: "alliance2",
 	})
 
@@ -159,6 +170,7 @@ func TestQueryAnUniqueIBCAlliance(t *testing.T) {
 		Alliance: &types.AllianceAsset{
 			Denom:                "ibc/alliance2",
 			RewardWeight:         sdk.NewDec(10),
+			RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(2), Max: sdk.NewDec(12)},
 			TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
 			TotalTokens:          sdk.ZeroInt(),
 			TotalValidatorShares: sdk.NewDec(0),
@@ -166,6 +178,20 @@ func TestQueryAnUniqueIBCAlliance(t *testing.T) {
 			RewardChangeInterval: 0,
 		},
 	}, alliances)
+
+	require.Nil(t, err2)
+	require.Equal(t, &types.QueryAllianceResponse{
+		Alliance: &types.AllianceAsset{
+			Denom:                "ibc/alliance2",
+			RewardWeight:         sdk.NewDec(10),
+			RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(2), Max: sdk.NewDec(12)},
+			TakeRate:             sdk.MustNewDecFromStr("0.14159265359"),
+			TotalTokens:          sdk.ZeroInt(),
+			TotalValidatorShares: sdk.NewDec(0),
+			RewardChangeRate:     sdk.NewDec(0),
+			RewardChangeInterval: 0,
+		},
+	}, alliancesIbcEndpoint)
 }
 
 func TestQueryAllianceNotFound(t *testing.T) {
@@ -291,7 +317,7 @@ func TestClaimQueryReward(t *testing.T) {
 
 	// ... at the next begin block, tokens will be distributed from the fee pool...
 	cons, _ := val1.GetConsAddr()
-	app.DistrKeeper.AllocateTokens(ctx, 1, 1, cons, []abcitypes.VoteInfo{
+	app.DistrKeeper.AllocateTokens(ctx, 1, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons,

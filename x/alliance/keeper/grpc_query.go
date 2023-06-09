@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/terra-money/alliance/x/alliance/types"
 
@@ -196,6 +197,11 @@ func (k QueryServer) Alliances(c context.Context, req *types.QueryAlliancesReque
 }
 
 func (k QueryServer) Alliance(c context.Context, req *types.QueryAllianceRequest) (*types.QueryAllianceResponse, error) {
+	decodedDenom, err := url.QueryUnescape(req.Denom)
+	if err == nil {
+		req.Denom = decodedDenom
+	}
+
 	var asset types.AllianceAsset
 
 	// Get context with the information about the environment
@@ -214,24 +220,28 @@ func (k QueryServer) Alliance(c context.Context, req *types.QueryAllianceRequest
 	}, nil
 }
 
-func (k QueryServer) IBCAlliance(c context.Context, request *types.QueryIBCAllianceRequest) (*types.QueryAllianceResponse, error) {
+func (k QueryServer) IBCAlliance(c context.Context, request *types.QueryIBCAllianceRequest) (*types.QueryAllianceResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceRequest is deprecated
 	req := types.QueryAllianceRequest{
 		Denom: "ibc/" + request.Hash,
 	}
 	return k.Alliance(c, &req)
 }
 
-func (k QueryServer) AllianceDelegationRewards(context context.Context, request *types.QueryAllianceDelegationRewardsRequest) (*types.QueryAllianceDelegationRewardsResponse, error) {
+func (k QueryServer) AllianceDelegationRewards(context context.Context, req *types.QueryAllianceDelegationRewardsRequest) (*types.QueryAllianceDelegationRewardsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(context)
-	delAddr, err := sdk.AccAddressFromBech32(request.DelegatorAddr)
+	decodedDenom, err := url.QueryUnescape(req.Denom)
+	if err == nil {
+		req.Denom = decodedDenom
+	}
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err
 	}
-	valAddr, err := sdk.ValAddressFromBech32(request.ValidatorAddr)
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 	if err != nil {
 		return nil, err
 	}
-	_, found := k.GetAssetByDenom(ctx, request.Denom)
+	_, found := k.GetAssetByDenom(ctx, req.Denom)
 	if !found {
 		return nil, types.ErrUnknownAsset
 	}
@@ -241,12 +251,12 @@ func (k QueryServer) AllianceDelegationRewards(context context.Context, request 
 		return nil, err
 	}
 
-	_, found = k.GetDelegation(ctx, delAddr, val, request.Denom)
+	_, found = k.GetDelegation(ctx, delAddr, val.GetOperator(), req.Denom)
 	if !found {
 		return nil, stakingtypes.ErrNoDelegation
 	}
 
-	rewards, err := k.ClaimDelegationRewards(ctx, delAddr, val, request.Denom)
+	rewards, err := k.ClaimDelegationRewards(ctx, delAddr, val, req.Denom)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +265,7 @@ func (k QueryServer) AllianceDelegationRewards(context context.Context, request 
 	}, nil
 }
 
-func (k QueryServer) IBCAllianceDelegationRewards(context context.Context, request *types.QueryIBCAllianceDelegationRewardsRequest) (*types.QueryAllianceDelegationRewardsResponse, error) {
+func (k QueryServer) IBCAllianceDelegationRewards(context context.Context, request *types.QueryIBCAllianceDelegationRewardsRequest) (*types.QueryAllianceDelegationRewardsResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRewardsRequest is deprecated
 	req := types.QueryAllianceDelegationRewardsRequest{
 		DelegatorAddr: request.DelegatorAddr,
 		ValidatorAddr: request.ValidatorAddr,
@@ -392,6 +402,10 @@ func (k QueryServer) AlliancesDelegationByValidator(c context.Context, req *type
 
 func (k QueryServer) AllianceDelegation(c context.Context, req *types.QueryAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
+	decodedDenom, err := url.QueryUnescape(req.Denom)
+	if err == nil {
+		req.Denom = decodedDenom
+	}
 
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
@@ -414,7 +428,7 @@ func (k QueryServer) AllianceDelegation(c context.Context, req *types.QueryAllia
 		return nil, status.Errorf(codes.NotFound, "AllianceAsset not found by denom %s", req.Denom)
 	}
 
-	delegation, found := k.GetDelegation(ctx, delAddr, validator, req.Denom)
+	delegation, found := k.GetDelegation(ctx, delAddr, validator.GetOperator(), req.Denom)
 	if !found {
 		return &types.QueryAllianceDelegationResponse{
 			Delegation: types.DelegationResponse{
@@ -433,7 +447,7 @@ func (k QueryServer) AllianceDelegation(c context.Context, req *types.QueryAllia
 	}, nil
 }
 
-func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.QueryIBCAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) {
+func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.QueryIBCAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRequest is deprecated
 	req := types.QueryAllianceDelegationRequest{
 		DelegatorAddr: request.DelegatorAddr,
 		ValidatorAddr: request.ValidatorAddr,

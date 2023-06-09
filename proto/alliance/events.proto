@@ -1,0 +1,56 @@
+syntax = "proto3";
+package alliance;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/terra-money/alliance/x/alliance/types";
+
+message DelegateAllianceEvent {
+  string allianceSender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string validator = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.v1beta1.Coin coin = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+  string newShares = 4 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message UndelegateAllianceEvent {
+  string allianceSender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string validator = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.v1beta1.Coin coin = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+  google.protobuf.Timestamp completionTime = 4
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
+}
+
+message RedelegateAllianceEvent {
+  string allianceSender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string sourceValidator = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string destinationValidator = 3
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.v1beta1.Coin coin = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+  google.protobuf.Timestamp completionTime = 5
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
+}
+
+message ClaimAllianceRewardsEvent {
+  string allianceSender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string validator = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  repeated cosmos.base.v1beta1.Coin coins = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}

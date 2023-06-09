@@ -4,6 +4,7 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
+PWD := $(shell pwd)
 BINDIR ?= $(GOPATH)/bin
 SIMAPP = ./app
 
@@ -98,6 +99,10 @@ test-e2e:
 test-benchmark:
 	@VERSION=$(VERSION) go test -v -mod=readonly -tags='ledger test_ledger_mock' github.com/terra-money/alliance/x/alliance/tests/benchmark
 
+test-simulate:
+	@VERSION=$(VERSION) go test -v -run=TestFullAppSimulation ./app -NumBlocks 200 -BlockSize 10 -Commit -Enabled -Period 1
+
+.PHONY: test test-unit test-e2e test-benchmark test-simulate
 ###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
@@ -106,41 +111,28 @@ format-tools:
 	go install mvdan.cc/gofumpt@v0.4.0
 	go install github.com/client9/misspell/cmd/misspell@v0.3.4
 	go install golang.org/x/tools/cmd/goimports@latest
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
 
 lint: format-tools
 	golangci-lint run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*pb.gw.go" | xargs gofumpt -d
+
+lint-docker:
+	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.52.2-alpine golangci-lint run
 
 format: format-tools
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*pb.gw.go" | xargs gofumpt -w
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*pb.gw.go" | xargs misspell -w
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*pb.gw.go" | xargs goimports -w -local github.com/terra-money/alliance
 
-
 ###############################################################################
 ###                                Protobuf                                 ###
 ###############################################################################
-PROTO_BUILDER_IMAGE=tendermintdev/sdk-proto-gen:v0.7
-
-proto-all: proto-swagger-gen proto-gen
+PROTO_BUILDER_IMAGE=ghcr.io/cosmos/proto-builder
 
 proto-gen:
 	@echo "Generating Protobuf files"
 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) sh ./scripts/protocgen.sh
-
-
-###############################################################################
-###                           Local Testnet (Single Node)                   ###
-###############################################################################
-
-serve: install init start
-
-init:
-	cd scripts/local && bash init.sh
-
-start:
-	cd scripts/local && bash start.sh
 
 ###############################################################################
 ###                                Local Testnet (docker)                   ###
