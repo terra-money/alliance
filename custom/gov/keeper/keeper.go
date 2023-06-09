@@ -9,7 +9,6 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -22,10 +21,10 @@ type Keeper struct {
 	govkeeper.Keeper
 
 	key  storetypes.StoreKey
-	ak   alliancekeeper.Keeper
-	sk   stakingkeeper.Keeper
+	ak   *alliancekeeper.Keeper
+	sk   *stakingkeeper.Keeper
 	acck accountkeeper.AccountKeeper
-	bk   custombankkeeper.Keeper
+	bk   *custombankkeeper.Keeper
 }
 
 var _ = govkeeper.Keeper{}
@@ -33,26 +32,35 @@ var _ = govkeeper.Keeper{}
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
-	paramSpace types.ParamSubspace,
-	ak accountkeeper.AccountKeeper,
-	bk custombankkeeper.Keeper,
-	sk *stakingkeeper.Keeper,
-	legacyRouter v1beta1.Router,
+	authKeeper accountkeeper.AccountKeeper,
+	bankKeeper custombankkeeper.Keeper,
+	stakingKeeper *stakingkeeper.Keeper,
 	router *baseapp.MsgServiceRouter,
 	config types.Config,
+	authority string,
 ) Keeper {
+	govKeeper := govkeeper.NewKeeper(cdc,
+		key,
+		authKeeper,
+		bankKeeper,
+		stakingKeeper,
+		router,
+		config,
+		authority,
+	)
+
 	keeper := Keeper{
-		Keeper: govkeeper.NewKeeper(cdc, key, paramSpace, ak, bk, sk, legacyRouter, router, config),
-		ak:     alliancekeeper.Keeper{},
-		bk:     custombankkeeper.Keeper{},
-		sk:     stakingkeeper.Keeper{},
-		acck:   ak,
+		Keeper: *govKeeper,
+		ak:     nil,
+		bk:     nil,
+		sk:     nil,
+		acck:   authKeeper,
 		key:    key,
 	}
 	return keeper
 }
 
-func (k *Keeper) RegisterKeepers(ak alliancekeeper.Keeper, bk custombankkeeper.Keeper, sk stakingkeeper.Keeper) {
+func (k *Keeper) RegisterKeepers(ak *alliancekeeper.Keeper, bk *custombankkeeper.Keeper, sk *stakingkeeper.Keeper) {
 	k.ak = ak
 	k.bk = bk
 	k.sk = sk
@@ -160,7 +168,7 @@ func (k *Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes bool, burn
 		totalVotingPower = totalVotingPower.Add(votingPower)
 	}
 
-	tallyParams := k.GetTallyParams(ctx)
+	tallyParams := k.GetParams(ctx)
 	tallyResults = v1.NewTallyResultFromMap(results)
 
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
@@ -195,4 +203,10 @@ func (k *Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes bool, burn
 
 	// If more than 1/2 of non-abstaining voters vote No, proposal fails
 	return false, false, tallyResults
+}
+
+// SetHooks sets the hooks for governance
+func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
+	keeper.Keeper.SetHooks(gh)
+	return keeper
 }
