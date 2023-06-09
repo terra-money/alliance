@@ -206,7 +206,7 @@ func (k *Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes bool, burn
 }
 
 // SetHooks sets the hooks for governance
-func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
-	keeper.Keeper.SetHooks(gh)
-	return keeper
+func (k *Keeper) SetHooks(gh types.GovHooks) *Keeper {
+	k.Keeper = *k.Keeper.SetHooks(gh)
+	return k
 }

@@ -138,6 +138,9 @@ proto-gen:
 ###                                Local Testnet (docker)                   ###
 ###############################################################################
 
+start: install 
+	./scripts/local/start.sh
+
 localnet-alliance-rmi:
 	$(DOCKER) rmi terra-money/localnet-alliance 2>/dev/null; true
 
