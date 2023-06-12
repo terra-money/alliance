@@ -854,13 +854,14 @@ Alliance
 <a name="alliance.QueryAllianceUnbondingsByDenomAndDelegatorRequest"></a>
 
 ### QueryAllianceUnbondingsByDenomAndDelegatorRequest
-
+AllianceDelegation
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `delegator_addr` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
 
 
 
@@ -876,6 +877,7 @@ Alliance
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `unbondings` | [UnbondingDelegation](#alliance.UnbondingDelegation) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
 
 
 
@@ -893,6 +895,7 @@ Alliance
 | `denom` | [string](#string) |  |  |
 | `delegator_addr` | [string](#string) |  |  |
 | `validator_addr` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
 
 
 
@@ -908,6 +911,7 @@ Alliance
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `unbondings` | [UnbondingDelegation](#alliance.UnbondingDelegation) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
 
 
 

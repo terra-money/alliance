@@ -285,13 +285,13 @@ message QueryAllianceValidatorsResponse {
 }
 
 // AllianceDelegation
-
 message QueryAllianceUnbondingsByDenomAndDelegatorRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   string denom           = 1;
   string delegator_addr  = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
 message QueryAllianceUnbondingsByDenomAndDelegatorResponse {
@@ -299,6 +299,7 @@ message QueryAllianceUnbondingsByDenomAndDelegatorResponse {
   option (gogoproto.goproto_getters) = false;
 
   repeated UnbondingDelegation unbondings = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryAllianceUnbondingsRequest {
@@ -308,6 +309,7 @@ message QueryAllianceUnbondingsRequest {
   string denom           = 1;
   string delegator_addr  = 2;
   string validator_addr  = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }
 
 message QueryAllianceUnbondingsResponse {
@@ -315,6 +317,7 @@ message QueryAllianceUnbondingsResponse {
   option (gogoproto.goproto_getters) = false;
 
   repeated UnbondingDelegation unbondings = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // Redelegations
