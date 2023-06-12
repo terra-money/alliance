@@ -34,7 +34,12 @@ func (k Keeper) ClaimValidatorRewards(ctx sdk.Context, val types.AllianceValidat
 
 // ClaimDelegationRewards claims delegation rewards and transfers to the delegator account
 // This method updates the delegation so you will need to re-query an updated version from the database
-func (k Keeper) ClaimDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, val types.AllianceValidator, denom string) (sdk.Coins, error) {
+func (k Keeper) ClaimDelegationRewards(
+	ctx sdk.Context,
+	delAddr sdk.AccAddress,
+	val types.AllianceValidator,
+	denom string,
+) (sdk.Coins, error) {
 	asset, found := k.GetAssetByDenom(ctx, denom)
 	if !found {
 		return nil, types.ErrUnknownAsset

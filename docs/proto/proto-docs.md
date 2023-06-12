@@ -16,9 +16,7 @@
 - [alliance/delegations.proto](#alliance/delegations.proto)
     - [AllianceValidatorInfo](#alliance.AllianceValidatorInfo)
     - [Delegation](#alliance.Delegation)
-    - [QueuedRedelegation](#alliance.QueuedRedelegation)
     - [QueuedUndelegation](#alliance.QueuedUndelegation)
-    - [Redelegation](#alliance.Redelegation)
     - [Undelegation](#alliance.Undelegation)
   
 - [alliance/events.proto](#alliance/events.proto)
@@ -26,6 +24,11 @@
     - [DelegateAllianceEvent](#alliance.DelegateAllianceEvent)
     - [RedelegateAllianceEvent](#alliance.RedelegateAllianceEvent)
     - [UndelegateAllianceEvent](#alliance.UndelegateAllianceEvent)
+  
+- [alliance/redelegations.proto](#alliance/redelegations.proto)
+    - [QueuedRedelegation](#alliance.QueuedRedelegation)
+    - [Redelegation](#alliance.Redelegation)
+    - [RedelegationEntry](#alliance.RedelegationEntry)
   
 - [alliance/genesis.proto](#alliance/genesis.proto)
     - [GenesisState](#alliance.GenesisState)
@@ -39,6 +42,9 @@
     - [MsgDeleteAllianceProposal](#alliance.MsgDeleteAllianceProposal)
     - [MsgUpdateAllianceProposal](#alliance.MsgUpdateAllianceProposal)
   
+- [alliance/unbonding.proto](#alliance/unbonding.proto)
+    - [UnbondingDelegation](#alliance.UnbondingDelegation)
+  
 - [alliance/query.proto](#alliance/query.proto)
     - [DelegationResponse](#alliance.DelegationResponse)
     - [QueryAllAllianceValidatorsRequest](#alliance.QueryAllAllianceValidatorsRequest)
@@ -47,8 +53,14 @@
     - [QueryAllianceDelegationResponse](#alliance.QueryAllianceDelegationResponse)
     - [QueryAllianceDelegationRewardsRequest](#alliance.QueryAllianceDelegationRewardsRequest)
     - [QueryAllianceDelegationRewardsResponse](#alliance.QueryAllianceDelegationRewardsResponse)
+    - [QueryAllianceRedelegationsRequest](#alliance.QueryAllianceRedelegationsRequest)
+    - [QueryAllianceRedelegationsResponse](#alliance.QueryAllianceRedelegationsResponse)
     - [QueryAllianceRequest](#alliance.QueryAllianceRequest)
     - [QueryAllianceResponse](#alliance.QueryAllianceResponse)
+    - [QueryAllianceUnbondingsByDenomAndDelegatorRequest](#alliance.QueryAllianceUnbondingsByDenomAndDelegatorRequest)
+    - [QueryAllianceUnbondingsByDenomAndDelegatorResponse](#alliance.QueryAllianceUnbondingsByDenomAndDelegatorResponse)
+    - [QueryAllianceUnbondingsRequest](#alliance.QueryAllianceUnbondingsRequest)
+    - [QueryAllianceUnbondingsResponse](#alliance.QueryAllianceUnbondingsResponse)
     - [QueryAllianceValidatorRequest](#alliance.QueryAllianceValidatorRequest)
     - [QueryAllianceValidatorResponse](#alliance.QueryAllianceValidatorResponse)
     - [QueryAllianceValidatorsResponse](#alliance.QueryAllianceValidatorsResponse)
@@ -247,21 +259,6 @@ key: denom value: AllianceAsset
 
 
 
-<a name="alliance.QueuedRedelegation"></a>
-
-### QueuedRedelegation
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `entries` | [Redelegation](#alliance.Redelegation) | repeated |  |
-
-
-
-
-
-
 <a name="alliance.QueuedUndelegation"></a>
 
 ### QueuedUndelegation
@@ -271,24 +268,6 @@ key: denom value: AllianceAsset
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `entries` | [Undelegation](#alliance.Undelegation) | repeated |  |
-
-
-
-
-
-
-<a name="alliance.Redelegation"></a>
-
-### Redelegation
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `delegator_address` | [string](#string) |  |  |
-| `src_validator_address` | [string](#string) |  |  |
-| `dst_validator_address` | [string](#string) |  |  |
-| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
@@ -394,6 +373,74 @@ key: denom value: AllianceAsset
 | `validator` | [string](#string) |  |  |
 | `coin` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `completionTime` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="alliance/redelegations.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## alliance/redelegations.proto
+
+
+
+<a name="alliance.QueuedRedelegation"></a>
+
+### QueuedRedelegation
+Used internally to keep track of redelegations
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `entries` | [Redelegation](#alliance.Redelegation) | repeated |  |
+
+
+
+
+
+
+<a name="alliance.Redelegation"></a>
+
+### Redelegation
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator_address` | [string](#string) |  | internal or external user address |
+| `src_validator_address` | [string](#string) |  | redelegation source validator |
+| `dst_validator_address` | [string](#string) |  | redelegation destination validator |
+| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount to redelegate |
+
+
+
+
+
+
+<a name="alliance.RedelegationEntry"></a>
+
+### RedelegationEntry
+Used on QueryServer
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator_address` | [string](#string) |  | internal or external user address |
+| `src_validator_address` | [string](#string) |  | redelegation source validator |
+| `dst_validator_address` | [string](#string) |  | redelegation destination validator |
+| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | amount to redelegate |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time defines the unix time for redelegation completion. |
 
 
 
@@ -588,6 +635,39 @@ GenesisState defines the module's genesis state.
 
 
 
+<a name="alliance/unbonding.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## alliance/unbonding.proto
+
+
+
+<a name="alliance.UnbondingDelegation"></a>
+
+### UnbondingDelegation
+UnbondingDelegation defines an unbonding object with relevant metadata.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time is the unix time for unbonding completion. |
+| `validator_address` | [string](#string) |  | validator_address is the bech32-encoded address of the validator. |
+| `amount` | [string](#string) |  | amount defines the tokens to receive at completion. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="alliance/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -708,6 +788,39 @@ AllianceDelegation
 
 
 
+<a name="alliance.QueryAllianceRedelegationsRequest"></a>
+
+### QueryAllianceRedelegationsRequest
+Redelegations
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `delegator_addr` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+
+
+
+
+
+
+<a name="alliance.QueryAllianceRedelegationsResponse"></a>
+
+### QueryAllianceRedelegationsResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `redelegations` | [RedelegationEntry](#alliance.RedelegationEntry) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
+
 <a name="alliance.QueryAllianceRequest"></a>
 
 ### QueryAllianceRequest
@@ -732,6 +845,73 @@ Alliance
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `alliance` | [AllianceAsset](#alliance.AllianceAsset) |  |  |
+
+
+
+
+
+
+<a name="alliance.QueryAllianceUnbondingsByDenomAndDelegatorRequest"></a>
+
+### QueryAllianceUnbondingsByDenomAndDelegatorRequest
+AllianceDelegation
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `delegator_addr` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+
+
+
+
+
+
+<a name="alliance.QueryAllianceUnbondingsByDenomAndDelegatorResponse"></a>
+
+### QueryAllianceUnbondingsByDenomAndDelegatorResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `unbondings` | [UnbondingDelegation](#alliance.UnbondingDelegation) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
+
+<a name="alliance.QueryAllianceUnbondingsRequest"></a>
+
+### QueryAllianceUnbondingsRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `delegator_addr` | [string](#string) |  |  |
+| `validator_addr` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+
+
+
+
+
+
+<a name="alliance.QueryAllianceUnbondingsResponse"></a>
+
+### QueryAllianceUnbondingsResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `unbondings` | [UnbondingDelegation](#alliance.UnbondingDelegation) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
 
 
 
@@ -968,6 +1148,9 @@ Params
 | `IBCAllianceDelegation` | [QueryIBCAllianceDelegationRequest](#alliance.QueryIBCAllianceDelegationRequest) | [QueryAllianceDelegationResponse](#alliance.QueryAllianceDelegationResponse) | Query a delegation to an alliance by delegator addr, validator_addr and denom @deprecated: this endpoint will be replaced for by the encoded version of the denom e.g.: GET:/terra/alliances/terradr1231/terravaloper41234/ibc%2Falliance | GET|/terra/alliances/delegations/{delegator_addr}/{validator_addr}/ibc/{hash}|
 | `AllianceDelegationRewards` | [QueryAllianceDelegationRewardsRequest](#alliance.QueryAllianceDelegationRewardsRequest) | [QueryAllianceDelegationRewardsResponse](#alliance.QueryAllianceDelegationRewardsResponse) | Query for rewards by delegator addr, validator_addr and denom | GET|/terra/alliances/rewards/{delegator_addr}/{validator_addr}/{denom}|
 | `IBCAllianceDelegationRewards` | [QueryIBCAllianceDelegationRewardsRequest](#alliance.QueryIBCAllianceDelegationRewardsRequest) | [QueryAllianceDelegationRewardsResponse](#alliance.QueryAllianceDelegationRewardsResponse) | Query for rewards by delegator addr, validator_addr and denom @deprecated: this endpoint will be replaced for by the encoded version of the denom e.g.: GET:/terra/alliances/terradr1231/terravaloper41234/ibc%2Falliance | GET|/terra/alliances/rewards/{delegator_addr}/{validator_addr}/ibc/{hash}|
+| `AllianceUnbondingsByDenomAndDelegator` | [QueryAllianceUnbondingsByDenomAndDelegatorRequest](#alliance.QueryAllianceUnbondingsByDenomAndDelegatorRequest) | [QueryAllianceUnbondingsByDenomAndDelegatorResponse](#alliance.QueryAllianceUnbondingsByDenomAndDelegatorResponse) | Query for rewards by delegator addr, validator_addr and denom | GET|/terra/alliances/unbondings/{denom}/{delegator_addr}|
+| `AllianceUnbondings` | [QueryAllianceUnbondingsRequest](#alliance.QueryAllianceUnbondingsRequest) | [QueryAllianceUnbondingsResponse](#alliance.QueryAllianceUnbondingsResponse) | Query for rewards by delegator addr, validator_addr and denom | GET|/terra/alliances/unbondings/{denom}/{delegator_addr}/{validator_addr}|
+| `AllianceRedelegations` | [QueryAllianceRedelegationsRequest](#alliance.QueryAllianceRedelegationsRequest) | [QueryAllianceRedelegationsResponse](#alliance.QueryAllianceRedelegationsResponse) | Query redelegations by denom and delegator address | GET|/terra/alliances/redelegations/{denom}/{delegator_addr}|
 | `Alliance` | [QueryAllianceRequest](#alliance.QueryAllianceRequest) | [QueryAllianceResponse](#alliance.QueryAllianceResponse) | Query a specific alliance by denom | GET|/terra/alliances/{denom}|
 
  <!-- end services -->
