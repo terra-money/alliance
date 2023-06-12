@@ -245,6 +245,17 @@ func ParseRedelegationKeyForCompletionTime(key []byte) time.Time {
 	return t
 }
 
+func ParseRedelegationPaginationKeyTime(key []byte) time.Time {
+	offset := 0
+	offset += int(key[offset]) + 1
+	b := key[offset:]
+	t, err := sdk.ParseTimeBytes(b)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
 func ParseUndelegationQueueKeyForCompletionTime(key []byte) (time.Time, error) {
 	offset := len(UndelegationQueueKey)
 

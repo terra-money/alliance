@@ -798,6 +798,7 @@ Redelegations
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `delegator_addr` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
 
 
 
@@ -813,6 +814,7 @@ Redelegations
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `redelegations` | [RedelegationEntry](#alliance.RedelegationEntry) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
 
 
 
@@ -1144,7 +1146,7 @@ Params
 | `IBCAllianceDelegationRewards` | [QueryIBCAllianceDelegationRewardsRequest](#alliance.QueryIBCAllianceDelegationRewardsRequest) | [QueryAllianceDelegationRewardsResponse](#alliance.QueryAllianceDelegationRewardsResponse) | Query for rewards by delegator addr, validator_addr and denom @deprecated: this endpoint will be replaced for by the encoded version of the denom e.g.: GET:/terra/alliances/terradr1231/terravaloper41234/ibc%2Falliance | GET|/terra/alliances/rewards/{delegator_addr}/{validator_addr}/ibc/{hash}|
 | `AllianceUnbondingsByDenomAndDelegator` | [QueryAllianceUnbondingsByDenomAndDelegatorRequest](#alliance.QueryAllianceUnbondingsByDenomAndDelegatorRequest) | [QueryAllianceUnbondingsByDenomAndDelegatorResponse](#alliance.QueryAllianceUnbondingsByDenomAndDelegatorResponse) | Query for rewards by delegator addr, validator_addr and denom | GET|/terra/alliances/unbondings/{denom}/{delegator_addr}|
 | `AllianceUnbondings` | [QueryAllianceUnbondingsRequest](#alliance.QueryAllianceUnbondingsRequest) | [QueryAllianceUnbondingsResponse](#alliance.QueryAllianceUnbondingsResponse) | Query for rewards by delegator addr, validator_addr and denom | GET|/terra/alliances/unbondings/{denom}/{delegator_addr}/{validator_addr}|
-| `AllianceRedelegations` | [QueryAllianceRedelegationsRequest](#alliance.QueryAllianceRedelegationsRequest) | [QueryAllianceRedelegationsResponse](#alliance.QueryAllianceRedelegationsResponse) | Query for rewards by delegator addr, validator_addr and denom | GET|/terra/alliances/redelegations/{denom}/{delegator_addr}|
+| `AllianceRedelegations` | [QueryAllianceRedelegationsRequest](#alliance.QueryAllianceRedelegationsRequest) | [QueryAllianceRedelegationsResponse](#alliance.QueryAllianceRedelegationsResponse) | Query redelegations by denom and delegator address | GET|/terra/alliances/redelegations/{denom}/{delegator_addr}|
 | `Alliance` | [QueryAllianceRequest](#alliance.QueryAllianceRequest) | [QueryAllianceResponse](#alliance.QueryAllianceResponse) | Query a specific alliance by denom | GET|/terra/alliances/{denom}|
 
  <!-- end services -->

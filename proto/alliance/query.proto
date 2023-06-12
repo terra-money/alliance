@@ -97,7 +97,7 @@ service Query {
     option (google.api.http).get = "/terra/alliances/unbondings/{denom}/{delegator_addr}/{validator_addr}";
   }
 
-  // Query for rewards by delegator addr, validator_addr and denom
+  // Query redelegations by denom and delegator address
   rpc AllianceRedelegations(QueryAllianceRedelegationsRequest) returns (QueryAllianceRedelegationsResponse) {
     option (google.api.http).get = "/terra/alliances/redelegations/{denom}/{delegator_addr}";
   }
@@ -324,6 +324,7 @@ message QueryAllianceRedelegationsRequest {
 
   string denom           = 1;
   string delegator_addr  = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
 message QueryAllianceRedelegationsResponse {
@@ -331,4 +332,5 @@ message QueryAllianceRedelegationsResponse {
   option (gogoproto.goproto_getters) = false;
 
   repeated RedelegationEntry redelegations = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
