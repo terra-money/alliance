@@ -259,6 +259,7 @@ func TestSuccessfulRedelegation(t *testing.T) {
 			types.NewAllianceAsset(AllianceDenomTwo, sdk.NewDec(10), sdk.NewDec(2), sdk.NewDec(12), sdk.NewDec(0), ctx.BlockTime()),
 		},
 	})
+	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// Get all the addresses needed for the test
 	moduleAddr := app.AccountKeeper.GetModuleAddress(types.ModuleName)
@@ -365,6 +366,23 @@ func TestSuccessfulRedelegation(t *testing.T) {
 	assets = app.AllianceKeeper.GetAllAssets(ctx)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
+
+	// Query all redelegations
+	redelegationsRes, err := queryServer.AllianceRedelegations(ctx,
+		&types.QueryAllianceRedelegationsRequest{
+			Denom:         AllianceDenom,
+			DelegatorAddr: delAddr1.String(),
+			Pagination:    nil,
+		})
+	require.NoError(t, err)
+	require.Len(t, redelegationsRes.Redelegations, 1)
+	require.Equal(t, types.RedelegationEntry{
+		DelegatorAddress:    delAddr1.String(),
+		SrcValidatorAddress: valAddr1.String(),
+		DstValidatorAddress: valAddr2.String(),
+		Balance:             sdk.NewCoin(AllianceDenom, sdk.NewInt(500_000)),
+		CompletionTime:      ctx.BlockTime().Add(app.StakingKeeper.UnbondingTime(ctx)),
+	}, redelegationsRes.Redelegations[0])
 
 	// Immediately calling complete re-delegation should do nothing
 	deleted := app.AllianceKeeper.CompleteRedelegations(ctx)
