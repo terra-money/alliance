@@ -21,7 +21,7 @@ require (
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 	google.golang.org/grpc v1.55.0
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/protobuf v1.31.0
 )
 
 require github.com/cosmos/gogoproto v1.4.10
