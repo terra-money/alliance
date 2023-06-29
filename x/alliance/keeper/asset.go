@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/terra-money/alliance/x/alliance/types"
@@ -321,7 +320,7 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 	}
 
 	if !coins.Empty() && !coins.IsZero() {
-		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, coins)
+		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, coins)
 		if err != nil {
 			return nil, err
 		}

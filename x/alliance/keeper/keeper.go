@@ -21,6 +21,7 @@ type Keeper struct {
 	bankKeeper         types.BankKeeper
 	stakingKeeper      types.StakingKeeper
 	distributionKeeper types.DistributionKeeper
+	feeCollectorName   string // name of the FeeCollector ModuleAccount
 }
 
 func NewKeeper(
@@ -31,11 +32,17 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	stakingKeeper types.StakingKeeper,
 	distributionKeeper types.DistributionKeeper,
+	feeCollectorName string,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		kt := paramtypes.NewKeyTable().RegisterParamSet(&types.Params{})
 		ps = ps.WithKeyTable(kt)
+	}
+
+	// make sure the fee collector module account exists
+	if accountKeeper.GetModuleAddress(feeCollectorName) == nil {
+		panic(fmt.Sprintf("%s module account has not been set", feeCollectorName))
 	}
 
 	return Keeper{
@@ -46,6 +53,7 @@ func NewKeeper(
 		bankKeeper:         bankKeeper,
 		stakingKeeper:      stakingKeeper,
 		distributionKeeper: distributionKeeper,
+		feeCollectorName:   feeCollectorName,
 	}
 }
 
