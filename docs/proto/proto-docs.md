@@ -21,6 +21,7 @@
   
 - [alliance/events.proto](#alliance/events.proto)
     - [ClaimAllianceRewardsEvent](#alliance.ClaimAllianceRewardsEvent)
+    - [DeductAllianceAssetsEvent](#alliance.DeductAllianceAssetsEvent)
     - [DelegateAllianceEvent](#alliance.DelegateAllianceEvent)
     - [RedelegateAllianceEvent](#alliance.RedelegateAllianceEvent)
     - [UndelegateAllianceEvent](#alliance.UndelegateAllianceEvent)
@@ -317,6 +318,21 @@ key: denom value: AllianceAsset
 | ----- | ---- | ----- | ----------- |
 | `allianceSender` | [string](#string) |  |  |
 | `validator` | [string](#string) |  |  |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="alliance.DeductAllianceAssetsEvent"></a>
+
+### DeductAllianceAssetsEvent
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 

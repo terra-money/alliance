@@ -326,6 +326,7 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 		}
 		// Only update if there was a token transfer to prevent < 1 amounts to be ignored
 		k.SetLastRewardClaimTime(ctx, lastClaim.Add(rewardClaimInterval*time.Duration(intervalsSinceLastClaim)))
+		_ = ctx.EventManager().EmitTypedEvent(&types.DeductAllianceAssetsEvent{Coins: coins})
 	}
 	return coins, nil
 }
