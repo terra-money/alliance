@@ -72,3 +72,9 @@ func (k Keeper) GetAllAllianceValidatorInfo(ctx sdk.Context) []types.AllianceVal
 	}
 	return infos
 }
+
+func (k Keeper) DeleteValidatorInfo(ctx sdk.Context, valAddr sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetAllianceValidatorInfoKey(valAddr)
+	store.Delete(key)
+}
