@@ -144,6 +144,10 @@ func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 		idx = simtypes.RandIntBetween(r, 0, len(validators)-1)
 		validatorToDelegateTo := validators[idx]
 
+		if delegation.ValidatorAddress == validatorToDelegateTo.GetOperator().String() {
+			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "redelegation to the same validator"), nil, nil
+		}
+
 		msg := &types.MsgRedelegate{
 			DelegatorAddress:    delegation.DelegatorAddress,
 			ValidatorSrcAddress: delegation.ValidatorAddress,

@@ -19,6 +19,8 @@ type QueryServer struct {
 	Keeper
 }
 
+var _ types.QueryServer = QueryServer{}
+
 func (k QueryServer) AllAlliancesDelegations(c context.Context, req *types.QueryAllAlliancesDelegationsRequest) (*types.QueryAlliancesDelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -139,8 +141,6 @@ func (k QueryServer) AllAllianceValidators(c context.Context, req *types.QueryAl
 	res.Pagination = pageRes
 	return res, nil
 }
-
-var _ types.QueryServer = QueryServer{}
 
 func (k QueryServer) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	// Define a variable that will store the params
@@ -447,6 +447,100 @@ func (k QueryServer) AllianceDelegation(c context.Context, req *types.QueryAllia
 	}, nil
 }
 
+func (k QueryServer) AllianceUnbondingsByDenomAndDelegator(c context.Context, req *types.QueryAllianceUnbondingsByDenomAndDelegatorRequest) (*types.QueryAllianceUnbondingsByDenomAndDelegatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	decodedDenom, err := url.QueryUnescape(req.Denom)
+	if err == nil {
+		req.Denom = decodedDenom
+	}
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := k.GetUnbondingsByDenomAndDelegator(ctx, req.Denom, delAddr)
+
+	return &types.QueryAllianceUnbondingsByDenomAndDelegatorResponse{
+		Unbondings: res,
+	}, err
+}
+
+func (k QueryServer) AllianceUnbondings(c context.Context, req *types.QueryAllianceUnbondingsRequest) (*types.QueryAllianceUnbondingsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	decodedDenom, err := url.QueryUnescape(req.Denom)
+	if err == nil {
+		req.Denom = decodedDenom
+	}
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := k.GetUnbondings(ctx, req.Denom, delAddr, valAddr)
+
+	return &types.QueryAllianceUnbondingsResponse{
+		Unbondings: res,
+	}, err
+}
+
+func (k QueryServer) AllianceRedelegations(c context.Context, req *types.QueryAllianceRedelegationsRequest) (*types.QueryAllianceRedelegationsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	// Decode the denom from the request url (https://stackoverflow.com/questions/20921619/is-there-any-example-and-usage-of-url-queryescape-for-golang)
+	decodedDenom, err := url.QueryUnescape(req.Denom)
+	if err == nil {
+		req.Denom = decodedDenom
+	}
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the key-value module store using the store key
+	store := ctx.KVStore(k.storeKey)
+
+	// Get the part of the store that keeps assets
+	redelegationsStore := prefix.NewStore(store, types.GetRedelegationsKeyByDelegatorAndDenom(delAddr, req.Denom))
+
+	var redelegationEntries []types.RedelegationEntry
+
+	// Paginate the assets store based on PageRequest
+	pageRes, err := query.Paginate(redelegationsStore, req.Pagination, func(key []byte, value []byte) error {
+		var redelegation types.Redelegation
+		k.cdc.MustUnmarshal(value, &redelegation)
+		// get the completion time from the latest bytes of the key
+		completionTime := types.ParseRedelegationPaginationKeyTime(key)
+
+		redelegationEntry := types.RedelegationEntry{
+			DelegatorAddress:    redelegation.DelegatorAddress,
+			SrcValidatorAddress: redelegation.SrcValidatorAddress,
+			DstValidatorAddress: redelegation.DstValidatorAddress,
+			Balance:             redelegation.Balance,
+			CompletionTime:      completionTime,
+		}
+
+		redelegationEntries = append(redelegationEntries, redelegationEntry)
+		return nil
+	})
+	// Throw an error if pagination failed
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllianceRedelegationsResponse{
+		Redelegations: redelegationEntries,
+		Pagination:    pageRes,
+	}, err
+}
+
 func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.QueryIBCAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRequest is deprecated
 	req := types.QueryAllianceDelegationRequest{
 		DelegatorAddr: request.DelegatorAddr,
@@ -458,5 +552,7 @@ func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.Que
 }
 
 func NewQueryServerImpl(keeper Keeper) types.QueryServer {
-	return &QueryServer{Keeper: keeper}
+	return &QueryServer{
+		Keeper: keeper,
+	}
 }

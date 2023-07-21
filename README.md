@@ -59,6 +59,13 @@ Chains that want to add `x/alliance` must enable the following modules:
 - [x/distribution](https://github.com/cosmos/cosmos-sdk/blob/main/x/distribution/README.md)
 - [x/gov](https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/README.md)
 
+Compatibility matrix:
+
+| Release | Branch         | CosmosSDK |
+|---------|----------------|-----------|
+| v0.2.0  | release/v0.2.x | 0.47      |
+| v0.1.0  | release/v0.1.x | 0.46      |
+
 For an in-depth guide on integrating `x/alliance`, visit the [Alliance Module Integration Guide](https://alliance.terra.money/guides/get-started). 
 
 ## Development environment
