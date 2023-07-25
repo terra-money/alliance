@@ -6,8 +6,7 @@
   ·
   <a href="https://docs.alliance.terra.money/guides/get-started">Integration Guide</a>
   ·
-    <a href="https://docs.alliance.terra.money/alliance-audit.pdf">Code Audit</a>
-
+  <a href="https://github.com/terra-money/alliance/blob/main/audit/alliance-audit-v1.0.pdf">Code Audit</a>
 </p>
 
 <br/>
