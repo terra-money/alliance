@@ -2,11 +2,11 @@
 <h1 align="center"> 🤝 Alliance</h1>
 
 <p align="center">
-  <a href="https://alliance.terra.money/">Technical Documentation</a>
+  <a href="https://docs.alliance.terra.money/">Technical Documentation</a>
   ·
-  <a href="https://alliance.terra.money/guides/get-started">Integration Guide</a>
+  <a href="https://docs.alliance.terra.money/guides/get-started">Integration Guide</a>
   ·
-    <a href="https://alliance.terra.money/alliance-audit.pdf">Code Audit</a>
+    <a href="https://github.com/terra-money/alliance/blob/main/audit/alliance-audit-v1.0.pdf">Code Audit</a>
 
 </p>
 
