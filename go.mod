@@ -6,11 +6,11 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.1
 	cosmossdk.io/tools/rosetta v0.2.1
-	github.com/cometbft/cometbft v0.37.1
+	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2
-	github.com/cosmos/cosmos-sdk v0.47.2
-	github.com/cosmos/ibc-go/v7 v7.0.1
+	github.com/cosmos/cosmos-sdk v0.47.3
+	github.com/cosmos/ibc-go/v7 v7.1.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -18,7 +18,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
+	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
@@ -51,13 +51,13 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
-	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
+	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v0.20.0 // indirect
-	github.com/cosmos/ics23/go v0.9.1-0.20221207100636-b1abd8678aab // indirect
+	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/creachadair/taskgroup v0.4.2 // indirect
@@ -75,7 +75,7 @@ require (
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
-	github.com/go-playground/universal-translator v0.18.0 // indirect
+	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -110,7 +110,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
-	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/linxGnu/grocksdb v1.7.16 // indirect
@@ -167,10 +166,5 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace (
-	// Using the latest branch for cosmos-sdk 47 for a fix regarding simulations not allowing non EOA accounts to stake
-	// To remove after a new release of cosmos-sdk 47
-	github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.47.3-0.20230513170018-83d600596f5d
-	// Golevel DB fix
-	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-)
+// Golevel DB fix
+replace github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
