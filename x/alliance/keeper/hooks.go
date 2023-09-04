@@ -19,7 +19,8 @@ func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
+	h.k.DeleteValidatorInfo(ctx, valAddr)
 	h.k.QueueAssetRebalanceEvent(ctx)
 	return nil
 }
