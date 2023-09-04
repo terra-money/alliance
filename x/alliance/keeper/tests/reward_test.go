@@ -62,10 +62,6 @@ func TestRewardPoolAndGlobalIndex(t *testing.T) {
 	coin := app.BankKeeper.GetBalance(ctx, mintPoolAddr, "stake")
 	require.Equal(t, sdk.NewCoin("stake", sdk.NewInt(4000_000)), coin)
 
-	// Transfer to reward pool without delegations will fail
-	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val1, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
-	require.Error(t, err)
-
 	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)))
 	require.NoError(t, err)
 	assets := app.AllianceKeeper.GetAllAssets(ctx)

@@ -131,10 +131,15 @@ func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistor
 // To calculate the number of rewards claimable, take reward_history * alliance_token_amount * reward_weight
 func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val types.AllianceValidator, coins sdk.Coins) error {
 	rewardHistories := types.NewRewardHistories(val.GlobalRewardHistory)
+	// We need some delegations before we can split rewards. Else rewards belong to no one and do nothing
+	if len(val.TotalDelegatorShares) == 0 {
+		return nil
+	}
+
 	totalAssetWeight := k.totalAssetWeight(ctx, val)
-	// We need some delegations before we can split rewards. Else rewards belong to no one
 	if totalAssetWeight.IsZero() {
-		return types.ErrZeroDelegations
+		// Do nothing since there are no assets to distribute rewards to
+		return nil
 	}
 
 	for _, c := range coins {
