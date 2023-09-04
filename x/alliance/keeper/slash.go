@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
@@ -133,7 +131,7 @@ func (k Keeper) slashUndelegations(ctx sdk.Context, valAddr sdk.ValAddress, frac
 			tokensToSlash := fraction.MulInt(entry.Balance.Amount).TruncateInt()
 			entry.Balance = sdk.NewCoin(entry.Balance.Denom, entry.Balance.Amount.Sub(tokensToSlash))
 			coinToSlash := sdk.NewCoin(entry.Balance.Denom, tokensToSlash)
-			err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(coinToSlash))
+			err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, sdk.NewCoins(coinToSlash))
 			if err != nil {
 				return err
 			}

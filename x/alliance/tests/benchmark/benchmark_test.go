@@ -21,7 +21,7 @@ import (
 
 var (
 	SEED               = int64(1)
-	NumOfBlocks        = 1000
+	NumOfBlocks        = 200
 	BlocktimeInSeconds = 5
 	VoteRate           = 0.8
 	NumOfValidators    = 160
@@ -89,7 +89,7 @@ func TestRunBenchmarks(t *testing.T) {
 		// Endblock
 		assets := app.AllianceKeeper.GetAllAssets(ctx)
 		app.AllianceKeeper.CompleteRedelegations(ctx)
-		err := app.AllianceKeeper.CompleteUndelegations(ctx)
+		err := app.AllianceKeeper.CompleteUnbondings(ctx)
 		if err != nil {
 			panic(err)
 		}

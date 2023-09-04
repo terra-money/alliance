@@ -32,9 +32,9 @@ func NewDelegateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate [validator-addr] [amount]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Delegate alliance enabled tokens to a validator",
+		Short: "Delegate alliance-enabled tokens to a validator",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Delegate an amount of liquid alliance enabled coins to a validator from your wallet.
+			fmt.Sprintf(`Delegate an amount of liquid alliance-enabled coins to a validator from your wallet.
 
 Example:
 $ %s tx alliance delegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
@@ -79,9 +79,9 @@ func NewRedelegateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegate [src-validator-addr] [dst-validator-addr] [amount]",
 		Args:  cobra.ExactArgs(3),
-		Short: "Re-delegate alliance enabled tokens from a validator to another",
+		Short: "Re-delegate alliance-enabled tokens from a validator to another",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Re-delegate an amount of liquid alliance enabled coins from a validator to another from your wallet.
+			fmt.Sprintf(`Re-delegate an amount of liquid alliance-enabled coins from a validator to another from your wallet.
 
 Example:
 $ %s tx alliance redelegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm %ss1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
@@ -133,9 +133,9 @@ func NewUndelegateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "undelegate validator-addr amount",
 		Args:  cobra.ExactArgs(2),
-		Short: "Undelegate alliance enabled tokens to a validator",
+		Short: "Undelegate alliance-enabled tokens to a validator",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Undelegate an amount of liquid alliance enabled coins from a validator to your wallet (after the unbonding period has passed).
+			fmt.Sprintf(`Undelegate an amount of liquid alliance-enabled coins from a validator to your wallet (after the unbonding period has passed).
 
 Example:
 $ %s tx alliance undelegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey

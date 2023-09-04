@@ -241,6 +241,20 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	require.NoError(t, err)
 	del = res.GetDelegation()
 	require.True(t, del.Balance.Amount.IsZero())
+
+	// Query the unbondings in progress
+	unbondings, err := app.AllianceKeeper.GetUnbondingsByDenomAndDelegator(ctx, allianceAsset2, user1)
+	require.NoError(t, err)
+	require.True(t, len(unbondings) == 1)
+	require.Equal(t, val1.GetOperator().String(), unbondings[0].ValidatorAddress)
+	require.Equal(t, sdk.NewInt(100), unbondings[0].Amount)
+
+	// Query the unbondings in progress
+	unbondings, err = app.AllianceKeeper.GetUnbondings(ctx, allianceAsset2, user1, val1.GetOperator())
+	require.NoError(t, err)
+	require.True(t, len(unbondings) == 1)
+	require.Equal(t, val1.GetOperator().String(), unbondings[0].ValidatorAddress)
+	require.Equal(t, sdk.NewInt(100), unbondings[0].Amount)
 }
 
 // This test replicates this issue where there are large amounts of tokens delegated,

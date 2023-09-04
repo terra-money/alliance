@@ -99,7 +99,10 @@ test-e2e:
 test-benchmark:
 	@VERSION=$(VERSION) go test -v -mod=readonly -tags='ledger test_ledger_mock' github.com/terra-money/alliance/x/alliance/tests/benchmark
 
-.PHONY: test test-unit test-e2e test-benchmark
+test-simulate:
+	@VERSION=$(VERSION) go test -v -run=TestFullAppSimulation ./app -NumBlocks 200 -BlockSize 10 -Commit -Enabled -Period 1
+
+.PHONY: test test-unit test-e2e test-benchmark test-simulate
 ###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
@@ -115,7 +118,7 @@ lint: format-tools
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*pb.gw.go" | xargs gofumpt -d
 
 lint-docker:
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.52.2-alpine golangci-lint run
+	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.52.2-alpine golangci-lint run --timeout 10m
 
 format: format-tools
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*pb.gw.go" | xargs gofumpt -w

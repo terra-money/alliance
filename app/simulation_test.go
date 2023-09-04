@@ -4,38 +4,86 @@ import (
 	"os"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	simulationtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/terra-money/alliance/app"
 )
 
-// SimAppChainID hardcoded chainID for simulation
-const SimAppChainID = "simulation-app"
+// Hardcoded chainID for simulation.
+const (
+	simulationAppChainID = "simulation-app"
+	simulationDirPrefix  = "leveldb-app-sim"
+	simulationDBName     = "Simulation"
+)
 
 func init() {
 	simcli.GetSimulatorFlags()
 }
 
-type SimApp interface {
-	app.App
-	GetBaseApp() *baseapp.BaseApp
-	AppCodec() codec.Codec
-	SimulationManager() *module.SimulationManager
-	ModuleAccountAddrs() map[string]bool
-	Name() string
-	LegacyAmino() *codec.LegacyAmino
-	BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock
-	EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock
-	InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain
+// Running as a go test:
+//
+// go test -v -run=TestFullAppSimulation ./app -NumBlocks 200 -BlockSize 10 -Commit -Enabled -Period 1
+func TestFullAppSimulation(t *testing.T) {
+	config := simcli.NewConfigFromFlags()
+	config.ChainID = simulationAppChainID
+
+	if !simcli.FlagEnabledValue {
+		t.Skip("skipping application simulation")
+	}
+
+	db, dir, logger, _, err := simtestutil.SetupSimulation(
+		config,
+		simulationDirPrefix,
+		simulationDBName,
+		simcli.FlagVerboseValue,
+		true, // Don't use this as it is confusing
+	)
+	require.NoError(t, err, "simulation setup failed")
+
+	defer func() {
+		require.NoError(t, db.Close())
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+
+	app := app.New(logger,
+		db,
+		nil,
+		true,
+		map[int64]bool{},
+		app.DefaultNodeHome,
+		simcli.FlagPeriodValue,
+		app.MakeTestEncodingConfig(),
+		simtestutil.EmptyAppOptions{},
+		baseapp.SetChainID(simulationAppChainID),
+	)
+
+	// run randomized simulation
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		app.BaseApp,
+		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtypes.RandomAccounts,
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		app.BankKeeper.GetBlockedAddresses(),
+		config,
+		app.AppCodec(),
+	)
+
+	// export state and simParams before the simulatino error is checked
+	err = simtestutil.CheckExportSimulation(app, config, simParams)
+	require.NoError(t, err)
+	require.NoError(t, simErr)
+
+	if config.Commit {
+		simtestutil.PrintStats(db)
+	}
 }
 
 // BenchmarkSimulation run the chain simulation
@@ -61,8 +109,7 @@ func BenchmarkSimulation(b *testing.B) {
 
 	encoding := app.MakeTestEncodingConfig()
 
-	simApp := app.New(
-		logger,
+	app := app.New(logger,
 		db,
 		nil,
 		true,
@@ -77,17 +124,17 @@ func BenchmarkSimulation(b *testing.B) {
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
-		simApp.GetBaseApp(),
-		simtestutil.AppStateFn(simApp.AppCodec(), simApp.SimulationManager(), simApp.DefaultGenesis()),
-		simulationtypes.RandomAccounts,
-		simtestutil.SimulationOperations(simApp, simApp.AppCodec(), config),
-		simApp.ModuleAccountAddrs(),
+		app.GetBaseApp(),
+		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtypes.RandomAccounts,
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		app.ModuleAccountAddrs(),
 		config,
-		simApp.AppCodec(),
+		app.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
-	err = simtestutil.CheckExportSimulation(simApp, config, simParams)
+	err = simtestutil.CheckExportSimulation(app, config, simParams)
 	require.NoError(b, err)
 	require.NoError(b, simErr)
 

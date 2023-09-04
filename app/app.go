@@ -441,6 +441,7 @@ func New(
 		app.BankKeeper,
 		app.StakingKeeper,
 		app.DistrKeeper,
+		authtypes.FeeCollectorName,
 	)
 
 	app.BankKeeper.RegisterKeepers(app.AllianceKeeper, app.StakingKeeper)
