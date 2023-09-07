@@ -153,6 +153,9 @@ func (m MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 }
 
 func (m MsgServer) CreateAlliance(ctx context.Context, req *types.MsgCreateAlliance) (*types.MsgCreateAllianceResponse, error) {
+	if m.GetAuthority() != req.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", m.GetAuthority(), req.Authority)
+	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	_, found := m.GetAssetByDenom(sdkCtx, req.Plan.Denom)
 
@@ -177,6 +180,9 @@ func (m MsgServer) CreateAlliance(ctx context.Context, req *types.MsgCreateAllia
 }
 
 func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAlliance) (*types.MsgUpdateAllianceResponse, error) {
+	if m.GetAuthority() != req.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", m.GetAuthority(), req.Authority)
+	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	asset, found := m.GetAssetByDenom(sdkCtx, req.Plan.Denom)
 
@@ -200,6 +206,9 @@ func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAllia
 }
 
 func (m MsgServer) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAlliance) (*types.MsgDeleteAllianceResponse, error) {
+	if m.GetAuthority() != req.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", m.GetAuthority(), req.Authority)
+	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	asset, found := m.GetAssetByDenom(sdkCtx, req.Plan.Denom)
 
