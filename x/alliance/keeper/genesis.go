@@ -112,7 +112,3 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 	return &state
 }
-
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramstore.SetParamSet(ctx, &params)
-}

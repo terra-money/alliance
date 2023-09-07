@@ -13,9 +13,15 @@ var (
 	RewardDelayTime       = []byte("RewardDelayTime")
 	TakeRateClaimInterval = []byte("TakeRateClaimInterval")
 	LastTakeRateClaimTime = []byte("LastTakeRateClaimTime")
+	// ParamKeyTable deprecated - only used for migration
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
+
+// Deprecated: ParamKeyTable for auth module
+func ParamKeyTable() paramtypes.KeyTable {
+	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
+}
 
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
