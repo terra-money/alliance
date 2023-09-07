@@ -2,13 +2,11 @@ package keeper
 
 import (
 	"context"
-
 	sdkerrors "cosmossdk.io/errors"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	"github.com/terra-money/alliance/x/alliance/types"
-
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 type MsgServer struct {
@@ -150,6 +148,73 @@ func (m MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 		return nil, err
 	}
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+func (m MsgServer) CreateAlliance(ctx context.Context, req *types.MsgCreateAlliance) (*types.MsgCreateAllianceResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	_, found := m.GetAssetByDenom(sdkCtx, req.Denom)
+
+	if found {
+		return nil, types.ErrAlreadyExists
+	}
+	rewardStartTime := sdkCtx.BlockTime().Add(m.RewardDelayTime(sdkCtx))
+	asset := types.AllianceAsset{
+		Denom:                req.Denom,
+		RewardWeight:         req.RewardWeight,
+		RewardWeightRange:    req.RewardWeightRange,
+		TakeRate:             req.TakeRate,
+		TotalTokens:          sdk.ZeroInt(),
+		TotalValidatorShares: sdk.ZeroDec(),
+		RewardStartTime:      rewardStartTime,
+		RewardChangeRate:     req.RewardChangeRate,
+		RewardChangeInterval: req.RewardChangeInterval,
+		LastRewardChangeTime: rewardStartTime,
+	}
+	m.SetAsset(sdkCtx, asset)
+	return &types.MsgCreateAllianceResponse{}, nil
+}
+
+func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAlliance) (*types.MsgUpdateAllianceResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	asset, found := m.GetAssetByDenom(sdkCtx, req.Denom)
+
+	if !found {
+		return nil, types.ErrUnknownAsset
+	}
+	if asset.RewardWeightRange.Min.GT(req.RewardWeight) || asset.RewardWeightRange.Max.LT(req.RewardWeight) {
+		return nil, types.ErrRewardWeightOutOfBound
+	}
+	asset.RewardWeight = req.RewardWeight
+	asset.TakeRate = req.TakeRate
+	asset.RewardChangeRate = req.RewardChangeRate
+	asset.RewardChangeInterval = req.RewardChangeInterval
+
+	err := m.UpdateAllianceAsset(sdkCtx, asset)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateAllianceResponse{}, nil
+}
+
+func (m MsgServer) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAlliance) (*types.MsgDeleteAllianceResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	asset, found := m.GetAssetByDenom(sdkCtx, req.Denom)
+
+	if !found {
+		return nil, types.ErrUnknownAsset
+	}
+
+	if asset.TotalTokens.GT(math.ZeroInt()) {
+		return nil, types.ErrActiveDelegationsExists
+	}
+
+	err := m.DeleteAsset(sdkCtx, asset)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgDeleteAllianceResponse{}, nil
 }
 
 // NewMsgServerImpl returns an implementation of the MsgServer interface
