@@ -169,7 +169,11 @@ func NewMsgUpdateParams(authority string, params Params) *MsgUpdateParams {
 	}
 }
 
+
 func (msg *MsgUpdateParams) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.Wrap(err, "invalid authority address")
+	}
 	if err := ValidatePositiveDuration(msg.Params.RewardDelayTime); err != nil {
 		return err
 	}
