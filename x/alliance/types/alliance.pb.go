@@ -30,6 +30,179 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type CreateAlliance struct {
+	// Denom of the asset. It could either be a native token or an IBC token
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
+	// The reward weight specifies the ratio of rewards that will be given to each alliance asset
+	// It does not need to sum to 1. rate = weight / total_weight
+	// Native asset is always assumed to have a weight of 1.
+	RewardWeight github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=reward_weight,json=rewardWeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reward_weight"`
+	// A positive take rate is used for liquid staking derivatives. It defines an annualized reward rate that
+	// will be redirected to the distribution rewards pool
+	TakeRate             github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=take_rate,json=takeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"take_rate"`
+	RewardChangeRate     github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=reward_change_rate,json=rewardChangeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reward_change_rate"`
+	RewardChangeInterval time.Duration                          `protobuf:"bytes,5,opt,name=reward_change_interval,json=rewardChangeInterval,proto3,stdduration" json:"reward_change_interval"`
+	// set a bound of weight range to limit how much reward weights can scale.
+	RewardWeightRange RewardWeightRange `protobuf:"bytes,6,opt,name=reward_weight_range,json=rewardWeightRange,proto3" json:"reward_weight_range"`
+}
+
+func (m *CreateAlliance) Reset()         { *m = CreateAlliance{} }
+func (m *CreateAlliance) String() string { return proto.CompactTextString(m) }
+func (*CreateAlliance) ProtoMessage()    {}
+func (*CreateAlliance) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f7dbf17f28cd0f90, []int{0}
+}
+func (m *CreateAlliance) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CreateAlliance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CreateAlliance.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CreateAlliance) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateAlliance.Merge(m, src)
+}
+func (m *CreateAlliance) XXX_Size() int {
+	return m.Size()
+}
+func (m *CreateAlliance) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateAlliance.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateAlliance proto.InternalMessageInfo
+
+func (m *CreateAlliance) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *CreateAlliance) GetRewardChangeInterval() time.Duration {
+	if m != nil {
+		return m.RewardChangeInterval
+	}
+	return 0
+}
+
+func (m *CreateAlliance) GetRewardWeightRange() RewardWeightRange {
+	if m != nil {
+		return m.RewardWeightRange
+	}
+	return RewardWeightRange{}
+}
+
+type UpdateAlliance struct {
+	// Denom of the asset. It could either be a native token or an IBC token
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
+	// The reward weight specifies the ratio of rewards that will be given to each alliance asset
+	// It does not need to sum to 1. rate = weight / total_weight
+	// Native asset is always assumed to have a weight of 1.
+	RewardWeight         github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=reward_weight,json=rewardWeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reward_weight"`
+	TakeRate             github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=take_rate,json=takeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"take_rate"`
+	RewardChangeRate     github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=reward_change_rate,json=rewardChangeRate,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reward_change_rate"`
+	RewardChangeInterval time.Duration                          `protobuf:"bytes,5,opt,name=reward_change_interval,json=rewardChangeInterval,proto3,stdduration" json:"reward_change_interval"`
+}
+
+func (m *UpdateAlliance) Reset()         { *m = UpdateAlliance{} }
+func (m *UpdateAlliance) String() string { return proto.CompactTextString(m) }
+func (*UpdateAlliance) ProtoMessage()    {}
+func (*UpdateAlliance) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f7dbf17f28cd0f90, []int{1}
+}
+func (m *UpdateAlliance) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *UpdateAlliance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_UpdateAlliance.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *UpdateAlliance) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateAlliance.Merge(m, src)
+}
+func (m *UpdateAlliance) XXX_Size() int {
+	return m.Size()
+}
+func (m *UpdateAlliance) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateAlliance.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpdateAlliance proto.InternalMessageInfo
+
+func (m *UpdateAlliance) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *UpdateAlliance) GetRewardChangeInterval() time.Duration {
+	if m != nil {
+		return m.RewardChangeInterval
+	}
+	return 0
+}
+
+type DeleteAlliance struct {
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
+}
+
+func (m *DeleteAlliance) Reset()         { *m = DeleteAlliance{} }
+func (m *DeleteAlliance) String() string { return proto.CompactTextString(m) }
+func (*DeleteAlliance) ProtoMessage()    {}
+func (*DeleteAlliance) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f7dbf17f28cd0f90, []int{2}
+}
+func (m *DeleteAlliance) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DeleteAlliance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DeleteAlliance.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DeleteAlliance) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteAlliance.Merge(m, src)
+}
+func (m *DeleteAlliance) XXX_Size() int {
+	return m.Size()
+}
+func (m *DeleteAlliance) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteAlliance.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteAlliance proto.InternalMessageInfo
+
+func (m *DeleteAlliance) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
 type RewardWeightRange struct {
 	Min github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=min,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min"`
 	Max github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=max,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"max"`
@@ -39,7 +212,7 @@ func (m *RewardWeightRange) Reset()         { *m = RewardWeightRange{} }
 func (m *RewardWeightRange) String() string { return proto.CompactTextString(m) }
 func (*RewardWeightRange) ProtoMessage()    {}
 func (*RewardWeightRange) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f7dbf17f28cd0f90, []int{0}
+	return fileDescriptor_f7dbf17f28cd0f90, []int{3}
 }
 func (m *RewardWeightRange) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -95,7 +268,7 @@ func (m *AllianceAsset) Reset()         { *m = AllianceAsset{} }
 func (m *AllianceAsset) String() string { return proto.CompactTextString(m) }
 func (*AllianceAsset) ProtoMessage()    {}
 func (*AllianceAsset) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f7dbf17f28cd0f90, []int{1}
+	return fileDescriptor_f7dbf17f28cd0f90, []int{4}
 }
 func (m *AllianceAsset) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -133,7 +306,7 @@ func (m *RewardWeightChangeSnapshot) Reset()         { *m = RewardWeightChangeSn
 func (m *RewardWeightChangeSnapshot) String() string { return proto.CompactTextString(m) }
 func (*RewardWeightChangeSnapshot) ProtoMessage()    {}
 func (*RewardWeightChangeSnapshot) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f7dbf17f28cd0f90, []int{2}
+	return fileDescriptor_f7dbf17f28cd0f90, []int{5}
 }
 func (m *RewardWeightChangeSnapshot) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -163,6 +336,9 @@ func (m *RewardWeightChangeSnapshot) XXX_DiscardUnknown() {
 var xxx_messageInfo_RewardWeightChangeSnapshot proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterType((*CreateAlliance)(nil), "alliance.CreateAlliance")
+	proto.RegisterType((*UpdateAlliance)(nil), "alliance.UpdateAlliance")
+	proto.RegisterType((*DeleteAlliance)(nil), "alliance.DeleteAlliance")
 	proto.RegisterType((*RewardWeightRange)(nil), "alliance.RewardWeightRange")
 	proto.RegisterType((*AllianceAsset)(nil), "alliance.AllianceAsset")
 	proto.RegisterType((*RewardWeightChangeSnapshot)(nil), "alliance.RewardWeightChangeSnapshot")
@@ -171,50 +347,229 @@ func init() {
 func init() { proto.RegisterFile("alliance/alliance.proto", fileDescriptor_f7dbf17f28cd0f90) }
 
 var fileDescriptor_f7dbf17f28cd0f90 = []byte{
-	// 674 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0xbb, 0x6e, 0xdb, 0x3c,
-	0x14, 0xc7, 0xad, 0x5c, 0x1d, 0x3a, 0xf9, 0xbe, 0x44, 0x75, 0x13, 0xc5, 0x05, 0x24, 0xc3, 0x40,
-	0x03, 0x2f, 0x91, 0x8b, 0x74, 0x0b, 0x3a, 0x34, 0x6e, 0x86, 0xb8, 0x5d, 0x5a, 0x39, 0x68, 0xd1,
-	0x0b, 0x20, 0x30, 0x16, 0x2b, 0x13, 0x91, 0x44, 0x83, 0x3c, 0xb9, 0xb8, 0x4f, 0xd0, 0xa1, 0x43,
-	0xc6, 0x8e, 0xe9, 0x3b, 0xf4, 0x21, 0x32, 0x15, 0x41, 0xa7, 0xa2, 0x43, 0x5a, 0x24, 0x4b, 0xe7,
-	0x3e, 0x41, 0x41, 0x8a, 0x4a, 0xe4, 0x64, 0x8a, 0x26, 0x91, 0x3c, 0xe2, 0x8f, 0xff, 0x73, 0xf8,
-	0x3f, 0x44, 0x4b, 0x38, 0x8a, 0x28, 0x4e, 0x7a, 0xa4, 0x95, 0x0d, 0xdc, 0x01, 0x67, 0xc0, 0xcc,
-	0x72, 0x36, 0xaf, 0x55, 0x43, 0x16, 0x32, 0xb5, 0xd8, 0x92, 0xa3, 0x34, 0x5e, 0x5b, 0xee, 0x31,
-	0x11, 0x33, 0xe1, 0xa7, 0x81, 0x74, 0xa2, 0x43, 0x77, 0x2f, 0x99, 0x03, 0xcc, 0x71, 0x9c, 0x2d,
-	0xdb, 0x21, 0x63, 0x61, 0x44, 0x5a, 0x6a, 0xb6, 0xb3, 0xf7, 0xbe, 0x15, 0xec, 0x71, 0x0c, 0x94,
-	0x25, 0x3a, 0xee, 0x5c, 0x8f, 0x03, 0x8d, 0x89, 0x00, 0x1c, 0x0f, 0xd2, 0x1f, 0x1a, 0x5f, 0x0c,
-	0xb4, 0xe0, 0x91, 0x03, 0xcc, 0x83, 0x57, 0x84, 0x86, 0x7d, 0xf0, 0x70, 0x12, 0x12, 0xf3, 0x31,
-	0x1a, 0x8f, 0x69, 0x62, 0x19, 0x75, 0xa3, 0x39, 0xd3, 0x76, 0x4f, 0xce, 0x9c, 0xd2, 0xcf, 0x33,
-	0x67, 0x25, 0xa4, 0xd0, 0xdf, 0xdb, 0x71, 0x7b, 0x2c, 0xd6, 0xda, 0xf4, 0x67, 0x55, 0x04, 0xbb,
-	0x2d, 0x18, 0x0e, 0x88, 0x70, 0x37, 0x49, 0xcf, 0x93, 0x5b, 0x15, 0x01, 0x1f, 0x5a, 0x63, 0x05,
-	0x09, 0xf8, 0x70, 0xbd, 0xfc, 0xf1, 0xd8, 0x29, 0xfd, 0x39, 0x76, 0x4a, 0x8d, 0x4f, 0xd3, 0x68,
-	0x6e, 0x43, 0xa7, 0xbf, 0x21, 0x04, 0x01, 0x73, 0x05, 0x4d, 0x06, 0x24, 0x61, 0xb1, 0x56, 0x38,
-	0xff, 0xf7, 0xcc, 0x99, 0x1d, 0xe2, 0x38, 0x5a, 0x6f, 0xa8, 0xe5, 0x86, 0x97, 0x86, 0xcd, 0x2e,
-	0x9a, 0xe3, 0x2a, 0x39, 0xff, 0x40, 0x65, 0x57, 0x50, 0xcf, 0x2c, 0xcf, 0x55, 0xc8, 0x7c, 0x86,
-	0x66, 0x00, 0xef, 0x12, 0x9f, 0x63, 0x20, 0xd6, 0x78, 0x21, 0x60, 0x59, 0x02, 0x3c, 0x0c, 0xc4,
-	0xf4, 0xd1, 0x2c, 0x30, 0xc0, 0x91, 0x0f, 0x6c, 0x97, 0x24, 0xc2, 0x9a, 0x50, 0xbc, 0x47, 0xb7,
-	0xe0, 0x75, 0x12, 0xf8, 0xfe, 0x75, 0x15, 0x69, 0xb7, 0x74, 0x12, 0xf0, 0x2a, 0x8a, 0xb8, 0xad,
-	0x80, 0x66, 0x80, 0x16, 0xd3, 0x03, 0xf6, 0x71, 0x44, 0x03, 0x0c, 0x8c, 0xfb, 0xa2, 0x8f, 0x39,
-	0x11, 0xd6, 0x64, 0x21, 0xe9, 0x55, 0x45, 0x7b, 0x99, 0xc1, 0xba, 0x8a, 0x65, 0x3e, 0x47, 0x0b,
-	0xba, 0xd0, 0x02, 0x30, 0x07, 0x5f, 0xda, 0xcc, 0x9a, 0xaa, 0x1b, 0xcd, 0xca, 0x5a, 0xcd, 0x4d,
-	0x3d, 0xe8, 0x66, 0x1e, 0x74, 0xb7, 0x33, 0x0f, 0xb6, 0xcb, 0xf2, 0xf0, 0xa3, 0x5f, 0x8e, 0xe1,
-	0xfd, 0x9f, 0x6e, 0xef, 0xca, 0xdd, 0x32, 0x6e, 0xbe, 0x43, 0xa6, 0x26, 0xf6, 0xfa, 0xd2, 0x93,
-	0x69, 0xb9, 0xa7, 0x0b, 0x69, 0x9e, 0x4f, 0x49, 0x4f, 0x14, 0x48, 0x95, 0xfd, 0x35, 0x5a, 0x1c,
-	0xa5, 0xd3, 0x04, 0x08, 0xdf, 0xc7, 0x91, 0x55, 0x56, 0xa2, 0x97, 0x6f, 0x88, 0xde, 0xd4, 0x8d,
-	0x95, 0x6a, 0xfe, 0x2c, 0x35, 0x57, 0xf3, 0xd8, 0x8e, 0x06, 0x98, 0x6f, 0xd1, 0x52, 0x84, 0x05,
-	0xf8, 0xa3, 0x7c, 0x55, 0x90, 0x99, 0x5b, 0x14, 0xa4, 0x2a, 0x21, 0x5e, 0xee, 0x00, 0x55, 0x95,
-	0x17, 0xe8, 0xce, 0x88, 0xa1, 0x7d, 0x2e, 0x43, 0x16, 0x52, 0xe0, 0x7b, 0xee, 0xe5, 0x7b, 0x73,
-	0xa3, 0xa5, 0xdb, 0x13, 0x92, 0xec, 0x2d, 0xf0, 0x1b, 0xbd, 0x7e, 0x1f, 0xfd, 0x47, 0x85, 0x4f,
-	0x13, 0x0a, 0x14, 0x47, 0xf4, 0x03, 0x09, 0xac, 0x4a, 0xdd, 0x68, 0x96, 0xbd, 0x39, 0x2a, 0x3a,
-	0x57, 0x8b, 0xb9, 0x76, 0xfc, 0x66, 0xa0, 0x5a, 0x9e, 0x9f, 0xca, 0xeb, 0x26, 0x78, 0x20, 0xfa,
-	0x0c, 0xe4, 0xc5, 0x0d, 0x38, 0xd9, 0xf7, 0x47, 0x1b, 0xaf, 0xd8, 0x53, 0x32, 0x2f, 0x49, 0xf9,
-	0xb3, 0xcc, 0x2d, 0xa4, 0x2f, 0xd3, 0xef, 0x53, 0x01, 0x8c, 0x53, 0x22, 0xac, 0xb1, 0xfa, 0x78,
-	0xb3, 0xb2, 0xb6, 0x74, 0x3d, 0xfb, 0x2d, 0xf5, 0xc3, 0x50, 0x67, 0xae, 0x0d, 0xb6, 0x95, 0xed,
-	0xba, 0x4a, 0xa8, 0xfd, 0xf4, 0xe4, 0xdc, 0x36, 0x4e, 0xcf, 0x6d, 0xe3, 0xf7, 0xb9, 0x6d, 0x1c,
-	0x5d, 0xd8, 0xa5, 0xd3, 0x0b, 0xbb, 0xf4, 0xe3, 0xc2, 0x2e, 0xbd, 0x79, 0x90, 0xd3, 0x09, 0x84,
-	0x73, 0xbc, 0x1a, 0xb3, 0x84, 0x0c, 0x2f, 0xdf, 0xf5, 0xd6, 0xe1, 0xd5, 0x50, 0xa9, 0xde, 0x99,
-	0x52, 0x97, 0xfa, 0xf0, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x86, 0x2e, 0x21, 0x10, 0x04, 0x06,
-	0x00, 0x00,
+	// 731 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x96, 0x4d, 0x4f, 0x13, 0x41,
+	0x18, 0x80, 0xbb, 0x94, 0x8f, 0x32, 0x85, 0x0a, 0x6b, 0x85, 0x52, 0x93, 0x6e, 0xb3, 0x89, 0xa4,
+	0x17, 0xb6, 0x06, 0x2f, 0x86, 0x78, 0x90, 0xc2, 0x81, 0xea, 0x45, 0xb7, 0xa8, 0xf1, 0x23, 0xd9,
+	0x0c, 0xdd, 0x71, 0x3b, 0x61, 0x77, 0x67, 0x33, 0x33, 0x7c, 0xd4, 0x5f, 0xe0, 0xc1, 0x03, 0x89,
+	0x17, 0x8f, 0xf8, 0x1f, 0xfc, 0x11, 0x9c, 0x0c, 0xf1, 0x64, 0x3c, 0xa0, 0x81, 0xc4, 0x78, 0xf6,
+	0x17, 0x98, 0x99, 0x9d, 0x85, 0x2d, 0x84, 0x43, 0x6b, 0x4c, 0x8c, 0xf1, 0xd4, 0x99, 0x79, 0xe7,
+	0x7d, 0xde, 0xcf, 0x79, 0xb7, 0x60, 0x16, 0xfa, 0x3e, 0x86, 0x61, 0x1b, 0xd5, 0x93, 0x85, 0x15,
+	0x51, 0xc2, 0x89, 0x9e, 0x4b, 0xf6, 0xe5, 0xa2, 0x47, 0x3c, 0x22, 0x0f, 0xeb, 0x62, 0x15, 0xcb,
+	0xcb, 0x73, 0x6d, 0xc2, 0x02, 0xc2, 0x9c, 0x58, 0x10, 0x6f, 0x94, 0xe8, 0xda, 0x29, 0x33, 0x82,
+	0x14, 0x06, 0xc9, 0x71, 0xc5, 0x23, 0xc4, 0xf3, 0x51, 0x5d, 0xee, 0x36, 0xb6, 0x5e, 0xd6, 0xdd,
+	0x2d, 0x0a, 0x39, 0x26, 0xa1, 0x92, 0x1b, 0xe7, 0xe5, 0x1c, 0x07, 0x88, 0x71, 0x18, 0x44, 0xf1,
+	0x05, 0xf3, 0x7b, 0x16, 0x14, 0x56, 0x28, 0x82, 0x1c, 0x2d, 0x2b, 0x03, 0xfa, 0x3c, 0x18, 0x71,
+	0x51, 0x48, 0x82, 0x92, 0x56, 0xd5, 0x6a, 0xe3, 0x8d, 0xa9, 0x9f, 0x47, 0xc6, 0x44, 0x17, 0x06,
+	0xfe, 0x92, 0x29, 0x8f, 0x4d, 0x3b, 0x16, 0xeb, 0x2d, 0x30, 0x49, 0xd1, 0x0e, 0xa4, 0xae, 0xb3,
+	0x83, 0xb0, 0xd7, 0xe1, 0xa5, 0x21, 0x79, 0xdf, 0x3a, 0x38, 0x32, 0x32, 0x5f, 0x8e, 0x8c, 0x79,
+	0x0f, 0xf3, 0xce, 0xd6, 0x86, 0xd5, 0x26, 0x81, 0x0a, 0x45, 0xfd, 0x2c, 0x30, 0x77, 0xb3, 0xce,
+	0xbb, 0x11, 0x62, 0xd6, 0x2a, 0x6a, 0xdb, 0x13, 0x31, 0xe4, 0x89, 0x64, 0xe8, 0xf7, 0xc1, 0x38,
+	0x87, 0x9b, 0xc8, 0xa1, 0x90, 0xa3, 0x52, 0x76, 0x20, 0x60, 0x4e, 0x00, 0x6c, 0xc8, 0x91, 0xfe,
+	0x02, 0xe8, 0xca, 0xc3, 0x76, 0x07, 0x86, 0x9e, 0xa2, 0x0e, 0x0f, 0x44, 0x9d, 0x8a, 0x49, 0x2b,
+	0x12, 0x24, 0xe9, 0x4f, 0xc1, 0x4c, 0x2f, 0x1d, 0x87, 0x1c, 0xd1, 0x6d, 0xe8, 0x97, 0x46, 0xaa,
+	0x5a, 0x2d, 0xbf, 0x38, 0x67, 0xc5, 0xc9, 0xb7, 0x92, 0xe4, 0x5b, 0xab, 0xaa, 0x38, 0x8d, 0x9c,
+	0x30, 0xfe, 0xee, 0xab, 0xa1, 0xd9, 0xc5, 0x34, 0xb6, 0xa9, 0x00, 0xfa, 0x43, 0x70, 0xb5, 0x27,
+	0xb5, 0x0e, 0x15, 0xe2, 0xd2, 0xa8, 0xe4, 0x5e, 0xb7, 0x4e, 0xdb, 0xca, 0x4e, 0xa5, 0xce, 0x16,
+	0x57, 0x1a, 0xc3, 0x82, 0x6c, 0x4f, 0xd3, 0xf3, 0x02, 0xf3, 0x6d, 0x16, 0x14, 0x1e, 0x45, 0xee,
+	0xff, 0x42, 0xff, 0x4d, 0x85, 0x36, 0x6f, 0x83, 0xc2, 0x2a, 0xf2, 0x51, 0xff, 0x45, 0x31, 0xdf,
+	0x6b, 0x60, 0xfa, 0x42, 0xf9, 0xf5, 0xbb, 0x20, 0x1b, 0xe0, 0x50, 0xe9, 0xf6, 0x1b, 0xb9, 0x50,
+	0x95, 0x04, 0xb8, 0x3b, 0x60, 0x89, 0x85, 0xea, 0x52, 0xee, 0xf5, 0xbe, 0x91, 0xf9, 0xb1, 0x6f,
+	0x64, 0xcc, 0x37, 0x63, 0x60, 0x32, 0x09, 0x6c, 0x99, 0x31, 0xc4, 0xff, 0xa1, 0x96, 0x73, 0xc0,
+	0x04, 0x27, 0x1c, 0xfa, 0x0e, 0x27, 0x9b, 0x28, 0x64, 0xaa, 0xd9, 0xee, 0xf4, 0xc1, 0x6b, 0x86,
+	0xfc, 0xd3, 0x87, 0x05, 0xa0, 0xc6, 0x7c, 0x33, 0xe4, 0x76, 0x5e, 0x12, 0xd7, 0x25, 0x50, 0x77,
+	0xc1, 0x4c, 0x6c, 0x60, 0x1b, 0xfa, 0xd8, 0x85, 0x9c, 0x50, 0x87, 0x75, 0x20, 0x45, 0x4c, 0x76,
+	0x5d, 0xff, 0xae, 0x17, 0x25, 0xed, 0x71, 0x02, 0x6b, 0x49, 0x96, 0xfe, 0x00, 0xa8, 0x59, 0xe1,
+	0x30, 0x0e, 0x29, 0x77, 0xc4, 0xf7, 0x41, 0xcd, 0x99, 0xf2, 0x85, 0xb6, 0x5e, 0x4f, 0x3e, 0x1e,
+	0x71, 0x5f, 0xef, 0x89, 0xbe, 0xbe, 0x12, 0xab, 0xb7, 0x84, 0xb6, 0x90, 0x5f, 0xf2, 0x16, 0xc7,
+	0xfe, 0xf8, 0x5b, 0xcc, 0xfd, 0xee, 0xd0, 0x7d, 0x0e, 0x66, 0x7d, 0xc8, 0xb8, 0xd3, 0xcb, 0x97,
+	0x09, 0x19, 0xef, 0x23, 0x21, 0x45, 0x01, 0xb1, 0x53, 0x06, 0x64, 0x56, 0x2e, 0x99, 0xe8, 0x60,
+	0xf0, 0x89, 0xae, 0xdf, 0x00, 0x05, 0xcc, 0x1c, 0x1c, 0x62, 0x8e, 0xa1, 0x8f, 0x5f, 0x21, 0xb7,
+	0x94, 0xaf, 0x6a, 0xb5, 0x9c, 0x3d, 0x89, 0x59, 0xf3, 0xec, 0x30, 0xf5, 0x1c, 0x3f, 0x6a, 0xa0,
+	0x9c, 0xe6, 0xc7, 0xee, 0xb5, 0x42, 0x18, 0xb1, 0x0e, 0xe1, 0xa2, 0x70, 0x11, 0x45, 0xdb, 0x4e,
+	0xef, 0xc3, 0x1b, 0x6c, 0x94, 0x4c, 0x09, 0x52, 0xda, 0x96, 0xbe, 0x06, 0x54, 0x31, 0x9d, 0x0e,
+	0x66, 0x9c, 0x50, 0x8c, 0x58, 0x69, 0xa8, 0x9a, 0xad, 0xe5, 0x17, 0x67, 0xcf, 0x47, 0xbf, 0x26,
+	0x2f, 0x74, 0x55, 0xe4, 0xaa, 0xc1, 0xd6, 0x12, 0xad, 0xb3, 0x80, 0x1a, 0xf7, 0x0e, 0x8e, 0x2b,
+	0xda, 0xe1, 0x71, 0x45, 0xfb, 0x76, 0x5c, 0xd1, 0xf6, 0x4e, 0x2a, 0x99, 0xc3, 0x93, 0x4a, 0xe6,
+	0xf3, 0x49, 0x25, 0xf3, 0xec, 0x66, 0xca, 0x4f, 0x8e, 0x28, 0x85, 0x0b, 0x01, 0x09, 0x51, 0xf7,
+	0xf4, 0x0f, 0x59, 0x7d, 0xf7, 0x6c, 0x29, 0xbd, 0xde, 0x18, 0x95, 0x45, 0xbd, 0xf5, 0x2b, 0x00,
+	0x00, 0xff, 0xff, 0xba, 0xa3, 0x14, 0x26, 0xbd, 0x09, 0x00, 0x00,
+}
+
+func (m *CreateAlliance) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CreateAlliance) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CreateAlliance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.RewardWeightRange.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintAlliance(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x32
+	n2, err2 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.RewardChangeInterval, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.RewardChangeInterval):])
+	if err2 != nil {
+		return 0, err2
+	}
+	i -= n2
+	i = encodeVarintAlliance(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x2a
+	{
+		size := m.RewardChangeRate.Size()
+		i -= size
+		if _, err := m.RewardChangeRate.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintAlliance(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.TakeRate.Size()
+		i -= size
+		if _, err := m.TakeRate.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintAlliance(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.RewardWeight.Size()
+		i -= size
+		if _, err := m.RewardWeight.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintAlliance(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintAlliance(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *UpdateAlliance) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *UpdateAlliance) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *UpdateAlliance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	n3, err3 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.RewardChangeInterval, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.RewardChangeInterval):])
+	if err3 != nil {
+		return 0, err3
+	}
+	i -= n3
+	i = encodeVarintAlliance(dAtA, i, uint64(n3))
+	i--
+	dAtA[i] = 0x2a
+	{
+		size := m.RewardChangeRate.Size()
+		i -= size
+		if _, err := m.RewardChangeRate.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintAlliance(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.TakeRate.Size()
+		i -= size
+		if _, err := m.TakeRate.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintAlliance(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.RewardWeight.Size()
+		i -= size
+		if _, err := m.RewardWeight.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintAlliance(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintAlliance(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *DeleteAlliance) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DeleteAlliance) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DeleteAlliance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintAlliance(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *RewardWeightRange) Marshal() (dAtA []byte, err error) {
@@ -300,20 +655,20 @@ func (m *AllianceAsset) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x52
-	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.LastRewardChangeTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.LastRewardChangeTime):])
-	if err2 != nil {
-		return 0, err2
+	n5, err5 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.LastRewardChangeTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.LastRewardChangeTime):])
+	if err5 != nil {
+		return 0, err5
 	}
-	i -= n2
-	i = encodeVarintAlliance(dAtA, i, uint64(n2))
+	i -= n5
+	i = encodeVarintAlliance(dAtA, i, uint64(n5))
 	i--
 	dAtA[i] = 0x4a
-	n3, err3 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.RewardChangeInterval, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.RewardChangeInterval):])
-	if err3 != nil {
-		return 0, err3
+	n6, err6 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.RewardChangeInterval, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.RewardChangeInterval):])
+	if err6 != nil {
+		return 0, err6
 	}
-	i -= n3
-	i = encodeVarintAlliance(dAtA, i, uint64(n3))
+	i -= n6
+	i = encodeVarintAlliance(dAtA, i, uint64(n6))
 	i--
 	dAtA[i] = 0x42
 	{
@@ -326,12 +681,12 @@ func (m *AllianceAsset) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x3a
-	n4, err4 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.RewardStartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.RewardStartTime):])
-	if err4 != nil {
-		return 0, err4
+	n7, err7 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.RewardStartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.RewardStartTime):])
+	if err7 != nil {
+		return 0, err7
 	}
-	i -= n4
-	i = encodeVarintAlliance(dAtA, i, uint64(n4))
+	i -= n7
+	i = encodeVarintAlliance(dAtA, i, uint64(n7))
 	i--
 	dAtA[i] = 0x32
 	{
@@ -442,6 +797,63 @@ func encodeVarintAlliance(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *CreateAlliance) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovAlliance(uint64(l))
+	}
+	l = m.RewardWeight.Size()
+	n += 1 + l + sovAlliance(uint64(l))
+	l = m.TakeRate.Size()
+	n += 1 + l + sovAlliance(uint64(l))
+	l = m.RewardChangeRate.Size()
+	n += 1 + l + sovAlliance(uint64(l))
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.RewardChangeInterval)
+	n += 1 + l + sovAlliance(uint64(l))
+	l = m.RewardWeightRange.Size()
+	n += 1 + l + sovAlliance(uint64(l))
+	return n
+}
+
+func (m *UpdateAlliance) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovAlliance(uint64(l))
+	}
+	l = m.RewardWeight.Size()
+	n += 1 + l + sovAlliance(uint64(l))
+	l = m.TakeRate.Size()
+	n += 1 + l + sovAlliance(uint64(l))
+	l = m.RewardChangeRate.Size()
+	n += 1 + l + sovAlliance(uint64(l))
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.RewardChangeInterval)
+	n += 1 + l + sovAlliance(uint64(l))
+	return n
+}
+
+func (m *DeleteAlliance) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovAlliance(uint64(l))
+	}
+	return n
+}
+
 func (m *RewardWeightRange) Size() (n int) {
 	if m == nil {
 		return 0
@@ -511,6 +923,555 @@ func sovAlliance(x uint64) (n int) {
 }
 func sozAlliance(x uint64) (n int) {
 	return sovAlliance(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *CreateAlliance) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAlliance
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CreateAlliance: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CreateAlliance: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAlliance
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardWeight", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAlliance
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.RewardWeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakeRate", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAlliance
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TakeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardChangeRate", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAlliance
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.RewardChangeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardChangeInterval", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAlliance
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.RewardChangeInterval, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardWeightRange", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAlliance
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.RewardWeightRange.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAlliance(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *UpdateAlliance) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAlliance
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: UpdateAlliance: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: UpdateAlliance: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAlliance
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardWeight", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAlliance
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.RewardWeight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TakeRate", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAlliance
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TakeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardChangeRate", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAlliance
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.RewardChangeRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardChangeInterval", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAlliance
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.RewardChangeInterval, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAlliance(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DeleteAlliance) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAlliance
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DeleteAlliance: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DeleteAlliance: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAlliance
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAlliance(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAlliance
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *RewardWeightRange) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

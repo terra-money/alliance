@@ -146,7 +146,7 @@ func (m MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if err := m.SetParams(sdkCtx, msg.Params); err != nil {
+	if err := m.SetParams(sdkCtx, msg.Plan); err != nil {
 		return nil, err
 	}
 	return &types.MsgUpdateParamsResponse{}, nil
@@ -154,22 +154,22 @@ func (m MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 
 func (m MsgServer) CreateAlliance(ctx context.Context, req *types.MsgCreateAlliance) (*types.MsgCreateAllianceResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	_, found := m.GetAssetByDenom(sdkCtx, req.Denom)
+	_, found := m.GetAssetByDenom(sdkCtx, req.Plan.Denom)
 
 	if found {
 		return nil, types.ErrAlreadyExists
 	}
 	rewardStartTime := sdkCtx.BlockTime().Add(m.RewardDelayTime(sdkCtx))
 	asset := types.AllianceAsset{
-		Denom:                req.Denom,
-		RewardWeight:         req.RewardWeight,
-		RewardWeightRange:    req.RewardWeightRange,
-		TakeRate:             req.TakeRate,
+		Denom:                req.Plan.Denom,
+		RewardWeight:         req.Plan.RewardWeight,
+		RewardWeightRange:    req.Plan.RewardWeightRange,
+		TakeRate:             req.Plan.TakeRate,
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
 		RewardStartTime:      rewardStartTime,
-		RewardChangeRate:     req.RewardChangeRate,
-		RewardChangeInterval: req.RewardChangeInterval,
+		RewardChangeRate:     req.Plan.RewardChangeRate,
+		RewardChangeInterval: req.Plan.RewardChangeInterval,
 		LastRewardChangeTime: rewardStartTime,
 	}
 	m.SetAsset(sdkCtx, asset)
@@ -178,18 +178,18 @@ func (m MsgServer) CreateAlliance(ctx context.Context, req *types.MsgCreateAllia
 
 func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAlliance) (*types.MsgUpdateAllianceResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	asset, found := m.GetAssetByDenom(sdkCtx, req.Denom)
+	asset, found := m.GetAssetByDenom(sdkCtx, req.Plan.Denom)
 
 	if !found {
 		return nil, types.ErrUnknownAsset
 	}
-	if asset.RewardWeightRange.Min.GT(req.RewardWeight) || asset.RewardWeightRange.Max.LT(req.RewardWeight) {
+	if asset.RewardWeightRange.Min.GT(req.Plan.RewardWeight) || asset.RewardWeightRange.Max.LT(req.Plan.RewardWeight) {
 		return nil, types.ErrRewardWeightOutOfBound
 	}
-	asset.RewardWeight = req.RewardWeight
-	asset.TakeRate = req.TakeRate
-	asset.RewardChangeRate = req.RewardChangeRate
-	asset.RewardChangeInterval = req.RewardChangeInterval
+	asset.RewardWeight = req.Plan.RewardWeight
+	asset.TakeRate = req.Plan.TakeRate
+	asset.RewardChangeRate = req.Plan.RewardChangeRate
+	asset.RewardChangeInterval = req.Plan.RewardChangeInterval
 
 	err := m.UpdateAllianceAsset(sdkCtx, asset)
 	if err != nil {
@@ -201,7 +201,7 @@ func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAllia
 
 func (m MsgServer) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAlliance) (*types.MsgDeleteAllianceResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	asset, found := m.GetAssetByDenom(sdkCtx, req.Denom)
+	asset, found := m.GetAssetByDenom(sdkCtx, req.Plan.Denom)
 
 	if !found {
 		return nil, types.ErrUnknownAsset

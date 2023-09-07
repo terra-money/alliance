@@ -9,13 +9,15 @@ import (
 func (k Keeper) CreateAlliance(ctx context.Context, req *types.MsgCreateAllianceProposal) error {
 	ms := MsgServer{k}
 	_, err := ms.CreateAlliance(ctx, &types.MsgCreateAlliance{
-		Authority:            k.GetAuthority(),
-		Denom:                req.Denom,
-		RewardWeight:         req.RewardWeight,
-		TakeRate:             req.TakeRate,
-		RewardChangeRate:     req.RewardChangeRate,
-		RewardChangeInterval: req.RewardChangeInterval,
-		RewardWeightRange:    req.RewardWeightRange,
+		Authority: k.GetAuthority(),
+		Plan: types.CreateAlliance{
+			Denom:                req.Denom,
+			RewardWeight:         req.RewardWeight,
+			TakeRate:             req.TakeRate,
+			RewardChangeRate:     req.RewardChangeRate,
+			RewardChangeInterval: req.RewardChangeInterval,
+			RewardWeightRange:    req.RewardWeightRange,
+		},
 	})
 	return err
 }
@@ -23,12 +25,14 @@ func (k Keeper) CreateAlliance(ctx context.Context, req *types.MsgCreateAlliance
 func (k Keeper) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAllianceProposal) error {
 	ms := MsgServer{k}
 	_, err := ms.UpdateAlliance(ctx, &types.MsgUpdateAlliance{
-		Authority:            k.GetAuthority(),
-		Denom:                req.Denom,
-		RewardWeight:         req.RewardWeight,
-		TakeRate:             req.TakeRate,
-		RewardChangeRate:     req.RewardChangeRate,
-		RewardChangeInterval: req.RewardChangeInterval,
+		Authority: k.GetAuthority(),
+		Plan: types.UpdateAlliance{
+			Denom:                req.Denom,
+			RewardWeight:         req.RewardWeight,
+			TakeRate:             req.TakeRate,
+			RewardChangeRate:     req.RewardChangeRate,
+			RewardChangeInterval: req.RewardChangeInterval,
+		},
 	})
 	return err
 }
@@ -37,7 +41,9 @@ func (k Keeper) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAlliance
 	ms := MsgServer{k}
 	_, err := ms.DeleteAlliance(ctx, &types.MsgDeleteAlliance{
 		Authority: k.GetAuthority(),
-		Denom:     req.Denom,
+		Plan: types.DeleteAlliance{
+			Denom: req.Denom,
+		},
 	})
 	return err
 }

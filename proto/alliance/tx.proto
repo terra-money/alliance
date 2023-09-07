@@ -16,6 +16,7 @@ service Msg {
   rpc Redelegate(MsgRedelegate) returns(MsgRedelegateResponse);
   rpc Undelegate(MsgUndelegate) returns(MsgUndelegateResponse);
   rpc ClaimDelegationRewards(MsgClaimDelegationRewards) returns(MsgClaimDelegationRewardsResponse);
+  // Gov
   rpc UpdateParams(MsgUpdateParams) returns(MsgUpdateParamsResponse);
   rpc CreateAlliance(MsgCreateAlliance) returns(MsgCreateAllianceResponse);
   rpc UpdateAlliance(MsgUpdateAlliance) returns(MsgUpdateAllianceResponse);
@@ -84,47 +85,16 @@ message MsgClaimDelegationRewardsResponse {}
 
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
-
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  Params params    = 2 [(gogoproto.nullable) = false];
+  Params plan    = 2 [(gogoproto.nullable) = false];
 }
 
 message MsgUpdateParamsResponse {}
 
 message MsgCreateAlliance {
   option (cosmos.msg.v1.signer) = "authority";
-
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // Denom of the asset. It could either be a native token or an IBC token
-  string denom      = 2 [(gogoproto.moretags) = "yaml:\"denom\""];
-  // The reward weight specifies the ratio of rewards that will be given to each alliance asset
-  // It does not need to sum to 1. rate = weight / total_weight
-  // Native asset is always assumed to have a weight of 1.
-  string reward_weight = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-  // A positive take rate is used for liquid staking derivatives. It defines an annualized reward rate that
-  // will be redirected to the distribution rewards pool
-  string take_rate = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-
-  string reward_change_rate = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-
-  google.protobuf.Duration reward_change_interval = 6 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.stdduration) = true
-  ];
-
-  // set a bound of weight range to limit how much reward weights can scale.
-  RewardWeightRange reward_weight_range = 7 [
-    (gogoproto.nullable)   = false
-  ];
+  CreateAlliance plan    = 2 [(gogoproto.nullable) = false];
 }
 
 message MsgCreateAllianceResponse {}
@@ -133,30 +103,7 @@ message MsgUpdateAlliance {
   option (cosmos.msg.v1.signer) = "authority";
 
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // Denom of the asset. It could either be a native token or an IBC token
-  string denom      = 2 [(gogoproto.moretags) = "yaml:\"denom\""];
-  // The reward weight specifies the ratio of rewards that will be given to each alliance asset
-  // It does not need to sum to 1. rate = weight / total_weight
-  // Native asset is always assumed to have a weight of 1.
-  string reward_weight = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-
-  string take_rate = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-
-  string reward_change_rate = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable)   = false
-  ];
-
-  google.protobuf.Duration reward_change_interval = 6 [
-    (gogoproto.nullable)   = false,
-    (gogoproto.stdduration) = true
-  ];
+  UpdateAlliance plan    = 2 [(gogoproto.nullable) = false];
 }
 
 message MsgUpdateAllianceResponse {}
@@ -165,7 +112,7 @@ message MsgDeleteAlliance {
   option (cosmos.msg.v1.signer) = "authority";
 
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string denom      = 2 [(gogoproto.moretags) = "yaml:\"denom\""];
+  DeleteAlliance plan    = 2 [(gogoproto.nullable) = false];
 }
 
 message MsgDeleteAllianceResponse {}

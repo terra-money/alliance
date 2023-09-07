@@ -193,7 +193,7 @@ func TestUpdateParams(t *testing.T) {
 	msgServer := keeper.MsgServer{Keeper: app.AllianceKeeper}
 	_, err := msgServer.UpdateParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateParams{
 		Authority: govAddr,
-		Params: types.Params{
+		Plan: types.Params{
 			RewardDelayTime:       100,
 			TakeRateClaimInterval: 100,
 			LastTakeRateClaimTime: timeNow,
@@ -225,7 +225,7 @@ func TestUnauthorizedUpdateParams(t *testing.T) {
 	msgServer := keeper.MsgServer{Keeper: app.AllianceKeeper}
 	_, err := msgServer.UpdateParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateParams{
 		Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), []byte("random")),
-		Params: types.Params{
+		Plan: types.Params{
 			RewardDelayTime:       100,
 			TakeRateClaimInterval: 100,
 			LastTakeRateClaimTime: timeNow,

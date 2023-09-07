@@ -10,8 +10,11 @@
   
 - [alliance/alliance.proto](#alliance/alliance.proto)
     - [AllianceAsset](#alliance.AllianceAsset)
+    - [CreateAlliance](#alliance.CreateAlliance)
+    - [DeleteAlliance](#alliance.DeleteAlliance)
     - [RewardWeightChangeSnapshot](#alliance.RewardWeightChangeSnapshot)
     - [RewardWeightRange](#alliance.RewardWeightRange)
+    - [UpdateAlliance](#alliance.UpdateAlliance)
   
 - [alliance/delegations.proto](#alliance/delegations.proto)
     - [AllianceValidatorInfo](#alliance.AllianceValidatorInfo)
@@ -183,6 +186,41 @@ key: denom value: AllianceAsset
 
 
 
+<a name="alliance.CreateAlliance"></a>
+
+### CreateAlliance
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | Denom of the asset. It could either be a native token or an IBC token |
+| `reward_weight` | [string](#string) |  | The reward weight specifies the ratio of rewards that will be given to each alliance asset It does not need to sum to 1. rate = weight / total_weight Native asset is always assumed to have a weight of 1. |
+| `take_rate` | [string](#string) |  | A positive take rate is used for liquid staking derivatives. It defines an annualized reward rate that will be redirected to the distribution rewards pool |
+| `reward_change_rate` | [string](#string) |  |  |
+| `reward_change_interval` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `reward_weight_range` | [RewardWeightRange](#alliance.RewardWeightRange) |  | set a bound of weight range to limit how much reward weights can scale. |
+
+
+
+
+
+
+<a name="alliance.DeleteAlliance"></a>
+
+### DeleteAlliance
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="alliance.RewardWeightChangeSnapshot"></a>
 
 ### RewardWeightChangeSnapshot
@@ -209,6 +247,25 @@ key: denom value: AllianceAsset
 | ----- | ---- | ----- | ----------- |
 | `min` | [string](#string) |  |  |
 | `max` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="alliance.UpdateAlliance"></a>
+
+### UpdateAlliance
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  | Denom of the asset. It could either be a native token or an IBC token |
+| `reward_weight` | [string](#string) |  | The reward weight specifies the ratio of rewards that will be given to each alliance asset It does not need to sum to 1. rate = weight / total_weight Native asset is always assumed to have a weight of 1. |
+| `take_rate` | [string](#string) |  |  |
+| `reward_change_rate` | [string](#string) |  |  |
+| `reward_change_interval` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 
 
 
@@ -1224,12 +1281,7 @@ Params
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  |  |
-| `denom` | [string](#string) |  | Denom of the asset. It could either be a native token or an IBC token |
-| `reward_weight` | [string](#string) |  | The reward weight specifies the ratio of rewards that will be given to each alliance asset It does not need to sum to 1. rate = weight / total_weight Native asset is always assumed to have a weight of 1. |
-| `take_rate` | [string](#string) |  | A positive take rate is used for liquid staking derivatives. It defines an annualized reward rate that will be redirected to the distribution rewards pool |
-| `reward_change_rate` | [string](#string) |  |  |
-| `reward_change_interval` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-| `reward_weight_range` | [RewardWeightRange](#alliance.RewardWeightRange) |  | set a bound of weight range to limit how much reward weights can scale. |
+| `plan` | [CreateAlliance](#alliance.CreateAlliance) |  |  |
 
 
 
@@ -1282,7 +1334,7 @@ Params
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  |  |
-| `denom` | [string](#string) |  |  |
+| `plan` | [DeleteAlliance](#alliance.DeleteAlliance) |  |  |
 
 
 
@@ -1363,11 +1415,7 @@ Params
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  |  |
-| `denom` | [string](#string) |  | Denom of the asset. It could either be a native token or an IBC token |
-| `reward_weight` | [string](#string) |  | The reward weight specifies the ratio of rewards that will be given to each alliance asset It does not need to sum to 1. rate = weight / total_weight Native asset is always assumed to have a weight of 1. |
-| `take_rate` | [string](#string) |  |  |
-| `reward_change_rate` | [string](#string) |  |  |
-| `reward_change_interval` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `plan` | [UpdateAlliance](#alliance.UpdateAlliance) |  |  |
 
 
 
@@ -1393,7 +1441,7 @@ Params
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  |  |
-| `params` | [Params](#alliance.Params) |  |  |
+| `plan` | [Params](#alliance.Params) |  |  |
 
 
 
@@ -1427,7 +1475,7 @@ Params
 | `Redelegate` | [MsgRedelegate](#alliance.MsgRedelegate) | [MsgRedelegateResponse](#alliance.MsgRedelegateResponse) |  | |
 | `Undelegate` | [MsgUndelegate](#alliance.MsgUndelegate) | [MsgUndelegateResponse](#alliance.MsgUndelegateResponse) |  | |
 | `ClaimDelegationRewards` | [MsgClaimDelegationRewards](#alliance.MsgClaimDelegationRewards) | [MsgClaimDelegationRewardsResponse](#alliance.MsgClaimDelegationRewardsResponse) |  | |
-| `UpdateParams` | [MsgUpdateParams](#alliance.MsgUpdateParams) | [MsgUpdateParamsResponse](#alliance.MsgUpdateParamsResponse) |  | |
+| `UpdateParams` | [MsgUpdateParams](#alliance.MsgUpdateParams) | [MsgUpdateParamsResponse](#alliance.MsgUpdateParamsResponse) | Gov | |
 | `CreateAlliance` | [MsgCreateAlliance](#alliance.MsgCreateAlliance) | [MsgCreateAllianceResponse](#alliance.MsgCreateAllianceResponse) |  | |
 | `UpdateAlliance` | [MsgUpdateAlliance](#alliance.MsgUpdateAlliance) | [MsgUpdateAllianceResponse](#alliance.MsgUpdateAllianceResponse) |  | |
 | `DeleteAlliance` | [MsgDeleteAlliance](#alliance.MsgDeleteAlliance) | [MsgDeleteAllianceResponse](#alliance.MsgDeleteAllianceResponse) |  | |

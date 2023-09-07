@@ -183,10 +183,10 @@ func (msg *MsgUpdateParams) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
 		return sdkerrors.Wrap(err, "invalid authority address")
 	}
-	if err := ValidatePositiveDuration(msg.Params.RewardDelayTime); err != nil {
+	if err := ValidatePositiveDuration(msg.Plan.RewardDelayTime); err != nil {
 		return err
 	}
-	return ValidatePositiveDuration(msg.Params.TakeRateClaimInterval)
+	return ValidatePositiveDuration(msg.Plan.TakeRateClaimInterval)
 }
 
 func (msg MsgUpdateParams) Route() string {
@@ -208,40 +208,40 @@ func (msg *MsgUpdateParams) GetSigners() []sdk.AccAddress {
 func (msg MsgUpdateParams) Type() string { return MsgUpdateParamsType }
 
 func (msg *MsgCreateAlliance) ValidateBasic() error {
-	if msg.Denom == "" {
+	if msg.Plan.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
 
-	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+	if err := sdk.ValidateDenom(msg.Plan.Denom); err != nil {
 		return err
 	}
 
-	if msg.RewardWeight.IsNil() || msg.RewardWeight.LT(sdk.ZeroDec()) {
+	if msg.Plan.RewardWeight.IsNil() || msg.Plan.RewardWeight.LT(sdk.ZeroDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be zero or a positive number")
 	}
 
-	if msg.RewardWeightRange.Min.IsNil() || msg.RewardWeightRange.Min.LT(sdk.ZeroDec()) ||
-		msg.RewardWeightRange.Max.IsNil() || msg.RewardWeightRange.Max.LT(sdk.ZeroDec()) {
+	if msg.Plan.RewardWeightRange.Min.IsNil() || msg.Plan.RewardWeightRange.Min.LT(sdk.ZeroDec()) ||
+		msg.Plan.RewardWeightRange.Max.IsNil() || msg.Plan.RewardWeightRange.Max.LT(sdk.ZeroDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight min and max must be zero or a positive number")
 	}
 
-	if msg.RewardWeightRange.Min.GT(msg.RewardWeightRange.Max) {
+	if msg.Plan.RewardWeightRange.Min.GT(msg.Plan.RewardWeightRange.Max) {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight min must be less or equal to rewardWeight max")
 	}
 
-	if msg.RewardWeight.LT(msg.RewardWeightRange.Min) || msg.RewardWeight.GT(msg.RewardWeightRange.Max) {
+	if msg.Plan.RewardWeight.LT(msg.Plan.RewardWeightRange.Min) || msg.Plan.RewardWeight.GT(msg.Plan.RewardWeightRange.Max) {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be bounded in RewardWeightRange")
 	}
 
-	if msg.TakeRate.IsNil() || msg.TakeRate.IsNegative() || msg.TakeRate.GTE(sdk.OneDec()) {
+	if msg.Plan.TakeRate.IsNil() || msg.Plan.TakeRate.IsNegative() || msg.Plan.TakeRate.GTE(sdk.OneDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be more or equals to 0 but strictly less than 1")
 	}
 
-	if msg.RewardChangeRate.IsZero() || msg.RewardChangeRate.IsNegative() {
+	if msg.Plan.RewardChangeRate.IsZero() || msg.Plan.RewardChangeRate.IsNegative() {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeRate must be strictly a positive number")
 	}
 
-	if msg.RewardChangeInterval < 0 {
+	if msg.Plan.RewardChangeInterval < 0 {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeInterval must be strictly a positive number")
 	}
 
@@ -267,23 +267,23 @@ func (msg *MsgCreateAlliance) GetSigners() []sdk.AccAddress {
 func (msg MsgCreateAlliance) Type() string { return MsgCreateAllianceType }
 
 func (msg *MsgUpdateAlliance) ValidateBasic() error {
-	if msg.Denom == "" {
+	if msg.Plan.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
 
-	if msg.RewardWeight.IsNil() || msg.RewardWeight.LT(sdk.ZeroDec()) {
+	if msg.Plan.RewardWeight.IsNil() || msg.Plan.RewardWeight.LT(sdk.ZeroDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be zero or a positive number")
 	}
 
-	if msg.TakeRate.IsNil() || msg.TakeRate.IsNegative() || msg.TakeRate.GTE(sdk.OneDec()) {
+	if msg.Plan.TakeRate.IsNil() || msg.Plan.TakeRate.IsNegative() || msg.Plan.TakeRate.GTE(sdk.OneDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be more or equals to 0 but strictly less than 1")
 	}
 
-	if msg.RewardChangeRate.IsZero() || msg.RewardChangeRate.IsNegative() {
+	if msg.Plan.RewardChangeRate.IsZero() || msg.Plan.RewardChangeRate.IsNegative() {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeRate must be strictly a positive number")
 	}
 
-	if msg.RewardChangeInterval < 0 {
+	if msg.Plan.RewardChangeInterval < 0 {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeInterval must be strictly a positive number")
 	}
 
@@ -309,7 +309,7 @@ func (msg *MsgUpdateAlliance) GetSigners() []sdk.AccAddress {
 func (msg MsgUpdateAlliance) Type() string { return MsgUpdateAllianceType }
 
 func (msg *MsgDeleteAlliance) ValidateBasic() error {
-	if msg.Denom == "" {
+	if msg.Plan.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
 	return nil
