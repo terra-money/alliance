@@ -5,7 +5,8 @@ Alliance is an open-source Cosmos SDK module that leverages interchain staking t
 
 ## Version Matrix
 
-| Release | Commit         | CosmosSDK |
-|---------|----------------|-----------|
+| Release | Commit                                                                                        | CosmosSDK |
+|---------|-----------------------------------------------------------------------------------------------|-----------|
+| v0.3.x  | [6fa52f8c16...](https://buf.build/terra-money/alliance/docs/6fa52f8c16764fe4b7e755c1775f18e1) | 0.47      |
 | v0.2.x  | [2347629bbf...](https://buf.build/terra-money/alliance/docs/2347629bbf524993b0b9b242b8e1a8ce) | 0.47      |
-| v0.1.x  | [bb98190e9...](https://buf.build/terra-money/alliance/docs/bb98190e913b4a77b0eb0c74998934e0) | 0.46      |
+| v0.1.x  | [bb98190e9...](https://buf.build/terra-money/alliance/docs/bb98190e913b4a77b0eb0c74998934e0)  | 0.46      |
