@@ -3,6 +3,9 @@ package keeper
 import (
 	"context"
 
+	sdkerrors "cosmossdk.io/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -135,6 +138,18 @@ func (m MsgServer) ClaimDelegationRewards(ctx context.Context, msg *types.MsgCla
 	_, err = m.Keeper.ClaimDelegationRewards(sdkCtx, delAddr, validator, msg.Denom)
 
 	return &types.MsgClaimDelegationRewardsResponse{}, err
+}
+
+func (m MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if m.GetAuthority() != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", m.GetAuthority(), msg.Authority)
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if err := m.SetParams(sdkCtx, msg.Params); err != nil {
+		return nil, err
+	}
+	return &types.MsgUpdateParamsResponse{}, nil
 }
 
 // NewMsgServerImpl returns an implementation of the MsgServer interface

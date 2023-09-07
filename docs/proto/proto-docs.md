@@ -87,6 +87,8 @@
     - [MsgRedelegateResponse](#alliance.MsgRedelegateResponse)
     - [MsgUndelegate](#alliance.MsgUndelegate)
     - [MsgUndelegateResponse](#alliance.MsgUndelegateResponse)
+    - [MsgUpdateParams](#alliance.MsgUpdateParams)
+    - [MsgUpdateParamsResponse](#alliance.MsgUpdateParamsResponse)
   
     - [Msg](#alliance.Msg)
   
@@ -1288,6 +1290,32 @@ Params
 
 
 
+
+<a name="alliance.MsgUpdateParams"></a>
+
+### MsgUpdateParams
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority` | [string](#string) |  |  |
+| `params` | [Params](#alliance.Params) |  |  |
+
+
+
+
+
+
+<a name="alliance.MsgUpdateParamsResponse"></a>
+
+### MsgUpdateParamsResponse
+
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -1306,6 +1334,7 @@ Params
 | `Redelegate` | [MsgRedelegate](#alliance.MsgRedelegate) | [MsgRedelegateResponse](#alliance.MsgRedelegateResponse) |  | |
 | `Undelegate` | [MsgUndelegate](#alliance.MsgUndelegate) | [MsgUndelegateResponse](#alliance.MsgUndelegateResponse) |  | |
 | `ClaimDelegationRewards` | [MsgClaimDelegationRewards](#alliance.MsgClaimDelegationRewards) | [MsgClaimDelegationRewardsResponse](#alliance.MsgClaimDelegationRewardsResponse) |  | |
+| `UpdateParams` | [MsgUpdateParams](#alliance.MsgUpdateParams) | [MsgUpdateParamsResponse](#alliance.MsgUpdateParamsResponse) |  | |
 
  <!-- end services -->
 

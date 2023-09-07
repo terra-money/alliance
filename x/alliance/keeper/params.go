@@ -23,10 +23,10 @@ func (k Keeper) LastRewardClaimTime(ctx sdk.Context) (res time.Time) {
 	return params.LastTakeRateClaimTime
 }
 
-func (k Keeper) SetLastRewardClaimTime(ctx sdk.Context, lastTime time.Time) {
+func (k Keeper) SetLastRewardClaimTime(ctx sdk.Context, lastTime time.Time) error {
 	params := k.GetParams(ctx)
 	params.LastTakeRateClaimTime = lastTime
-	k.SetParams(ctx, params)
+	return k.SetParams(ctx, params)
 }
 
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
@@ -39,8 +39,15 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	return
 }
 
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+	if err := types.ValidatePositiveDuration(params.RewardDelayTime); err != nil {
+		return err
+	}
+	if err := types.ValidatePositiveDuration(params.TakeRateClaimInterval); err != nil {
+		return err
+	}
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&params)
 	store.Set(types.ParamsKey, bz)
+	return nil
 }

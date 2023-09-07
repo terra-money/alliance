@@ -20,6 +20,7 @@ type Keeper struct {
 	stakingKeeper      types.StakingKeeper
 	distributionKeeper types.DistributionKeeper
 	feeCollectorName   string // name of the FeeCollector ModuleAccount
+	authorityAddr      string // name of the Gov ModuleAccount for permissioned messages
 }
 
 func NewKeeper(
@@ -30,6 +31,7 @@ func NewKeeper(
 	stakingKeeper types.StakingKeeper,
 	distributionKeeper types.DistributionKeeper,
 	feeCollectorName string,
+	authorityAddr string,
 ) Keeper {
 	// make sure the fee collector module account exists
 	if accountKeeper.GetModuleAddress(feeCollectorName) == nil {
@@ -44,6 +46,7 @@ func NewKeeper(
 		stakingKeeper:      stakingKeeper,
 		distributionKeeper: distributionKeeper,
 		feeCollectorName:   feeCollectorName,
+		authorityAddr:      authorityAddr,
 	}
 }
 
@@ -59,4 +62,8 @@ func (k Keeper) StakingHooks() Hooks {
 
 func (k Keeper) StoreKey() storetypes.StoreKey {
 	return k.storeKey
+}
+
+func (k Keeper) GetAuthority() string {
+	return k.authorityAddr
 }

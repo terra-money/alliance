@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	simulation2 "github.com/terra-money/alliance/x/alliance/tests/simulation"

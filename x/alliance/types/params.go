@@ -79,3 +79,10 @@ func (r RewardHistories) GetIndexByDenom(denom string) (ri *RewardHistory, found
 	}
 	return &r[idx], true
 }
+
+func ValidatePositiveDuration(t time.Duration) error {
+	if t < 0 {
+		return fmt.Errorf("duration must be positive: %d", t)
+	}
+	return nil
+}
