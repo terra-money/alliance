@@ -152,44 +152,50 @@ func (m MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	return &types.MsgUpdateParamsResponse{}, nil
 }
 
-func (m MsgServer) CreateAlliance(ctx context.Context, req *types.MsgCreateAlliance) (*types.MsgCreateAllianceResponse, error) {
+func (m MsgServer) CreateAlliance(ctx context.Context, msg *types.MsgCreateAlliance) (*types.MsgCreateAllianceResponse, error) {
+	if m.GetAuthority() != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", m.GetAuthority(), msg.Authority)
+	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	_, found := m.GetAssetByDenom(sdkCtx, req.Denom)
+	_, found := m.GetAssetByDenom(sdkCtx, msg.Denom)
 
 	if found {
 		return nil, types.ErrAlreadyExists
 	}
 	rewardStartTime := sdkCtx.BlockTime().Add(m.RewardDelayTime(sdkCtx))
 	asset := types.AllianceAsset{
-		Denom:                req.Denom,
-		RewardWeight:         req.RewardWeight,
-		RewardWeightRange:    req.RewardWeightRange,
-		TakeRate:             req.TakeRate,
+		Denom:                msg.Denom,
+		RewardWeight:         msg.RewardWeight,
+		RewardWeightRange:    msg.RewardWeightRange,
+		TakeRate:             msg.TakeRate,
 		TotalTokens:          sdk.ZeroInt(),
 		TotalValidatorShares: sdk.ZeroDec(),
 		RewardStartTime:      rewardStartTime,
-		RewardChangeRate:     req.RewardChangeRate,
-		RewardChangeInterval: req.RewardChangeInterval,
+		RewardChangeRate:     msg.RewardChangeRate,
+		RewardChangeInterval: msg.RewardChangeInterval,
 		LastRewardChangeTime: rewardStartTime,
 	}
 	m.SetAsset(sdkCtx, asset)
 	return &types.MsgCreateAllianceResponse{}, nil
 }
 
-func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAlliance) (*types.MsgUpdateAllianceResponse, error) {
+func (m MsgServer) UpdateAlliance(ctx context.Context, msg *types.MsgUpdateAlliance) (*types.MsgUpdateAllianceResponse, error) {
+	if m.GetAuthority() != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", m.GetAuthority(), msg.Authority)
+	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	asset, found := m.GetAssetByDenom(sdkCtx, req.Denom)
+	asset, found := m.GetAssetByDenom(sdkCtx, msg.Denom)
 
 	if !found {
 		return nil, types.ErrUnknownAsset
 	}
-	if asset.RewardWeightRange.Min.GT(req.RewardWeight) || asset.RewardWeightRange.Max.LT(req.RewardWeight) {
+	if asset.RewardWeightRange.Min.GT(msg.RewardWeight) || asset.RewardWeightRange.Max.LT(msg.RewardWeight) {
 		return nil, types.ErrRewardWeightOutOfBound
 	}
-	asset.RewardWeight = req.RewardWeight
-	asset.TakeRate = req.TakeRate
-	asset.RewardChangeRate = req.RewardChangeRate
-	asset.RewardChangeInterval = req.RewardChangeInterval
+	asset.RewardWeight = msg.RewardWeight
+	asset.TakeRate = msg.TakeRate
+	asset.RewardChangeRate = msg.RewardChangeRate
+	asset.RewardChangeInterval = msg.RewardChangeInterval
 
 	err := m.UpdateAllianceAsset(sdkCtx, asset)
 	if err != nil {
@@ -199,9 +205,12 @@ func (m MsgServer) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAllia
 	return &types.MsgUpdateAllianceResponse{}, nil
 }
 
-func (m MsgServer) DeleteAlliance(ctx context.Context, req *types.MsgDeleteAlliance) (*types.MsgDeleteAllianceResponse, error) {
+func (m MsgServer) DeleteAlliance(ctx context.Context, msg *types.MsgDeleteAlliance) (*types.MsgDeleteAllianceResponse, error) {
+	if m.GetAuthority() != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", m.GetAuthority(), msg.Authority)
+	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	asset, found := m.GetAssetByDenom(sdkCtx, req.Denom)
+	asset, found := m.GetAssetByDenom(sdkCtx, msg.Denom)
 
 	if !found {
 		return nil, types.ErrUnknownAsset
