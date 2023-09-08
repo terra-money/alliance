@@ -172,13 +172,6 @@ func (msg *MsgClaimDelegationRewards) GetSigners() []sdk.AccAddress {
 
 func (msg MsgClaimDelegationRewards) Type() string { return MsgClaimDelegationRewardsType }
 
-func NewMsgUpdateParams(authority string, params Params) *MsgUpdateParams {
-	return &MsgUpdateParams{
-		authority,
-		params,
-	}
-}
-
 func (msg *MsgUpdateParams) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
 		return sdkerrors.Wrap(err, "invalid authority address")
@@ -208,6 +201,10 @@ func (msg *MsgUpdateParams) GetSigners() []sdk.AccAddress {
 func (msg MsgUpdateParams) Type() string { return MsgUpdateParamsType }
 
 func (msg *MsgCreateAlliance) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.Wrap(err, "invalid authority address")
+	}
+
 	if msg.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
@@ -267,6 +264,10 @@ func (msg *MsgCreateAlliance) GetSigners() []sdk.AccAddress {
 func (msg MsgCreateAlliance) Type() string { return MsgCreateAllianceType }
 
 func (msg *MsgUpdateAlliance) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.Wrap(err, "invalid authority address")
+	}
+
 	if msg.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
@@ -309,6 +310,10 @@ func (msg *MsgUpdateAlliance) GetSigners() []sdk.AccAddress {
 func (msg MsgUpdateAlliance) Type() string { return MsgUpdateAllianceType }
 
 func (msg *MsgDeleteAlliance) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.Wrap(err, "invalid authority address")
+	}
+
 	if msg.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
