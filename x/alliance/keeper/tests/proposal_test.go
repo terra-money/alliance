@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
 
@@ -170,4 +173,65 @@ func TestDeleteAlliance(t *testing.T) {
 			Total:   0,
 		},
 	})
+}
+
+func TestUpdateParams(t *testing.T) {
+	// GIVEN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset("uluna", sdk.NewDec(1), sdk.ZeroDec(), sdk.NewDec(2), sdk.NewDec(0), startTime),
+		},
+	})
+	timeNow := time.Now().UTC()
+	govAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
+	// WHEN
+	msgServer := keeper.MsgServer{Keeper: app.AllianceKeeper}
+	_, err := msgServer.UpdateParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateParams{
+		Authority: govAddr,
+		Params: types.Params{
+			RewardDelayTime:       100,
+			TakeRateClaimInterval: 100,
+			LastTakeRateClaimTime: timeNow,
+		},
+	})
+	require.NoError(t, err)
+
+	// THEN
+	params := app.AllianceKeeper.GetParams(ctx)
+	require.Equal(t, time.Duration(100), params.RewardDelayTime)
+	require.Equal(t, time.Duration(100), params.TakeRateClaimInterval)
+	require.Equal(t, timeNow, params.LastTakeRateClaimTime)
+}
+
+func TestUnauthorizedUpdateParams(t *testing.T) {
+	// GIVEN
+	app, ctx := createTestContext(t)
+	startTime := time.Now()
+	ctx.WithBlockTime(startTime).WithBlockHeight(1)
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset("uluna", sdk.NewDec(1), sdk.ZeroDec(), sdk.NewDec(2), sdk.NewDec(0), startTime),
+		},
+	})
+	timeNow := time.Now().UTC()
+
+	// WHEN
+	msgServer := keeper.MsgServer{Keeper: app.AllianceKeeper}
+	_, err := msgServer.UpdateParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateParams{
+		Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), []byte("random")),
+		Params: types.Params{
+			RewardDelayTime:       100,
+			TakeRateClaimInterval: 100,
+			LastTakeRateClaimTime: timeNow,
+		},
+	})
+
+	// THEN
+	require.NotNil(t, err)
 }

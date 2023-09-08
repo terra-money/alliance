@@ -285,7 +285,9 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 
 	// If start time has not been set, set the start time and do nothing for this block
 	if lastClaim.Equal(time.Time{}) {
-		k.SetLastRewardClaimTime(ctx, ctx.BlockTime())
+		if err := k.SetLastRewardClaimTime(ctx, ctx.BlockTime()); err != nil {
+			return coins, err
+		}
 		return coins, nil
 	}
 
@@ -315,7 +317,9 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 
 	// If there are no assets with positive take rate, continue to update last reward claim time and return
 	if assetsWithPositiveTakeRate == 0 {
-		k.SetLastRewardClaimTime(ctx, ctx.BlockTime())
+		if err := k.SetLastRewardClaimTime(ctx, ctx.BlockTime()); err != nil {
+			return coins, err
+		}
 		return coins, nil
 	}
 
@@ -325,7 +329,9 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 			return nil, err
 		}
 		// Only update if there was a token transfer to prevent < 1 amounts to be ignored
-		k.SetLastRewardClaimTime(ctx, lastClaim.Add(rewardClaimInterval*time.Duration(intervalsSinceLastClaim)))
+		if err = k.SetLastRewardClaimTime(ctx, lastClaim.Add(rewardClaimInterval*time.Duration(intervalsSinceLastClaim))); err != nil {
+			return coins, err
+		}
 		_ = ctx.EventManager().EmitTypedEvent(&types.DeductAllianceAssetsEvent{Coins: coins})
 	}
 	return coins, nil

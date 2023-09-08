@@ -3,9 +3,12 @@ package keeper
 import (
 	"context"
 
-	"github.com/terra-money/alliance/x/alliance/types"
-
+	sdkerrors "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 type MsgServer struct {
@@ -135,6 +138,94 @@ func (m MsgServer) ClaimDelegationRewards(ctx context.Context, msg *types.MsgCla
 	_, err = m.Keeper.ClaimDelegationRewards(sdkCtx, delAddr, validator, msg.Denom)
 
 	return &types.MsgClaimDelegationRewardsResponse{}, err
+}
+
+func (m MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if m.GetAuthority() != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", m.GetAuthority(), msg.Authority)
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if err := m.SetParams(sdkCtx, msg.Params); err != nil {
+		return nil, err
+	}
+	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+func (m MsgServer) CreateAlliance(ctx context.Context, msg *types.MsgCreateAlliance) (*types.MsgCreateAllianceResponse, error) {
+	if m.GetAuthority() != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", m.GetAuthority(), msg.Authority)
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	_, found := m.GetAssetByDenom(sdkCtx, msg.Denom)
+
+	if found {
+		return nil, types.ErrAlreadyExists
+	}
+	rewardStartTime := sdkCtx.BlockTime().Add(m.RewardDelayTime(sdkCtx))
+	asset := types.AllianceAsset{
+		Denom:                msg.Denom,
+		RewardWeight:         msg.RewardWeight,
+		RewardWeightRange:    msg.RewardWeightRange,
+		TakeRate:             msg.TakeRate,
+		TotalTokens:          sdk.ZeroInt(),
+		TotalValidatorShares: sdk.ZeroDec(),
+		RewardStartTime:      rewardStartTime,
+		RewardChangeRate:     msg.RewardChangeRate,
+		RewardChangeInterval: msg.RewardChangeInterval,
+		LastRewardChangeTime: rewardStartTime,
+	}
+	m.SetAsset(sdkCtx, asset)
+	return &types.MsgCreateAllianceResponse{}, nil
+}
+
+func (m MsgServer) UpdateAlliance(ctx context.Context, msg *types.MsgUpdateAlliance) (*types.MsgUpdateAllianceResponse, error) {
+	if m.GetAuthority() != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", m.GetAuthority(), msg.Authority)
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	asset, found := m.GetAssetByDenom(sdkCtx, msg.Denom)
+
+	if !found {
+		return nil, types.ErrUnknownAsset
+	}
+	if asset.RewardWeightRange.Min.GT(msg.RewardWeight) || asset.RewardWeightRange.Max.LT(msg.RewardWeight) {
+		return nil, types.ErrRewardWeightOutOfBound
+	}
+	asset.RewardWeight = msg.RewardWeight
+	asset.TakeRate = msg.TakeRate
+	asset.RewardChangeRate = msg.RewardChangeRate
+	asset.RewardChangeInterval = msg.RewardChangeInterval
+
+	err := m.UpdateAllianceAsset(sdkCtx, asset)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateAllianceResponse{}, nil
+}
+
+func (m MsgServer) DeleteAlliance(ctx context.Context, msg *types.MsgDeleteAlliance) (*types.MsgDeleteAllianceResponse, error) {
+	if m.GetAuthority() != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", m.GetAuthority(), msg.Authority)
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	asset, found := m.GetAssetByDenom(sdkCtx, msg.Denom)
+
+	if !found {
+		return nil, types.ErrUnknownAsset
+	}
+
+	if asset.TotalTokens.GT(math.ZeroInt()) {
+		return nil, types.ErrActiveDelegationsExists
+	}
+
+	err := m.DeleteAsset(sdkCtx, asset)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgDeleteAllianceResponse{}, nil
 }
 
 // NewMsgServerImpl returns an implementation of the MsgServer interface

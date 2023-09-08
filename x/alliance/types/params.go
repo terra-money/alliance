@@ -13,9 +13,15 @@ var (
 	RewardDelayTime       = []byte("RewardDelayTime")
 	TakeRateClaimInterval = []byte("TakeRateClaimInterval")
 	LastTakeRateClaimTime = []byte("LastTakeRateClaimTime")
+	// ParamKeyTable deprecated - only used for migration
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
+
+// Deprecated: ParamKeyTable for auth module
+func ParamKeyTable() paramtypes.KeyTable {
+	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
+}
 
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
@@ -72,4 +78,11 @@ func (r RewardHistories) GetIndexByDenom(denom string) (ri *RewardHistory, found
 		return &RewardHistory{}, false
 	}
 	return &r[idx], true
+}
+
+func ValidatePositiveDuration(t time.Duration) error {
+	if t < 0 {
+		return fmt.Errorf("duration must be positive: %d", t)
+	}
+	return nil
 }

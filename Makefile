@@ -134,6 +134,10 @@ proto-gen:
 	@echo "Generating Protobuf files"
 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(PROTO_BUILDER_IMAGE) sh ./scripts/protocgen.sh
 
+buf-push:
+	@echo "Pushing protobuf files to buf registry"
+	cd proto && buf push
+
 ###############################################################################
 ###                                Local Testnet (docker)                   ###
 ###############################################################################

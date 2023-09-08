@@ -10,7 +10,9 @@ import (
 )
 
 func (k Keeper) InitGenesis(ctx sdk.Context, g *types.GenesisState) []abci.ValidatorUpdate {
-	k.SetParams(ctx, g.Params)
+	if err := k.SetParams(ctx, g.Params); err != nil {
+		panic(err)
+	}
 	for _, asset := range g.Assets {
 		if err := sdk.ValidateDenom(asset.Denom); err != nil {
 			panic(err)
@@ -111,8 +113,4 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 
 	return &state
-}
-
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramstore.SetParamSet(ctx, &params)
 }

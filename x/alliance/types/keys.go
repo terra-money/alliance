@@ -29,6 +29,7 @@ const (
 
 var (
 	ModuleAccKey = []byte{0x01}
+	ParamsKey    = []byte{0x02}
 
 	AssetKey                      = []byte{0x11}
 	ValidatorInfoKey              = []byte{0x12}

@@ -1,6 +1,7 @@
 package types
 
 import (
+	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"google.golang.org/grpc/codes"
@@ -12,11 +13,19 @@ var (
 	_ sdk.Msg = &MsgRedelegate{}
 	_ sdk.Msg = &MsgUndelegate{}
 	_ sdk.Msg = &MsgClaimDelegationRewards{}
+	_ sdk.Msg = &MsgUpdateParams{}
+	_ sdk.Msg = &MsgCreateAlliance{}
+	_ sdk.Msg = &MsgUpdateAlliance{}
+	_ sdk.Msg = &MsgDeleteAlliance{}
 
 	_ legacytx.LegacyMsg = &MsgDelegate{}
 	_ legacytx.LegacyMsg = &MsgRedelegate{}
 	_ legacytx.LegacyMsg = &MsgUndelegate{}
 	_ legacytx.LegacyMsg = &MsgClaimDelegationRewards{}
+	_ legacytx.LegacyMsg = &MsgUpdateParams{}
+	_ legacytx.LegacyMsg = &MsgCreateAlliance{}
+	_ legacytx.LegacyMsg = &MsgUpdateAlliance{}
+	_ legacytx.LegacyMsg = &MsgDeleteAlliance{}
 )
 
 var (
@@ -24,6 +33,10 @@ var (
 	MsgUndelegateType             = "msg_undelegate"
 	MsgRedelegateType             = "msg_redelegate"
 	MsgClaimDelegationRewardsType = "claim_delegation_rewards"
+	MsgUpdateParamsType           = "update_params"
+	MsgCreateAllianceType         = "create_alliance"
+	MsgUpdateAllianceType         = "update_alliance"
+	MsgDeleteAllianceType         = "delete_alliance"
 )
 
 func NewMsgDelegate(delegatorAddress, validatorAddress string, amount sdk.Coin) *MsgDelegate {
@@ -158,3 +171,169 @@ func (msg *MsgClaimDelegationRewards) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgClaimDelegationRewards) Type() string { return MsgClaimDelegationRewardsType }
+
+func (msg *MsgUpdateParams) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.Wrap(err, "invalid authority address")
+	}
+	if err := ValidatePositiveDuration(msg.Params.RewardDelayTime); err != nil {
+		return err
+	}
+	return ValidatePositiveDuration(msg.Params.TakeRateClaimInterval)
+}
+
+func (msg MsgUpdateParams) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+func (msg MsgUpdateParams) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg *MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		panic("Authority is not valid")
+	}
+	return []sdk.AccAddress{signer}
+}
+
+func (msg MsgUpdateParams) Type() string { return MsgUpdateParamsType }
+
+func (msg *MsgCreateAlliance) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.Wrap(err, "invalid authority address")
+	}
+
+	if msg.Denom == "" {
+		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
+	}
+
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return err
+	}
+
+	if msg.RewardWeight.IsNil() || msg.RewardWeight.LT(sdk.ZeroDec()) {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be zero or a positive number")
+	}
+
+	if msg.RewardWeightRange.Min.IsNil() || msg.RewardWeightRange.Min.LT(sdk.ZeroDec()) ||
+		msg.RewardWeightRange.Max.IsNil() || msg.RewardWeightRange.Max.LT(sdk.ZeroDec()) {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight min and max must be zero or a positive number")
+	}
+
+	if msg.RewardWeightRange.Min.GT(msg.RewardWeightRange.Max) {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight min must be less or equal to rewardWeight max")
+	}
+
+	if msg.RewardWeight.LT(msg.RewardWeightRange.Min) || msg.RewardWeight.GT(msg.RewardWeightRange.Max) {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be bounded in RewardWeightRange")
+	}
+
+	if msg.TakeRate.IsNil() || msg.TakeRate.IsNegative() || msg.TakeRate.GTE(sdk.OneDec()) {
+		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be more or equals to 0 but strictly less than 1")
+	}
+
+	if msg.RewardChangeRate.IsZero() || msg.RewardChangeRate.IsNegative() {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeRate must be strictly a positive number")
+	}
+
+	if msg.RewardChangeInterval < 0 {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeInterval must be strictly a positive number")
+	}
+
+	return nil
+}
+
+func (msg MsgCreateAlliance) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+func (msg MsgCreateAlliance) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg *MsgCreateAlliance) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		panic("Authority is not valid")
+	}
+	return []sdk.AccAddress{signer}
+}
+
+func (msg MsgCreateAlliance) Type() string { return MsgCreateAllianceType }
+
+func (msg *MsgUpdateAlliance) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.Wrap(err, "invalid authority address")
+	}
+
+	if msg.Denom == "" {
+		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
+	}
+
+	if msg.RewardWeight.IsNil() || msg.RewardWeight.LT(sdk.ZeroDec()) {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be zero or a positive number")
+	}
+
+	if msg.TakeRate.IsNil() || msg.TakeRate.IsNegative() || msg.TakeRate.GTE(sdk.OneDec()) {
+		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be more or equals to 0 but strictly less than 1")
+	}
+
+	if msg.RewardChangeRate.IsZero() || msg.RewardChangeRate.IsNegative() {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeRate must be strictly a positive number")
+	}
+
+	if msg.RewardChangeInterval < 0 {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeInterval must be strictly a positive number")
+	}
+
+	return nil
+}
+
+func (msg MsgUpdateAlliance) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+func (msg MsgUpdateAlliance) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg *MsgUpdateAlliance) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		panic("Authority is not valid")
+	}
+	return []sdk.AccAddress{signer}
+}
+
+func (msg MsgUpdateAlliance) Type() string { return MsgUpdateAllianceType }
+
+func (msg *MsgDeleteAlliance) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.Wrap(err, "invalid authority address")
+	}
+
+	if msg.Denom == "" {
+		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
+	}
+	return nil
+}
+
+func (msg MsgDeleteAlliance) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+func (msg MsgDeleteAlliance) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg *MsgDeleteAlliance) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		panic("Authority is not valid")
+	}
+	return []sdk.AccAddress{signer}
+}
+
+func (msg MsgDeleteAlliance) Type() string { return MsgDeleteAllianceType }

@@ -143,13 +143,10 @@ func (k QueryServer) AllAllianceValidators(c context.Context, req *types.QueryAl
 }
 
 func (k QueryServer) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	// Define a variable that will store the params
-	var params types.Params
-
 	// Get context with the information about the environment
 	ctx := sdk.UnwrapSDKContext(c)
 
-	k.paramstore.GetParamSet(ctx, &params)
+	params := k.GetParams(ctx)
 
 	return &types.QueryParamsResponse{
 		Params: params,

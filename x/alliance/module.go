@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	simulation2 "github.com/terra-money/alliance/x/alliance/tests/simulation"
 
 	// this line is used by starport scaffolding # 1
@@ -17,6 +19,7 @@ import (
 	"github.com/terra-money/alliance/x/alliance/client/cli"
 	"github.com/terra-money/alliance/x/alliance/keeper"
 	migrationsv4 "github.com/terra-money/alliance/x/alliance/migrations/v4"
+	migrationsv5 "github.com/terra-money/alliance/x/alliance/migrations/v5"
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -42,6 +45,7 @@ type AppModuleBasic struct {
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sk types.StakingKeeper,
 	ak types.AccountKeeper, bk types.BankKeeper, registry cdctypes.InterfaceRegistry,
+	subspace paramstypes.Subspace,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, pcdc: codec.NewProtoCodec(registry)},
@@ -49,6 +53,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sk types.StakingKeeper,
 		stakingKeeper:  sk,
 		bankKeeper:     bk,
 		accountKeeper:  ak,
+		subspace:       subspace,
 	}
 }
 
@@ -96,6 +101,7 @@ type AppModule struct {
 	stakingKeeper types.StakingKeeper
 	bankKeeper    types.BankKeeper
 	accountKeeper types.AccountKeeper
+	subspace      paramstypes.Subspace // Legacy for migration only
 }
 
 func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
@@ -125,10 +131,14 @@ func (a AppModule) RegisterServices(cfg module.Configurator) {
 	if err != nil {
 		panic(fmt.Sprintf("failed to migrate x/alliance from version 3 to 4: %v", err))
 	}
+	err = cfg.RegisterMigration(types.ModuleName, 4, migrationsv5.Migrate(a.keeper, a.subspace))
+	if err != nil {
+		panic(fmt.Sprintf("failed to migrate x/alliance from version 4 to 5: %v", err))
+	}
 }
 
 func (a AppModule) ConsensusVersion() uint64 {
-	return 4
+	return 5
 }
 
 func (a AppModule) GenerateGenesisState(simState *module.SimulationState) {
