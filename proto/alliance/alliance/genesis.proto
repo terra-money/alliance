@@ -1,11 +1,11 @@
 syntax = "proto3";
-package alliance;
+package alliance.alliance;
 
 import "gogoproto/gogo.proto";
-import "alliance/alliance.proto";
-import "alliance/params.proto";
-import "alliance/delegations.proto";
-import "alliance/redelegations.proto";
+import "alliance/alliance/alliance.proto";
+import "alliance/alliance/params.proto";
+import "alliance/alliance/delegations.proto";
+import "alliance/alliance/redelegations.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/terra-money/alliance/x/alliance/types";

@@ -1,15 +1,15 @@
 syntax = "proto3";
-package alliance;
+package alliance.alliance;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "alliance/params.proto";
-import "alliance/alliance.proto";
+import "alliance/alliance/params.proto";
+import "alliance/alliance/alliance.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "alliance/delegations.proto";
-import "alliance/unbonding.proto";
-import "alliance/redelegations.proto";
+import "alliance/alliance/delegations.proto";
+import "alliance/alliance/unbonding.proto";
+import "alliance/alliance/redelegations.proto";
 
 option go_package = "github.com/terra-money/alliance/x/alliance/types";
 
