@@ -1,12 +1,12 @@
 syntax = "proto3";
-package alliance;
+package alliance.alliance;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "alliance/params.proto";
-import "alliance/alliance.proto";
+import "alliance/alliance/params.proto";
+import "alliance/alliance/alliance.proto";
 import "google/protobuf/duration.proto";
 
 option go_package = "github.com/terra-money/alliance/x/alliance/types";

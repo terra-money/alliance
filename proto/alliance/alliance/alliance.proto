@@ -1,9 +1,9 @@
 syntax = "proto3";
-package alliance;
+package alliance.alliance;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
-import "alliance/params.proto";
+import "alliance/alliance/params.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
