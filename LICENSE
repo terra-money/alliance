@@ -1,13 +1,40 @@
-Copyright 2023 Terraform Labs Pte
-
-Licensed under the Apache License, Version 2.0 (the "License");
+Copyright 2023 Terraform Labs Pte Ltd
+Alliance is Licensed under the Apache License, Version 2.0 with Common Clause
+License Condition v1.0 and Additional License Condition v1.0 (the "License");
 you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+You   may   obtain   a   copy   of   the   Apache   License,   Version   2.0   license   at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and limitations
+under the License.
 
-    http://www.apache.org/licenses/LICENSE-2.0
+Commons Clause” License Condition v1.0
+The Software is provided to you by the Licensor under the License, as defined 
+below, subject to the following condition.
+Without limiting other conditions in the License, the grant of rights under the 
+License will not include, and the License does not grant to you, the right to Sell 
+the Software.
+For purposes of the foregoing, “Sell” means practicing any or all of the rights 
+granted to you under the License to provide to third parties or any other persons,
+for a fee or other monetary or non-monetary consideration (including without 
+limitation fees for hosting or consulting/ support services related to the 
+Software), a product or service whose value derives, entirely, substantially or 
+similarly, from the functionality of the Software. Any license notice or attribution 
+required by the License must also include this Commons Clause License 
+Condition notice.
+Software: Alliance
+License: Apache 2.0 
+Licensor: Terraform Labs Pte Ltd
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Additional License Condition v1.0
+The terms below are in addition to the Apache 2.0 license terms and the 
+Commons Clause License Conditions v1.0. 
+Copying Restrictions:
+Despite the terms of the License, no person or entity shall be permitted to copy, 
+or reproduce in any form, any portion of the Software.
+Redistribution Restrictions:
+Despite the terms of the License, no person or entity shall be permitted to 
+redistribute, share, or make publicly available any portion of the Software or 
+derivative works thereof.
