@@ -2,11 +2,11 @@
 <h1 align="center"> 🤝 Alliance</h1>
 
 <p align="center">
-  <a href="https://alliance.terra.money/">Technical Documentation</a>
+  <a href="https://docs.alliance.terra.money/">Technical Documentation</a>
   ·
-  <a href="https://alliance.terra.money/guides/get-started">Integration Guide</a>
+  <a href="https://docs.alliance.terra.money/guides/get-started">Integration Guide</a>
   ·
-    <a href="https://alliance.terra.money/alliance-audit.pdf">Code Audit</a>
+    <a href="https://docs.alliance.terra.money/alliance-audit.pdf">Code Audit</a>
 
 </p>
 
@@ -20,35 +20,35 @@ Alliance is an open-source Cosmos SDK module that leverages interchain staking t
 
 ### Here’s how it works:
 
-- Two chains [integrate the Alliance module](https://alliance.terra.money/guides/get-started) and decide through governance which assets can be staked on their chain. These are known as [Alliance assets](https://alliance.terra.money/alliance#what-are-alliance-assets). 
-- Each Alliance asset is assigned a [Take Rate](https://alliance.terra.money/alliance#the-take-rate) (the percentage of staked Alliance assets the chain redistributes to native chain stakers) and a [Reward Weight](https://alliance.terra.money/alliance#rewards) (the percentage of native staking rewards the chain distributes to Alliance asset stakers).
-- Users of each chain can then [bridge their assets via IBC](https://alliance.terra.money/alliance#what-are-alliance-assets) to the other chain and stake them to earn the Reward Weight. 
+- Two chains [integrate the Alliance module](https://docs.alliance.terra.money/guides/get-started) and decide through governance which assets can be staked on their chain. These are known as [Alliance assets](https://docs.alliance.terra.money/alliance#what-are-alliance-assets). 
+- Each Alliance asset is assigned a [Take Rate](https://docs.alliance.terra.money/alliance#the-take-rate) (the percentage of staked Alliance assets the chain redistributes to native chain stakers) and a [Reward Weight](https://docs.alliance.terra.money/alliance#rewards) (the percentage of native staking rewards the chain distributes to Alliance asset stakers).
+- Users of each chain can then [bridge their assets via IBC](https://docs.alliance.terra.money/alliance#what-are-alliance-assets) to the other chain and stake them to earn the Reward Weight. 
 
 ## Tech Specs
 
-[The Alliance Docs](https://alliance.terra.money/) contain detailed information about Alliance. Familiarize yourself with the following concepts before integrating the Alliance module. 
+[The Alliance Docs](https://docs.alliance.terra.money/) contain detailed information about Alliance. Familiarize yourself with the following concepts before integrating the Alliance module. 
 
 - About Alliance
-    - [Overview](https://alliance.terra.money/overview)
-    - [How Alliance works](https://alliance.terra.money/alliance)
-    - [Alliance staking](https://alliance.terra.money/concepts/staking)
-    - [Reward distribution](https://alliance.terra.money/concepts/rewards)
-    - [Validator shares](https://alliance.terra.money/concepts/delegation)
+    - [Overview](https://docs.alliance.terra.money/overview)
+    - [How Alliance works](https://docs.alliance.terra.money/alliance)
+    - [Alliance staking](https://docs.alliance.terra.money/concepts/staking)
+    - [Reward distribution](https://docs.alliance.terra.money/concepts/rewards)
+    - [Validator shares](https://docs.alliance.terra.money/concepts/delegation)
 - Guides
-    - [Integrate the Alliance module](https://alliance.terra.money/guides/get-started)
-    - [Create, update, or delete an Alliance](https://alliance.terra.money/guides/create)
-    - [Interact with an Alliance](https://alliance.terra.money/guides/how-to)
+    - [Integrate the Alliance module](https://docs.alliance.terra.money/guides/get-started)
+    - [Create, update, or delete an Alliance](https://docs.alliance.terra.money/guides/create)
+    - [Interact with an Alliance](https://docs.alliance.terra.money/guides/how-to)
 - Technical specifications:
-    - [Module parameters](https://alliance.terra.money/tech/parameters) and [Alliance asset properties](https://alliance.terra.money/tech/asset)
-    - [Txs and queries](https://alliance.terra.money/tech/tx-queries)
-    - [Data structures](https://alliance.terra.money/tech/data)
-    - [State transitions](https://alliance.terra.money/tech/transitions)
-    - [Invariants](https://alliance.terra.money/tech/invariants)
-    - [Benchmarks](https://alliance.terra.money/tech/benchmarks)
+    - [Module parameters](https://docs.alliance.terra.money/tech/parameters) and [Alliance asset properties](https://alliance.terra.money/tech/asset)
+    - [Txs and queries](https://docs.alliance.terra.money/tech/tx-queries)
+    - [Data structures](https://docs.alliance.terra.money/tech/data)
+    - [State transitions](https://docs.alliance.terra.money/tech/transitions)
+    - [Invariants](https://docs.alliance.terra.money/tech/invariants)
+    - [Benchmarks](https://docs.alliance.terra.money/tech/benchmarks)
 
 ## Integrate the `x/alliance` module
 
-The Alliance module can be [added to any compatible Cosmos chain](https://alliance.terra.money/guides/get-started) and does not require any changes to consensus or major changes to common core modules. This module wraps around a chain’s native staking module, allowing whitelisted assets to be staked and earn rewards. Alliance assets can be staked with the Alliance module, and the chain's native staking module is used for native stakers. 
+The Alliance module can be [added to any compatible Cosmos chain](https://docs.alliance.terra.money/guides/get-started) and does not require any changes to consensus or major changes to common core modules. This module wraps around a chain’s native staking module, allowing whitelisted assets to be staked and earn rewards. Alliance assets can be staked with the Alliance module, and the chain's native staking module is used for native stakers. 
 
 Chains that want to add `x/alliance` must enable the following modules:
 
@@ -66,7 +66,7 @@ Compatibility matrix:
 | v0.2.0  | release/v0.2.x | 0.47      |
 | v0.1.0  | release/v0.1.x | 0.46      |
 
-For an in-depth guide on integrating `x/alliance`, visit the [Alliance Module Integration Guide](https://alliance.terra.money/guides/get-started). 
+For an in-depth guide on integrating `x/alliance`, visit the [Alliance Module Integration Guide](https://docs.alliance.terra.money/guides/get-started). 
 
 ## Development environment
 
