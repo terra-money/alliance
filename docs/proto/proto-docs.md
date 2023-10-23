@@ -1392,6 +1392,8 @@ Params
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `title` | [string](#string) |  | the title of the update proposal |
+| `description` | [string](#string) |  | the description of the proposal |
 | `authority` | [string](#string) |  |  |
 | `params` | [Params](#alliance.alliance.Params) |  |  |
 

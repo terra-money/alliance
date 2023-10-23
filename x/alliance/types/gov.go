@@ -3,6 +3,7 @@ package types
 import (
 	"time"
 
+	sdkerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"google.golang.org/grpc/codes"
@@ -10,22 +11,62 @@ import (
 )
 
 const (
-	ProposalTypeCreateAlliance = "msg_create_alliance_proposal"
-	ProposalTypeUpdateAlliance = "msg_update_alliance_proposal"
-	ProposalTypeDeleteAlliance = "msg_delete_alliance_proposal"
+	ProposalTypeUpdateAllianceParams = "msg_update_alliance_params"
+	ProposalTypeCreateAlliance       = "msg_create_alliance_proposal"
+	ProposalTypeUpdateAlliance       = "msg_update_alliance_proposal"
+	ProposalTypeDeleteAlliance       = "msg_delete_alliance_proposal"
 )
 
 var (
+	_ govtypes.Content = &MsgUpdateParams{}
 	_ govtypes.Content = &MsgCreateAllianceProposal{}
 	_ govtypes.Content = &MsgUpdateAllianceProposal{}
 	_ govtypes.Content = &MsgDeleteAllianceProposal{}
 )
 
 func init() {
+	govtypes.RegisterProposalType(ProposalTypeUpdateAllianceParams)
 	govtypes.RegisterProposalType(ProposalTypeCreateAlliance)
 	govtypes.RegisterProposalType(ProposalTypeUpdateAlliance)
 	govtypes.RegisterProposalType(ProposalTypeDeleteAlliance)
 }
+
+func NewMsgUpdateParams(title, description string,
+	rewardDelayTime, takeRateClaimInterval time.Duration,
+	lastTakeRateClaimTime time.Time) govtypes.Content {
+	return &MsgUpdateParams{
+		Title:       title,
+		Description: description,
+		Params: Params{
+			RewardDelayTime:       rewardDelayTime,
+			TakeRateClaimInterval: takeRateClaimInterval,
+			LastTakeRateClaimTime: lastTakeRateClaimTime,
+		},
+	}
+}
+func (msg *MsgUpdateParams) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.Wrap(err, "invalid authority address")
+	}
+	if err := ValidatePositiveDuration(msg.Params.RewardDelayTime); err != nil {
+		return err
+	}
+	return ValidatePositiveDuration(msg.Params.TakeRateClaimInterval)
+}
+
+func (msg MsgUpdateParams) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg *MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	signer, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		panic("Authority is not valid")
+	}
+	return []sdk.AccAddress{signer}
+}
+func (m *MsgUpdateParams) ProposalRoute() string { return RouterKey }
+func (m *MsgUpdateParams) ProposalType() string  { return ProposalTypeCreateAlliance }
 
 func NewMsgCreateAllianceProposal(title, description, denom string, rewardWeight sdk.Dec, rewardWeightRange RewardWeightRange, takeRate sdk.Dec, rewardChangeRate sdk.Dec, rewardChangeInterval time.Duration) govtypes.Content {
 	return &MsgCreateAllianceProposal{
@@ -39,11 +80,8 @@ func NewMsgCreateAllianceProposal(title, description, denom string, rewardWeight
 		RewardChangeInterval: rewardChangeInterval,
 	}
 }
-func (m *MsgCreateAllianceProposal) GetTitle() string       { return m.Title }
-func (m *MsgCreateAllianceProposal) GetDescription() string { return m.Description }
-func (m *MsgCreateAllianceProposal) ProposalRoute() string  { return RouterKey }
-func (m *MsgCreateAllianceProposal) ProposalType() string   { return ProposalTypeCreateAlliance }
-
+func (m *MsgCreateAllianceProposal) ProposalRoute() string { return RouterKey }
+func (m *MsgCreateAllianceProposal) ProposalType() string  { return ProposalTypeCreateAlliance }
 func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 	if m.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
@@ -96,11 +134,8 @@ func NewMsgUpdateAllianceProposal(title, description, denom string, rewardWeight
 		RewardChangeInterval: rewardChangeInterval,
 	}
 }
-func (m *MsgUpdateAllianceProposal) GetTitle() string       { return m.Title }
-func (m *MsgUpdateAllianceProposal) GetDescription() string { return m.Description }
-func (m *MsgUpdateAllianceProposal) ProposalRoute() string  { return RouterKey }
-func (m *MsgUpdateAllianceProposal) ProposalType() string   { return ProposalTypeUpdateAlliance }
-
+func (m *MsgUpdateAllianceProposal) ProposalRoute() string { return RouterKey }
+func (m *MsgUpdateAllianceProposal) ProposalType() string  { return ProposalTypeUpdateAlliance }
 func (m *MsgUpdateAllianceProposal) ValidateBasic() error {
 	if m.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
@@ -132,11 +167,8 @@ func NewMsgDeleteAllianceProposal(title, description, denom string) govtypes.Con
 		Denom:       denom,
 	}
 }
-func (m *MsgDeleteAllianceProposal) GetTitle() string       { return m.Title }
-func (m *MsgDeleteAllianceProposal) GetDescription() string { return m.Description }
-func (m *MsgDeleteAllianceProposal) ProposalRoute() string  { return RouterKey }
-func (m *MsgDeleteAllianceProposal) ProposalType() string   { return ProposalTypeDeleteAlliance }
-
+func (m *MsgDeleteAllianceProposal) ProposalRoute() string { return RouterKey }
+func (m *MsgDeleteAllianceProposal) ProposalType() string  { return ProposalTypeDeleteAlliance }
 func (m *MsgDeleteAllianceProposal) ValidateBasic() error {
 	if m.Denom == "" {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")

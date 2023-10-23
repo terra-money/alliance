@@ -22,7 +22,6 @@ var (
 	_ legacytx.LegacyMsg = &MsgRedelegate{}
 	_ legacytx.LegacyMsg = &MsgUndelegate{}
 	_ legacytx.LegacyMsg = &MsgClaimDelegationRewards{}
-	_ legacytx.LegacyMsg = &MsgUpdateParams{}
 	_ legacytx.LegacyMsg = &MsgCreateAlliance{}
 	_ legacytx.LegacyMsg = &MsgUpdateAlliance{}
 	_ legacytx.LegacyMsg = &MsgDeleteAlliance{}
@@ -33,7 +32,6 @@ var (
 	MsgUndelegateType             = "msg_undelegate"
 	MsgRedelegateType             = "msg_redelegate"
 	MsgClaimDelegationRewardsType = "claim_delegation_rewards"
-	MsgUpdateParamsType           = "update_params"
 	MsgCreateAllianceType         = "create_alliance"
 	MsgUpdateAllianceType         = "update_alliance"
 	MsgDeleteAllianceType         = "delete_alliance"
@@ -171,34 +169,6 @@ func (msg *MsgClaimDelegationRewards) GetSigners() []sdk.AccAddress {
 }
 
 func (msg MsgClaimDelegationRewards) Type() string { return MsgClaimDelegationRewardsType }
-
-func (msg *MsgUpdateParams) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return sdkerrors.Wrap(err, "invalid authority address")
-	}
-	if err := ValidatePositiveDuration(msg.Params.RewardDelayTime); err != nil {
-		return err
-	}
-	return ValidatePositiveDuration(msg.Params.TakeRateClaimInterval)
-}
-
-func (msg MsgUpdateParams) Route() string {
-	return sdk.MsgTypeURL(&msg)
-}
-
-func (msg MsgUpdateParams) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg *MsgUpdateParams) GetSigners() []sdk.AccAddress {
-	signer, err := sdk.AccAddressFromBech32(msg.Authority)
-	if err != nil {
-		panic("Authority is not valid")
-	}
-	return []sdk.AccAddress{signer}
-}
-
-func (msg MsgUpdateParams) Type() string { return MsgUpdateParamsType }
 
 func (msg *MsgCreateAlliance) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
