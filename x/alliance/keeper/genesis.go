@@ -3,8 +3,9 @@ package keeper
 import (
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/terra-money/alliance/x/alliance/types"
 )

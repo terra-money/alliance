@@ -3,6 +3,9 @@ package keeper
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,8 +13,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	banktypes "github.com/terra-money/alliance/custom/bank/types"
 	alliancekeeper "github.com/terra-money/alliance/x/alliance/keeper"

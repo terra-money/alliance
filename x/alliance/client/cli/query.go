@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/terra-money/alliance/x/alliance/types"
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/spf13/cobra"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

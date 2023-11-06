@@ -5,10 +5,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/json"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+
+	"github.com/cometbft/cometbft/libs/json"
 
 	"github.com/terra-money/alliance/x/alliance/types"
 )

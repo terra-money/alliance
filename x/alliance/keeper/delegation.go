@@ -3,14 +3,15 @@ package keeper
 import (
 	"time"
 
-	"github.com/terra-money/alliance/x/alliance/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 // Delegate is the entry point for delegators to delegate alliance assets to validators

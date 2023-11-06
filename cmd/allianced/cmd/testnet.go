@@ -9,15 +9,9 @@ import (
 	"path/filepath"
 	"time"
 
-	tmconfig "github.com/cometbft/cometbft/config"
-	tmrand "github.com/cometbft/cometbft/libs/rand"
-	"github.com/cometbft/cometbft/types"
-	tmtime "github.com/cometbft/cometbft/types/time"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/math"
-
-	alliancetypes "github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -40,7 +34,13 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	tmconfig "github.com/cometbft/cometbft/config"
+	tmrand "github.com/cometbft/cometbft/libs/rand"
+	"github.com/cometbft/cometbft/types"
+	tmtime "github.com/cometbft/cometbft/types/time"
+
 	"github.com/terra-money/alliance/app"
+	alliancetypes "github.com/terra-money/alliance/x/alliance/types"
 )
 
 var (

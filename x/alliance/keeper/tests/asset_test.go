@@ -4,17 +4,18 @@ import (
 	"testing"
 	"time"
 
-	abcitypes "github.com/cometbft/cometbft/abci/types"
+	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance"
 	"github.com/terra-money/alliance/x/alliance/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestRebalancingAfterRewardsRateChange(t *testing.T) {

@@ -3,9 +3,9 @@ package keeper
 import (
 	"time"
 
-	"github.com/terra-money/alliance/x/alliance/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 func (k Keeper) RewardDelayTime(ctx sdk.Context) (res time.Duration) {

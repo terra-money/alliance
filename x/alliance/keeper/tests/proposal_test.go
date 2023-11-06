@@ -4,12 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/terra-money/alliance/x/alliance/keeper"
-	"github.com/terra-money/alliance/x/alliance/types"
+	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/stretchr/testify/require"
+
+	"github.com/terra-money/alliance/x/alliance/keeper"
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 func TestCreateAlliance(t *testing.T) {

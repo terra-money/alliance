@@ -4,15 +4,15 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/terra-money/alliance/app"
+	allianceapp "github.com/terra-money/alliance/app"
 )
 
 // Hardcoded chainID for simulation.
@@ -51,14 +51,14 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app := app.New(logger,
+	app := allianceapp.New(logger,
 		db,
 		nil,
 		true,
 		map[int64]bool{},
-		app.DefaultNodeHome,
+		allianceapp.DefaultNodeHome,
 		simcli.FlagPeriodValue,
-		app.MakeTestEncodingConfig(),
+		allianceapp.MakeTestEncodingConfig(),
 		simtestutil.EmptyAppOptions{},
 		baseapp.SetChainID(simulationAppChainID),
 	)
@@ -107,14 +107,14 @@ func BenchmarkSimulation(b *testing.B) {
 		require.NoError(b, err)
 	})
 
-	encoding := app.MakeTestEncodingConfig()
+	encoding := allianceapp.MakeTestEncodingConfig()
 
-	app := app.New(logger,
+	app := allianceapp.New(logger,
 		db,
 		nil,
 		true,
 		map[int64]bool{},
-		app.DefaultNodeHome,
+		allianceapp.DefaultNodeHome,
 		0,
 		encoding,
 		simtestutil.EmptyAppOptions{},

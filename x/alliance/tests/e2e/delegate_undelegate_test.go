@@ -4,13 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/terra-money/alliance/x/alliance"
-
-	"github.com/terra-money/alliance/x/alliance/keeper"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/terra-money/alliance/x/alliance"
+	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 

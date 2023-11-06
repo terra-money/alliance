@@ -3,10 +3,11 @@ package tests_test
 import (
 	"testing"
 
-	"github.com/terra-money/alliance/app"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/terra-money/alliance/app"
 )
 
 func createTestContext(t *testing.T) (*app.App, sdk.Context) {

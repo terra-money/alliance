@@ -14,7 +14,7 @@ func Handler(title, specURL string) http.HandlerFunc {
 	t, _ := template.ParseFS(index, "index.tpl")
 
 	return func(w http.ResponseWriter, req *http.Request) {
-		t.Execute(w, struct { //nolint:errcheck
+		t.Execute(w, struct { //nolint:errcheck,revive // ignore error for now
 			Title string
 			URL   string
 		}{

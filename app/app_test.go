@@ -3,11 +3,13 @@ package app
 import (
 	"testing"
 
-	db "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
+	"github.com/stretchr/testify/require"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/stretchr/testify/require"
+
+	db "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 )
 
 func TestAppExportAndBlockedAddrs(t *testing.T) {

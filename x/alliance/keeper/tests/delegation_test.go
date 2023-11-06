@@ -4,17 +4,18 @@ import (
 	"testing"
 	"time"
 
-	test_helpers "github.com/terra-money/alliance/app"
-	"github.com/terra-money/alliance/x/alliance"
-	"github.com/terra-money/alliance/x/alliance/keeper"
-	"github.com/terra-money/alliance/x/alliance/types"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
+
+	test_helpers "github.com/terra-money/alliance/app"
+	"github.com/terra-money/alliance/x/alliance"
+	"github.com/terra-money/alliance/x/alliance/keeper"
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 var (

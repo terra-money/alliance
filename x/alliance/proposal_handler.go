@@ -1,13 +1,14 @@
 package alliance
 
 import (
-	"github.com/terra-money/alliance/x/alliance/keeper"
-	"github.com/terra-money/alliance/x/alliance/types"
-
 	cosmoserrors "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
+	"github.com/terra-money/alliance/x/alliance/keeper"
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 func NewAllianceProposalHandler(k keeper.Keeper) govtypes.Handler {

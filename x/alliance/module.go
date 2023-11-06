@@ -5,19 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	simulation2 "github.com/terra-money/alliance/x/alliance/tests/simulation"
-
-	// this line is used by starport scaffolding # 1
-
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-
-	"github.com/terra-money/alliance/x/alliance/client/cli"
-	"github.com/terra-money/alliance/x/alliance/keeper"
-	migrationsv4 "github.com/terra-money/alliance/x/alliance/migrations/v4"
-	"github.com/terra-money/alliance/x/alliance/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,6 +14,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+
+	"github.com/terra-money/alliance/x/alliance/client/cli"
+	"github.com/terra-money/alliance/x/alliance/keeper"
+	migrationsv4 "github.com/terra-money/alliance/x/alliance/migrations/v4"
+	simulation2 "github.com/terra-money/alliance/x/alliance/tests/simulation"
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 var (

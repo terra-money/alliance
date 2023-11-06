@@ -4,17 +4,19 @@ import (
 	"testing"
 	"time"
 
-	test_helpers "github.com/terra-money/alliance/app"
-	"github.com/terra-money/alliance/x/alliance/keeper"
-	"github.com/terra-money/alliance/x/alliance/types"
+	"github.com/stretchr/testify/require"
 
-	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
+
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+
+	test_helpers "github.com/terra-money/alliance/app"
+	"github.com/terra-money/alliance/x/alliance/keeper"
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 func TestRewardPoolAndGlobalIndex(t *testing.T) {

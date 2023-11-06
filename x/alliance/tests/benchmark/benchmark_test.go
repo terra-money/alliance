@@ -6,16 +6,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/terra-money/alliance/x/alliance/tests/benchmark"
+	"github.com/stretchr/testify/require"
 
-	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/stretchr/testify/require"
+
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance"
+	"github.com/terra-money/alliance/x/alliance/tests/benchmark"
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 

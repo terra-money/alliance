@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/terra-money/alliance/x/alliance/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 type QueryServer struct {

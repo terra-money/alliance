@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/terra-money/alliance/x/alliance/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's

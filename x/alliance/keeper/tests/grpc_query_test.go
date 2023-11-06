@@ -4,17 +4,19 @@ import (
 	"testing"
 	"time"
 
-	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/math"
-	abcitypes "github.com/cometbft/cometbft/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
+
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance/keeper"

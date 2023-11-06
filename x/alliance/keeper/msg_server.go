@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 
-	"github.com/terra-money/alliance/x/alliance/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/terra-money/alliance/x/alliance/types"
 )
 
 type MsgServer struct {
