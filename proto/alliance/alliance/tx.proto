@@ -157,6 +157,11 @@ message MsgUpdateAlliance {
     (gogoproto.nullable)   = false,
     (gogoproto.stdduration) = true
   ];
+
+  // set a bound of weight range to limit how much reward weights can scale.
+  RewardWeightRange reward_weight_range = 7 [
+    (gogoproto.nullable)   = false
+  ];
 }
 
 message MsgUpdateAllianceResponse {}

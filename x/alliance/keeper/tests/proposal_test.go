@@ -106,10 +106,14 @@ func TestUpdateAlliance(t *testing.T) {
 
 	// WHEN
 	updateErr := app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
-		Title:                "",
-		Description:          "",
-		Denom:                "uluna",
-		RewardWeight:         sdk.NewDec(6),
+		Title:        "",
+		Description:  "",
+		Denom:        "uluna",
+		RewardWeight: sdk.NewDec(11),
+		RewardWeightRange: types.RewardWeightRange{
+			Min: sdk.NewDec(0),
+			Max: sdk.NewDec(11),
+		},
 		TakeRate:             sdk.NewDec(7),
 		RewardChangeInterval: 0,
 		RewardChangeRate:     sdk.ZeroDec(),
@@ -123,8 +127,8 @@ func TestUpdateAlliance(t *testing.T) {
 		Alliances: []types.AllianceAsset{
 			{
 				Denom:                "uluna",
-				RewardWeight:         sdk.NewDec(6),
-				RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(10)},
+				RewardWeight:         sdk.NewDec(11),
+				RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(11)},
 				TakeRate:             sdk.NewDec(7),
 				TotalTokens:          sdk.ZeroInt(),
 				TotalValidatorShares: sdk.NewDec(0),

@@ -644,6 +644,7 @@ GenesisState defines the module's genesis state.
 | `take_rate` | [string](#string) |  |  |
 | `reward_change_rate` | [string](#string) |  |  |
 | `reward_change_interval` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `reward_weight_range` | [RewardWeightRange](#alliance.alliance.RewardWeightRange) |  | set a bound of weight range to limit how much reward weights can scale. |
 
 
 
@@ -1368,6 +1369,7 @@ Params
 | `take_rate` | [string](#string) |  |  |
 | `reward_change_rate` | [string](#string) |  |  |
 | `reward_change_interval` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `reward_weight_range` | [RewardWeightRange](#alliance.alliance.RewardWeightRange) |  | set a bound of weight range to limit how much reward weights can scale. |
 
 
 

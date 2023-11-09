@@ -189,6 +189,7 @@ func (m MsgServer) UpdateAlliance(ctx context.Context, msg *types.MsgUpdateAllia
 	if !found {
 		return nil, types.ErrUnknownAsset
 	}
+	asset.RewardWeightRange = msg.RewardWeightRange
 	if asset.RewardWeightRange.Min.GT(msg.RewardWeight) || asset.RewardWeightRange.Max.LT(msg.RewardWeight) {
 		return nil, types.ErrRewardWeightOutOfBound
 	}
