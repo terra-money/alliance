@@ -85,7 +85,7 @@ func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgUpdateAllianceProposal(title, description, denom string, rewardWeight, takeRate sdk.Dec, rewardChangeRate sdk.Dec, rewardChangeInterval time.Duration) govtypes.Content {
+func NewMsgUpdateAllianceProposal(title, description, denom string, rewardWeight sdk.Dec, rewardWeightRange RewardWeightRange, takeRate sdk.Dec, rewardChangeRate sdk.Dec, rewardChangeInterval time.Duration) govtypes.Content {
 	return &MsgUpdateAllianceProposal{
 		Title:                title,
 		Description:          description,
@@ -94,6 +94,7 @@ func NewMsgUpdateAllianceProposal(title, description, denom string, rewardWeight
 		TakeRate:             takeRate,
 		RewardChangeRate:     rewardChangeRate,
 		RewardChangeInterval: rewardChangeInterval,
+		RewardWeightRange:    rewardWeightRange,
 	}
 }
 func (m *MsgUpdateAllianceProposal) GetTitle() string       { return m.Title }
@@ -120,6 +121,19 @@ func (m *MsgUpdateAllianceProposal) ValidateBasic() error {
 
 	if m.RewardChangeInterval < 0 {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeInterval must be strictly a positive number")
+	}
+
+	if m.RewardWeightRange.Min.IsNil() || m.RewardWeightRange.Min.LT(sdk.ZeroDec()) ||
+		m.RewardWeightRange.Max.IsNil() || m.RewardWeightRange.Max.LT(sdk.ZeroDec()) {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight min and max must be zero or a positive number")
+	}
+
+	if m.RewardWeightRange.Min.GT(m.RewardWeightRange.Max) {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight min must be less or equal to rewardWeight max")
+	}
+
+	if m.RewardWeight.LT(m.RewardWeightRange.Min) || m.RewardWeight.GT(m.RewardWeightRange.Max) {
+		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be bounded in RewardWeightRange")
 	}
 
 	return nil
