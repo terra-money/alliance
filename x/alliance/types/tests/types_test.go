@@ -66,7 +66,7 @@ func TestProposalsContent(t *testing.T) {
 			title: "Alliance2",
 			desc:  "Alliance with 2",
 			typ:   "msg_update_alliance_proposal",
-			str:   "title:\"Alliance2\" description:\"Alliance with 2\" denom:\"ibc/denom2\" reward_weight:\"2000000000000000000\" take_rate:\"2000000000000000000\" reward_change_rate:\"2000000000000000000\" reward_change_interval:<seconds:3600 > ",
+			str:   "title:\"Alliance2\" description:\"Alliance with 2\" denom:\"ibc/denom2\" reward_weight:\"2000000000000000000\" take_rate:\"2000000000000000000\" reward_change_rate:\"2000000000000000000\" reward_change_interval:<seconds:3600 > reward_weight_range:<min:\"0\" max:\"5000000000000000000\" > ",
 		},
 		"msg_delete_alliance_proposal": {
 			p:     types.NewMsgDeleteAllianceProposal("test", "abcd", "ibc/denom"),
