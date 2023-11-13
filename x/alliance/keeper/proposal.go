@@ -42,6 +42,8 @@ func (k Keeper) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAlliance
 	if !found {
 		return status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", req.Denom)
 	}
+
+	asset.RewardWeightRange = req.RewardWeightRange
 	if asset.RewardWeightRange.Min.GT(req.RewardWeight) || asset.RewardWeightRange.Max.LT(req.RewardWeight) {
 		return types.ErrRewardWeightOutOfBound
 	}
