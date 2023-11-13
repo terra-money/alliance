@@ -28,6 +28,7 @@ func (k Keeper) UpdateAlliance(ctx context.Context, req *types.MsgUpdateAlliance
 		RewardWeight:         req.RewardWeight,
 		TakeRate:             req.TakeRate,
 		RewardChangeRate:     req.RewardChangeRate,
+		RewardWeightRange:    req.RewardWeightRange,
 		RewardChangeInterval: req.RewardChangeInterval,
 	})
 	return err

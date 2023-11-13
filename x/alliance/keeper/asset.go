@@ -82,6 +82,7 @@ func (k Keeper) UpdateAllianceAsset(ctx sdk.Context, newAsset types.AllianceAsse
 	asset.RewardChangeRate = newAsset.RewardChangeRate
 	asset.RewardChangeInterval = newAsset.RewardChangeInterval
 	asset.LastRewardChangeTime = newAsset.LastRewardChangeTime
+	asset.RewardWeightRange = newAsset.RewardWeightRange
 	k.SetAsset(ctx, asset)
 
 	return nil
