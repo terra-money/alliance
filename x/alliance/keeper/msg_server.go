@@ -218,7 +218,10 @@ func (m MsgServer) DeleteAlliance(ctx context.Context, msg *types.MsgDeleteAllia
 	}
 
 	if asset.TotalTokens.GT(math.ZeroInt()) {
-		return nil, types.ErrActiveDelegationsExists
+		err := m.UnbondAllTokensForAlliance(sdkCtx, asset.Denom)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err := m.DeleteAsset(sdkCtx, asset)

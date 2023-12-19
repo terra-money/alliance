@@ -8,6 +8,21 @@ import (
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
+func (k Keeper) UnbondAllTokensForAlliance(ctx sdk.Context, denom string) error {
+	// Iterate over all delegations and add them to the delegationsToUnbond slice
+	delegationsToUnbond := make([]types.Delegation, 0)
+	k.IterateDelegations(ctx, func(delegation types.Delegation) (stop bool) {
+		if delegation.Denom == denom {
+			delegationsToUnbond = append(delegationsToUnbond, delegation)
+
+			return false
+		}
+		return false
+	})
+
+	return nil
+}
+
 // CompleteUnbondings Go through all queued undelegations and send the tokens to the delAddrs
 func (k Keeper) CompleteUnbondings(ctx sdk.Context) error {
 	store := ctx.KVStore(k.storeKey)

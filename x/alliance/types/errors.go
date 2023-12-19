@@ -7,10 +7,9 @@ import (
 var (
 	ErrInvalidGenesisState = sdkerrors.Register(ModuleName, 0, "invalid genesis state")
 
-	ErrEmptyValidatorAddr      = sdkerrors.Register(ModuleName, 10, "empty validator address")
-	ErrValidatorNotFound       = sdkerrors.Register(ModuleName, 11, "validator not found")
-	ErrDelegationNotFound      = sdkerrors.Register(ModuleName, 12, "delegation not found")
-	ErrActiveDelegationsExists = sdkerrors.Register(ModuleName, 13, "active delegations exists")
+	ErrEmptyValidatorAddr = sdkerrors.Register(ModuleName, 10, "empty validator address")
+	ErrValidatorNotFound  = sdkerrors.Register(ModuleName, 11, "validator not found")
+	ErrDelegationNotFound = sdkerrors.Register(ModuleName, 12, "delegation not found")
 
 	ErrZeroDelegations    = sdkerrors.Register(ModuleName, 20, "there are no delegations yet")
 	ErrInsufficientTokens = sdkerrors.Register(ModuleName, 21, "insufficient tokens")
