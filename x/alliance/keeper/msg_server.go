@@ -189,6 +189,10 @@ func (m MsgServer) UpdateAlliance(ctx context.Context, msg *types.MsgUpdateAllia
 	if !found {
 		return nil, types.ErrUnknownAsset
 	}
+	if asset.IsDissolving {
+		return nil, types.ErrAssetDissolving
+	}
+
 	asset.RewardWeightRange = msg.RewardWeightRange
 	if asset.RewardWeightRange.Min.GT(msg.RewardWeight) || asset.RewardWeightRange.Max.LT(msg.RewardWeight) {
 		return nil, types.ErrRewardWeightOutOfBound
@@ -216,17 +220,18 @@ func (m MsgServer) DeleteAlliance(ctx context.Context, msg *types.MsgDeleteAllia
 	if !found {
 		return nil, types.ErrUnknownAsset
 	}
+	if asset.IsDissolving {
+		return nil, types.ErrAssetDissolving
+	}
 
 	if asset.TotalTokens.GT(math.ZeroInt()) {
-		err := m.UnbondAllTokensForAlliance(sdkCtx, asset.Denom)
+		asset.IsDissolving = true
+		m.SetAsset(sdkCtx, asset)
+	} else {
+		err := m.DeleteAsset(sdkCtx, asset)
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	err := m.DeleteAsset(sdkCtx, asset)
-	if err != nil {
-		return nil, err
 	}
 
 	return &types.MsgDeleteAllianceResponse{}, nil

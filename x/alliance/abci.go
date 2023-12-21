@@ -15,6 +15,11 @@ import (
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, ctx.BlockTime(), telemetry.MetricKeyEndBlocker)
 	k.CompleteRedelegations(ctx)
+
+	if err := k.BeginUnbondingsForDissolvingAlliances(ctx); err != nil {
+		panic(fmt.Errorf("failed to begin undelegations from x/alliance module: %s", err))
+	}
+
 	if err := k.CompleteUnbondings(ctx); err != nil {
 		panic(fmt.Errorf("failed to complete undelegations from x/alliance module: %s", err))
 	}

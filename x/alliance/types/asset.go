@@ -23,6 +23,7 @@ func NewAllianceAsset(denom string, rewardWeight sdk.Dec, minRewardWeight sdk.De
 		RewardChangeInterval: time.Duration(0),
 		LastRewardChangeTime: rewardStartTime,
 		IsInitialized:        false,
+		IsDissolving:         false,
 	}
 }
 

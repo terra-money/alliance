@@ -24,6 +24,10 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 		return nil, status.Errorf(codes.NotFound, "asset with denom: %s does not exist in alliance whitelist", coin.Denom)
 	}
 
+	if asset.IsDissolving {
+		return nil, types.ErrAssetDissolving
+	}
+
 	// for the AllianceDenomTwo.
 	// Check and send delegated tokens into the alliance module address
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, delAddr, types.ModuleName, sdk.NewCoins(coin))
@@ -76,6 +80,9 @@ func (k Keeper) Redelegate(ctx sdk.Context, delAddr sdk.AccAddress, srcVal types
 	asset, found := k.GetAssetByDenom(ctx, coin.Denom)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "Asset with denom: %s does not exist", coin.Denom)
+	}
+	if asset.IsDissolving {
+		return nil, types.ErrAssetDissolving
 	}
 
 	_, found = k.GetDelegation(ctx, delAddr, srcVal.GetOperator(), coin.Denom)

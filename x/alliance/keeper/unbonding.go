@@ -8,19 +8,48 @@ import (
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
-func (k Keeper) UnbondAllTokensForAlliance(ctx sdk.Context, denom string) error {
-	// Iterate over all delegations and add them to the delegationsToUnbond slice
-	delegationsToUnbond := make([]types.Delegation, 0)
-	k.IterateDelegations(ctx, func(delegation types.Delegation) (stop bool) {
-		if delegation.Denom == denom {
-			delegationsToUnbond = append(delegationsToUnbond, delegation)
+// BeginUnbondingsForDissolvingAlliances got thought all alliances, check if there is any alliance winding down
+// and if so, start the unbonding process for all delegations
+func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err error) {
+	assets := k.GetAllAssets(ctx)
+
+	amountOfDelegationsExecuted := 0
+	for _, asset := range assets {
+		if !asset.IsDissolving {
+			continue
+		}
+
+		k.IterateDelegations(ctx, func(delegation types.Delegation) (stop bool) {
+			// We should begin unbonding in batches of 50 at the time
+			// otherwise it can be too expensive to process
+			if amountOfDelegationsExecuted == 50 {
+				return true
+			}
+
+			if delegation.Denom == asset.Denom {
+				validator, fail := k.GetAllianceValidator(ctx, sdk.ValAddress(delegation.DelegatorAddress))
+				if err != nil {
+					err = fail
+					return true
+				}
+
+				coinsToUndelegate := types.GetDelegationTokensWithShares(delegation.Shares, validator, *asset)
+				_, fail = k.Undelegate(ctx, sdk.AccAddress(delegation.DelegatorAddress), validator, coinsToUndelegate)
+				if err != nil {
+					err = fail
+					return true
+				}
+			}
 
 			return false
-		}
-		return false
-	})
+		})
 
-	return nil
+		if err != nil {
+			return err
+		}
+	}
+
+	return err
 }
 
 // CompleteUnbondings Go through all queued undelegations and send the tokens to the delAddrs

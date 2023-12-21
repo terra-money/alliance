@@ -71,6 +71,8 @@ message AllianceAsset {
   RewardWeightRange reward_weight_range = 10 [(gogoproto.nullable) = false];
   // flag to check if an asset has completed the initialization process after the reward delay
   bool is_initialized = 11;
+  // flag used to dissolve an alliance asset
+  bool is_dissolving = 12;
 }
 
 message RewardWeightChangeSnapshot {
