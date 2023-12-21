@@ -178,6 +178,7 @@ key: denom value: AllianceAsset
 | `reward_weight_range` | [RewardWeightRange](#alliance.alliance.RewardWeightRange) |  | set a bound of weight range to limit how much reward weights can scale. |
 | `is_initialized` | [bool](#bool) |  | flag to check if an asset has completed the initialization process after the reward delay |
 | `is_dissolving` | [bool](#bool) |  | flag used to dissolve an alliance asset |
+| `alliance_dissolution_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | Timestamp when the latest alliance delegation will complete its undelegation and the alliance will be disolved. |
 
 
 

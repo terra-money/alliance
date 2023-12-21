@@ -65,14 +65,22 @@ message AllianceAsset {
   ];
   google.protobuf.Timestamp last_reward_change_time = 9 [
     (gogoproto.stdtime) = true,
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable) = false
   ];
   // set a bound of weight range to limit how much reward weights can scale.
   RewardWeightRange reward_weight_range = 10 [(gogoproto.nullable) = false];
   // flag to check if an asset has completed the initialization process after the reward delay
   bool is_initialized = 11;
+ 
   // flag used to dissolve an alliance asset
   bool is_dissolving = 12;
+  
+  // Timestamp when the latest alliance delegation will complete its undelegation and
+  // the alliance will be disolved.
+  google.protobuf.Timestamp alliance_dissolution_time = 13 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable)= true
+  ];
 }
 
 message RewardWeightChangeSnapshot {

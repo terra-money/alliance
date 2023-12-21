@@ -13,16 +13,25 @@ import (
 func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err error) {
 	assets := k.GetAllAssets(ctx)
 
-	amountOfDelegationsExecuted := 0
+	amountOfUndelegationsExecuted := 0
+
 	for _, asset := range assets {
 		if !asset.IsDissolving {
 			continue
+		}
+		assetDereference := *asset
+		if asset.AllianceDissolutionTime.Before(ctx.BlockTime()) {
+			err := k.DeleteAsset(ctx, assetDereference)
+			if err != nil {
+				return err
+			}
+			break
 		}
 
 		k.IterateDelegations(ctx, func(delegation types.Delegation) (stop bool) {
 			// We should begin unbonding in batches of 50 at the time
 			// otherwise it can be too expensive to process
-			if amountOfDelegationsExecuted == 50 {
+			if amountOfUndelegationsExecuted == 50 {
 				return true
 			}
 
@@ -33,12 +42,16 @@ func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err erro
 					return true
 				}
 
-				coinsToUndelegate := types.GetDelegationTokensWithShares(delegation.Shares, validator, *asset)
-				_, fail = k.Undelegate(ctx, sdk.AccAddress(delegation.DelegatorAddress), validator, coinsToUndelegate)
+				coinsToUndelegate := types.GetDelegationTokensWithShares(delegation.Shares, validator, assetDereference)
+				time, fail := k.Undelegate(ctx, sdk.AccAddress(delegation.DelegatorAddress), validator, coinsToUndelegate)
 				if err != nil {
 					err = fail
 					return true
 				}
+
+				asset.AllianceDissolutionTime = time
+				k.SetAsset(ctx, assetDereference)
+				amountOfUndelegationsExecuted++
 			}
 
 			return false
