@@ -8,24 +8,38 @@ import (
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
-// BeginUnbondingsForDissolvingAlliances got thought all alliances, check if there is any alliance winding down
-// and if so, start the unbonding process for all delegations
+// BeginUnbondingsForDissolvingAlliances iterates thought all alliances,
+// if there is any alliance being dissolved
+//   - when that specific alliance is being disslved it will first check if the
+//     AllianceDissolutionTime has been set and if it is in the past compared to
+//     the current block time the alliance will be deleted.
+//   - if the alliance is not initialized and is being dissolved it means that
+//     all alliance unbondings have been executed and no further comput needs to be done.
+//   - else iterate the delegations and begin the unbonding for all assets,
+//     setting always the last unbonding period for the latest unbonding executed
+//     as the AllianceDissolutionTime, so that we can keep track of when to delete the alliance.
 func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err error) {
 	assets := k.GetAllAssets(ctx)
-
-	amountOfUndelegationsExecuted := 0
 
 	for _, asset := range assets {
 		if !asset.IsDissolving {
 			continue
 		}
 		assetDereference := *asset
-		if asset.AllianceDissolutionTime.Before(ctx.BlockTime()) {
-			err := k.DeleteAsset(ctx, assetDereference)
-			if err != nil {
-				return err
+		amountOfUndelegationsExecuted := 0
+
+		if assetDereference.AllianceDissolutionTime != nil {
+			if ctx.BlockTime().After(*assetDereference.AllianceDissolutionTime) {
+				err := k.DeleteAsset(ctx, assetDereference)
+				if err != nil {
+					return err
+				}
+				continue
 			}
-			break
+		}
+
+		if !assetDereference.IsInitialized && assetDereference.IsDissolving {
+			continue
 		}
 
 		k.IterateDelegations(ctx, func(delegation types.Delegation) (stop bool) {
@@ -35,7 +49,7 @@ func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err erro
 				return true
 			}
 
-			if delegation.Denom == asset.Denom {
+			if delegation.Denom == assetDereference.Denom {
 				validator, fail := k.GetAllianceValidator(ctx, sdk.ValAddress(delegation.DelegatorAddress))
 				if err != nil {
 					err = fail
@@ -59,6 +73,11 @@ func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err erro
 
 		if err != nil {
 			return err
+		}
+
+		if amountOfUndelegationsExecuted == 0 {
+			assetDereference.IsInitialized = false
+			k.SetAsset(ctx, assetDereference)
 		}
 	}
 
