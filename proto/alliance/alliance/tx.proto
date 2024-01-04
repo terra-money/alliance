@@ -1,6 +1,7 @@
 syntax = "proto3";
 package alliance.alliance;
 
+import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
@@ -24,6 +25,7 @@ service Msg {
 
 message MsgDelegate {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name) = "alliance/MsgDelegate";
 
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
@@ -39,6 +41,7 @@ message MsgDelegateResponse {}
 
 message MsgUndelegate {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name) = "alliance/MsgUndelegate";
 
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
@@ -55,6 +58,7 @@ message MsgUndelegateResponse {}
 
 message MsgRedelegate {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name) = "alliance/MsgRedelegate";
 
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
@@ -72,6 +76,7 @@ message MsgRedelegateResponse {}
 
 message MsgClaimDelegationRewards {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name) = "alliance/MsgClaimDelegationRewards";
 
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;

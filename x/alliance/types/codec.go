@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,10 +12,10 @@ import (
 )
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgDelegate{}, "alliance/MsgDelegate", nil)
-	cdc.RegisterConcrete(&MsgRedelegate{}, "alliance/MsgRedelegate", nil)
-	cdc.RegisterConcrete(&MsgUndelegate{}, "alliance/MsgUndelegate", nil)
-	cdc.RegisterConcrete(&MsgClaimDelegationRewards{}, "alliance/MsgClaimDelegationRewards", nil)
+	legacy.RegisterAminoMsg(cdc, &MsgDelegate{}, "alliance/MsgDelegate")
+	legacy.RegisterAminoMsg(cdc, &MsgRedelegate{}, "alliance/MsgRedelegate")
+	legacy.RegisterAminoMsg(cdc, &MsgUndelegate{}, "alliance/MsgUndelegate")
+	legacy.RegisterAminoMsg(cdc, &MsgClaimDelegationRewards{}, "alliance/MsgClaimDelegationRewards")
 
 	cdc.RegisterConcrete(&MsgCreateAllianceProposal{}, "alliance/MsgCreateAllianceProposal", nil)
 	cdc.RegisterConcrete(&MsgUpdateAllianceProposal{}, "alliance/MsgUpdateAllianceProposal", nil)
