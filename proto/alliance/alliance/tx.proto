@@ -8,6 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "alliance/alliance/params.proto";
 import "alliance/alliance/alliance.proto";
 import "google/protobuf/duration.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/terra-money/alliance/x/alliance/types";
 
@@ -24,6 +25,7 @@ service Msg {
 
 message MsgDelegate {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "alliance/MsgDelegate";
 
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
@@ -39,6 +41,7 @@ message MsgDelegateResponse {}
 
 message MsgUndelegate {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "alliance/MsgUndelegate";
 
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
@@ -55,6 +58,7 @@ message MsgUndelegateResponse {}
 
 message MsgRedelegate {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "alliance/MsgRedelegate";
 
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
@@ -72,6 +76,7 @@ message MsgRedelegateResponse {}
 
 message MsgClaimDelegationRewards {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "alliance/MsgClaimDelegationRewards";
 
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
@@ -84,6 +89,7 @@ message MsgClaimDelegationRewardsResponse {}
 
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "alliance/MsgUpdateParams";
 
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   Params params    = 2 [(gogoproto.nullable) = false];
@@ -93,6 +99,7 @@ message MsgUpdateParamsResponse {}
 
 message MsgCreateAlliance {
   option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "alliance/MsgCreateAlliance";
 
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Denom of the asset. It could either be a native token or an IBC token
@@ -131,6 +138,7 @@ message MsgCreateAllianceResponse {}
 
 message MsgUpdateAlliance {
   option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "alliance/MsgUpdateAlliance";
 
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Denom of the asset. It could either be a native token or an IBC token
@@ -168,6 +176,7 @@ message MsgUpdateAllianceResponse {}
 
 message MsgDeleteAlliance {
   option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "alliance/MsgDeleteAlliance";
 
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string denom      = 2 [(gogoproto.moretags) = "yaml:\"denom\""];
