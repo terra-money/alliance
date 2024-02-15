@@ -14,14 +14,13 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-
 	"github.com/terra-money/alliance/x/alliance/client/cli"
 	"github.com/terra-money/alliance/x/alliance/keeper"
 	migrationsv4 "github.com/terra-money/alliance/x/alliance/migrations/v4"
 	migrationsv5 "github.com/terra-money/alliance/x/alliance/migrations/v5"
 	"github.com/terra-money/alliance/x/alliance/types"
 
+	"cosmossdk.io/core/appmodule"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -32,9 +31,13 @@ import (
 
 var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.EndBlockAppModule   = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
+	_ module.HasInvariants       = AppModule{}
+
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasEndBlocker = AppModule{}
 )
 
 type AppModuleBasic struct {
@@ -104,14 +107,15 @@ type AppModule struct {
 	subspace      paramstypes.Subspace // Legacy for migration only
 }
 
-func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, a.keeper)
+func (a AppModule) EndBlock(ctx context.Context) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return EndBlocker(sdkCtx, a.keeper)
 }
 
-func (a AppModule) InitGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
+func (a AppModule) InitGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec, message json.RawMessage) {
 	var genesis types.GenesisState
 	jsonCodec.MustUnmarshalJSON(message, &genesis)
-	return a.keeper.InitGenesis(ctx, &genesis)
+	a.keeper.InitGenesis(ctx, &genesis)
 }
 
 func (a AppModule) ExportGenesis(ctx sdk.Context, _ codec.JSONCodec) json.RawMessage {
@@ -149,10 +153,16 @@ func (a AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weighte
 	return nil
 }
 
-func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
+func (a AppModule) RegisterStoreDecoder(registry simtypes.StoreDecoderRegistry) {
 	registry[types.StoreKey] = simulation2.NewDecodeStore(a.cdc)
 }
 
 func (a AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return simulation2.WeightedOperations(a.pcdc, a.accountKeeper, a.bankKeeper, a.stakingKeeper, a.keeper)
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
