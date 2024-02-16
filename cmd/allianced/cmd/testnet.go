@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"net"
 	"os"
 	"path/filepath"
@@ -296,7 +298,7 @@ func initTestnetFiles(
 
 		valTokens := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
-			sdk.ValAddress(addr),
+			addr.String(),
 			valPubKeys[i],
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
@@ -325,7 +327,7 @@ func initTestnetFiles(
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
 
-		if err := tx.Sign(txFactory, nodeDirName, txBuilder, true); err != nil {
+		if err := tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true); err != nil {
 			return err
 		}
 
@@ -395,7 +397,7 @@ func initGenFiles(
 	var mintGenState minttypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
 	minterParams := mintGenState.GetMinter()
-	minterParams.Inflation = sdk.NewDecWithPrec(50, 2)
+	minterParams.Inflation = math.LegacyNewDecWithPrec(50, 2)
 	mintGenState.Minter = minterParams
 	mintParams := mintGenState.GetParams()
 	mintParams.InflationMax = math.LegacyNewDec(1)
@@ -463,7 +465,7 @@ func collectGenFiles(
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
 		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, nodeID, valPubKey)
 
-		genDoc, err := types.GenesisDocFromFile(nodeConfig.GenesisFile())
+		appGen, err := genutiltypes.AppGenesisFromFile(nodeConfig.GenesisFile())
 		if err != nil {
 			return err
 		}
@@ -473,9 +475,10 @@ func collectGenFiles(
 			clientCtx.TxConfig,
 			nodeConfig,
 			initCfg,
-			*genDoc,
+			appGen,
 			genBalIterator,
 			genutiltypes.DefaultMessageValidator,
+			authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		)
 		if err != nil {
 			return err
@@ -547,7 +550,7 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 	networkConfig.SigningAlgo = args.algo
 	networkConfig.MinGasPrices = args.minGasPrices
 	networkConfig.NumValidators = args.numValidators
-	networkConfig.EnableTMLogging = args.enableLogging
+	networkConfig.EnableLogging = args.enableLogging
 	networkConfig.RPCAddress = args.rpcAddress
 	networkConfig.APIAddress = args.apiAddress
 	networkConfig.GRPCAddress = args.grpcAddress

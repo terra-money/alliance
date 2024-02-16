@@ -55,13 +55,13 @@ func TestDelegateThenTakeRateThenUndelegate(t *testing.T) {
 
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, "test")
 
-	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], val0.GetOperator(), "test")
+	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], vals[0], "test")
 	require.True(t, found)
 	tokens := types.GetDelegationTokens(del0, val0, asset)
 	_, err = app.AllianceKeeper.Undelegate(ctx, dels[0], val0, tokens)
 	require.NoError(t, err)
 
-	_, found = app.AllianceKeeper.GetDelegation(ctx, dels[0], val0.GetOperator(), "test")
+	_, found = app.AllianceKeeper.GetDelegation(ctx, dels[0], vals[0], "test")
 	require.False(t, found)
 
 	val0, err = app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
@@ -113,13 +113,13 @@ func TestDelegateThenTakeRateThenRedelegate(t *testing.T) {
 
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, "test")
 
-	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], val0.GetOperator(), "test")
+	del0, found := app.AllianceKeeper.GetDelegation(ctx, dels[0], vals[0], "test")
 	require.True(t, found)
 	tokens := types.GetDelegationTokens(del0, val0, asset)
 	_, err = app.AllianceKeeper.Redelegate(ctx, dels[0], val0, val1, tokens)
 	require.NoError(t, err)
 
-	_, found = app.AllianceKeeper.GetDelegation(ctx, dels[0], val0.GetOperator(), "test")
+	_, found = app.AllianceKeeper.GetDelegation(ctx, dels[0], vals[0], "test")
 	require.False(t, found)
 
 	val0, err = app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
@@ -155,9 +155,10 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// Set tax and rewards to be zero for easier calculation
-	distParams := app.DistrKeeper.GetParams(ctx)
+	distParams, err := app.DistrKeeper.Params.Get(ctx)
+	require.NoError(t, err)
 	distParams.CommunityTax = math.LegacyZeroDec()
-	err := app.DistrKeeper.SetParams(ctx, distParams)
+	err = app.DistrKeeper.Params.Set(ctx, distParams)
 	require.NoError(t, err)
 
 	user1 := dels[0]
@@ -183,7 +184,7 @@ func TestDelegatingASmallAmount(t *testing.T) {
 
 	res, err := queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),
-		ValidatorAddr: val1.GetOperator().String(),
+		ValidatorAddr: val1.GetOperator(),
 		Denom:         allianceAsset2,
 		Pagination:    nil,
 	})
@@ -198,7 +199,7 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	// User should have everything withdrawn
-	_, found := app.AllianceKeeper.GetDelegation(ctx, user1, val1.GetOperator(), allianceAsset2)
+	_, found := app.AllianceKeeper.GetDelegation(ctx, user1, vals[0], allianceAsset2)
 	require.False(t, found)
 
 	// Delegate again
@@ -217,7 +218,7 @@ func TestDelegatingASmallAmount(t *testing.T) {
 
 	res, err = queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),
-		ValidatorAddr: val1.GetOperator().String(),
+		ValidatorAddr: val1.GetOperator(),
 		Denom:         allianceAsset2,
 		Pagination:    nil,
 	})
@@ -230,12 +231,12 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	// User should have everything withdrawn
-	_, found = app.AllianceKeeper.GetDelegation(ctx, user1, val1.GetOperator(), allianceAsset2)
+	_, found = app.AllianceKeeper.GetDelegation(ctx, user1, vals[0], allianceAsset2)
 	require.False(t, found)
 
 	res, err = queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),
-		ValidatorAddr: val1.GetOperator().String(),
+		ValidatorAddr: val1.GetOperator(),
 		Denom:         allianceAsset2,
 		Pagination:    nil,
 	})
@@ -247,14 +248,14 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	unbondings, err := app.AllianceKeeper.GetUnbondingsByDenomAndDelegator(ctx, allianceAsset2, user1)
 	require.NoError(t, err)
 	require.True(t, len(unbondings) == 1)
-	require.Equal(t, val1.GetOperator().String(), unbondings[0].ValidatorAddress)
+	require.Equal(t, val1.GetOperator(), unbondings[0].ValidatorAddress)
 	require.Equal(t, math.NewInt(100), unbondings[0].Amount)
 
 	// Query the unbondings in progress
-	unbondings, err = app.AllianceKeeper.GetUnbondings(ctx, allianceAsset2, user1, val1.GetOperator())
+	unbondings, err = app.AllianceKeeper.GetUnbondings(ctx, allianceAsset2, user1, vals[0])
 	require.NoError(t, err)
 	require.True(t, len(unbondings) == 1)
-	require.Equal(t, val1.GetOperator().String(), unbondings[0].ValidatorAddress)
+	require.Equal(t, val1.GetOperator(), unbondings[0].ValidatorAddress)
 	require.Equal(t, math.NewInt(100), unbondings[0].Amount)
 }
 
@@ -280,10 +281,10 @@ func TestDelegateAndUndelegateWithSmallAmounts(t *testing.T) {
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// Set tax and rewards to be zero for easier calculation
-	distParams := app.DistrKeeper.GetParams(ctx)
+	distParams, err := app.DistrKeeper.Params.Get(ctx)
+	require.NoError(t, err)
 	distParams.CommunityTax = math.LegacyZeroDec()
-
-	err := app.DistrKeeper.SetParams(ctx, distParams)
+	err = app.DistrKeeper.Params.Set(ctx, distParams)
 	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
@@ -308,7 +309,7 @@ func TestDelegateAndUndelegateWithSmallAmounts(t *testing.T) {
 
 	res, err := queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),
-		ValidatorAddr: val1.GetOperator().String(),
+		ValidatorAddr: val1.GetOperator(),
 		Denom:         allianceAsset2,
 		Pagination:    nil,
 	})
@@ -347,10 +348,10 @@ func TestUnDelegatingSlightlyMoreCoin(t *testing.T) {
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// Set tax and rewards to be zero for easier calculation
-	distParams := app.DistrKeeper.GetParams(ctx)
+	distParams, err := app.DistrKeeper.Params.Get(ctx)
+	require.NoError(t, err)
 	distParams.CommunityTax = math.LegacyZeroDec()
-
-	err := app.DistrKeeper.SetParams(ctx, distParams)
+	err = app.DistrKeeper.Params.Set(ctx, distParams)
 	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
@@ -374,7 +375,7 @@ func TestUnDelegatingSlightlyMoreCoin(t *testing.T) {
 	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 6)).WithBlockHeight(2)
 	res, err := queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),
-		ValidatorAddr: val1.GetOperator().String(),
+		ValidatorAddr: val1.GetOperator(),
 		Denom:         allianceAsset2,
 		Pagination:    nil,
 	})
@@ -412,10 +413,10 @@ func TestReDelegatingSlightlyMoreCoin(t *testing.T) {
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// Set tax and rewards to be zero for easier calculation
-	distParams := app.DistrKeeper.GetParams(ctx)
+	distParams, err := app.DistrKeeper.Params.Get(ctx)
+	require.NoError(t, err)
 	distParams.CommunityTax = math.LegacyZeroDec()
-
-	err := app.DistrKeeper.SetParams(ctx, distParams)
+	err = app.DistrKeeper.Params.Set(ctx, distParams)
 	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
@@ -439,7 +440,7 @@ func TestReDelegatingSlightlyMoreCoin(t *testing.T) {
 	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 6)).WithBlockHeight(2)
 	res, err := queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),
-		ValidatorAddr: val1.GetOperator().String(),
+		ValidatorAddr: val1.GetOperator(),
 		Denom:         allianceAsset2,
 		Pagination:    nil,
 	})
@@ -472,10 +473,10 @@ func TestDustValidatorSharesAfterUndelegationError(t *testing.T) {
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// Set tax and rewards to be zero for easier calculation
-	distParams := app.DistrKeeper.GetParams(ctx)
+	distParams, err := app.DistrKeeper.Params.Get(ctx)
+	require.NoError(t, err)
 	distParams.CommunityTax = math.LegacyZeroDec()
-
-	err := app.DistrKeeper.SetParams(ctx, distParams)
+	err = app.DistrKeeper.Params.Set(ctx, distParams)
 	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
@@ -504,7 +505,7 @@ func TestDustValidatorSharesAfterUndelegationError(t *testing.T) {
 
 	res, err := queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),
-		ValidatorAddr: val1.GetOperator().String(),
+		ValidatorAddr: val1.GetOperator(),
 		Denom:         allianceAsset2,
 		Pagination:    nil,
 	})
@@ -541,10 +542,10 @@ func TestDustValidatorSharesAfterRedelegationError(t *testing.T) {
 	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 
 	// Set tax and rewards to be zero for easier calculation
-	distParams := app.DistrKeeper.GetParams(ctx)
+	distParams, err := app.DistrKeeper.Params.Get(ctx)
+	require.NoError(t, err)
 	distParams.CommunityTax = math.LegacyZeroDec()
-
-	err := app.DistrKeeper.SetParams(ctx, distParams)
+	err = app.DistrKeeper.Params.Set(ctx, distParams)
 	require.NoError(t, err)
 
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, vals[0])
@@ -573,7 +574,7 @@ func TestDustValidatorSharesAfterRedelegationError(t *testing.T) {
 
 	res, err := queryServer.AllianceDelegation(ctx, &types.QueryAllianceDelegationRequest{
 		DelegatorAddr: user1.String(),
-		ValidatorAddr: val1.GetOperator().String(),
+		ValidatorAddr: val1.GetOperator(),
 		Denom:         allianceAsset2,
 		Pagination:    nil,
 	})

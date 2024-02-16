@@ -1,6 +1,7 @@
 package benchmark_test
 
 import (
+	"cosmossdk.io/math"
 	"math/rand"
 	"os"
 	"testing"
@@ -60,7 +61,6 @@ func TestRunBenchmarks(t *testing.T) {
 					Address: cons,
 					Power:   votingPower,
 				},
-				SignedLastBlock: r.Float64() < VoteRate,
 			})
 		}
 
@@ -168,7 +168,7 @@ func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, v
 	dstValAddr := getRandomValAddress(r, vals, srcValAddr)
 	dstValidator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, dstValAddr)
 
-	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, srcValidator.GetOperator(), asset.Denom)
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, srcValAddr, asset.Denom)
 	if !found {
 		return
 	}
@@ -215,7 +215,7 @@ func undelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand) {
 	validator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 	asset, _ := app.AllianceKeeper.GetAssetByDenom(ctx, delegation.Denom)
 
-	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, validator.GetOperator(), asset.Denom)
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, valAddr, asset.Denom)
 	if !found {
 		return
 	}
@@ -243,7 +243,7 @@ func claimRewardsOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand)
 	valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 	validator, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 
-	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, validator.GetOperator(), delegation.Denom)
+	delegation, found := app.AllianceKeeper.GetDelegation(ctx, delAddr, valAddr, delegation.Denom)
 	if !found {
 		return
 	}

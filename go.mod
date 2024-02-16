@@ -10,7 +10,6 @@ require (
 	cosmossdk.io/log v1.3.0
 	cosmossdk.io/math v1.2.0
 	cosmossdk.io/store v1.0.2
-	cosmossdk.io/tools/rosetta v0.2.1
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.1.0
 	cosmossdk.io/x/upgrade v0.1.0
@@ -64,7 +63,6 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20231102162011-844f0582c2eb // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cometbft/cometbft-db v0.9.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
@@ -72,7 +70,6 @@ require (
 	github.com/cosmos/iavl v1.0.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
-	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect

@@ -1,12 +1,12 @@
 package bindings_test
 
 import (
+	"cosmossdk.io/math"
 	"encoding/json"
 	"testing"
 
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -18,7 +18,7 @@ import (
 
 func createTestContext(t *testing.T) (*app.App, sdk.Context) {
 	app := app.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	return app, ctx
 }
 
@@ -77,7 +77,8 @@ func TestDelegationQuery(t *testing.T) {
 			types.NewAllianceAsset(AllianceDenom, math.LegacyNewDec(2), math.LegacyZeroDec(), math.LegacyNewDec(5), math.LegacyNewDec(0), genesisTime),
 		},
 	})
-	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	delegations, err := app.StakingKeeper.GetAllDelegations(ctx)
+	require.NoError(t, err)
 	require.Len(t, delegations, 1)
 	// All the addresses needed
 	delAddr, err := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
@@ -94,7 +95,8 @@ func TestDelegationQuery(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check current total staked tokens
-	totalBonded := app.StakingKeeper.TotalBondedTokens(ctx)
+	totalBonded, err := app.StakingKeeper.TotalBondedTokens(ctx)
+	require.NoError(t, err)
 	require.Equal(t, math.NewInt(1000_000), totalBonded)
 
 	// Delegate
@@ -107,7 +109,7 @@ func TestDelegationQuery(t *testing.T) {
 	delegationQuery := bindingtypes.AllianceQuery{
 		Delegation: &bindingtypes.Delegation{
 			Delegator: delAddr.String(),
-			Validator: val.GetOperator().String(),
+			Validator: val.GetOperator(),
 			Denom:     AllianceDenom,
 		},
 	}
@@ -122,7 +124,7 @@ func TestDelegationQuery(t *testing.T) {
 
 	require.Equal(t, bindingtypes.DelegationResponse{
 		Delegator: delAddr.String(),
-		Validator: val.GetOperator().String(),
+		Validator: val.GetOperator(),
 		Denom:     AllianceDenom,
 		Amount: bindingtypes.Coin{
 			Denom:  AllianceDenom,
@@ -140,7 +142,8 @@ func TestDelegationRewardsQuery(t *testing.T) {
 			types.NewAllianceAsset(AllianceDenom, math.LegacyNewDec(2), math.LegacyZeroDec(), math.LegacyNewDec(5), math.LegacyNewDec(0), genesisTime),
 		},
 	})
-	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	delegations, err := app.StakingKeeper.GetAllDelegations(ctx)
+	require.NoError(t, err)
 	require.Len(t, delegations, 1)
 	// All the addresses needed
 	delAddr, err := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
@@ -157,7 +160,8 @@ func TestDelegationRewardsQuery(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check current total staked tokens
-	totalBonded := app.StakingKeeper.TotalBondedTokens(ctx)
+	totalBonded, err := app.StakingKeeper.TotalBondedTokens(ctx)
+	require.NoError(t, err)
 	require.Equal(t, math.NewInt(1000_000), totalBonded)
 
 	// Delegate
@@ -181,7 +185,7 @@ func TestDelegationRewardsQuery(t *testing.T) {
 	delegationQuery := bindingtypes.AllianceQuery{
 		DelegationRewards: &bindingtypes.DelegationRewards{
 			Delegator: delAddr.String(),
-			Validator: val.GetOperator().String(),
+			Validator: val.GetOperator(),
 			Denom:     AllianceDenom,
 		},
 	}

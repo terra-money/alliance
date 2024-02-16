@@ -252,7 +252,8 @@ type App struct {
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// mm is the module manager
-	mm *module.Manager
+	mm  *module.Manager
+	bmm module.BasicManager
 
 	// sm is the simulation manager
 	sm           *module.SimulationManager
@@ -578,6 +579,19 @@ func New(
 		alliancemodule.NewAppModule(appCodec, app.AllianceKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry, app.GetSubspace(alliancemoduletypes.ModuleName)),
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
+
+	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
+	// non-dependant module elements, such as codec registration and genesis verification.
+	// By default it is composed of all the module from the module manager.
+	// Additionally, app module basics can be overwritten by passing them as argument.
+	app.bmm = module.NewBasicManagerFromManager(
+		app.mm,
+		map[string]module.AppModuleBasic{
+			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+			govtypes.ModuleName: gov.NewAppModuleBasic(
+				[]govclient.ProposalHandler{},
+			),
+		})
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -907,4 +921,8 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 // SimulationManager implements the SimulationApp interface
 func (app *App) SimulationManager() *module.SimulationManager {
 	return app.sm
+}
+
+func (app *App) BasicModuleManager() module.BasicManager {
+	return app.bmm
 }

@@ -2,24 +2,24 @@ package cmd
 
 import (
 	"errors"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"io"
 	"os"
 
 	"github.com/spf13/cast"
 
+	"cosmossdk.io/log"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 
-	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -161,37 +161,46 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	cfg.Seal()
 	gentxModule := app.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 	a := appCreator{encodingConfig}
+
+	tempApp := app.New(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		map[int64]bool{},
+		app.DefaultNodeHome,
+		0,
+		encodingConfig,
+		app.EmptyAppOptions{},
+	)
+
+	mb := tempApp.BasicModuleManager()
+
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, gentxModule.GenTxValidator),
-		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
-		genesisCommand(encodingConfig),
+		genutilcli.InitCmd(mb, app.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, gentxModule.GenTxValidator, authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr)),
+		genutilcli.MigrateGenesisCmd(genutiltypes.MigrationMap{}),
+		genutilcli.GenTxCmd(mb, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr)),
+		genutilcli.ValidateGenesisCmd(mb),
+		genesisCommand(encodingConfig, tempApp.BasicModuleManager()),
 		tmcli.NewCompletionCmd(rootCmd, true),
-		NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		NewTestnetCmd(mb, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
-		config.Cmd(),
-		pruning.PruningCmd(a.newApp),
 	)
 
 	server.AddCommands(rootCmd, app.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
 		queryCommand(),
-		txCommand(),
-		keys.Commands(app.DefaultNodeHome),
+		txCommand(mb),
+		keys.Commands(),
 	)
-
-	// add rosetta
-	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 }
 
 // genesisCommand builds genesis-related `terrad genesis` command. Users may provide application specific commands as a parameter
-func genesisCommand(encodingConfig params.EncodingConfig, cmds ...*cobra.Command) *cobra.Command {
-	cmd := genutilcli.GenesisCoreCommand(encodingConfig.TxConfig, app.ModuleBasics, app.DefaultNodeHome)
+func genesisCommand(encodingConfig params.EncodingConfig, manager module.BasicManager, cmds ...*cobra.Command) *cobra.Command {
+	cmd := genutilcli.GenesisCoreCommand(encodingConfig.TxConfig, manager, app.DefaultNodeHome)
 
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
@@ -214,9 +223,7 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)
@@ -227,7 +234,7 @@ func queryCommand() *cobra.Command {
 	return cmd
 }
 
-func txCommand() *cobra.Command {
+func txCommand(manager module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -245,10 +252,8 @@ func txCommand() *cobra.Command {
 		authcmd.GetBroadcastCommand(),
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
-		authcmd.GetAuxToFeeCommand(),
 	)
-
-	app.ModuleBasics.AddTxCommands(cmd)
+	manager.AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
