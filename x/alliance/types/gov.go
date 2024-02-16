@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +28,7 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeDeleteAlliance)
 }
 
-func NewMsgCreateAllianceProposal(title, description, denom string, rewardWeight sdk.Dec, rewardWeightRange RewardWeightRange, takeRate sdk.Dec, rewardChangeRate sdk.Dec, rewardChangeInterval time.Duration) govtypes.Content {
+func NewMsgCreateAllianceProposal(title, description, denom string, rewardWeight math.LegacyDec, rewardWeightRange RewardWeightRange, takeRate math.LegacyDec, rewardChangeRate math.LegacyDec, rewardChangeInterval time.Duration) govtypes.Content {
 	return &MsgCreateAllianceProposal{
 		Title:                title,
 		Description:          description,
@@ -53,12 +54,12 @@ func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 		return err
 	}
 
-	if m.RewardWeight.IsNil() || m.RewardWeight.LT(sdk.ZeroDec()) {
+	if m.RewardWeight.IsNil() || m.RewardWeight.LT(math.LegacyZeroDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be zero or a positive number")
 	}
 
-	if m.RewardWeightRange.Min.IsNil() || m.RewardWeightRange.Min.LT(sdk.ZeroDec()) ||
-		m.RewardWeightRange.Max.IsNil() || m.RewardWeightRange.Max.LT(sdk.ZeroDec()) {
+	if m.RewardWeightRange.Min.IsNil() || m.RewardWeightRange.Min.LT(math.LegacyZeroDec()) ||
+		m.RewardWeightRange.Max.IsNil() || m.RewardWeightRange.Max.LT(math.LegacyZeroDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight min and max must be zero or a positive number")
 	}
 
@@ -70,7 +71,7 @@ func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be bounded in RewardWeightRange")
 	}
 
-	if m.TakeRate.IsNil() || m.TakeRate.IsNegative() || m.TakeRate.GTE(sdk.OneDec()) {
+	if m.TakeRate.IsNil() || m.TakeRate.IsNegative() || m.TakeRate.GTE(math.LegacyOneDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be more or equals to 0 but strictly less than 1")
 	}
 
@@ -85,7 +86,7 @@ func (m *MsgCreateAllianceProposal) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgUpdateAllianceProposal(title, description, denom string, rewardWeight sdk.Dec, rewardWeightRange RewardWeightRange, takeRate sdk.Dec, rewardChangeRate sdk.Dec, rewardChangeInterval time.Duration) govtypes.Content {
+func NewMsgUpdateAllianceProposal(title, description, denom string, rewardWeight math.LegacyDec, rewardWeightRange RewardWeightRange, takeRate math.LegacyDec, rewardChangeRate math.LegacyDec, rewardChangeInterval time.Duration) govtypes.Content {
 	return &MsgUpdateAllianceProposal{
 		Title:                title,
 		Description:          description,
@@ -107,11 +108,11 @@ func (m *MsgUpdateAllianceProposal) ValidateBasic() error {
 		return status.Errorf(codes.InvalidArgument, "Alliance denom must have a value")
 	}
 
-	if m.RewardWeight.IsNil() || m.RewardWeight.LT(sdk.ZeroDec()) {
+	if m.RewardWeight.IsNil() || m.RewardWeight.LT(math.LegacyZeroDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight must be zero or a positive number")
 	}
 
-	if m.TakeRate.IsNil() || m.TakeRate.IsNegative() || m.TakeRate.GTE(sdk.OneDec()) {
+	if m.TakeRate.IsNil() || m.TakeRate.IsNegative() || m.TakeRate.GTE(math.LegacyOneDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance takeRate must be more or equals to 0 but strictly less than 1")
 	}
 
@@ -123,8 +124,8 @@ func (m *MsgUpdateAllianceProposal) ValidateBasic() error {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardChangeInterval must be strictly a positive number")
 	}
 
-	if m.RewardWeightRange.Min.IsNil() || m.RewardWeightRange.Min.LT(sdk.ZeroDec()) ||
-		m.RewardWeightRange.Max.IsNil() || m.RewardWeightRange.Max.LT(sdk.ZeroDec()) {
+	if m.RewardWeightRange.Min.IsNil() || m.RewardWeightRange.Min.LT(math.LegacyZeroDec()) ||
+		m.RewardWeightRange.Max.IsNil() || m.RewardWeightRange.Max.LT(math.LegacyZeroDec()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance rewardWeight min and max must be zero or a positive number")
 	}
 

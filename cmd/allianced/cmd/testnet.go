@@ -301,9 +301,9 @@ func initTestnetFiles(
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(
-				sdk.NewDec(1).Quo(sdk.NewDec(100)),
-				sdk.NewDec(1).Quo(sdk.NewDec(100)),
-				sdk.NewDec(1).Quo(sdk.NewDec(100)),
+				math.LegacyNewDec(1).Quo(math.LegacyNewDec(100)),
+				math.LegacyNewDec(1).Quo(math.LegacyNewDec(100)),
+				math.LegacyNewDec(1).Quo(math.LegacyNewDec(100)),
 			),
 			math.OneInt(),
 		)
@@ -398,7 +398,7 @@ func initGenFiles(
 	minterParams.Inflation = sdk.NewDecWithPrec(50, 2)
 	mintGenState.Minter = minterParams
 	mintParams := mintGenState.GetParams()
-	mintParams.InflationMax = sdk.NewDec(1)
+	mintParams.InflationMax = math.LegacyNewDec(1)
 	mintGenState.Params = mintParams
 	appGenState[minttypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&mintGenState)
 

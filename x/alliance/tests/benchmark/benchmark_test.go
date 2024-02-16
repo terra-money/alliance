@@ -40,7 +40,7 @@ var createdDelegations = []types.Delegation{}
 func TestRunBenchmarks(t *testing.T) {
 	r := rand.New(rand.NewSource(SEED))
 	app, ctx, assets, vals, dels := benchmark.SetupApp(t, r, NumOfAssets, NumOfValidators, NumOfDelegators)
-	powerReduction := sdk.OneInt()
+	powerReduction := math.OneInt()
 	operations := make(map[string]int)
 
 	for b := 0; b < NumOfBlocks; b++ {
@@ -131,7 +131,7 @@ func delegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, ass
 	valAddr := sdk.ValAddress(vals[r.Intn(len(vals)-1)])
 	delAddr := dels[r.Intn(len(dels)-1)]
 
-	amountToDelegate := simulation.RandomAmount(r, sdk.NewInt(1000_000_000))
+	amountToDelegate := simulation.RandomAmount(r, math.NewInt(1000_000_000))
 	if amountToDelegate.IsZero() {
 		return
 	}
@@ -142,7 +142,7 @@ func delegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, ass
 
 	val, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 	app.AllianceKeeper.Delegate(ctx, delAddr, val, coins) //nolint:errcheck
-	createdDelegations = append(createdDelegations, types.NewDelegation(ctx, delAddr, valAddr, asset.Denom, sdk.ZeroDec(), []types.RewardHistory{}))
+	createdDelegations = append(createdDelegations, types.NewDelegation(ctx, delAddr, valAddr, asset.Denom, math.LegacyZeroDec(), []types.RewardHistory{}))
 }
 
 func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, vals []sdk.AccAddress) {
@@ -173,7 +173,7 @@ func redelegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, v
 		return
 	}
 	amountToRedelegate := simulation.RandomAmount(r, types.GetDelegationTokens(delegation, srcValidator, asset).Amount)
-	if amountToRedelegate.LTE(sdk.OneInt()) {
+	if amountToRedelegate.LTE(math.OneInt()) {
 		return
 	}
 	_, err := app.AllianceKeeper.Redelegate(ctx, delAddr, srcValidator, dstValidator, sdk.NewCoin(delegation.Denom, amountToRedelegate))

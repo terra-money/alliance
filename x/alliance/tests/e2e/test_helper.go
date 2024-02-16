@@ -28,9 +28,9 @@ func setupApp(t *testing.T, numValidators int, numDelegators int, initBalance sd
 		_val := teststaking.NewValidator(t, valAddr, pks[i])
 		_val.Commission = stakingtypes.Commission{
 			CommissionRates: stakingtypes.CommissionRates{
-				Rate:          sdk.NewDec(0),
-				MaxRate:       sdk.NewDec(0),
-				MaxChangeRate: sdk.NewDec(0),
+				Rate:          math.LegacyNewDec(0),
+				MaxRate:       math.LegacyNewDec(0),
+				MaxChangeRate: math.LegacyNewDec(0),
 			},
 			UpdateTime: time.Now(),
 		}

@@ -1,6 +1,7 @@
 package tests_test
 
 import (
+	"cosmossdk.io/math"
 	"testing"
 	"time"
 
@@ -29,7 +30,7 @@ func TestMarshalJSONMsgs(t *testing.T) {
 	}{
 		{
 			"Msg Delegate",
-			types.NewMsgDelegate("delegator", "validator", sdk.NewCoin("Alliance", sdk.NewInt(1000000000000000000))),
+			types.NewMsgDelegate("delegator", "validator", sdk.NewCoin("Alliance", math.NewInt(1000000000000000000))),
 			`{"delegator_address":"delegator","validator_address":"validator","amount":{"denom":"Alliance","amount":"1000000000000000000"}}`,
 		},
 	}
@@ -55,14 +56,14 @@ func TestProposalsContent(t *testing.T) {
 		str   string
 	}{
 		"msg_create_alliance_proposal": {
-			p:     types.NewMsgCreateAllianceProposal("Alliance1", "Alliance with 1", "ibc/denom1", sdk.NewDec(1), types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)}, sdk.NewDec(1), sdk.NewDec(1), time.Second),
+			p:     types.NewMsgCreateAllianceProposal("Alliance1", "Alliance with 1", "ibc/denom1", math.LegacyNewDec(1), types.RewardWeightRange{Min: math.LegacyNewDec(0), Max: math.LegacyNewDec(5)}, math.LegacyNewDec(1), math.LegacyNewDec(1), time.Second),
 			title: "Alliance1",
 			desc:  "Alliance with 1",
 			typ:   "msg_create_alliance_proposal",
 			str:   "title:\"Alliance1\" description:\"Alliance with 1\" denom:\"ibc/denom1\" reward_weight:\"1000000000000000000\" take_rate:\"1000000000000000000\" reward_change_rate:\"1000000000000000000\" reward_change_interval:<seconds:1 > reward_weight_range:<min:\"0\" max:\"5000000000000000000\" > ",
 		},
 		"msg_update_alliance_proposal": {
-			p:     types.NewMsgUpdateAllianceProposal("Alliance2", "Alliance with 2", "ibc/denom2", sdk.NewDec(2), types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)}, sdk.NewDec(2), sdk.NewDec(2), time.Hour),
+			p:     types.NewMsgUpdateAllianceProposal("Alliance2", "Alliance with 2", "ibc/denom2", math.LegacyNewDec(2), types.RewardWeightRange{Min: math.LegacyNewDec(0), Max: math.LegacyNewDec(5)}, math.LegacyNewDec(2), math.LegacyNewDec(2), time.Hour),
 			title: "Alliance2",
 			desc:  "Alliance with 2",
 			typ:   "msg_update_alliance_proposal",
@@ -118,19 +119,19 @@ func TestInvalidProposalsContent(t *testing.T) {
 		str   string
 	}{
 		"msg_create_alliance_proposal": {
-			p:     types.NewMsgCreateAllianceProposal("Alliance1", "Alliance with 1", "ibc/denom1", sdk.NewDec(1), types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)}, sdk.NewDec(1), sdk.NewDec(1), -time.Second),
+			p:     types.NewMsgCreateAllianceProposal("Alliance1", "Alliance with 1", "ibc/denom1", math.LegacyNewDec(1), types.RewardWeightRange{Min: math.LegacyNewDec(0), Max: math.LegacyNewDec(5)}, math.LegacyNewDec(1), math.LegacyNewDec(1), -time.Second),
 			title: "Alliance1",
 			desc:  "Alliance with 1",
 			typ:   "msg_create_alliance_proposal",
 		},
 		"msg_create_alliance_proposal_invalid_denom": {
-			p:     types.NewMsgCreateAllianceProposal("Alliance1", "Alliance with 1", invalidDenom, sdk.NewDec(1), types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)}, sdk.NewDec(1), sdk.NewDec(1), time.Second),
+			p:     types.NewMsgCreateAllianceProposal("Alliance1", "Alliance with 1", invalidDenom, math.LegacyNewDec(1), types.RewardWeightRange{Min: math.LegacyNewDec(0), Max: math.LegacyNewDec(5)}, math.LegacyNewDec(1), math.LegacyNewDec(1), time.Second),
 			title: "Alliance1",
 			desc:  "Alliance with 1",
 			typ:   "msg_create_alliance_proposal",
 		},
 		"msg_update_alliance_proposal": {
-			p:     types.NewMsgUpdateAllianceProposal("Alliance2", "Alliance with 2", "ibc/denom2", sdk.NewDec(2), types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)}, sdk.NewDec(2), sdk.NewDec(2), -time.Hour),
+			p:     types.NewMsgUpdateAllianceProposal("Alliance2", "Alliance with 2", "ibc/denom2", math.LegacyNewDec(2), types.RewardWeightRange{Min: math.LegacyNewDec(0), Max: math.LegacyNewDec(5)}, math.LegacyNewDec(2), math.LegacyNewDec(2), -time.Hour),
 			title: "Alliance2",
 			desc:  "Alliance with 2",
 			typ:   "msg_update_alliance_proposal",
@@ -150,27 +151,27 @@ func TestInvalidProposalsContent(t *testing.T) {
 }
 
 func TestAminoJSON(t *testing.T) {
-	msgDelegate := types.NewMsgDelegate("delegator", "validator", sdk.NewCoin("Alliance", sdk.NewInt(1000000000000000000)))
+	msgDelegate := types.NewMsgDelegate("delegator", "validator", sdk.NewCoin("Alliance", math.NewInt(1000000000000000000)))
 	require.Equal(t,
 		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"alliance/MsgDelegate","value":{"amount":{"amount":"1000000000000000000","denom":"Alliance"},"delegator_address":"delegator","validator_address":"validator"}}],"sequence":"1","timeout_height":"1"}`,
-		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgDelegate}, "memo", nil)),
+		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgDelegate}, "memo")),
 	)
 
-	msgUndelegate := types.NewMsgUndelegate("delegator", "validator", sdk.NewCoin("Alliance", sdk.NewInt(1000000000000000000)))
+	msgUndelegate := types.NewMsgUndelegate("delegator", "validator", sdk.NewCoin("Alliance", math.NewInt(1000000000000000000)))
 	require.Equal(t,
 		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"alliance/MsgUndelegate","value":{"amount":{"amount":"1000000000000000000","denom":"Alliance"},"delegator_address":"delegator","validator_address":"validator"}}],"sequence":"1","timeout_height":"1"}`,
-		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgUndelegate}, "memo", nil)),
+		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgUndelegate}, "memo")),
 	)
 
-	msgRedelegate := types.NewMsgRedelegate("delegator", "validator", "validator1", sdk.NewCoin("Alliance", sdk.NewInt(1000000000000000000)))
+	msgRedelegate := types.NewMsgRedelegate("delegator", "validator", "validator1", sdk.NewCoin("Alliance", math.NewInt(1000000000000000000)))
 	require.Equal(t,
 		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"alliance/MsgRedelegate","value":{"amount":{"amount":"1000000000000000000","denom":"Alliance"},"delegator_address":"delegator","validator_dst_address":"validator1","validator_src_address":"validator"}}],"sequence":"1","timeout_height":"1"}`,
-		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgRedelegate}, "memo", nil)),
+		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgRedelegate}, "memo")),
 	)
 
 	msgClaimDelegationRewards := types.NewMsgClaimDelegationRewards("delegator", "validator", "Alliance")
 	require.Equal(t,
 		`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"alliance/MsgClaimDelegationRewards","value":{"delegator_address":"delegator","denom":"Alliance","validator_address":"validator"}}],"sequence":"1","timeout_height":"1"}`,
-		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgClaimDelegationRewards}, "memo", nil)),
+		string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgClaimDelegationRewards}, "memo")),
 	)
 }

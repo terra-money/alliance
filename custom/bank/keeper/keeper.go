@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	accountkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -30,13 +32,14 @@ var _ bankkeeper.Keeper = Keeper{}
 
 func NewBaseKeeper(
 	cdc codec.BinaryCodec,
-	storeKey storetypes.StoreKey,
+	storeService store.KVStoreService,
 	ak accountkeeper.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
+	log log.Logger,
 ) Keeper {
 	keeper := Keeper{
-		BaseKeeper: bankkeeper.NewBaseKeeper(cdc, storeKey, ak, blockedAddrs, authority), // TODO: how to set authority?
+		BaseKeeper: bankkeeper.NewBaseKeeper(cdc, storeService, ak, blockedAddrs, authority, log),
 		ak:         alliancekeeper.Keeper{},
 		sk:         stakingkeeper.Keeper{},
 		acck:       ak,
@@ -62,9 +65,13 @@ func (k Keeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest) (*t
 	ctx := sdk.UnwrapSDKContext(c)
 	supply := k.GetSupply(ctx, req.Denom)
 
-	if req.Denom == k.sk.BondDenom(ctx) {
+	bondDenom, err := k.sk.BondDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if req.Denom == bondDenom {
 		assets := k.ak.GetAllAssets(ctx)
-		totalRewardWeights := sdk.ZeroDec()
+		totalRewardWeights := math.LegacyZeroDec()
 		for _, asset := range assets {
 			totalRewardWeights = totalRewardWeights.Add(asset.RewardWeight)
 		}
@@ -84,7 +91,10 @@ func (k Keeper) TotalSupply(ctx context.Context, req *types.QueryTotalSupplyRequ
 	}
 
 	allianceBonded := k.ak.GetAllianceBondedAmount(sdkCtx, k.acck.GetModuleAddress(alliancetypes.ModuleName))
-	bondDenom := k.sk.BondDenom(sdkCtx)
+	bondDenom, err := k.sk.BondDenom(sdkCtx)
+	if err != nil {
+		return nil, err
+	}
 	if totalSupply.AmountOf(bondDenom).IsPositive() {
 		totalSupply = totalSupply.Sub(sdk.NewCoin(bondDenom, allianceBonded))
 	}

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"time"
 
 	"github.com/terra-money/alliance/x/alliance/types"
@@ -30,7 +31,7 @@ func (k Keeper) SetLastRewardClaimTime(ctx sdk.Context, lastTime time.Time) erro
 }
 
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	bz := store.Get(types.ParamsKey)
 	if bz == nil {
 		return
@@ -46,7 +47,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 	if err := types.ValidatePositiveDuration(params.TakeRateClaimInterval); err != nil {
 		return err
 	}
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	bz := k.cdc.MustMarshal(&params)
 	store.Set(types.ParamsKey, bz)
 	return nil

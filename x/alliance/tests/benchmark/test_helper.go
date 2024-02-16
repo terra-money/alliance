@@ -22,10 +22,10 @@ func SetupApp(t *testing.T, r *rand.Rand, numAssets int, numValidators int, numD
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime)
 	for i := 0; i < numAssets; i++ {
-		rewardWeight := simulation.RandomDecAmount(r, sdk.NewDec(1))
-		takeRate := simulation.RandomDecAmount(r, sdk.MustNewDecFromStr("0.0001"))
-		asset := types.NewAllianceAsset(fmt.Sprintf("ASSET%d", i), rewardWeight, sdk.ZeroDec(), sdk.NewDec(5), takeRate, startTime)
-		asset.RewardChangeRate = sdk.OneDec().Sub(simulation.RandomDecAmount(r, sdk.MustNewDecFromStr("0.00001")))
+		rewardWeight := simulation.RandomDecAmount(r, math.LegacyNewDec(1))
+		takeRate := simulation.RandomDecAmount(r, math.LegacyMustNewDecFromStr("0.0001"))
+		asset := types.NewAllianceAsset(fmt.Sprintf("ASSET%d", i), rewardWeight, math.LegacyZeroDec(), math.LegacyNewDec(5), takeRate, startTime)
+		asset.RewardChangeRate = math.LegacyOneDec().Sub(simulation.RandomDecAmount(r, math.LegacyMustNewDecFromStr("0.00001")))
 		asset.RewardChangeInterval = time.Minute * 5
 		assets = append(assets, asset)
 	}
@@ -45,9 +45,9 @@ func SetupApp(t *testing.T, r *rand.Rand, numAssets int, numValidators int, numD
 		_val := teststaking.NewValidator(t, valAddr, pks[i])
 		_val.Commission = stakingtypes.Commission{
 			CommissionRates: stakingtypes.CommissionRates{
-				Rate:          sdk.NewDec(0),
-				MaxRate:       sdk.NewDec(0),
-				MaxChangeRate: sdk.NewDec(0),
+				Rate:          math.LegacyNewDec(0),
+				MaxRate:       math.LegacyNewDec(0),
+				MaxChangeRate: math.LegacyNewDec(0),
 			},
 			UpdateTime: time.Now(),
 		}

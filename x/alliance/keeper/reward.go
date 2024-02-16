@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+	cmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -13,15 +15,20 @@ var _ RewardsKeeper = Keeper{}
 
 // ClaimValidatorRewards claims the validator rewards (minus commission) from the distribution module
 // This should be called everytime validator delegation changes (e.g. [un/re]delegation) to update the reward claim history
-func (k Keeper) ClaimValidatorRewards(ctx sdk.Context, val types.AllianceValidator) (sdk.Coins, error) {
+func (k Keeper) ClaimValidatorRewards(ctx context.Context, val types.AllianceValidator) (sdk.Coins, error) {
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
-	_, found := k.stakingKeeper.GetDelegation(ctx, moduleAddr, val.GetOperator())
-	if !found {
+	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	if err != nil {
+		return sdk.NewCoins(), err
+	}
+
+	_, err = k.stakingKeeper.GetDelegation(ctx, moduleAddr, valAddr)
+	if err != nil {
 		return sdk.NewCoins(), nil
 	}
 
-	coins, err := k.distributionKeeper.WithdrawDelegationRewards(ctx, moduleAddr, val.GetOperator())
+	coins, err := k.distributionKeeper.WithdrawDelegationRewards(ctx, moduleAddr, valAddr)
 	if err != nil || coins.IsZero() {
 		return nil, err
 	}
@@ -35,7 +42,7 @@ func (k Keeper) ClaimValidatorRewards(ctx sdk.Context, val types.AllianceValidat
 // ClaimDelegationRewards claims delegation rewards and transfers to the delegator account
 // This method updates the delegation so you will need to re-query an updated version from the database
 func (k Keeper) ClaimDelegationRewards(
-	ctx sdk.Context,
+	ctx context.Context,
 	delAddr sdk.AccAddress,
 	val types.AllianceValidator,
 	denom string,
@@ -45,16 +52,22 @@ func (k Keeper) ClaimDelegationRewards(
 		return nil, types.ErrUnknownAsset
 	}
 
-	if !asset.RewardsStarted(ctx.BlockTime()) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if !asset.RewardsStarted(sdkCtx.BlockTime()) {
 		return sdk.NewCoins(), nil
 	}
 
-	delegation, found := k.GetDelegation(ctx, delAddr, val.GetOperator(), denom)
+	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	if err != nil {
+		return sdk.NewCoins(), err
+	}
+
+	delegation, found := k.GetDelegation(ctx, delAddr, valAddr, denom)
 	if !found {
 		return sdk.Coins{}, stakingtypes.ErrNoDelegatorForAddress
 	}
 
-	_, err := k.ClaimValidatorRewards(ctx, val)
+	_, err = k.ClaimValidatorRewards(ctx, val)
 	if err != nil {
 		return nil, err
 	}
@@ -65,15 +78,15 @@ func (k Keeper) ClaimDelegationRewards(
 	}
 
 	delegation.RewardHistory = newIndices
-	delegation.LastRewardClaimHeight = uint64(ctx.BlockHeight())
-	k.SetDelegation(ctx, delAddr, val.GetOperator(), denom, delegation)
+	delegation.LastRewardClaimHeight = uint64(sdkCtx.BlockHeight())
+	k.SetDelegation(ctx, delAddr, valAddr, denom, delegation)
 
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.RewardsPoolName, delAddr, coins)
 	if err != nil {
 		return nil, err
 	}
 
-	_ = ctx.EventManager().EmitTypedEvent(
+	_ = sdkCtx.EventManager().EmitTypedEvent(
 		&types.ClaimAllianceRewardsEvent{
 			AllianceSender: delAddr.String(),
 			Validator:      val.OperatorAddress,
@@ -86,12 +99,20 @@ func (k Keeper) ClaimDelegationRewards(
 
 // CalculateDelegationRewards calculates the rewards that can be claimed for a delegation
 // It takes past reward_rate changes into account by using the RewardRateChangeSnapshot entry
-func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Delegation, val types.AllianceValidator, asset types.AllianceAsset) (sdk.Coins, types.RewardHistories, error) {
+func (k Keeper) CalculateDelegationRewards(ctx context.Context, delegation types.Delegation, val types.AllianceValidator, asset types.AllianceAsset) (sdk.Coins, types.RewardHistories, error) {
 	totalRewards := sdk.NewCoins()
 	currentRewardHistory := types.NewRewardHistories(val.GlobalRewardHistory)
 	delegationRewardHistories := types.NewRewardHistories(delegation.RewardHistory)
+
+	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	if err != nil {
+		return sdk.NewCoins(), nil, err
+	}
 	// If there are reward rate changes between last and current claim, sequentially claim with the help of the snapshots
-	snapshotIter := k.IterateWeightChangeSnapshot(ctx, asset.Denom, val.GetOperator(), delegation.LastRewardClaimHeight)
+	snapshotIter, err := k.IterateWeightChangeSnapshot(ctx, asset.Denom, valAddr, delegation.LastRewardClaimHeight)
+	if err != nil {
+		return sdk.NewCoins(), nil, err
+	}
 	for ; snapshotIter.Valid(); snapshotIter.Next() {
 		var snapshot types.RewardWeightChangeSnapshot
 		b := snapshotIter.Value()
@@ -107,16 +128,16 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Del
 
 // accumulateRewards compares the latest reward history with the delegation's reward history
 // It takes the difference and calculates how much can be claimed
-func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistories types.RewardHistories, asset types.AllianceAsset, rewardWeight sdk.Dec, delegation types.Delegation, validator types.AllianceValidator) (sdk.Coins, types.RewardHistories) {
+func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistories types.RewardHistories, asset types.AllianceAsset, rewardWeight cmath.LegacyDec, delegation types.Delegation, validator types.AllianceValidator) (sdk.Coins, types.RewardHistories) {
 	// Go through each reward denom and accumulate rewards
 	var rewards sdk.Coins
 
-	delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, validator, asset).Amount)
+	delegationTokens := cmath.LegacyNewDecFromInt(types.GetDelegationTokens(delegation, validator, asset).Amount)
 	for _, history := range latestRewardHistories {
 		rewardHistory, found := rewardHistories.GetIndexByDenom(history.Denom)
 		if !found {
 			rewardHistory.Denom = history.Denom
-			rewardHistory.Index = sdk.ZeroDec()
+			rewardHistory.Index = cmath.LegacyZeroDec()
 		}
 		if rewardHistory.Index.GTE(history.Index) {
 			continue
@@ -134,7 +155,7 @@ func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistor
 
 // AddAssetsToRewardPool increments a reward history array. A reward history stores the average reward per token/reward_weight.
 // To calculate the number of rewards claimable, take reward_history * alliance_token_amount * reward_weight
-func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val types.AllianceValidator, coins sdk.Coins) error {
+func (k Keeper) AddAssetsToRewardPool(ctx context.Context, from sdk.AccAddress, val types.AllianceValidator, coins sdk.Coins) error {
 	rewardHistories := types.NewRewardHistories(val.GlobalRewardHistory)
 	// We need some delegations before we can split rewards. Else rewards belong to no one and do nothing
 	if len(val.TotalDelegatorShares) == 0 {
@@ -152,10 +173,10 @@ func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val 
 		if !found {
 			rewardHistories = append(rewardHistories, types.RewardHistory{
 				Denom: c.Denom,
-				Index: sdk.NewDecFromInt(c.Amount).Quo(totalAssetWeight),
+				Index: cmath.LegacyNewDecFromInt(c.Amount).Quo(totalAssetWeight),
 			})
 		} else {
-			rewardHistory.Index = rewardHistory.Index.Add(sdk.NewDecFromInt(c.Amount).Quo(totalAssetWeight))
+			rewardHistory.Index = rewardHistory.Index.Add(cmath.LegacyNewDecFromInt(c.Amount).Quo(totalAssetWeight))
 		}
 	}
 
@@ -169,14 +190,15 @@ func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val 
 	return nil
 }
 
-func (k Keeper) totalAssetWeight(ctx sdk.Context, val types.AllianceValidator) sdk.Dec {
-	total := sdk.ZeroDec()
+func (k Keeper) totalAssetWeight(ctx context.Context, val types.AllianceValidator) cmath.LegacyDec {
+	total := cmath.LegacyZeroDec()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, token := range val.TotalDelegatorShares {
 		asset, found := k.GetAssetByDenom(ctx, token.Denom)
 		if !found {
 			continue
 		}
-		if !asset.RewardsStarted(ctx.BlockTime()) {
+		if !asset.RewardsStarted(sdkCtx.BlockTime()) {
 			continue
 		}
 		totalValTokens := val.TotalTokensWithAsset(asset)

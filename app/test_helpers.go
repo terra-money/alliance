@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"cosmossdk.io/math"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -34,9 +35,8 @@ import (
 
 	"github.com/terra-money/alliance/app/params"
 
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
@@ -59,7 +59,7 @@ func Setup(t *testing.T) *App {
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000))),
 	}
 
 	app := SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
@@ -78,26 +78,31 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	genesisState, err := simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, genAccs, balances...)
 	require.NoError(t, err)
 
+	// Set inflation to 0
+	var mintGenesisState minttypes.GenesisState
+	app.AppCodec().UnmarshalJSON(genesisState[minttypes.ModuleName], &mintGenesisState)
+	mintGenesisState.Params.InflationMin = math.LegacyZeroDec()
+	mintGenesisState.Params.InflationMax = math.LegacyZeroDec()
+	mintGenesisState.Params.InflationRateChange = math.LegacyZeroDec()
+	genesisState[minttypes.ModuleName] = app.AppCodec().MustMarshalJSON(&mintGenesisState)
+
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts
 	app.InitChain(
-		abci.RequestInitChain{
+		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)
 
-	// commit genesis changes
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
-		AppHash:            app.LastCommitID().Hash,
-		ValidatorsHash:     valSet.Hash(),
 		NextValidatorsHash: valSet.Hash(),
-	}})
+	})
+	require.NoError(t, err)
 
 	return app
 }
@@ -266,7 +271,9 @@ func RegisterNewValidator(t *testing.T, app *App, ctx sdk.Context, val stakingty
 	app.StakingKeeper.SetValidator(ctx, val)
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, val) //nolint:errcheck
 	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
-	err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+	valAddr, err := sdk.ValAddressFromBech32(val.GetOperator())
+	require.NoError(t, err)
+	err = app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, valAddr)
 	require.NoError(t, err)
 }
 

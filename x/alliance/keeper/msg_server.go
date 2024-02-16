@@ -168,7 +168,7 @@ func (m MsgServer) CreateAlliance(ctx context.Context, msg *types.MsgCreateAllia
 	}
 
 	if err := sdk.ValidateDenom(msg.Denom); err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(err, "invalid denom")
 	}
 
 	if msg.RewardWeight.IsNil() || msg.RewardWeight.LT(math.LegacyZeroDec()) {

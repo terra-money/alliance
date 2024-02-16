@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+	"cosmossdk.io/math"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,9 +14,9 @@ import (
 // This effectively reallocates tokens from slashed validators to good validators
 // On top of slashing currently bonded delegations, we also slash re-delegations and un-delegations
 // that are still in the progress of unbonding
-func (k Keeper) SlashValidator(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+func (k Keeper) SlashValidator(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error {
 	// Slashing must be checked otherwise we can end up slashing incorrect amounts
-	if fraction.LTE(sdk.ZeroDec()) || fraction.GT(sdk.OneDec()) {
+	if fraction.LTE(math.LegacyZeroDec()) || fraction.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("slashed fraction must be greater than 0 and less than or equal to 1: %d", fraction)
 	}
 
@@ -50,8 +52,9 @@ func (k Keeper) SlashValidator(ctx sdk.Context, valAddr sdk.ValAddress, fraction
 	return nil
 }
 
-func (k Keeper) slashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
-	store := ctx.KVStore(k.storeKey)
+func (k Keeper) slashRedelegations(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error {
+	store := k.storeService.OpenKVStore(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Slash all immature re-delegations
 	redelegationIterator := k.IterateRedelegationsBySrcValidator(ctx, valAddr)
 	for ; redelegationIterator.Valid(); redelegationIterator.Next() {
@@ -60,10 +63,13 @@ func (k Keeper) slashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, frac
 			return err
 		}
 		// Skip if redelegation is already mature
-		if completion.Before(ctx.BlockTime()) {
+		if completion.Before(sdkCtx.BlockTime()) {
 			continue
 		}
-		b := store.Get(redelegationKey)
+		b, err := store.Get(redelegationKey)
+		if err != nil {
+			return err
+		}
 		var redelegation types.Redelegation
 		k.cdc.MustUnmarshal(b, &redelegation)
 
@@ -85,7 +91,7 @@ func (k Keeper) slashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, frac
 			return err
 		}
 
-		delegation, found := k.GetDelegation(ctx, delAddr, dstVal.GetOperator(), redelegation.Balance.Denom)
+		delegation, found := k.GetDelegation(ctx, delAddr, dstValAddr, redelegation.Balance.Denom)
 		if !found {
 			continue
 		}
@@ -105,13 +111,14 @@ func (k Keeper) slashRedelegations(ctx sdk.Context, valAddr sdk.ValAddress, frac
 		k.SetValidator(ctx, dstVal)
 
 		delegation.Shares = delegation.Shares.Sub(sharesToSlash)
-		k.SetDelegation(ctx, delAddr, dstVal.GetOperator(), asset.Denom, delegation)
+		k.SetDelegation(ctx, delAddr, dstValAddr, asset.Denom, delegation)
 	}
 	return nil
 }
 
-func (k Keeper) slashUndelegations(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
-	store := ctx.KVStore(k.storeKey)
+func (k Keeper) slashUndelegations(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error {
+	store := k.storeService.OpenKVStore(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// Slash all immature re-delegations
 	undelegationIterator := k.IterateUndelegationsBySrcValidator(ctx, valAddr)
 	for ; undelegationIterator.Valid(); undelegationIterator.Next() {
@@ -120,10 +127,13 @@ func (k Keeper) slashUndelegations(ctx sdk.Context, valAddr sdk.ValAddress, frac
 			return err
 		}
 		// Skip if undelegation is already mature
-		if completion.Before(ctx.BlockTime()) {
+		if completion.Before(sdkCtx.BlockTime()) {
 			continue
 		}
-		b := store.Get(undelegationKey)
+		b, err := store.Get(undelegationKey)
+		if err != nil {
+			return err
+		}
 		var undelegations types.QueuedUndelegation
 		k.cdc.MustUnmarshal(b, &undelegations)
 

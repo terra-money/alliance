@@ -3,11 +3,11 @@ package types
 import (
 	"time"
 
-	cosmosmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewAllianceAsset(denom string, rewardWeight sdk.Dec, minRewardWeight sdk.Dec, maxRewardWeight sdk.Dec, takeRate sdk.Dec, rewardStartTime time.Time) AllianceAsset {
+func NewAllianceAsset(denom string, rewardWeight math.LegacyDec, minRewardWeight math.LegacyDec, maxRewardWeight math.LegacyDec, takeRate math.LegacyDec, rewardStartTime time.Time) AllianceAsset {
 	return AllianceAsset{
 		Denom:        denom,
 		RewardWeight: rewardWeight,
@@ -16,24 +16,24 @@ func NewAllianceAsset(denom string, rewardWeight sdk.Dec, minRewardWeight sdk.De
 			Max: maxRewardWeight,
 		},
 		TakeRate:             takeRate,
-		TotalTokens:          sdk.ZeroInt(),
-		TotalValidatorShares: sdk.ZeroDec(),
+		TotalTokens:          math.ZeroInt(),
+		TotalValidatorShares: math.LegacyZeroDec(),
 		RewardStartTime:      rewardStartTime,
-		RewardChangeRate:     sdk.OneDec(),
+		RewardChangeRate:     math.LegacyOneDec(),
 		RewardChangeInterval: time.Duration(0),
 		LastRewardChangeTime: rewardStartTime,
 		IsInitialized:        false,
 	}
 }
 
-func ConvertNewTokenToShares(totalTokens sdk.Dec, totalShares sdk.Dec, newTokens cosmosmath.Int) (shares sdk.Dec) {
+func ConvertNewTokenToShares(totalTokens math.LegacyDec, totalShares math.LegacyDec, newTokens math.Int) (shares math.LegacyDec) {
 	if totalShares.IsZero() {
-		return sdk.NewDecFromInt(newTokens)
+		return math.LegacyNewDecFromInt(newTokens)
 	}
 	return totalShares.Quo(totalTokens).MulInt(newTokens)
 }
 
-func ConvertNewShareToDecToken(totalTokens sdk.Dec, totalShares sdk.Dec, shares sdk.Dec) (token sdk.Dec) {
+func ConvertNewShareToDecToken(totalTokens math.LegacyDec, totalShares math.LegacyDec, shares math.LegacyDec) (token math.LegacyDec) {
 	if totalShares.IsZero() {
 		return totalTokens
 	}
@@ -47,26 +47,26 @@ func GetDelegationTokens(del Delegation, val AllianceValidator, asset AllianceAs
 
 	// We add a small epsilon before rounding down to make sure cases like
 	// 9.999999 get round to 10
-	delTokens = delTokens.Add(sdk.NewDecWithPrec(1, 6))
+	delTokens = delTokens.Add(math.LegacyNewDecWithPrec(1, 6))
 	return sdk.NewCoin(asset.Denom, delTokens.TruncateInt())
 }
 
-func GetDelegationTokensWithShares(delegatorShares sdk.Dec, val AllianceValidator, asset AllianceAsset) sdk.Coin {
+func GetDelegationTokensWithShares(delegatorShares math.LegacyDec, val AllianceValidator, asset AllianceAsset) sdk.Coin {
 	valTokens := val.TotalTokensWithAsset(asset)
 	totalDelegationShares := val.TotalDelegationSharesWithDenom(asset.Denom)
 	delTokens := ConvertNewShareToDecToken(valTokens, totalDelegationShares, delegatorShares)
 
 	// We add a small epsilon before rounding down to make sure cases like
 	// 9.999999 get round to 10
-	delTokens = delTokens.Add(sdk.NewDecWithPrec(1, 6))
+	delTokens = delTokens.Add(math.LegacyNewDecWithPrec(1, 6))
 	return sdk.NewCoin(asset.Denom, delTokens.TruncateInt())
 }
 
-func GetDelegationSharesFromTokens(val AllianceValidator, asset AllianceAsset, token cosmosmath.Int) sdk.Dec {
+func GetDelegationSharesFromTokens(val AllianceValidator, asset AllianceAsset, token math.Int) math.LegacyDec {
 	valTokens := val.TotalTokensWithAsset(asset)
 	totalDelegationShares := val.TotalDelegationSharesWithDenom(asset.Denom)
-	if totalDelegationShares.TruncateInt().Equal(sdk.ZeroInt()) {
-		return sdk.NewDecFromInt(token)
+	if totalDelegationShares.TruncateInt().Equal(math.ZeroInt()) {
+		return math.LegacyNewDecFromInt(token)
 	}
 	return ConvertNewTokenToShares(valTokens, totalDelegationShares, token)
 }

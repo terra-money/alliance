@@ -22,3 +22,28 @@ func NewMsgDelegate(delegatorAddress, validatorAddress string, amount sdk.Coin) 
 		Amount:           amount,
 	}
 }
+
+func NewMsgRedelegate(delegatorAddress, validatorSrcAddress, validatorDstAddress string, amount sdk.Coin) *MsgRedelegate {
+	return &MsgRedelegate{
+		DelegatorAddress:    delegatorAddress,
+		ValidatorSrcAddress: validatorSrcAddress,
+		ValidatorDstAddress: validatorDstAddress,
+		Amount:              amount,
+	}
+}
+
+func NewMsgUndelegate(delegatorAddress, validatorAddress string, amount sdk.Coin) *MsgUndelegate {
+	return &MsgUndelegate{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: validatorAddress,
+		Amount:           amount,
+	}
+}
+
+func NewMsgClaimDelegationRewards(delegatorAddress, validatorAddress, denom string) *MsgClaimDelegationRewards {
+	return &MsgClaimDelegationRewards{
+		DelegatorAddress: delegatorAddress,
+		ValidatorAddress: validatorAddress,
+		Denom:            denom,
+	}
+}
