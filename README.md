@@ -62,6 +62,8 @@ Compatibility matrix:
 
 | Release | Branch         | CosmosSDK |
 |---------|----------------|-----------|
+| v0.4.0  | release/v0.4.x | 0.50      |
+| v0.3.0  | release/v0.3.x | 0.47      |
 | v0.2.0  | release/v0.2.x | 0.47      |
 | v0.1.0  | release/v0.1.x | 0.46      |
 
@@ -71,7 +73,7 @@ For an in-depth guide on integrating `x/alliance`, visit the [Alliance Module In
 
 The following sections are for developers working on the  `x/alliance` module. 
 
-This project uses [Go v1.19](https://go.dev/dl/).
+This project uses [Go v1.21](https://go.dev/dl/).
 
 To build a ready-to-use binary, run the following:
 
