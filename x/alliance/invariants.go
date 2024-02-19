@@ -3,6 +3,8 @@ package alliance
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/terra-money/alliance/x/alliance/keeper"
@@ -30,8 +32,11 @@ func ValidatorSharesInvariant(k keeper.Keeper) sdk.Invariant {
 			broken bool
 		)
 		assets := k.GetAllAssets(ctx)
-		infos := k.GetAllAllianceValidatorInfo(ctx)
-		validatorShares := map[string]sdk.Dec{} // {denom: shares}
+		infos, err := k.GetAllAllianceValidatorInfo(ctx)
+		if err != nil {
+			return sdk.FormatInvariant(types.ModuleName, "error getting alliance validator info", err.Error()), true
+		}
+		validatorShares := map[string]math.LegacyDec{} // {denom: shares}
 		for _, info := range infos {
 			for _, share := range info.ValidatorShares {
 				if share.IsNegative() {
@@ -64,15 +69,15 @@ func DelegatorSharesInvariant(k keeper.Keeper) sdk.Invariant {
 			msg    string
 			broken bool
 		)
-		delegatorShares := map[string]map[string]sdk.Dec{} // {validator: {asset: share}}
+		delegatorShares := map[string]map[string]math.LegacyDec{} // {validator: {asset: share}}
 		var hasNegativeShares bool
-		k.IterateDelegations(ctx, func(delegation types.Delegation) bool {
+		err := k.IterateDelegations(ctx, func(delegation types.Delegation) bool {
 			if delegation.Shares.IsNegative() {
 				hasNegativeShares = true
 				return true
 			}
 			if delegatorShares[delegation.ValidatorAddress] == nil {
-				delegatorShares[delegation.ValidatorAddress] = map[string]sdk.Dec{
+				delegatorShares[delegation.ValidatorAddress] = map[string]math.LegacyDec{
 					delegation.Denom: delegation.Shares,
 				}
 			} else {
@@ -84,6 +89,9 @@ func DelegatorSharesInvariant(k keeper.Keeper) sdk.Invariant {
 			}
 			return false
 		})
+		if err != nil {
+			return sdk.FormatInvariant(types.ModuleName, "error iterating delegations", err.Error()), true
+		}
 
 		if hasNegativeShares {
 			msg += "negative delegation shares found\n"

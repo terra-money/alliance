@@ -3,6 +3,7 @@ package v4
 import (
 	"math"
 
+	cmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	alliancekeeper "github.com/terra-money/alliance/x/alliance/keeper"
@@ -23,13 +24,15 @@ func migrateAssetsWithDefaultRewardWeightRange(ctx sdk.Context, k alliancekeeper
 	assets := k.GetAllAssets(ctx)
 	for _, asset := range assets {
 		asset.RewardWeightRange = types.RewardWeightRange{
-			Min: sdk.ZeroDec(),
-			Max: sdk.NewDec(math.MaxInt),
+			Min: cmath.LegacyZeroDec(),
+			Max: cmath.LegacyNewDec(math.MaxInt),
 		}
 		if asset.RewardsStarted(ctx.BlockTime()) {
 			asset.IsInitialized = true
 		}
-		k.SetAsset(ctx, *asset)
+		if err := k.SetAsset(ctx, *asset); err != nil {
+			return err
+		}
 	}
 	return nil
 }

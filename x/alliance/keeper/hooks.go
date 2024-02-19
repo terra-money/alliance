@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"context"
+
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -11,59 +14,57 @@ type Hooks struct {
 
 var _ stakingtypes.StakingHooks = Hooks{}
 
-func (h Hooks) AfterValidatorCreated(_ sdk.Context, _ sdk.ValAddress) error {
+func (h Hooks) AfterValidatorCreated(_ context.Context, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress) error {
+func (h Hooks) BeforeValidatorModified(_ context.Context, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
-	h.k.DeleteValidatorInfo(ctx, valAddr)
-	h.k.QueueAssetRebalanceEvent(ctx)
+func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) (err error) {
+	err = h.k.DeleteValidatorInfo(ctx, valAddr)
+	if err != nil {
+		return err
+	}
+	return h.k.QueueAssetRebalanceEvent(ctx)
+}
+
+func (h Hooks) AfterValidatorBonded(ctx context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+	return h.k.QueueAssetRebalanceEvent(ctx)
+}
+
+func (h Hooks) AfterValidatorBeginUnbonding(ctx context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+	return h.k.QueueAssetRebalanceEvent(ctx)
+}
+
+func (h Hooks) BeforeDelegationCreated(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
-	h.k.QueueAssetRebalanceEvent(ctx)
+func (h Hooks) BeforeDelegationSharesModified(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
-	h.k.QueueAssetRebalanceEvent(ctx)
+func (h Hooks) BeforeDelegationRemoved(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
-	return nil
+func (h Hooks) AfterDelegationModified(ctx context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return h.k.QueueAssetRebalanceEvent(ctx)
 }
 
-func (h Hooks) BeforeDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
-	return nil
-}
-
-func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
-	return nil
-}
-
-func (h Hooks) AfterDelegationModified(ctx sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
-	h.k.QueueAssetRebalanceEvent(ctx)
-	return nil
-}
-
-func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error {
+func (h Hooks) BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error {
 	err := h.k.SlashValidator(ctx, valAddr, fraction)
 	if err != nil {
 		return err
 	}
-	h.k.QueueAssetRebalanceEvent(ctx)
-	return nil
+	return h.k.QueueAssetRebalanceEvent(ctx)
 }
 
-func (h Hooks) AfterValidatorSlashed(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress, _ sdk.Dec) {
+func (h Hooks) AfterValidatorSlashed(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress, _ math.LegacyDec) {
 }
 
-func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
+func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
 	return nil
 }
