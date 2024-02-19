@@ -1,9 +1,10 @@
 package tests_test
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"testing"
 
 	"github.com/terra-money/alliance/app"
 )

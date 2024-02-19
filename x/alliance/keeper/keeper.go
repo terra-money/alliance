@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"cosmossdk.io/core/store"
 	"fmt"
+
+	"cosmossdk.io/core/store"
 
 	"github.com/terra-money/alliance/x/alliance/types"
 

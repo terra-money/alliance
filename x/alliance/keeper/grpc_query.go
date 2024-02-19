@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"net/url"
+
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 
 	"github.com/terra-money/alliance/x/alliance/types"
 

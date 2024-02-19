@@ -1,9 +1,10 @@
 package tests_test
 
 import (
-	"cosmossdk.io/math"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

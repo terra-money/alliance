@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -75,7 +76,10 @@ func (k Keeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest) (*t
 		for _, asset := range assets {
 			totalRewardWeights = totalRewardWeights.Add(asset.RewardWeight)
 		}
-		allianceBonded := k.ak.GetAllianceBondedAmount(ctx, k.acck.GetModuleAddress(alliancetypes.ModuleName))
+		allianceBonded, err := k.ak.GetAllianceBondedAmount(ctx, k.acck.GetModuleAddress(alliancetypes.ModuleName))
+		if err != nil {
+			return nil, err
+		}
 		supply.Amount = supply.Amount.Sub(allianceBonded)
 	}
 
@@ -90,7 +94,10 @@ func (k Keeper) TotalSupply(ctx context.Context, req *types.QueryTotalSupplyRequ
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	allianceBonded := k.ak.GetAllianceBondedAmount(sdkCtx, k.acck.GetModuleAddress(alliancetypes.ModuleName))
+	allianceBonded, err := k.ak.GetAllianceBondedAmount(sdkCtx, k.acck.GetModuleAddress(alliancetypes.ModuleName))
+	if err != nil {
+		return nil, err
+	}
 	bondDenom, err := k.sk.BondDenom(sdkCtx)
 	if err != nil {
 		return nil, err

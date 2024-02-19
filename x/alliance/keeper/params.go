@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 
 	"github.com/terra-money/alliance/x/alliance/types"
 

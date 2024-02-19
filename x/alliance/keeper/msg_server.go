@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -158,7 +159,6 @@ func (m MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 }
 
 func (m MsgServer) CreateAlliance(ctx context.Context, msg *types.MsgCreateAlliance) (*types.MsgCreateAllianceResponse, error) {
-
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
 		return nil, sdkerrors.Wrap(err, "invalid authority address")
 	}
@@ -222,8 +222,8 @@ func (m MsgServer) CreateAlliance(ctx context.Context, msg *types.MsgCreateAllia
 		RewardChangeInterval: msg.RewardChangeInterval,
 		LastRewardChangeTime: rewardStartTime,
 	}
-	m.SetAsset(sdkCtx, asset)
-	return &types.MsgCreateAllianceResponse{}, nil
+	err := m.SetAsset(sdkCtx, asset)
+	return &types.MsgCreateAllianceResponse{}, err
 }
 
 func (m MsgServer) UpdateAlliance(ctx context.Context, msg *types.MsgUpdateAlliance) (*types.MsgUpdateAllianceResponse, error) {

@@ -318,7 +318,7 @@ func TestClaimQueryReward(t *testing.T) {
 
 	// ... at the next begin block, tokens will be distributed from the fee pool...
 	cons, _ := val1.GetConsAddr()
-	app.DistrKeeper.AllocateTokens(ctx, 1, []abcitypes.VoteInfo{
+	err = app.DistrKeeper.AllocateTokens(ctx, 1, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons,
@@ -326,6 +326,7 @@ func TestClaimQueryReward(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
 	// THEN: Query the delegation rewards ...
 	queryDelegation, queryErr := queryServer.AllianceDelegationRewards(ctx, &types.QueryAllianceDelegationRewardsRequest{

@@ -1,11 +1,12 @@
 package benchmark
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
 	"math/rand"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"

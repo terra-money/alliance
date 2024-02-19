@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"errors"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"io"
 	"os"
+
+	"github.com/cosmos/cosmos-sdk/types/module"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	"github.com/spf13/cast"
 

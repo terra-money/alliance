@@ -1,9 +1,10 @@
 package bindings_test
 
 import (
-	"cosmossdk.io/math"
 	"encoding/json"
 	"testing"
+
+	"cosmossdk.io/math"
 
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 

@@ -86,7 +86,7 @@ func (a AppModuleBasic) ValidateGenesis(jsonCodec codec.JSONCodec, _ client.TxEn
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
+	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck,nolintlint
 }
 
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -162,7 +162,7 @@ func (a AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weigh
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (am AppModule) IsOnePerModuleType() {}
+func (a AppModule) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
-func (am AppModule) IsAppModule() {}
+func (a AppModule) IsAppModule() {}

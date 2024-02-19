@@ -1,9 +1,10 @@
 package e2e
 
 import (
-	"cosmossdk.io/math"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"

@@ -1,9 +1,10 @@
 package tests_test
 
 import (
-	"cosmossdk.io/math"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance"

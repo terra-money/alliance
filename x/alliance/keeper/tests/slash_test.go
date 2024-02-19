@@ -1,9 +1,10 @@
 package tests_test
 
 import (
-	"cosmossdk.io/math"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance"
@@ -107,6 +108,7 @@ func TestSlashingEvent(t *testing.T) {
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 	totalBonded, err := app.StakingKeeper.TotalBondedTokens(ctx)
+	require.NoError(t, err)
 	require.Equal(t, math.NewInt(13_000_000), totalBonded)
 
 	val1, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
@@ -122,7 +124,9 @@ func TestSlashingEvent(t *testing.T) {
 	require.Equal(t, math.NewInt(20_000_000), tokens)
 
 	fraction, err := app.SlashingKeeper.SlashFractionDoubleSign(ctx)
-	app.SlashingKeeper.Slash(ctx, valConAddr1, fraction, valPower1, 1)
+	require.NoError(t, err)
+	err = app.SlashingKeeper.Slash(ctx, valConAddr1, fraction, valPower1, 1)
+	require.NoError(t, err)
 	// Slashing will first reduce tokens from validator
 	totalBonded, err = app.StakingKeeper.TotalBondedTokens(ctx)
 	require.NoError(t, err)
@@ -278,7 +282,8 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	valConAddr1, _ := val1.GetConsAddr()
 	slashFraction, err := app.SlashingKeeper.SlashFractionDoubleSign(ctx)
 	require.NoError(t, err)
-	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
+	err = app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
+	require.NoError(t, err)
 
 	// Expect that delegation decreased
 	delegation, _ = app.AllianceKeeper.GetDelegation(ctx, user1, valAddr2, AllianceDenom)
@@ -294,7 +299,8 @@ func TestSlashingAfterRedelegation(t *testing.T) {
 	// Now we slash val 1
 	_, err = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
 	require.NoError(t, err)
-	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
+	err = app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
+	require.NoError(t, err)
 
 	// Expect that delegation stayed the same
 	delegation, _ = app.AllianceKeeper.GetDelegation(ctx, user1, valAddr2, AllianceDenom)
@@ -418,7 +424,8 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	valConAddr1, _ := val1.GetConsAddr()
 	slashFraction, err := app.SlashingKeeper.SlashFractionDoubleSign(ctx)
 	require.NoError(t, err)
-	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
+	err = app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
+	require.NoError(t, err)
 
 	// Expect something to be slashed from undelegation entry
 	unbondingTime, err := app.StakingKeeper.UnbondingTime(ctx)
@@ -437,7 +444,8 @@ func TestSlashingAfterUndelegation(t *testing.T) {
 	// Now we slash val 1
 	_, err = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr1)
 	require.NoError(t, err)
-	app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
+	err = app.SlashingKeeper.Slash(ctx, valConAddr1, slashFraction, valPower1, 1)
+	require.NoError(t, err)
 
 	// Expect that delegation stayed the same
 	undelegationsIter = app.AllianceKeeper.IterateUndelegationsByCompletionTime(ctx, ctx.BlockTime())

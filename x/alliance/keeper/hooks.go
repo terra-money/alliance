@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -21,20 +22,20 @@ func (h Hooks) BeforeValidatorModified(_ context.Context, _ sdk.ValAddress) erro
 	return nil
 }
 
-func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
-	h.k.DeleteValidatorInfo(ctx, valAddr)
-	h.k.QueueAssetRebalanceEvent(ctx)
-	return nil
+func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) (err error) {
+	err = h.k.DeleteValidatorInfo(ctx, valAddr)
+	if err != nil {
+		return err
+	}
+	return h.k.QueueAssetRebalanceEvent(ctx)
 }
 
 func (h Hooks) AfterValidatorBonded(ctx context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
-	h.k.QueueAssetRebalanceEvent(ctx)
-	return nil
+	return h.k.QueueAssetRebalanceEvent(ctx)
 }
 
 func (h Hooks) AfterValidatorBeginUnbonding(ctx context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
-	h.k.QueueAssetRebalanceEvent(ctx)
-	return nil
+	return h.k.QueueAssetRebalanceEvent(ctx)
 }
 
 func (h Hooks) BeforeDelegationCreated(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
@@ -50,8 +51,7 @@ func (h Hooks) BeforeDelegationRemoved(_ context.Context, _ sdk.AccAddress, _ sd
 }
 
 func (h Hooks) AfterDelegationModified(ctx context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
-	h.k.QueueAssetRebalanceEvent(ctx)
-	return nil
+	return h.k.QueueAssetRebalanceEvent(ctx)
 }
 
 func (h Hooks) BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error {
@@ -59,8 +59,7 @@ func (h Hooks) BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddres
 	if err != nil {
 		return err
 	}
-	h.k.QueueAssetRebalanceEvent(ctx)
-	return nil
+	return h.k.QueueAssetRebalanceEvent(ctx)
 }
 
 func (h Hooks) AfterValidatorSlashed(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress, _ math.LegacyDec) {

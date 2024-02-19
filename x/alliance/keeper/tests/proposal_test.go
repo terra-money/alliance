@@ -1,9 +1,10 @@
 package tests_test
 
 import (
-	"cosmossdk.io/math"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -198,7 +199,7 @@ func TestUpdateParams(t *testing.T) {
 
 	// WHEN
 	msgServer := keeper.MsgServer{Keeper: app.AllianceKeeper}
-	_, err := msgServer.UpdateParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateParams{
+	_, err := msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
 		Authority: govAddr,
 		Params: types.Params{
 			RewardDelayTime:       100,
@@ -230,7 +231,7 @@ func TestUnauthorizedUpdateParams(t *testing.T) {
 
 	// WHEN
 	msgServer := keeper.MsgServer{Keeper: app.AllianceKeeper}
-	_, err := msgServer.UpdateParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateParams{
+	_, err := msgServer.UpdateParams(ctx, &types.MsgUpdateParams{
 		Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), []byte("random")),
 		Params: types.Params{
 			RewardDelayTime:       100,

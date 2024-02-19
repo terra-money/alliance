@@ -1,9 +1,10 @@
 package tests_test
 
 import (
-	"cosmossdk.io/math"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	test_helpers "github.com/terra-money/alliance/app"
 	"github.com/terra-money/alliance/x/alliance/keeper"
@@ -299,7 +300,8 @@ func TestClaimRewardsBeforeRewardsIssuance(t *testing.T) {
 	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, math.NewInt(1000_000)))
 	require.NoError(t, err)
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
-	app.AllianceKeeper.InitializeAllianceAssets(ctx, assets)
+	err = app.AllianceKeeper.InitializeAllianceAssets(ctx, assets)
+	require.NoError(t, err)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 
@@ -311,7 +313,8 @@ func TestClaimRewardsBeforeRewardsIssuance(t *testing.T) {
 	_, err = app.AllianceKeeper.Delegate(ctx, user2, val1, sdk.NewCoin(AllianceDenomTwo, math.NewInt(1000_000)))
 	require.NoError(t, err)
 	assets = app.AllianceKeeper.GetAllAssets(ctx)
-	app.AllianceKeeper.InitializeAllianceAssets(ctx, assets)
+	err = app.AllianceKeeper.InitializeAllianceAssets(ctx, assets)
+	require.NoError(t, err)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 
@@ -344,7 +347,8 @@ func TestClaimRewardsBeforeRewardsIssuance(t *testing.T) {
 	// Move time forward so alliance 2 is enabled
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1).WithBlockTime(ctx.BlockTime().Add(2 * time.Hour))
 	assets = app.AllianceKeeper.GetAllAssets(ctx)
-	app.AllianceKeeper.InitializeAllianceAssets(ctx, assets)
+	err = app.AllianceKeeper.InitializeAllianceAssets(ctx, assets)
+	require.NoError(t, err)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
 	require.NoError(t, err)
 
@@ -453,7 +457,7 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 	cons1, _ := val1.GetConsAddr()
 	cons2, _ := val2.GetConsAddr()
 	var votingPower int64 = 12
-	app.DistrKeeper.AllocateTokens(ctx, votingPower, []abcitypes.VoteInfo{
+	err = app.DistrKeeper.AllocateTokens(ctx, votingPower, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
@@ -467,6 +471,7 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
 	commission, err := app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, getOperator(val1))
 	require.NoError(t, err)
@@ -476,6 +481,7 @@ func TestClaimRewardsWithMultipleValidators(t *testing.T) {
 	require.Equal(t, math.NewInt(3333333), commission.Commission.AmountOf("stake").TruncateInt())
 
 	rewards, err := app.DistrKeeper.GetValidatorCurrentRewards(ctx, getOperator(val1))
+	require.NoError(t, err)
 	require.Equal(t, math.NewInt(666666), rewards.Rewards.AmountOf("stake").TruncateInt())
 	rewards, err = app.DistrKeeper.GetValidatorCurrentRewards(ctx, getOperator(val2))
 	require.NoError(t, err)
@@ -579,7 +585,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 	cons2, _ := val2.GetConsAddr()
 	power2 := val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
 
-	app.DistrKeeper.AllocateTokens(ctx, power1+power2, []abcitypes.VoteInfo{
+	err = app.DistrKeeper.AllocateTokens(ctx, power1+power2, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
@@ -593,6 +599,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
 	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.NewAllianceAsset(AllianceDenom, math.LegacyNewDec(10), math.LegacyNewDec(2), math.LegacyNewDec(12), math.LegacyNewDec(0), ctx.BlockTime()))
 	require.NoError(t, err)
@@ -611,7 +618,8 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 		PrevRewardWeight: math.LegacyNewDec(2),
 		RewardHistories:  val1.GlobalRewardHistory,
 	}, snapshot)
-	iter.Close()
+	err = iter.Close()
+	require.NoError(t, err)
 
 	// Accumulate rewards in pool
 	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(bondDenom, math.NewInt(10_000_000))))
@@ -625,7 +633,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 
 	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
 	power2 = val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
-	app.DistrKeeper.AllocateTokens(ctx, power1+power2, []abcitypes.VoteInfo{
+	err = app.DistrKeeper.AllocateTokens(ctx, power1+power2, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
@@ -639,6 +647,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
 	rewards1, err := app.AllianceKeeper.ClaimDelegationRewards(ctx, user1, val1, AllianceDenom)
 	require.NoError(t, err)
@@ -660,7 +669,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 
 	val2, _ = app.AllianceKeeper.GetAllianceValidator(ctx, valAddr2)
 	power2 = val2.ConsensusPower(app.StakingKeeper.PowerReduction(ctx))
-	app.DistrKeeper.AllocateTokens(ctx, power1+power2, []abcitypes.VoteInfo{
+	err = app.DistrKeeper.AllocateTokens(ctx, power1+power2, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
@@ -674,6 +683,7 @@ func TestClaimRewardsAfterRewardsRatesChange(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
 	rewards1, err = app.AllianceKeeper.ClaimDelegationRewards(ctx, user1, val1, AllianceDenom)
 	require.NoError(t, err)
@@ -878,7 +888,7 @@ func TestClaimRewardsAfterRebalancing(t *testing.T) {
 	cons1, _ := val1.GetConsAddr()
 	cons2, _ := val2.GetConsAddr()
 	var votingPower int64 = 3
-	app.DistrKeeper.AllocateTokens(ctx, votingPower, []abcitypes.VoteInfo{
+	err = app.DistrKeeper.AllocateTokens(ctx, votingPower, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons1,
@@ -892,6 +902,7 @@ func TestClaimRewardsAfterRebalancing(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
 	assets = app.AllianceKeeper.GetAllAssets(ctx)
 	err = app.AllianceKeeper.RebalanceBondTokenWeights(ctx, assets)
@@ -957,7 +968,8 @@ func TestRewardWeightWithZeroTokens(t *testing.T) {
 	asset, found := app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	require.True(t, found)
 	asset.TotalTokens = math.NewInt(1)
-	app.AllianceKeeper.SetAsset(ctx, asset)
+	err = app.AllianceKeeper.SetAsset(ctx, asset)
+	require.NoError(t, err)
 
 	// New delegation from user 1
 	_, err = app.AllianceKeeper.Delegate(ctx, user1, val1, sdk.NewCoin(AllianceDenom, math.NewInt(1000_000)))
@@ -967,7 +979,8 @@ func TestRewardWeightWithZeroTokens(t *testing.T) {
 	asset, found = app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
 	require.True(t, found)
 	asset.TotalTokens = math.NewInt(0)
-	app.AllianceKeeper.SetAsset(ctx, asset)
+	err = app.AllianceKeeper.SetAsset(ctx, asset)
+	require.NoError(t, err)
 
 	// Before transfer to reward pool
 	beforeMintPoolAmount := app.BankKeeper.GetBalance(ctx, mintPoolAddr, AllianceDenom)

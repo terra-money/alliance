@@ -1,8 +1,9 @@
 package alliance
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -31,7 +32,10 @@ func ValidatorSharesInvariant(k keeper.Keeper) sdk.Invariant {
 			broken bool
 		)
 		assets := k.GetAllAssets(ctx)
-		infos := k.GetAllAllianceValidatorInfo(ctx)
+		infos, err := k.GetAllAllianceValidatorInfo(ctx)
+		if err != nil {
+			return sdk.FormatInvariant(types.ModuleName, "error getting alliance validator info", err.Error()), true
+		}
 		validatorShares := map[string]math.LegacyDec{} // {denom: shares}
 		for _, info := range infos {
 			for _, share := range info.ValidatorShares {
@@ -67,7 +71,7 @@ func DelegatorSharesInvariant(k keeper.Keeper) sdk.Invariant {
 		)
 		delegatorShares := map[string]map[string]math.LegacyDec{} // {validator: {asset: share}}
 		var hasNegativeShares bool
-		k.IterateDelegations(ctx, func(delegation types.Delegation) bool {
+		err := k.IterateDelegations(ctx, func(delegation types.Delegation) bool {
 			if delegation.Shares.IsNegative() {
 				hasNegativeShares = true
 				return true
@@ -85,6 +89,9 @@ func DelegatorSharesInvariant(k keeper.Keeper) sdk.Invariant {
 			}
 			return false
 		})
+		if err != nil {
+			return sdk.FormatInvariant(types.ModuleName, "error iterating delegations", err.Error()), true
+		}
 
 		if hasNegativeShares {
 			msg += "negative delegation shares found\n"

@@ -1,9 +1,10 @@
 package tests_test
 
 import (
-	"cosmossdk.io/math"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"

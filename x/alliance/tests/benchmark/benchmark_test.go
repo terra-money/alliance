@@ -1,11 +1,12 @@
 package benchmark_test
 
 import (
-	"cosmossdk.io/math"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	"github.com/terra-money/alliance/x/alliance/tests/benchmark"
 
@@ -24,10 +25,10 @@ var (
 	SEED               = int64(1)
 	NumOfBlocks        = 200
 	BlocktimeInSeconds = 5
-	VoteRate           = 0.8
-	NumOfValidators    = 160
-	NumOfAssets        = 20
-	NumOfDelegators    = 10
+	// VoteRate           = 0.8
+	NumOfValidators = 160
+	NumOfAssets     = 20
+	NumOfDelegators = 10
 
 	OperationsPerBlock = 30
 	DelegationRate     = 10
@@ -65,7 +66,10 @@ func TestRunBenchmarks(t *testing.T) {
 		}
 
 		// Begin block
-		app.DistrKeeper.AllocateTokens(ctx, totalVotingPower, voteInfo)
+		err := app.DistrKeeper.AllocateTokens(ctx, totalVotingPower, voteInfo)
+		if err != nil {
+			panic(err)
+		}
 
 		// Delegator Actions
 		operationFunc := benchmark.GenerateOperationSlots(DelegationRate, RedelegationRate, UndelegationRate, RewardClaimRate)
@@ -89,7 +93,7 @@ func TestRunBenchmarks(t *testing.T) {
 		// Endblock
 		assets := app.AllianceKeeper.GetAllAssets(ctx)
 		app.AllianceKeeper.CompleteRedelegations(ctx)
-		err := app.AllianceKeeper.CompleteUnbondings(ctx)
+		err = app.AllianceKeeper.CompleteUnbondings(ctx)
 		if err != nil {
 			panic(err)
 		}
@@ -114,8 +118,16 @@ func TestRunBenchmarks(t *testing.T) {
 
 	state := app.AllianceKeeper.ExportGenesis(ctx)
 	file, _ := os.Create("./benchmark_genesis.json")
-	defer file.Close()
-	file.Write(app.AppCodec().MustMarshalJSON(state)) //nolint:errcheck
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(file)
+	_, err := file.Write(app.AppCodec().MustMarshalJSON(state)) //nolint:errcheck,nolintlint
+	if err != nil {
+		panic(err)
+	}
 }
 
 func delegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, assets []types.AllianceAsset, vals []sdk.AccAddress, dels []sdk.AccAddress) {
@@ -137,11 +149,20 @@ func delegateOperation(ctx sdk.Context, app *test_helpers.App, r *rand.Rand, ass
 	}
 	coins := sdk.NewCoin(asset.Denom, amountToDelegate)
 
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(coins))                             //nolint:errcheck
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(coins)) //nolint:errcheck
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(coins))
+	if err != nil {
+		panic(err)
+	}
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(coins))
+	if err != nil {
+		panic(err)
+	}
 
 	val, _ := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
-	app.AllianceKeeper.Delegate(ctx, delAddr, val, coins) //nolint:errcheck
+	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, coins)
+	if err != nil {
+		panic(err)
+	}
 	createdDelegations = append(createdDelegations, types.NewDelegation(ctx, delAddr, valAddr, asset.Denom, math.LegacyZeroDec(), []types.RewardHistory{}))
 }
 

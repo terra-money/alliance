@@ -1,8 +1,9 @@
 package cli
 
 import (
-	"cosmossdk.io/math"
 	"time"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"

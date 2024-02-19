@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"context"
+
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 
@@ -29,8 +30,7 @@ func (k Keeper) CompleteUnbondings(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, delAddr, sdk.NewCoins(undel.Balance))
-			if err != nil {
+			if err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, delAddr, sdk.NewCoins(undel.Balance)); err != nil {
 				return err
 			}
 			valAddr, err := sdk.ValAddressFromBech32(undel.ValidatorAddress)
@@ -38,9 +38,13 @@ func (k Keeper) CompleteUnbondings(ctx context.Context) error {
 				return err
 			}
 			indexKey := types.GetUnbondingIndexKey(valAddr, completionTime, undel.Balance.Denom, delAddr)
-			store.Delete(indexKey)
+			if err = store.Delete(indexKey); err != nil {
+				return err
+			}
 		}
-		store.Delete(iter.Key())
+		if err := store.Delete(iter.Key()); err != nil {
+			return err
+		}
 	}
 
 	// Burn all "virtual" staking tokens in the module account
@@ -70,9 +74,8 @@ func (k Keeper) GetUnbondings(
 ) (unbondingDelegations []types.UnbondingDelegation, err error) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	iter := storetypes.KVStorePrefixIterator(store, types.UndelegationByValidatorIndexKey)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck,nolintlint
 	suffix := types.GetPartialUnbondingKeySuffix(denom, delAddr)
-
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()
 		if len(key) < len(suffix) {
@@ -115,7 +118,7 @@ func (k Keeper) GetUnbondingsByDenomAndDelegator(
 ) (unbondingDelegations []types.UnbondingDelegation, err error) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	iter := storetypes.KVStorePrefixIterator(store, types.UndelegationByValidatorIndexKey)
-	defer iter.Close()
+	defer iter.Close() //nolint:errcheck,nolintlint
 	suffix := types.GetPartialUnbondingKeySuffix(denom, delAddr)
 
 	for ; iter.Valid(); iter.Next() {
@@ -148,7 +151,7 @@ func (k Keeper) GetUnbondingsByDenomAndDelegator(
 func (k Keeper) addUnbondingAmounts(ctx context.Context, unbondingDelegations []types.UnbondingDelegation, delAddr sdk.AccAddress) (unbonding []types.UnbondingDelegation) {
 	for i := 0; i < len(unbondingDelegations); i++ {
 		iter := k.IterateUndelegationsByCompletionTime(ctx, unbondingDelegations[i].CompletionTime)
-		defer iter.Close()
+		defer iter.Close() //nolint:errcheck,nolintlint
 		for ; iter.Valid(); iter.Next() {
 			var queued types.QueuedUndelegation
 			k.cdc.MustUnmarshal(iter.Value(), &queued)

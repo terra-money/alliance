@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	cmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -79,10 +80,11 @@ func (k Keeper) ClaimDelegationRewards(
 
 	delegation.RewardHistory = newIndices
 	delegation.LastRewardClaimHeight = uint64(sdkCtx.BlockHeight())
-	k.SetDelegation(ctx, delAddr, valAddr, denom, delegation)
+	if err = k.SetDelegation(ctx, delAddr, valAddr, denom, delegation); err != nil {
+		return nil, err
+	}
 
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.RewardsPoolName, delAddr, coins)
-	if err != nil {
+	if err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.RewardsPoolName, delAddr, coins); err != nil {
 		return nil, err
 	}
 
@@ -181,13 +183,10 @@ func (k Keeper) AddAssetsToRewardPool(ctx context.Context, from sdk.AccAddress, 
 	}
 
 	val.GlobalRewardHistory = rewardHistories
-	k.SetValidator(ctx, val)
-	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, from, types.RewardsPoolName, coins)
-	if err != nil {
+	if err := k.SetValidator(ctx, val); err != nil {
 		return err
 	}
-
-	return nil
+	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, from, types.RewardsPoolName, coins)
 }
 
 func (k Keeper) totalAssetWeight(ctx context.Context, val types.AllianceValidator) cmath.LegacyDec {

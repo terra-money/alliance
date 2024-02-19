@@ -1,9 +1,10 @@
 package e2e
 
 import (
-	"cosmossdk.io/math"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	"github.com/terra-money/alliance/x/alliance"
 

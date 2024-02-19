@@ -2,7 +2,6 @@ package app
 
 import (
 	"bytes"
-	"cosmossdk.io/math"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -10,6 +9,8 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	cosmoserrors "cosmossdk.io/errors"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -80,7 +81,8 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 
 	// Set inflation to 0
 	var mintGenesisState minttypes.GenesisState
-	app.AppCodec().UnmarshalJSON(genesisState[minttypes.ModuleName], &mintGenesisState)
+	err = app.AppCodec().UnmarshalJSON(genesisState[minttypes.ModuleName], &mintGenesisState)
+	require.NoError(t, err)
 	mintGenesisState.Params.InflationMin = math.LegacyZeroDec()
 	mintGenesisState.Params.InflationMax = math.LegacyZeroDec()
 	mintGenesisState.Params.InflationRateChange = math.LegacyZeroDec()
@@ -90,13 +92,14 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(
+	_, err = app.InitChain(
 		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)
+	require.NoError(t, err)
 
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
@@ -121,12 +124,12 @@ func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
 func MakeTestEncodingConfig() params.EncodingConfig {
 	cdc := codec.NewLegacyAmino()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	codec := codec.NewProtoCodec(interfaceRegistry)
+	pcdc := codec.NewProtoCodec(interfaceRegistry)
 
 	encodingConfig := params.EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
-		Marshaler:         codec,
-		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
+		Marshaler:         pcdc,
+		TxConfig:          tx.NewTxConfig(pcdc, tx.DefaultSignModes),
 		Amino:             cdc,
 	}
 
@@ -268,9 +271,12 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 func RegisterNewValidator(t *testing.T, app *App, ctx sdk.Context, val stakingtypes.Validator) {
 	t.Helper()
 	val.Status = stakingtypes.Bonded
-	app.StakingKeeper.SetValidator(ctx, val)
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, val) //nolint:errcheck
-	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
+	err := app.StakingKeeper.SetValidator(ctx, val)
+	require.NoError(t, err)
+	err = app.StakingKeeper.SetValidatorByConsAddr(ctx, val)
+	require.NoError(t, err)
+	err = app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
+	require.NoError(t, err)
 	valAddr, err := sdk.ValAddressFromBech32(val.GetOperator())
 	require.NoError(t, err)
 	err = app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, valAddr)
@@ -283,8 +289,7 @@ func NewTestNetworkFixture() network.TestFixture {
 	if err != nil {
 		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
 	}
-	defer os.RemoveAll(dir)
-
+	defer os.RemoveAll(dir) //nolint:errcheck,nolintlint
 	app := New(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),

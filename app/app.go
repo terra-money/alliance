@@ -684,7 +684,9 @@ func New(
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	app.mm.RegisterServices(app.configurator)
+	if err := app.mm.RegisterServices(app.configurator); err != nil {
+		panic(err)
+	}
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -761,7 +763,9 @@ func (app *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+	if err := app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap()); err != nil {
+		return nil, err
+	}
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 

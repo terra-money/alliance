@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"context"
-	storetypes "cosmossdk.io/store/types"
 	"fmt"
+
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +20,10 @@ func (k Keeper) GetAllianceValidator(ctx context.Context, valAddr sdk.ValAddress
 	}
 	valInfo, found := k.GetAllianceValidatorInfo(ctx, valAddr)
 	if !found {
-		valInfo = k.createAllianceValidatorInfo(ctx, valAddr)
+		valInfo, err = k.createAllianceValidatorInfo(ctx, valAddr)
+		if err != nil {
+			return types.AllianceValidator{}, err
+		}
 	}
 	return types.AllianceValidator{
 		Validator:             &val,
@@ -38,46 +43,53 @@ func (k Keeper) GetAllianceValidatorInfo(ctx context.Context, valAddr sdk.ValAdd
 	return info, true
 }
 
-func (k Keeper) createAllianceValidatorInfo(ctx context.Context, valAddr sdk.ValAddress) (val types.AllianceValidatorInfo) {
+func (k Keeper) createAllianceValidatorInfo(ctx context.Context, valAddr sdk.ValAddress) (val types.AllianceValidatorInfo, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	key := types.GetAllianceValidatorInfoKey(valAddr)
 	val = types.NewAllianceValidatorInfo()
 	vb := k.cdc.MustMarshal(&val)
-	store.Set(key, vb)
-	return val
+	err = store.Set(key, vb)
+	return val, err
 }
 
-func (k Keeper) IterateAllianceValidatorInfo(ctx context.Context, cb func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) (stop bool)) {
+func (k Keeper) IterateAllianceValidatorInfo(ctx context.Context, cb func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) (stop bool)) (err error) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorInfoKey)
-	defer iter.Close()
+	defer func(iter storetypes.Iterator) {
+		err = iter.Close()
+	}(iter)
 	for ; iter.Valid(); iter.Next() {
 		var info types.AllianceValidatorInfo
 		b := iter.Value()
 		k.cdc.MustUnmarshal(b, &info)
 		valAddr := types.ParseAllianceValidatorKey(iter.Key())
 		if cb(valAddr, info) {
-			return
+			return err
 		}
 	}
+	return err
 }
 
-func (k Keeper) GetAllAllianceValidatorInfo(ctx context.Context) []types.AllianceValidatorInfo {
+func (k Keeper) GetAllAllianceValidatorInfo(ctx context.Context) (infos []types.AllianceValidatorInfo, err error) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorInfoKey)
-	defer iter.Close()
-	var infos []types.AllianceValidatorInfo
+	defer func(iter storetypes.Iterator) {
+		err = iter.Close()
+	}(iter)
 	for ; iter.Valid(); iter.Next() {
 		b := iter.Value()
 		var info types.AllianceValidatorInfo
-		k.cdc.UnmarshalInterface(b, &info) //nolint:errcheck
+		err = k.cdc.UnmarshalInterface(b, &info)
+		if err != nil {
+			return nil, err
+		}
 		infos = append(infos, info)
 	}
-	return infos
+	return infos, err
 }
 
-func (k Keeper) DeleteValidatorInfo(ctx context.Context, valAddr sdk.ValAddress) {
+func (k Keeper) DeleteValidatorInfo(ctx context.Context, valAddr sdk.ValAddress) error {
 	store := k.storeService.OpenKVStore(ctx)
 	key := types.GetAllianceValidatorInfoKey(valAddr)
-	store.Delete(key)
+	return store.Delete(key)
 }

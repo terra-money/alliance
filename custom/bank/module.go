@@ -2,6 +2,7 @@ package bank
 
 import (
 	"fmt"
+
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/cosmos/cosmos-sdk/codec"

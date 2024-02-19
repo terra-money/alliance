@@ -17,18 +17,25 @@ func (k Keeper) InitGenesis(ctx sdk.Context, g *types.GenesisState) []abci.Valid
 		if err := sdk.ValidateDenom(asset.Denom); err != nil {
 			panic(err)
 		}
-		k.SetAsset(ctx, asset)
+		if err := k.SetAsset(ctx, asset); err != nil {
+			panic(err)
+		}
+
 	}
 
 	for _, val := range g.ValidatorInfos {
 		valAddr, _ := sdk.ValAddressFromBech32(val.ValidatorAddress)
-		k.SetValidatorInfo(ctx, valAddr, val.Validator)
+		if err := k.SetValidatorInfo(ctx, valAddr, val.Validator); err != nil {
+			panic(err)
+		}
 	}
 
 	for _, delegation := range g.Delegations {
 		delAddr, _ := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
 		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
-		k.SetDelegation(ctx, delAddr, valAddr, delegation.Denom, delegation)
+		if err := k.SetDelegation(ctx, delAddr, valAddr, delegation.Denom, delegation); err != nil {
+			panic(err)
+		}
 	}
 
 	for _, redelegationState := range g.Redelegations {
@@ -36,8 +43,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, g *types.GenesisState) []abci.Valid
 		srcValAddr, _ := sdk.ValAddressFromBech32(redelegationState.Redelegation.SrcValidatorAddress)
 		dstValAddr, _ := sdk.ValAddressFromBech32(redelegationState.Redelegation.DstValidatorAddress)
 
-		k.addRedelegation(ctx, delAddr, srcValAddr, dstValAddr, redelegationState.Redelegation.Balance, redelegationState.CompletionTime)
-		k.queueRedelegation(ctx, delAddr, srcValAddr, dstValAddr, redelegationState.Redelegation.Balance, redelegationState.CompletionTime)
+		if err := k.addRedelegation(ctx, delAddr, srcValAddr, dstValAddr, redelegationState.Redelegation.Balance, redelegationState.CompletionTime); err != nil {
+			panic(err)
+		}
+		if err := k.queueRedelegation(ctx, delAddr, srcValAddr, dstValAddr, redelegationState.Redelegation.Balance, redelegationState.CompletionTime); err != nil {
+			panic(err)
+		}
 	}
 
 	for _, undelegationState := range g.Undelegations {
@@ -45,16 +56,22 @@ func (k Keeper) InitGenesis(ctx sdk.Context, g *types.GenesisState) []abci.Valid
 			continue
 		}
 		delAddr, _ := sdk.AccAddressFromBech32(undelegationState.Undelegation.Entries[0].DelegatorAddress)
-		k.setQueuedUndelegations(ctx, undelegationState.CompletionTime, delAddr, undelegationState.Undelegation)
+		if err := k.setQueuedUndelegations(ctx, undelegationState.CompletionTime, delAddr, undelegationState.Undelegation); err != nil {
+			panic(err)
+		}
 		for _, undelegation := range undelegationState.Undelegation.Entries {
 			valAddr, _ := sdk.ValAddressFromBech32(undelegation.ValidatorAddress)
-			k.setUnbondingIndexByVal(ctx, valAddr, undelegationState.CompletionTime, delAddr, undelegation.Balance.Denom)
+			if err := k.setUnbondingIndexByVal(ctx, valAddr, undelegationState.CompletionTime, delAddr, undelegation.Balance.Denom); err != nil {
+				panic(err)
+			}
 		}
 	}
 
 	for _, rewardWeightSnapshot := range g.RewardWeightChangeSnaphots {
 		valAddr, _ := sdk.ValAddressFromBech32(rewardWeightSnapshot.Validator)
-		k.setRewardWeightChangeSnapshot(ctx, rewardWeightSnapshot.Denom, valAddr, rewardWeightSnapshot.Height, rewardWeightSnapshot.Snapshot)
+		if err := k.setRewardWeightChangeSnapshot(ctx, rewardWeightSnapshot.Denom, valAddr, rewardWeightSnapshot.Height, rewardWeightSnapshot.Snapshot); err != nil {
+			panic(err)
+		}
 	}
 
 	return []abci.ValidatorUpdate{}
@@ -67,18 +84,22 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		state.Assets = append(state.Assets, *asset)
 	}
 
-	k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) (stop bool) {
+	if err := k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) (stop bool) {
 		state.ValidatorInfos = append(state.ValidatorInfos, types.ValidatorInfoState{
 			ValidatorAddress: valAddr.String(),
 			Validator:        info,
 		})
 		return false
-	})
+	}); err != nil {
+		panic(err)
+	}
 
-	k.IterateDelegations(ctx, func(d types.Delegation) (stop bool) {
+	if err := k.IterateDelegations(ctx, func(d types.Delegation) (stop bool) {
 		state.Delegations = append(state.Delegations, d)
 		return false
-	})
+	}); err != nil {
+		panic(err)
+	}
 
 	k.IterateRedelegations(ctx, func(r types.Redelegation, completionTime time.Time) (stop bool) {
 		state.Redelegations = append(state.Redelegations, types.RedelegationState{

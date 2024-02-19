@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"net"
 	"os"
 	"path/filepath"
 	"time"
+
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	tmconfig "github.com/cometbft/cometbft/config"
 	tmrand "github.com/cometbft/cometbft/libs/rand"

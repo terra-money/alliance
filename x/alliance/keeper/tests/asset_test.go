@@ -1,9 +1,10 @@
 package tests_test
 
 import (
-	"cosmossdk.io/math"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -91,6 +92,7 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 
 	// Expect no snapshots to be created
 	iter, err := app.AllianceKeeper.IterateWeightChangeSnapshot(ctx, AllianceDenom, getOperator(val), 0)
+	require.NoError(t, err)
 	require.False(t, iter.Valid())
 
 	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.AllianceAsset{
@@ -105,6 +107,7 @@ func TestRebalancingAfterRewardsRateChange(t *testing.T) {
 
 	// Expect a snapshot to be created
 	iter, err = app.AllianceKeeper.IterateWeightChangeSnapshot(ctx, AllianceDenom, getOperator(val), 0)
+	require.NoError(t, err)
 	require.True(t, iter.Valid())
 
 	assets = app.AllianceKeeper.GetAllAssets(ctx)
@@ -436,7 +439,8 @@ func TestRebalancingWithJailedValidator(t *testing.T) {
 
 	// Jail validator
 	cons2, _ := val2.GetConsAddr()
-	app.SlashingKeeper.Jail(ctx, cons2)
+	err = app.SlashingKeeper.Jail(ctx, cons2)
+	require.NoError(t, err)
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.NoError(t, err)
 	totalBonded, err = app.StakingKeeper.TotalBondedTokens(ctx)
@@ -625,7 +629,8 @@ func TestConsumingRebalancingEvent(t *testing.T) {
 		},
 	})
 
-	app.AllianceKeeper.QueueAssetRebalanceEvent(ctx)
+	err := app.AllianceKeeper.QueueAssetRebalanceEvent(ctx)
+	require.NoError(t, err)
 	store := app.AllianceKeeper.StoreService().OpenKVStore(ctx)
 	key := types.AssetRebalanceQueueKey
 	b, err := store.Get(key)
@@ -983,7 +988,7 @@ func TestClaimTakeRate(t *testing.T) {
 
 	// At the next begin block, tokens will be distributed from the fee pool
 	cons, _ := val1.GetConsAddr()
-	app.DistrKeeper.AllocateTokens(ctx, 1, []abcitypes.VoteInfo{
+	err = app.DistrKeeper.AllocateTokens(ctx, 1, []abcitypes.VoteInfo{
 		{
 			Validator: abcitypes.Validator{
 				Address: cons,
@@ -992,6 +997,7 @@ func TestClaimTakeRate(t *testing.T) {
 			BlockIdFlag: 1,
 		},
 	})
+	require.NoError(t, err)
 
 	outstandingRewards, err := app.DistrKeeper.GetValidatorOutstandingRewards(ctx, valAddr1)
 	require.NoError(t, err)
@@ -1161,7 +1167,7 @@ func TestRewardWeightRateChange(t *testing.T) {
 	ctx = ctx.WithBlockTime(startTime)
 	ctx = ctx.WithBlockHeight(1)
 	takeRateInterval := time.Minute * 5
-	alliance := types.NewAllianceAsset(AllianceDenom, math.LegacyNewDec(2), math.LegacyZeroDec(), math.LegacyNewDec(5), math.LegacyZeroDec(), startTime)
+	alli := types.NewAllianceAsset(AllianceDenom, math.LegacyNewDec(2), math.LegacyZeroDec(), math.LegacyNewDec(5), math.LegacyZeroDec(), startTime)
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.Params{
 			RewardDelayTime:       time.Minute * 60,
@@ -1169,7 +1175,7 @@ func TestRewardWeightRateChange(t *testing.T) {
 			LastTakeRateClaimTime: startTime,
 		},
 		Assets: []types.AllianceAsset{
-			alliance,
+			alli,
 		},
 	})
 
@@ -1178,15 +1184,15 @@ func TestRewardWeightRateChange(t *testing.T) {
 	err := app.AllianceKeeper.UpdateAlliance(ctx, &types.MsgUpdateAllianceProposal{
 		Title:                "Update",
 		Description:          "",
-		Denom:                alliance.Denom,
-		RewardWeight:         alliance.RewardWeight,
+		Denom:                alli.Denom,
+		RewardWeight:         alli.RewardWeight,
 		RewardWeightRange:    types.RewardWeightRange{Min: math.LegacyNewDec(0), Max: math.LegacyNewDec(5)},
-		TakeRate:             alliance.TakeRate,
+		TakeRate:             alli.TakeRate,
 		RewardChangeRate:     math.LegacyMustNewDecFromStr("1.001"),
 		RewardChangeInterval: time.Minute * 5,
 	})
 	require.NoError(t, err)
 
-	alliance, _ = app.AllianceKeeper.GetAssetByDenom(ctx, alliance.Denom)
-	require.Equal(t, alliance.LastRewardChangeTime, ctx.BlockTime())
+	alli, _ = app.AllianceKeeper.GetAssetByDenom(ctx, alli.Denom)
+	require.Equal(t, alli.LastRewardChangeTime, ctx.BlockTime())
 }

@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"fmt"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -35,10 +36,14 @@ func (k Keeper) SlashValidator(ctx context.Context, valAddr sdk.ValAddress, frac
 			return types.ErrUnknownAsset
 		}
 		asset.TotalValidatorShares = asset.TotalValidatorShares.Sub(sharesToSlash)
-		k.SetAsset(ctx, asset)
+		if err = k.SetAsset(ctx, asset); err != nil {
+			return err
+		}
 	}
 	val.ValidatorShares = slashedValidatorShares
-	k.SetValidator(ctx, val)
+	if err = k.SetValidator(ctx, val); err != nil {
+		return err
+	}
 
 	err = k.slashRedelegations(ctx, valAddr, fraction)
 	if err != nil {
@@ -108,10 +113,14 @@ func (k Keeper) slashRedelegations(ctx context.Context, valAddr sdk.ValAddress, 
 			return err
 		}
 		dstVal.TotalDelegatorShares = sdk.DecCoins(dstVal.TotalDelegatorShares).Sub(sdk.NewDecCoins(sdk.NewDecCoinFromDec(asset.Denom, sharesToSlash)))
-		k.SetValidator(ctx, dstVal)
+		if err = k.SetValidator(ctx, dstVal); err != nil {
+			return err
+		}
 
 		delegation.Shares = delegation.Shares.Sub(sharesToSlash)
-		k.SetDelegation(ctx, delAddr, dstValAddr, asset.Denom, delegation)
+		if err = k.SetDelegation(ctx, delAddr, dstValAddr, asset.Denom, delegation); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -148,7 +157,10 @@ func (k Keeper) slashUndelegations(ctx context.Context, valAddr sdk.ValAddress, 
 			}
 		}
 		b = k.cdc.MustMarshal(&undelegations)
-		store.Set(undelegationKey, b)
+		err = store.Set(undelegationKey, b)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

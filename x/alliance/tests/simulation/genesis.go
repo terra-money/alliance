@@ -1,10 +1,11 @@
 package simulation
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
 	"math/rand"
 	"time"
+
+	"cosmossdk.io/math"
 
 	"github.com/cometbft/cometbft/libs/json"
 	"github.com/cosmos/cosmos-sdk/types/module"
