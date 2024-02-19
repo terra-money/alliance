@@ -189,7 +189,7 @@ func (m MsgServer) CreateAlliance(ctx context.Context, msg *types.MsgCreateAllia
 	}
 
 	if msg.TakeRate.IsNil() || msg.TakeRate.IsNegative() || msg.TakeRate.GTE(math.LegacyOneDec()) {
-		return nil, status.Errorf(codes.InvalidArgument, "Alliance takeRate must be more or equals to 0 but strictly less than 1")
+		return nil, status.Errorf(codes.InvalidArgument, "Alliance takeRate must be 0 or greater but strictly less than 1")
 	}
 
 	if msg.RewardChangeRate.IsZero() || msg.RewardChangeRate.IsNegative() {
@@ -197,7 +197,7 @@ func (m MsgServer) CreateAlliance(ctx context.Context, msg *types.MsgCreateAllia
 	}
 
 	if msg.RewardChangeInterval < 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "Alliance rewardChangeInterval must be strictly a positive number")
+		return nil, status.Errorf(codes.InvalidArgument, "Alliance rewardChangeInterval must be zero or a positive number")
 	}
 
 	if m.GetAuthority() != msg.Authority {
