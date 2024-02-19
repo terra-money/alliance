@@ -197,7 +197,7 @@ func (m MsgServer) CreateAlliance(ctx context.Context, msg *types.MsgCreateAllia
 	}
 
 	if msg.RewardChangeInterval < 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "Alliance rewardChangeInterval must be strictly a positive number")
+		return nil, status.Errorf(codes.InvalidArgument, "Alliance rewardChangeInterval must be zero or a positive number")
 	}
 
 	if m.GetAuthority() != msg.Authority {
