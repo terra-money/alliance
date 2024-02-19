@@ -55,9 +55,7 @@ func (k Keeper) createAllianceValidatorInfo(ctx context.Context, valAddr sdk.Val
 func (k Keeper) IterateAllianceValidatorInfo(ctx context.Context, cb func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) (stop bool)) (err error) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	iter := storetypes.KVStorePrefixIterator(store, types.ValidatorInfoKey)
-	defer func(iter storetypes.Iterator) {
-		err = iter.Close()
-	}(iter)
+	iter.Close() //nolint:errcheck,nolintlint
 	for ; iter.Valid(); iter.Next() {
 		var info types.AllianceValidatorInfo
 		b := iter.Value()

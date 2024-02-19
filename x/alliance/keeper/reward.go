@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	cmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -21,7 +21,7 @@ func (k Keeper) ClaimValidatorRewards(ctx context.Context, val types.AllianceVal
 
 	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
 	if err != nil {
-		return sdk.NewCoins(), err
+		return nil, err
 	}
 
 	_, err = k.stakingKeeper.GetDelegation(ctx, moduleAddr, valAddr)
@@ -60,7 +60,7 @@ func (k Keeper) ClaimDelegationRewards(
 
 	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
 	if err != nil {
-		return sdk.NewCoins(), err
+		return nil, err
 	}
 
 	delegation, found := k.GetDelegation(ctx, delAddr, valAddr, denom)
@@ -108,12 +108,12 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, delegation types
 
 	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
 	if err != nil {
-		return sdk.NewCoins(), nil, err
+		return nil, nil, err
 	}
 	// If there are reward rate changes between last and current claim, sequentially claim with the help of the snapshots
 	snapshotIter, err := k.IterateWeightChangeSnapshot(ctx, asset.Denom, valAddr, delegation.LastRewardClaimHeight)
 	if err != nil {
-		return sdk.NewCoins(), nil, err
+		return nil, nil, err
 	}
 	for ; snapshotIter.Valid(); snapshotIter.Next() {
 		var snapshot types.RewardWeightChangeSnapshot
@@ -130,16 +130,16 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, delegation types
 
 // accumulateRewards compares the latest reward history with the delegation's reward history
 // It takes the difference and calculates how much can be claimed
-func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistories types.RewardHistories, asset types.AllianceAsset, rewardWeight cmath.LegacyDec, delegation types.Delegation, validator types.AllianceValidator) (sdk.Coins, types.RewardHistories) {
+func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistories types.RewardHistories, asset types.AllianceAsset, rewardWeight math.LegacyDec, delegation types.Delegation, validator types.AllianceValidator) (sdk.Coins, types.RewardHistories) {
 	// Go through each reward denom and accumulate rewards
 	var rewards sdk.Coins
 
-	delegationTokens := cmath.LegacyNewDecFromInt(types.GetDelegationTokens(delegation, validator, asset).Amount)
+	delegationTokens := math.LegacyNewDecFromInt(types.GetDelegationTokens(delegation, validator, asset).Amount)
 	for _, history := range latestRewardHistories {
 		rewardHistory, found := rewardHistories.GetIndexByDenom(history.Denom)
 		if !found {
 			rewardHistory.Denom = history.Denom
-			rewardHistory.Index = cmath.LegacyZeroDec()
+			rewardHistory.Index = math.LegacyZeroDec()
 		}
 		if rewardHistory.Index.GTE(history.Index) {
 			continue
@@ -175,10 +175,10 @@ func (k Keeper) AddAssetsToRewardPool(ctx context.Context, from sdk.AccAddress, 
 		if !found {
 			rewardHistories = append(rewardHistories, types.RewardHistory{
 				Denom: c.Denom,
-				Index: cmath.LegacyNewDecFromInt(c.Amount).Quo(totalAssetWeight),
+				Index: math.LegacyNewDecFromInt(c.Amount).Quo(totalAssetWeight),
 			})
 		} else {
-			rewardHistory.Index = rewardHistory.Index.Add(cmath.LegacyNewDecFromInt(c.Amount).Quo(totalAssetWeight))
+			rewardHistory.Index = rewardHistory.Index.Add(math.LegacyNewDecFromInt(c.Amount).Quo(totalAssetWeight))
 		}
 	}
 
@@ -189,8 +189,8 @@ func (k Keeper) AddAssetsToRewardPool(ctx context.Context, from sdk.AccAddress, 
 	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, from, types.RewardsPoolName, coins)
 }
 
-func (k Keeper) totalAssetWeight(ctx context.Context, val types.AllianceValidator) cmath.LegacyDec {
-	total := cmath.LegacyZeroDec()
+func (k Keeper) totalAssetWeight(ctx context.Context, val types.AllianceValidator) math.LegacyDec {
+	total := math.LegacyZeroDec()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, token := range val.TotalDelegatorShares {
 		asset, found := k.GetAssetByDenom(ctx, token.Denom)
