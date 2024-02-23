@@ -21,7 +21,7 @@ message Delegation {
   // shares define the delegation shares received.
   string shares = 4 [
   (cosmos_proto.scalar)  = "cosmos.Dec",
-  (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+  (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
   (gogoproto.nullable)   = false
   ];
   repeated RewardHistory reward_history = 5 [

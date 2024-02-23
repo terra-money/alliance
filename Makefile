@@ -111,14 +111,14 @@ format-tools:
 	go install mvdan.cc/gofumpt@v0.4.0
 	go install github.com/client9/misspell/cmd/misspell@v0.3.4
 	go install golang.org/x/tools/cmd/goimports@latest
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2
 
 lint: format-tools
 	golangci-lint run
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*pb.gw.go" | xargs gofumpt -d
 
 lint-docker:
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.52.2-alpine golangci-lint run --timeout 10m
+	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.54.2-alpine golangci-lint run --timeout 10m
 
 format: format-tools
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "*.pb.go" -not -path "*pb.gw.go" | xargs gofumpt -w
