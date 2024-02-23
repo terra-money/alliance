@@ -97,6 +97,26 @@ func (k Keeper) GetUnbondings(
 	return unbondingDelegations, err
 }
 
+// This method retun all in-progress unbondings for a given delegator address
+// it is less optimal than GetUnbondingsByDenomAndDelegator because it
+// has to iterate over all alliances to get the list of all assets
+func (k Keeper) GetUnbondingsByDelegator(
+	ctx context.Context,
+	delAddr sdk.AccAddress,
+) (unbondingDelegations []types.UnbondingDelegation, err error) {
+	// Retrieve all Aliances to get the list of all assets
+	alliances := k.GetAllAssets(ctx)
+
+	for _, alliance := range alliances {
+		// Get the unbonding delegations for the current alliance
+		unbondingDelegations, err = k.GetUnbondingsByDenomAndDelegator(ctx, alliance.Denom, delAddr)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return unbondingDelegations, err
+}
+
 // This method retun all unbonding delegations for a given denom and delegator address,
 // it is less optimal than GetUnbondings because it has do some data parsing and additional
 // checks, plus it returns a larger data set.

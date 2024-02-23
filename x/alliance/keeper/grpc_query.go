@@ -444,6 +444,21 @@ func (k QueryServer) AllianceDelegation(c context.Context, req *types.QueryAllia
 	}, nil
 }
 
+func (k QueryServer) AllianceUnbondingsByDelegator(c context.Context, req *types.QueryAllianceUnbondingsByDelegatorRequest) (*types.QueryAllianceUnbondingsByDelegatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := k.GetUnbondingsByDelegator(ctx, delAddr)
+
+	return &types.QueryAllianceUnbondingsByDelegatorResponse{
+		Unbondings: res,
+	}, err
+}
+
 func (k QueryServer) AllianceUnbondingsByDenomAndDelegator(c context.Context, req *types.QueryAllianceUnbondingsByDenomAndDelegatorRequest) (*types.QueryAllianceUnbondingsByDenomAndDelegatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -538,14 +553,49 @@ func (k QueryServer) AllianceRedelegations(c context.Context, req *types.QueryAl
 	}, err
 }
 
-func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.QueryIBCAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRequest is deprecated
-	req := types.QueryAllianceDelegationRequest{
-		DelegatorAddr: request.DelegatorAddr,
-		ValidatorAddr: request.ValidatorAddr,
-		Denom:         "ibc/" + request.Hash,
-		Pagination:    request.Pagination,
+func (k QueryServer) AllianceRedelegationsByDelegator(c context.Context, req *types.QueryAllianceRedelegationsByDelegatorRequest) (*types.QueryAllianceRedelegationsByDelegatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
 	}
-	return k.AllianceDelegation(c, &req)
+
+	// Get the key-value module store using the store key
+	store := ctx.KVStore(k.storeKey)
+
+	// Get the part of the store that keeps assets
+	redelegationsStore := prefix.NewStore(store, types.GetRedelegationsKeyByDelegator(delAddr))
+
+	var redelegationEntries []types.RedelegationEntry
+
+	// Paginate the assets store based on PageRequest
+	pageRes, err := query.Paginate(redelegationsStore, req.Pagination, func(key []byte, value []byte) error {
+		var redelegation types.Redelegation
+		k.cdc.MustUnmarshal(value, &redelegation)
+		// get the completion time from the latest bytes of the key
+		completionTime := types.ParseRedelegationPaginationKeyTime(key)
+
+		redelegationEntry := types.RedelegationEntry{
+			DelegatorAddress:    redelegation.DelegatorAddress,
+			SrcValidatorAddress: redelegation.SrcValidatorAddress,
+			DstValidatorAddress: redelegation.DstValidatorAddress,
+			Balance:             redelegation.Balance,
+			CompletionTime:      completionTime,
+		}
+
+		redelegationEntries = append(redelegationEntries, redelegationEntry)
+		return nil
+	})
+	// Throw an error if pagination failed
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllianceRedelegationsByDelegatorResponse{
+		Redelegations: redelegationEntries,
+		Pagination:    pageRes,
+	}, err
 }
 
 func NewQueryServerImpl(keeper Keeper) types.QueryServer {
