@@ -247,10 +247,9 @@ func ParseRedelegationKeyForCompletionTime(key []byte) time.Time {
 }
 
 func ParseRedelegationPaginationKeyTime(key []byte) time.Time {
-	offset := 0
-	offset += int(key[offset]) + 1
-	b := key[offset:]
-	t, err := sdk.ParseTimeBytes(b)
+	timestampLength := len(sdk.SortableTimeFormat)
+	timestampStart := len(key) - timestampLength
+	t, err := sdk.ParseTimeBytes(key[timestampStart:])
 	if err != nil {
 		panic(err)
 	}
