@@ -44,7 +44,7 @@ var (
 
 	// Indexes for querying
 	RedelegationByValidatorIndexKey = []byte{0x31}
-	UndelegationByValidatorIndexKey = []byte{0x32}
+	UndelegationByValidatorIndexKey = []byte{0x32} // TOODO: Simplify this index
 )
 
 func GetAssetKey(denom string) []byte {
@@ -149,39 +149,18 @@ func GetPartialUnbondingKeySuffix(denom string, delAddress sdk.AccAddress) (key 
 	return key
 }
 
-func PartiallyParseUndelegationKeyBytes(key []byte) (
-	valAddr sdk.ValAddress,
-	unbondingCompletionTime time.Time,
-	err error,
-) {
+func GetTimeFromUndelegationKey(key []byte) (time.Time, error) {
 	offset := len(UndelegationByValidatorIndexKey)
 
 	valAddrLen := int(key[offset])
 	offset++
-	valAddr = sdk.ValAddress(key[offset : offset+valAddrLen])
 	offset += valAddrLen
 
 	timeLen := int(key[offset])
 	offset++
 	timeBytes := key[offset : offset+timeLen]
 
-	// In case it's needed in the future to parse
-	// all thee properties from the key here is the code:
-
-	// offset += timeLen
-	// denomLen := int(key[offset])
-	// offset++
-	// denom = string(key[offset : offset+denomLen])
-	// offset += denomLen
-	//
-	// delAddrLen := int(key[offset])
-	// offset++
-	// delAddrBytes := key[offset : offset+delAddrLen]
-	// delAddr = sdk.AccAddress(delAddrBytes)
-
-	unbondingCompletionTime, err = sdk.ParseTimeBytes(timeBytes)
-
-	return valAddr, unbondingCompletionTime, err
+	return sdk.ParseTimeBytes(timeBytes)
 }
 
 func GetUndelegationsIndexOrderedByValidatorKey(valAddr sdk.ValAddress) []byte {

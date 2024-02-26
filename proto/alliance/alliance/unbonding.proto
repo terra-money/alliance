@@ -22,4 +22,6 @@ message UnbondingDelegation {
       (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
       (gogoproto.nullable)   = false
     ];
+    // alliance denom of the unbonding delegation
+    string denom = 4;
 }

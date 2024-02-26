@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/terra-money/alliance/x/alliance"
 
 	"github.com/terra-money/alliance/x/alliance/keeper"
@@ -245,16 +246,16 @@ func TestDelegatingASmallAmount(t *testing.T) {
 	// Query the unbondings in progress
 	unbondings, err := app.AllianceKeeper.GetUnbondingsByDenomAndDelegator(ctx, allianceAsset2, user1)
 	require.NoError(t, err)
-	require.True(t, len(unbondings) == 1)
-	require.Equal(t, val1.GetOperator().String(), unbondings[0].ValidatorAddress)
-	require.Equal(t, sdk.NewInt(100), unbondings[0].Amount)
+	require.Len(t, unbondings, 2)
+	require.Equal(t, val1.GetOperator(), unbondings[0].ValidatorAddress)
+	require.Equal(t, math.NewInt(100), unbondings[0].Amount)
 
 	// Query the unbondings in progress
 	unbondings, err = app.AllianceKeeper.GetUnbondings(ctx, allianceAsset2, user1, val1.GetOperator())
 	require.NoError(t, err)
-	require.True(t, len(unbondings) == 1)
-	require.Equal(t, val1.GetOperator().String(), unbondings[0].ValidatorAddress)
-	require.Equal(t, sdk.NewInt(100), unbondings[0].Amount)
+	require.Len(t, unbondings, 2)
+	require.Equal(t, val1.GetOperator(), unbondings[0].ValidatorAddress)
+	require.Equal(t, math.NewInt(100), unbondings[0].Amount)
 }
 
 // This test replicates this issue where there are large amounts of tokens delegated,
