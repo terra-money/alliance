@@ -679,6 +679,7 @@ UnbondingDelegation defines an unbonding object with relevant metadata.
 | `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time is the unix time for unbonding completion. |
 | `validator_address` | [string](#string) |  | validator_address is the bech32-encoded address of the validator. |
 | `amount` | [string](#string) |  | amount defines the tokens to receive at completion. |
+| `denom` | [string](#string) |  | alliance denom of the unbonding delegation |
 
 
 
@@ -934,7 +935,6 @@ AllianceDelegation
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `unbondings` | [UnbondingDelegation](#alliance.alliance.UnbondingDelegation) | repeated |  |
-| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
 
 
 
