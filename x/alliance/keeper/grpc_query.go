@@ -221,13 +221,6 @@ func (k QueryServer) Alliance(c context.Context, req *types.QueryAllianceRequest
 	}, nil
 }
 
-func (k QueryServer) IBCAlliance(c context.Context, request *types.QueryIBCAllianceRequest) (*types.QueryAllianceResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceRequest is deprecated
-	req := types.QueryAllianceRequest{
-		Denom: "ibc/" + request.Hash,
-	}
-	return k.Alliance(c, &req)
-}
-
 func (k QueryServer) AllianceDelegationRewards(context context.Context, req *types.QueryAllianceDelegationRewardsRequest) (*types.QueryAllianceDelegationRewardsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(context)
 	decodedDenom, err := url.QueryUnescape(req.Denom)
@@ -264,17 +257,6 @@ func (k QueryServer) AllianceDelegationRewards(context context.Context, req *typ
 	return &types.QueryAllianceDelegationRewardsResponse{
 		Rewards: rewards,
 	}, nil
-}
-
-func (k QueryServer) IBCAllianceDelegationRewards(context context.Context, request *types.QueryIBCAllianceDelegationRewardsRequest) (*types.QueryAllianceDelegationRewardsResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRewardsRequest is deprecated
-	req := types.QueryAllianceDelegationRewardsRequest{
-		DelegatorAddr: request.DelegatorAddr,
-		ValidatorAddr: request.ValidatorAddr,
-		Denom:         "ibc/" + request.Hash,
-		Pagination:    request.Pagination,
-	}
-
-	return k.AllianceDelegationRewards(context, &req)
 }
 
 func (k QueryServer) AlliancesDelegation(c context.Context, req *types.QueryAlliancesDelegationsRequest) (*types.QueryAlliancesDelegationsResponse, error) {
@@ -540,16 +522,6 @@ func (k QueryServer) AllianceRedelegations(c context.Context, req *types.QueryAl
 		Redelegations: redelegationEntries,
 		Pagination:    pageRes,
 	}, err
-}
-
-func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.QueryIBCAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRequest is deprecated
-	req := types.QueryAllianceDelegationRequest{
-		DelegatorAddr: request.DelegatorAddr,
-		ValidatorAddr: request.ValidatorAddr,
-		Denom:         "ibc/" + request.Hash,
-		Pagination:    request.Pagination,
-	}
-	return k.AllianceDelegation(c, &req)
 }
 
 func NewQueryServerImpl(keeper Keeper) types.QueryServer {
