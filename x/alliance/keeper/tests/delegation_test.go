@@ -12,6 +12,7 @@ import (
 	"github.com/terra-money/alliance/x/alliance/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -332,6 +333,26 @@ func TestSuccessfulRedelegation(t *testing.T) {
 	// Check total bonded amount
 	require.Equal(t, math.NewInt(3_000_000), totalBonded)
 
+	// Query redelegations by the delegator address
+	redelegationsByDelegator, err := queryServer.AllianceRedelegationsByDelegator(ctx, &types.QueryAllianceRedelegationsByDelegatorRequest{
+		DelegatorAddr: delAddr1.String(),
+	})
+	require.NoError(t, err)
+	require.Equal(t, &types.QueryAllianceRedelegationsByDelegatorResponse{
+		Redelegations: []types.RedelegationEntry{
+			{
+				DelegatorAddress:    delAddr1.String(),
+				SrcValidatorAddress: valAddr1.String(),
+				DstValidatorAddress: valAddr2.String(),
+				Balance:             sdk.NewCoin(AllianceDenom, math.NewInt(500_000)),
+				CompletionTime:      time.Date(1, time.January, 22, 0, 0, 0, 0, time.UTC),
+			},
+		},
+		Pagination: &query.PageResponse{
+			Total: 1,
+		},
+	}, redelegationsByDelegator)
+
 	// Check if there is a re-delegation event stored
 	iter := app.AllianceKeeper.IterateRedelegationsByDelegator(ctx, delAddr1)
 	defer iter.Close()
@@ -388,9 +409,21 @@ func TestSuccessfulRedelegation(t *testing.T) {
 			DelegatorAddr: delAddr1.String(),
 			Pagination:    nil,
 		})
-
 	require.NoError(t, err)
-	require.Len(t, redelegationsRes.Redelegations, 1)
+	require.Equal(t, &types.QueryAllianceRedelegationsResponse{
+		Redelegations: []types.RedelegationEntry{
+			{
+				DelegatorAddress:    delAddr1.String(),
+				SrcValidatorAddress: valAddr1.String(),
+				DstValidatorAddress: valAddr2.String(),
+				Balance:             sdk.NewCoin(AllianceDenom, math.NewInt(500_000)),
+				CompletionTime:      time.Date(1, time.January, 22, 0, 0, 0, 0, time.UTC),
+			},
+		},
+		Pagination: &query.PageResponse{
+			Total: 1,
+		},
+	}, redelegationsRes)
 
 	unbondingPeriod, err := app.StakingKeeper.UnbondingTime(ctx)
 	require.NoError(t, err)
