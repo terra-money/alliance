@@ -324,7 +324,7 @@ func TestClaimQueryReward(t *testing.T) {
 		Rewards: []sdk.Coin{
 			{
 				Denom:  ULunaAlliance,
-				Amount: math.NewInt(32666),
+				Amount: math.NewInt(32665),
 			},
 		},
 	}, queryDelegation)
