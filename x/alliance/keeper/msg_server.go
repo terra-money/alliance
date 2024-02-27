@@ -305,7 +305,11 @@ func (m MsgServer) DeleteAlliance(ctx context.Context, msg *types.MsgDeleteAllia
 
 	if asset.TotalTokens.GT(math.ZeroInt()) {
 		asset.IsDissolving = true
-		m.SetAsset(sdkCtx, asset)
+		err := m.SetAsset(sdkCtx, asset)
+		if err != nil {
+			return nil, err
+		}
+
 	} else {
 		err := m.DeleteAsset(sdkCtx, asset)
 		if err != nil {

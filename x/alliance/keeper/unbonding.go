@@ -12,10 +12,9 @@ import (
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
-// BeginUnbondingsForDissolvingAlliances iterates thought all alliances,
-// if there is any alliance being dissolved
-//   - when that specific alliance is being disslved it will first check if the
-//     AllianceDissolutionTime has been set and if it is in the past compared to
+// BeginUnbondingsForDissolvingAlliances iterates over the alliances,
+// if there is any alliance being dissolved:
+//   - check if the AllianceDissolutionTime has been set and if it is in the past compared to
 //     the current block time the alliance will be deleted.
 //   - if the alliance is not initialized and is being dissolved it means that
 //     all alliance unbondings have been executed and no further comput needs to be done.
@@ -23,65 +22,112 @@ import (
 //     setting always the last unbonding period for the latest unbonding executed
 //     as the AllianceDissolutionTime, so that we can keep track of when to delete the alliance.
 func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err error) {
-	assets := k.GetAllAssets(ctx)
-
-	for _, asset := range assets {
+	// Iterate over all alliances...
+	for _, asset := range k.GetAllAssets(ctx) {
+		// Check if any alliance is dissolving.
+		// ¡NOTE!: It's important to continue the loop if the alliance is not dissolving.
+		// because there is logic down the linde that depends on dissolving alliances.
 		if !asset.IsDissolving {
 			continue
 		}
-		assetDereference := *asset
+		assert := *asset
+		// Variable that keeps track of how many unbondings have been executed
 		amountOfUndelegationsExecuted := 0
 
-		if assetDereference.AllianceDissolutionTime != nil {
-			if ctx.BlockTime().After(*assetDereference.AllianceDissolutionTime) {
-				err := k.DeleteAsset(ctx, assetDereference)
+		// In theory if an alliance is dissolving it should have a dissolution time set
+		// and if the dissolution time is in the past we should delete the alliance
+		// because it means that the unbonding period for all the delegations is completed
+		// and funds have been sent back to the delegators.
+		if assert.AllianceDissolutionTime != nil {
+			if ctx.BlockTime().After(*assert.AllianceDissolutionTime) {
+				err := k.DeleteAsset(ctx, assert)
 				if err != nil {
 					return err
 				}
 				continue
 			}
 		}
-
-		if !assetDereference.IsInitialized && assetDereference.IsDissolving {
+		// If the alliance is not initialized and is being dissolved it means that
+		// all alliance unbondings have been executed and no further comput needs to be done.
+		if !assert.IsInitialized && assert.IsDissolving {
 			continue
 		}
 
-		k.IterateDelegations(ctx, func(delegation types.Delegation) (stop bool) {
+		// Iterate over all the delegations
+		err := k.IterateDelegations(ctx, func(delegation types.Delegation) (stop bool) {
+			// if the delegation being checked is not for the current alliance we should
+			// continue to the next delegation without spending more comput time.
+			if delegation.Denom != assert.Denom {
+				return false
+			}
+
 			// We should begin unbonding in batches of 50 at the time
-			// otherwise it can be too expensive to process
+			// otherwise it can be too expensive to process and blocks
+			// can take too long to be process.
+			// TODO: make of this a module parameter at some point.
 			if amountOfUndelegationsExecuted == 50 {
 				return true
 			}
 
-			if delegation.Denom == assetDereference.Denom {
-				validator, fail := k.GetAllianceValidator(ctx, sdk.ValAddress(delegation.DelegatorAddress))
-				if err != nil {
-					err = fail
-					return true
-				}
-
-				coinsToUndelegate := types.GetDelegationTokensWithShares(delegation.Shares, validator, assetDereference)
-				time, fail := k.Undelegate(ctx, sdk.AccAddress(delegation.DelegatorAddress), validator, coinsToUndelegate)
-				if err != nil {
-					err = fail
-					return true
-				}
-
-				asset.AllianceDissolutionTime = time
-				k.SetAsset(ctx, assetDereference)
-				amountOfUndelegationsExecuted++
+			// Parse delegator address
+			delAddr, fail := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
+			if fail != nil {
+				err = fail
+				return true
 			}
+
+			// Parse validator address
+			vaAddr, fail := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+			if fail != nil {
+				err = fail
+				return true
+			}
+
+			// Get the alliances alliance validator info
+			validator, fail := k.GetAllianceValidator(ctx, vaAddr)
+			if fail != nil {
+				err = fail
+				return true
+			}
+
+			// Calculate the amount of coins to unbond
+			coinsToUnbond := types.GetDelegationTokens(delegation, validator, assert)
+
+			// Execute the unbonding
+			time, fail := k.Undelegate(ctx, delAddr, validator, coinsToUnbond)
+			if fail != nil {
+				err = fail
+				return true
+			}
+
+			// Set the last unbonding time as the alliance dissolution time
+			asset.AllianceDissolutionTime = time
+			fail = k.SetAsset(ctx, assert)
+			if fail != nil {
+				err = fail
+				return true
+			}
+
+			// Increment the amount of unbondings executed so at the begining of the
+			// loop we can check if we have executed 50 unbondings and stop the loop.
+			amountOfUndelegationsExecuted++
 
 			return false
 		})
-
 		if err != nil {
 			return err
 		}
 
+		// ¡NOTE! If no unbondings have been executed but the alliance is in dissolving state,
+		// we should set the alliance as not initialized because it could be that the alliance
+		// the alliance has never had delegations or that all the delegations have been unbonded already,
+		// so going back to the line 52 of this file we avoid doing unnecessary comput.
 		if amountOfUndelegationsExecuted == 0 {
-			assetDereference.IsInitialized = false
-			k.SetAsset(ctx, assetDereference)
+			assert.IsInitialized = false
+			err = k.SetAsset(ctx, assert)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
