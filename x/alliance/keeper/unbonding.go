@@ -24,14 +24,16 @@ func (k Keeper) GetUnbondings(
 	// Get the store
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	// create the iterator with the correct prefix
-	iter := storetypes.KVStorePrefixIterator(store, types.UndelegationByValidatorIndexKey)
+	prefix := types.GetUndelegationsIndexOrderedByValidatorKey(valAddr)
+	// Get the iterator
+	iter := storetypes.KVStorePrefixIterator(store, prefix)
 	defer iter.Close()
 	suffix := types.GetPartialUnbondingKeySuffix(denom, delAddr)
 
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()
-		// Skip keys that are shorter than the suffix
-		if len(key) < len(suffix) {
+		// Skip keys that don't have the desired suffix
+		if bytes.HasSuffix(key, suffix) {
 			continue
 		}
 
