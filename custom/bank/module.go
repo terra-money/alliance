@@ -3,6 +3,8 @@ package bank
 import (
 	"fmt"
 
+	"cosmossdk.io/core/address"
+
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -20,17 +22,19 @@ import (
 // It modifies the TotalSupply and SupplyOf GRPC queries
 type AppModule struct {
 	bankmodule.AppModule
-	keeper   custombankkeeper.Keeper
-	subspace exported.Subspace
+	keeper       custombankkeeper.Keeper
+	subspace     exported.Subspace
+	addressCodec address.Codec
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, keeper custombankkeeper.Keeper, accountKeeper types.AccountKeeper, ss exported.Subspace) AppModule {
 	bankModule := bankmodule.NewAppModule(cdc, keeper, accountKeeper, ss)
 	return AppModule{
-		AppModule: bankModule,
-		keeper:    keeper,
-		subspace:  ss,
+		AppModule:    bankModule,
+		keeper:       keeper,
+		subspace:     ss,
+		addressCodec: accountKeeper.AddressCodec(),
 	}
 }
 
@@ -38,7 +42,7 @@ func NewAppModule(cdc codec.Codec, keeper custombankkeeper.Keeper, accountKeeper
 // NOTE: Overriding this method as not doing so will cause a panic
 // when trying to force this custom keeper into a bankkeeper.BaseKeeper
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), bankkeeper.NewMsgServerImpl(am.keeper))
+	types.RegisterMsgServer(cfg.MsgServer(), custombankkeeper.NewMsgServerImpl(am.keeper, am.addressCodec))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := bankkeeper.NewMigrator(am.keeper.BaseKeeper, am.subspace)
