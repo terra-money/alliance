@@ -108,7 +108,7 @@ func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err erro
 				return true
 			}
 
-			// Increment the amount of unbondings executed so at the begining of the
+			// Increment the amount of unbondings executed so at the beginning of the
 			// loop we can check if we have executed 50 unbondings and stop the loop.
 			amountOfUndelegationsExecuted++
 

@@ -125,7 +125,9 @@ func TestBeginUnbondingOnABCIAlliances(t *testing.T) {
 		RewardWeightRange:    types.RewardWeightRange{Min: math.LegacyNewDec(0), Max: math.LegacyNewDec(1)},
 		IsInitialized:        true,
 	}
-	app.AllianceKeeper.SetAsset(ctx, allianceAsset)
+	err := app.AllianceKeeper.SetAsset(ctx, allianceAsset)
+	require.NoError(t, err)
+
 	// Get the native delegations to have a validator address where to delegate
 	delegations, err := app.StakingKeeper.GetAllDelegations(ctx)
 	require.NoError(t, err)
@@ -150,11 +152,12 @@ func TestBeginUnbondingOnABCIAlliances(t *testing.T) {
 	require.Equal(t, math.LegacyNewDec(1000_000_000), *res2)
 
 	// Execute the deltion of the alliance
-	app.AllianceKeeper.DeleteAlliance(ctx, &types.MsgDeleteAllianceProposal{
+	err = app.AllianceKeeper.DeleteAlliance(ctx, &types.MsgDeleteAllianceProposal{
 		Title:       "",
 		Description: "",
 		Denom:       AllianceDenom,
 	})
+	require.NoError(t, err)
 
 	// ABCI execution: set alliance as dissolving and begin the unbonding of the delegations
 	err = app.AllianceKeeper.BeginUnbondingsForDissolvingAlliances(ctx)
