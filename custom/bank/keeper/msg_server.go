@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -31,7 +32,6 @@ func NewMsgServerImpl(keeper Keeper, addressCodec address.Codec) types.MsgServer
 }
 
 func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
-
 	from, err := k.addressCodec.StringToBytes(msg.FromAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
