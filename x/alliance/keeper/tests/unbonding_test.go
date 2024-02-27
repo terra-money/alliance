@@ -107,6 +107,8 @@ func TestUnbondingQueries(t *testing.T) {
 	)
 }
 
+// Happy path, when an Alliance has delegations and the MsgDeleteAllianceProposal is executed
+// the unbonding process should start for all the delegations,
 func TestBeginUnbondingOnABCIAlliances(t *testing.T) {
 	// Setup the context with an alliance asset
 	app, ctx := createTestContext(t)
@@ -160,7 +162,7 @@ func TestBeginUnbondingOnABCIAlliances(t *testing.T) {
 	require.NoError(t, err)
 
 	// ABCI execution: set alliance as dissolving and begin the unbonding of the delegations
-	err = app.AllianceKeeper.BeginUnbondingsForDissolvingAlliances(ctx)
+	err = app.AllianceKeeper.ClearAlliance(ctx)
 	require.NoError(t, err)
 
 	// Query staking module unbonding time to assert later on
@@ -174,7 +176,7 @@ func TestBeginUnbondingOnABCIAlliances(t *testing.T) {
 		[]types.UnbondingDelegation{{
 			ValidatorAddress: valAddr.String(),
 			Amount:           math.NewInt(1000_000_000),
-			CompletionTime:   ctx.BlockHeader().Time.Add(unbondingTime),
+			CompletionTime:   ctx.BlockTime().Add(unbondingTime),
 			Denom:            AllianceDenom,
 		}},
 		unbondings,
@@ -186,9 +188,32 @@ func TestBeginUnbondingOnABCIAlliances(t *testing.T) {
 		[]types.UnbondingDelegation{{
 			ValidatorAddress: valAddr.String(),
 			Amount:           math.NewInt(1000_000_000),
-			CompletionTime:   ctx.BlockHeader().Time.Add(unbondingTime),
+			CompletionTime:   ctx.BlockTime().Add(unbondingTime),
 			Denom:            AllianceDenom,
 		}},
 		unbondings,
 	)
+
+	// ABCI execution: simulate the unbonding time has passed
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(unbondingTime).Add(time.Minute))
+
+	// Should complete the unbondings
+	err = app.AllianceKeeper.CompleteUnbondings(ctx)
+	require.NoError(t, err)
+
+	// ABCI execution: simulate the unbonding time has passed
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(unbondingTime).Add(time.Minute * 10))
+
+	// Should complete the unbondings
+	err = app.AllianceKeeper.CompleteUnbondings(ctx)
+	require.NoError(t, err)
+
+	// Should remove the alliance from the store
+	err = app.AllianceKeeper.ClearAlliance(ctx)
+	require.NoError(t, err)
+
+	// Validate the alliance is deleted
+	ally, found := app.AllianceKeeper.GetAssetByDenom(ctx, AllianceDenom)
+	require.False(t, found)
+	require.Equal(t, types.AllianceAsset{}, ally)
 }

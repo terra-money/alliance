@@ -244,6 +244,24 @@ func (k Keeper) SetAsset(ctx context.Context, asset types.AllianceAsset) error {
 	return store.Set(types.GetAssetKey(asset.Denom), b)
 }
 
+// QueryAndUpdate the asset with the specified dissolution time
+func (k Keeper) UpdateAssetDissolutionTime(ctx context.Context, denom string, dissolutionTime *time.Time) error {
+	store := k.storeService.OpenKVStore(ctx)
+	key := types.GetAssetKey(denom)
+	b, err := store.Get(key)
+	if b == nil || err != nil {
+		return types.ErrUnknownAsset
+	}
+	var asset types.AllianceAsset
+	err = k.cdc.Unmarshal(b, &asset)
+	if err != nil {
+		return err
+	}
+	asset.AllianceDissolutionTime = dissolutionTime
+	b = k.cdc.MustMarshal(&asset)
+	return store.Set(types.GetAssetKey(denom), b)
+}
+
 func (k Keeper) GetAllAssets(ctx context.Context) (assets []*types.AllianceAsset) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	iter := storetypes.KVStorePrefixIterator(store, types.AssetKey)

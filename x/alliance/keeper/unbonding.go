@@ -12,7 +12,7 @@ import (
 	"github.com/terra-money/alliance/x/alliance/types"
 )
 
-// BeginUnbondingsForDissolvingAlliances iterates over the alliances,
+// ClearAlliance iterates over the alliances,
 // if there is any alliance being dissolved:
 //   - check if the AllianceDissolutionTime has been set and if it is in the past compared to
 //     the current block time the alliance will be deleted.
@@ -21,7 +21,7 @@ import (
 //   - else iterate the delegations and begin the unbonding for all assets,
 //     setting always the last unbonding period for the latest unbonding executed
 //     as the AllianceDissolutionTime, so that we can keep track of when to delete the alliance.
-func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err error) {
+func (k Keeper) ClearAlliance(ctx sdk.Context) (err error) {
 	// Iterate over all alliances...
 	for _, asset := range k.GetAllAssets(ctx) {
 		// Check if any alliance is dissolving.
@@ -30,7 +30,7 @@ func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err erro
 		if !asset.IsDissolving {
 			continue
 		}
-		assert := *asset
+		dereferencedAsset := *asset
 		// Variable that keeps track of how many unbondings have been executed
 		amountOfUndelegationsExecuted := 0
 
@@ -38,9 +38,9 @@ func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err erro
 		// and if the dissolution time is in the past we should delete the alliance
 		// because it means that the unbonding period for all the delegations is completed
 		// and funds have been sent back to the delegators.
-		if assert.AllianceDissolutionTime != nil {
-			if ctx.BlockTime().After(*assert.AllianceDissolutionTime) {
-				err := k.DeleteAsset(ctx, assert)
+		if dereferencedAsset.AllianceDissolutionTime != nil {
+			if ctx.BlockTime().After(*dereferencedAsset.AllianceDissolutionTime) {
+				err := k.DeleteAsset(ctx, dereferencedAsset)
 				if err != nil {
 					return err
 				}
@@ -49,7 +49,7 @@ func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err erro
 		}
 		// If the alliance is not initialized and is being dissolved it means that
 		// all alliance unbondings have been executed and no further comput needs to be done.
-		if !assert.IsInitialized && assert.IsDissolving {
+		if !dereferencedAsset.IsInitialized && dereferencedAsset.IsDissolving {
 			continue
 		}
 
@@ -57,7 +57,7 @@ func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err erro
 		err := k.IterateDelegations(ctx, func(delegation types.Delegation) (stop bool) {
 			// if the delegation being checked is not for the current alliance we should
 			// continue to the next delegation without spending more comput time.
-			if delegation.Denom != assert.Denom {
+			if delegation.Denom != dereferencedAsset.Denom {
 				return false
 			}
 
@@ -91,7 +91,7 @@ func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err erro
 			}
 
 			// Calculate the amount of coins to unbond
-			coinsToUnbond := types.GetDelegationTokens(delegation, validator, assert)
+			coinsToUnbond := types.GetDelegationTokens(delegation, validator, dereferencedAsset)
 
 			// Execute the unbonding
 			time, fail := k.Undelegate(ctx, delAddr, validator, coinsToUnbond)
@@ -101,8 +101,7 @@ func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err erro
 			}
 
 			// Set the last unbonding time as the alliance dissolution time
-			asset.AllianceDissolutionTime = time
-			fail = k.SetAsset(ctx, assert)
+			fail = k.UpdateAssetDissolutionTime(ctx, dereferencedAsset.Denom, time)
 			if fail != nil {
 				err = fail
 				return true
@@ -123,8 +122,8 @@ func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err erro
 		// the alliance has never had delegations or that all the delegations have been unbonded already,
 		// so going back to the line 52 of this file we avoid doing unnecessary comput.
 		if amountOfUndelegationsExecuted == 0 {
-			assert.IsInitialized = false
-			err = k.SetAsset(ctx, assert)
+			dereferencedAsset.IsInitialized = false
+			err = k.SetAsset(ctx, dereferencedAsset)
 			if err != nil {
 				return err
 			}
