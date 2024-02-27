@@ -296,10 +296,11 @@ func initTestnetFiles(
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
+		valAddr := sdk.ValAddress(addr)
 
 		valTokens := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
-			addr.String(),
+			valAddr.String(),
 			valPubKeys[i],
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
