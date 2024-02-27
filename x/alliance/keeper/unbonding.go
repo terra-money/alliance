@@ -88,6 +88,64 @@ func (k Keeper) BeginUnbondingsForDissolvingAlliances(ctx sdk.Context) (err erro
 	return err
 }
 
+// This method retun all unbonding delegations for a given denom, validator address and delegator address.
+// It is the most optimal way to query that data because it uses the indexes that are already in place
+// for the unbonding queue and ommits unnecessary checks or data parsings.
+func (k Keeper) GetUnbondings(
+	ctx sdk.Context,
+	denom string,
+	delAddr sdk.AccAddress,
+	valAddr sdk.ValAddress,
+) (unbondingDelegations []types.UnbondingDelegation, err error) {
+	// Get the store
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	// create the iterator with the correct prefix
+	iter := storetypes.KVStorePrefixIterator(store, types.UndelegationByValidatorIndexKey)
+	defer iter.Close()
+	suffix := types.GetPartialUnbondingKeySuffix(denom, delAddr)
+
+	for ; iter.Valid(); iter.Next() {
+		key := iter.Key()
+		// Skip keys that are shorter than the suffix
+		if len(key) < len(suffix) {
+			continue
+		}
+
+		prefix := types.GetUndelegationsIndexOrderedByValidatorKey(valAddr)
+		// Skip keys that don't have the desired suffix
+		if !bytes.HasPrefix(key, prefix) {
+			continue
+		}
+
+		completionTime, err := types.GetTimeFromUndelegationKey(key)
+		if err != nil {
+			return nil, err
+		}
+		// Recover the queued undelegation from the store
+		b := store.Get(types.GetUndelegationQueueKey(completionTime, delAddr))
+
+		// Parse the model from the bytes
+		var queue types.QueuedUndelegation
+		err = k.cdc.Unmarshal(b, &queue)
+		if err != nil {
+			return nil, err
+		}
+
+		// Iterate over the entries and append them to the result
+		for _, entry := range queue.Entries {
+			unbondDelegation := types.UnbondingDelegation{
+				ValidatorAddress: entry.ValidatorAddress,
+				CompletionTime:   completionTime,
+				Amount:           entry.Balance.Amount,
+				Denom:            entry.Balance.Denom,
+			}
+			unbondingDelegations = append(unbondingDelegations, unbondDelegation)
+		}
+	}
+
+	return unbondingDelegations, err
+}
+
 // CompleteUnbondings Go through all queued undelegations and send the tokens to the delAddrs
 func (k Keeper) CompleteUnbondings(ctx context.Context) error {
 	store := k.storeService.OpenKVStore(ctx)
@@ -139,48 +197,20 @@ func (k Keeper) CompleteUnbondings(ctx context.Context) error {
 	return nil
 }
 
-// This method retun all unbonding delegations for a given denom, validator address and delegator address.
-// It is the most optimal way to query that data because it uses the indexes that are already in place
-// for the unbonding queue and ommits unnecessary checks or data parsings.
-func (k Keeper) GetUnbondings(
+// This method retun all in-progress unbondings for a given delegator address
+func (k Keeper) GetUnbondingsByDelegator(
 	ctx context.Context,
-	denom string,
 	delAddr sdk.AccAddress,
-	valAddr sdk.ValAddress,
 ) (unbondingDelegations []types.UnbondingDelegation, err error) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	iter := storetypes.KVStorePrefixIterator(store, types.UndelegationByValidatorIndexKey)
-	defer iter.Close() //nolint:errcheck,nolintlint
-	suffix := types.GetPartialUnbondingKeySuffix(denom, delAddr)
-	for ; iter.Valid(); iter.Next() {
-		key := iter.Key()
-		if len(key) < len(suffix) {
-			continue // Skip keys that are shorter than the suffix
-		}
-
-		prefix := types.GetUndelegationsIndexOrderedByValidatorKey(valAddr)
-		if !bytes.HasPrefix(key, prefix) {
-			continue // Skip keys that don't have the desired suffix
-		}
-
-		if !bytes.HasSuffix(key, suffix) {
-			continue // Skip keys that don't have the desired suffix
-		}
-
-		_, unbondingCompletionTime, err := types.PartiallyParseUndelegationKeyBytes(key)
+	// Get and iterate over all alliances
+	for _, alliance := range k.GetAllAssets(ctx) {
+		// Get the unbonding delegations for the current alliance
+		unbondings, err := k.GetUnbondingsByDenomAndDelegator(ctx, alliance.Denom, delAddr)
 		if err != nil {
 			return nil, err
 		}
-		// Process and append item to the results
-		unbondDelegation := types.UnbondingDelegation{
-			ValidatorAddress: valAddr.String(),
-			CompletionTime:   unbondingCompletionTime,
-		}
-		unbondingDelegations = append(unbondingDelegations, unbondDelegation)
+		unbondingDelegations = append(unbondingDelegations, unbondings...)
 	}
-
-	unbondingDelegations = k.addUnbondingAmounts(ctx, unbondingDelegations, delAddr)
-
 	return unbondingDelegations, err
 }
 
@@ -192,67 +222,50 @@ func (k Keeper) GetUnbondingsByDenomAndDelegator(
 	denom string,
 	delAddr sdk.AccAddress,
 ) (unbondingDelegations []types.UnbondingDelegation, err error) {
+	// Get the store
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	// create the iterator with the correct prefix
 	iter := storetypes.KVStorePrefixIterator(store, types.UndelegationByValidatorIndexKey)
 	defer iter.Close() //nolint:errcheck,nolintlint
+	// Get the suffix key
 	suffix := types.GetPartialUnbondingKeySuffix(denom, delAddr)
 
+	// Iterate over the keys
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()
+		// Continue to the next iteration if the key is shorter than the suffix
 		if len(key) < len(suffix) {
-			continue // Skip keys that are shorter than the suffix
+			continue
 		}
-
+		// continue to the next iteration if the key doesn't have the desired suffix
 		if !bytes.HasSuffix(key, suffix) {
-			continue // Skip keys that don't have the desired suffix
+			continue
 		}
-
-		valAddr, unbondingCompletionTime, err := types.PartiallyParseUndelegationKeyBytes(key)
+		// parse the key and get the unbonding completion time
+		completionTime, err := types.GetTimeFromUndelegationKey(key)
 		if err != nil {
 			return nil, err
 		}
-		// Process and append item to the results
-		unbondDelegation := types.UnbondingDelegation{
-			ValidatorAddress: valAddr.String(),
-			CompletionTime:   unbondingCompletionTime,
+		// Recover the queued undelegation from the store
+		b := store.Get(types.GetUndelegationQueueKey(completionTime, delAddr))
+
+		// Parse the model from the bytes
+		var queue types.QueuedUndelegation
+		err = k.cdc.Unmarshal(b, &queue)
+		if err != nil {
+			return nil, err
 		}
-		unbondingDelegations = append(unbondingDelegations, unbondDelegation)
-	}
 
-	unbondingDelegations = k.addUnbondingAmounts(ctx, unbondingDelegations, delAddr)
-
-	return unbondingDelegations, err
-}
-
-func (k Keeper) addUnbondingAmounts(ctx context.Context, unbondingDelegations []types.UnbondingDelegation, delAddr sdk.AccAddress) (unbonding []types.UnbondingDelegation) {
-	for i := 0; i < len(unbondingDelegations); i++ {
-		iter := k.IterateUndelegationsByCompletionTime(ctx, unbondingDelegations[i].CompletionTime)
-		defer iter.Close() //nolint:errcheck,nolintlint
-		for ; iter.Valid(); iter.Next() {
-			var queued types.QueuedUndelegation
-			k.cdc.MustUnmarshal(iter.Value(), &queued)
-
-			for _, undel := range queued.Entries {
-				if undel.DelegatorAddress != delAddr.String() {
-					continue
-				}
-
-				if undel.ValidatorAddress != unbondingDelegations[i].ValidatorAddress {
-					continue
-				}
-
-				unbondingDelegations[i].Amount = undel.Balance.Amount
+		// Iterate over the entries and append them to the result
+		for _, entry := range queue.Entries {
+			unbondDelegation := types.UnbondingDelegation{
+				ValidatorAddress: entry.ValidatorAddress,
+				CompletionTime:   completionTime,
+				Amount:           entry.Balance.Amount,
+				Denom:            entry.Balance.Denom,
 			}
+			unbondingDelegations = append(unbondingDelegations, unbondDelegation)
 		}
 	}
-
-	for _, unbondingDelegation := range unbondingDelegations {
-		if unbondingDelegation.Amount.IsNil() {
-			continue
-		}
-
-		unbonding = append(unbonding, unbondingDelegation)
-	}
-
-	return unbonding
+	return unbondingDelegations, err
 }

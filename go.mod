@@ -2,7 +2,7 @@ module github.com/terra-money/alliance
 
 go 1.21
 
-toolchain go1.21.5
+toolchain go1.21.4
 
 require (
 	cosmossdk.io/core v0.11.0
