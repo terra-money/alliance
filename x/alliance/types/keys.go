@@ -44,7 +44,10 @@ var (
 
 	// Indexes for querying
 	RedelegationByValidatorIndexKey = []byte{0x31}
-	UndelegationByValidatorIndexKey = []byte{0x32} // TOODO: Simplify this index
+	// The full index looks like:
+	// 0x32 + valAddr + completionTime + denom + delAddr
+	// TODO: Simplify this index
+	UndelegationByValidatorIndexKey = []byte{0x32}
 )
 
 func GetAssetKey(denom string) []byte {
