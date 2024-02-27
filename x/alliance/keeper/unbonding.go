@@ -30,7 +30,7 @@ func (k Keeper) GetUnbondings(
 	for ; iter.Valid(); iter.Next() {
 		key := iter.Key()
 		// Skip keys that don't have the desired suffix
-		if bytes.HasSuffix(key, suffix) {
+		if !bytes.HasSuffix(key, suffix) {
 			continue
 		}
 
