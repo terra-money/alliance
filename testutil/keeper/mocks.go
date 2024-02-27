@@ -39,7 +39,7 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // BeginRedelegation mocks base method.
-func (m *MockStakingKeeper) BeginRedelegation(ctx types.Context, delAddr types.AccAddress, valSrcAddr, valDstAddr types.ValAddress, sharesAmount types.Dec) (time.Time, error) {
+func (m *MockStakingKeeper) BeginRedelegation(ctx types.Context, delAddr types.AccAddress, valSrcAddr, valDstAddr types.ValAddress, sharesAmount math.LegacyDec) (time.Time, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BeginRedelegation", ctx, delAddr, valSrcAddr, valDstAddr, sharesAmount)
 	ret0, _ := ret[0].(time.Time)
@@ -68,10 +68,10 @@ func (mr *MockStakingKeeperMockRecorder) BondDenom(ctx interface{}) *gomock.Call
 }
 
 // Delegate mocks base method.
-func (m *MockStakingKeeper) Delegate(ctx types.Context, delAddr types.AccAddress, bondAmt math.Int, tokenSrc types1.BondStatus, validator types1.Validator, subtractAccount bool) (types.Dec, error) {
+func (m *MockStakingKeeper) Delegate(ctx types.Context, delAddr types.AccAddress, bondAmt math.Int, tokenSrc types1.BondStatus, validator types1.Validator, subtractAccount bool) (math.LegacyDec, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delegate", ctx, delAddr, bondAmt, tokenSrc, validator, subtractAccount)
-	ret0, _ := ret[0].(types.Dec)
+	ret0, _ := ret[0].(math.LegacyDec)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -153,7 +153,7 @@ func (mr *MockStakingKeeperMockRecorder) RemoveValidatorTokens(ctx, validator, t
 }
 
 // RemoveValidatorTokensAndShares mocks base method.
-func (m *MockStakingKeeper) RemoveValidatorTokensAndShares(ctx types.Context, validator types1.Validator, sharesToRemove types.Dec) (types1.Validator, math.Int) {
+func (m *MockStakingKeeper) RemoveValidatorTokensAndShares(ctx types.Context, validator types1.Validator, sharesToRemove math.LegacyDec) (types1.Validator, math.Int) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveValidatorTokensAndShares", ctx, validator, sharesToRemove)
 	ret0, _ := ret[0].(types1.Validator)
@@ -182,7 +182,7 @@ func (mr *MockStakingKeeperMockRecorder) TotalBondedTokens(ctx interface{}) *gom
 }
 
 // Unbond mocks base method.
-func (m *MockStakingKeeper) Unbond(ctx types.Context, delAddr types.AccAddress, valAddr types.ValAddress, shares types.Dec) (math.Int, error) {
+func (m *MockStakingKeeper) Unbond(ctx types.Context, delAddr types.AccAddress, valAddr types.ValAddress, shares math.LegacyDec) (math.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Unbond", ctx, delAddr, valAddr, shares)
 	ret0, _ := ret[0].(math.Int)
@@ -211,10 +211,10 @@ func (mr *MockStakingKeeperMockRecorder) UnbondingTime(ctx interface{}) *gomock.
 }
 
 // ValidateUnbondAmount mocks base method.
-func (m *MockStakingKeeper) ValidateUnbondAmount(ctx types.Context, delAddr types.AccAddress, valAddr types.ValAddress, amt math.Int) (types.Dec, error) {
+func (m *MockStakingKeeper) ValidateUnbondAmount(ctx types.Context, delAddr types.AccAddress, valAddr types.ValAddress, amt math.Int) (math.LegacyDec, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateUnbondAmount", ctx, delAddr, valAddr, amt)
-	ret0, _ := ret[0].(types.Dec)
+	ret0, _ := ret[0].(math.LegacyDec)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

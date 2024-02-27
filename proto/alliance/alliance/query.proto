@@ -23,16 +23,6 @@ service Query {
     option (google.api.http).get = "/terra/alliances";
   }
 
-  // Query a specific alliance by ibc hash
-  // @deprecated: this endpoint will be replaced for by the encoded version
-  // of the denom e.g.: GET:/terra/alliances/ibc%2Falliance
-  rpc IBCAlliance(QueryIBCAllianceRequest) returns (QueryAllianceResponse) {
-    // Deprecated. Please use the default endpoint 
-    // with the encoded denom e.g from ibc/alliance to ibc%2Falliance
-    option deprecated = true;
-    option (google.api.http).get = "/terra/alliances/ibc/{hash}";
-  }
-
   // Query all paginated alliance delegations
   rpc AllAlliancesDelegations(QueryAllAlliancesDelegationsRequest) returns (QueryAlliancesDelegationsResponse) {
     option (google.api.http).get = "/terra/alliances/delegations";
@@ -63,28 +53,9 @@ service Query {
     option (google.api.http).get = "/terra/alliances/delegations/{delegator_addr}/{validator_addr}/{denom}";
   }
 
-  // Query a delegation to an alliance by delegator addr, validator_addr and denom
-  // @deprecated: this endpoint will be replaced for by the encoded version
-  // of the denom e.g.: GET:/terra/alliances/terradr1231/terravaloper41234/ibc%2Falliance
-  rpc IBCAllianceDelegation(QueryIBCAllianceDelegationRequest) returns (QueryAllianceDelegationResponse) {
-    // Deprecated. Please use the default endpoint 
-    // with the encoded denom e.g from ibc/alliance to ibc%2Falliance
-    option deprecated = true;
-    option (google.api.http).get = "/terra/alliances/delegations/{delegator_addr}/{validator_addr}/ibc/{hash}";
-  }
-
   // Query for rewards by delegator addr, validator_addr and denom
   rpc AllianceDelegationRewards(QueryAllianceDelegationRewardsRequest) returns (QueryAllianceDelegationRewardsResponse) {
     option (google.api.http).get = "/terra/alliances/rewards/{delegator_addr}/{validator_addr}/{denom}";
-  }
-  // Query for rewards by delegator addr, validator_addr and denom
-  // @deprecated: this endpoint will be replaced for by the encoded version
-  // of the denom e.g.: GET:/terra/alliances/terradr1231/terravaloper41234/ibc%2Falliance
-  rpc IBCAllianceDelegationRewards(QueryIBCAllianceDelegationRewardsRequest) returns (QueryAllianceDelegationRewardsResponse) {
-    // Deprecated. Please use the default endpoint 
-    // with the encoded denom e.g from ibc/alliance to ibc%2Falliance
-    option deprecated = true;
-    option (google.api.http).get = "/terra/alliances/rewards/{delegator_addr}/{validator_addr}/ibc/{hash}";
   }
 
   // Query for rewards by delegator addr, validator_addr and denom
@@ -132,13 +103,6 @@ message QueryAllianceRequest {
 
 message QueryAllianceResponse {
   AllianceAsset alliance = 1;
-}
-
-message QueryIBCAllianceRequest {
-  // Deprecated. Please use the default endpoint 
-  // with the encoded denom e.g from 
-  option deprecated = true;
-  string hash = 1;
 }
 
 message QueryAllianceValidatorRequest {
@@ -207,19 +171,6 @@ message QueryAllianceDelegationRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }
 
-message QueryIBCAllianceDelegationRequest {
-  // Deprecated. Please use the default endpoint 
-  // with the encoded denom e.g from 
-  option deprecated = true;
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  string delegator_addr  = 1;
-  string validator_addr  = 2;
-  string hash            = 3;
-  cosmos.base.query.v1beta1.PageRequest pagination = 4;
-}
-
 message QueryAllianceDelegationResponse {
   DelegationResponse delegation = 1 [(gogoproto.nullable) = false];
 }
@@ -232,19 +183,6 @@ message QueryAllianceDelegationRewardsRequest {
   string delegator_addr  = 1;
   string validator_addr  = 2;
   string denom           = 3;
-  cosmos.base.query.v1beta1.PageRequest pagination = 4;
-}
-
-message QueryIBCAllianceDelegationRewardsRequest {
-  // Deprecated. Please use the default endpoint 
-  // with the encoded denom e.g from 
-  option deprecated = true;
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  string delegator_addr  = 1;
-  string validator_addr  = 2;
-  string hash            = 3;
   cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }
 

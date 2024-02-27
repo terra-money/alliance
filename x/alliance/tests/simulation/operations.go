@@ -3,6 +3,8 @@ package simulation
 import (
 	"math/rand"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -14,6 +16,17 @@ import (
 
 	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
+)
+
+var (
+	MsgDelegateType               = "msg_delegate"
+	MsgUndelegateType             = "msg_undelegate"
+	MsgRedelegateType             = "msg_redelegate"
+	MsgClaimDelegationRewardsType = "claim_delegation_rewards"
+	MsgUpdateParamsType           = "update_params"
+	MsgCreateAllianceType         = "create_alliance"
+	MsgUpdateAllianceType         = "update_alliance"
+	MsgDeleteAllianceType         = "delete_alliance"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -58,25 +71,27 @@ func SimulateMsgDelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		assets := k.GetAllAssets(ctx)
 		if len(assets) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "No assets"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, MsgDelegateType, "No assets"), nil, nil
 		}
 		idx := simtypes.RandIntBetween(r, 0, len(assets)-1)
 		assetToDelegate := assets[idx]
-		amountToDelegate := simtypes.RandomAmount(r, sdk.NewInt(1000_000_000))
+		amountToDelegate := simtypes.RandomAmount(r, math.NewInt(1000_000_000))
 		if amountToDelegate.IsZero() {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "0 delegate amount"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, MsgDelegateType, "0 delegate amount"), nil, nil
 		}
-		validators := sk.GetAllValidators(ctx)
+		validators, err := sk.GetAllValidators(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, MsgDelegateType, "No validators"), nil, nil
+		}
 		idx = simtypes.RandIntBetween(r, 0, len(validators)-1)
 		validatorToDelegateTo := validators[idx]
 		coinToDelegate := sdk.NewCoin(assetToDelegate.Denom, amountToDelegate)
 
-		bk.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(coinToDelegate))                                        //nolint:errcheck
-		bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, simAccount.Address, sdk.NewCoins(coinToDelegate)) //nolint:errcheck
-
+		bk.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(coinToDelegate))                                        //nolint:errcheck,nolintlint
+		bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, simAccount.Address, sdk.NewCoins(coinToDelegate)) //nolint:errcheck,nolintlint
 		msg := &types.MsgDelegate{
 			DelegatorAddress: simAccount.Address.String(),
-			ValidatorAddress: validatorToDelegateTo.GetOperator().String(),
+			ValidatorAddress: validatorToDelegateTo.GetOperator(),
 			Amount:           coinToDelegate,
 		}
 
@@ -86,7 +101,6 @@ func SimulateMsgDelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types
 			TxGen:           tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:             cdc,
 			Msg:             msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
@@ -102,12 +116,12 @@ func SimulateMsgDelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types
 func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainId string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		var delegations []types.Delegation
-		k.IterateDelegations(ctx, func(d types.Delegation) bool {
+		err := k.IterateDelegations(ctx, func(d types.Delegation) bool {
 			delegations = append(delegations, d)
 			return false
 		})
-		if len(delegations) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "No delegations yet"), nil, nil
+		if len(delegations) == 0 || err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, MsgRedelegateType, "No delegations yet"), nil, nil
 		}
 		var idx int
 		if len(delegations) == 1 {
@@ -120,16 +134,16 @@ func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 		simAccountAddr, _ := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
 		simAccount, found := simtypes.FindAccount(accs, simAccountAddr)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "Account not found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, MsgRedelegateType, "Account not found"), nil, nil
 		}
 		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 		validator, err := k.GetAllianceValidator(ctx, valAddr)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "Validator not found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, MsgRedelegateType, "Validator not found"), nil, nil
 		}
 
 		if k.HasRedelegation(ctx, simAccountAddr, valAddr, delegation.Denom) {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "Cannot perform redelegation from a previous destination of a redelegation"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, MsgRedelegateType, "Cannot perform redelegation from a previous destination of a redelegation"), nil, nil
 		}
 
 		asset, _ := k.GetAssetByDenom(ctx, delegation.Denom)
@@ -137,21 +151,24 @@ func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 
 		amountToRedelegate := simtypes.RandomAmount(r, bondedTokens.Amount)
 		if amountToRedelegate.IsZero() {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "0 redelegate amount"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, MsgRedelegateType, "0 redelegate amount"), nil, nil
 		}
 
-		validators := sk.GetAllValidators(ctx)
+		validators, err := sk.GetAllValidators(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, MsgRedelegateType, "No validators"), nil, nil
+		}
 		idx = simtypes.RandIntBetween(r, 0, len(validators)-1)
 		validatorToDelegateTo := validators[idx]
 
-		if delegation.ValidatorAddress == validatorToDelegateTo.GetOperator().String() {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "redelegation to the same validator"), nil, nil
+		if delegation.ValidatorAddress == validatorToDelegateTo.GetOperator() {
+			return simtypes.NoOpMsg(types.ModuleName, MsgRedelegateType, "redelegation to the same validator"), nil, nil
 		}
 
 		msg := &types.MsgRedelegate{
 			DelegatorAddress:    delegation.DelegatorAddress,
 			ValidatorSrcAddress: delegation.ValidatorAddress,
-			ValidatorDstAddress: validatorToDelegateTo.GetOperator().String(),
+			ValidatorDstAddress: validatorToDelegateTo.GetOperator(),
 			Amount:              sdk.NewCoin(asset.Denom, amountToRedelegate),
 		}
 
@@ -161,7 +178,6 @@ func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 			TxGen:         tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:           cdc,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,
@@ -176,12 +192,12 @@ func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 func SimulateMsgUndelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainId string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		var delegations []types.Delegation
-		k.IterateDelegations(ctx, func(d types.Delegation) bool {
+		err := k.IterateDelegations(ctx, func(d types.Delegation) bool {
 			delegations = append(delegations, d)
 			return false
 		})
-		if len(delegations) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "No delegations yet"), nil, nil
+		if len(delegations) == 0 || err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, MsgUndelegateType, "No delegations yet"), nil, nil
 		}
 		var idx int
 		if len(delegations) == 1 {
@@ -194,20 +210,20 @@ func SimulateMsgUndelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 		simAccountAddr, _ := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
 		simAccount, found := simtypes.FindAccount(accs, simAccountAddr)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "Account not found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, MsgUndelegateType, "Account not found"), nil, nil
 		}
 		valAddr, _ := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 		validator, err := k.GetAllianceValidator(ctx, valAddr)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "Validator not found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, MsgUndelegateType, "Validator not found"), nil, nil
 		}
 
 		asset, _ := k.GetAssetByDenom(ctx, delegation.Denom)
 		bondedTokens := types.GetDelegationTokens(delegation, validator, asset)
 
-		amountToUndelegate := simtypes.RandomAmount(r, bondedTokens.Amount.Sub(sdk.NewInt(1))).Add(sdk.NewInt(1))
+		amountToUndelegate := simtypes.RandomAmount(r, bondedTokens.Amount.Sub(math.NewInt(1))).Add(math.NewInt(1))
 		if amountToUndelegate.IsZero() {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "0 undelegate amount"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, MsgUndelegateType, "0 undelegate amount"), nil, nil
 		}
 
 		msg := &types.MsgUndelegate{
@@ -222,7 +238,6 @@ func SimulateMsgUndelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 			TxGen:         tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:           cdc,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,
@@ -237,12 +252,12 @@ func SimulateMsgUndelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 func SimulateMsgClaimRewards(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainId string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		var delegations []types.Delegation
-		k.IterateDelegations(ctx, func(d types.Delegation) bool {
+		err := k.IterateDelegations(ctx, func(d types.Delegation) bool {
 			delegations = append(delegations, d)
 			return false
 		})
-		if len(delegations) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "No delegations yet"), nil, nil
+		if len(delegations) == 0 || err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, MsgClaimDelegationRewardsType, "No delegations yet"), nil, nil
 		}
 		var idx int
 		if len(delegations) == 1 {
@@ -255,7 +270,7 @@ func SimulateMsgClaimRewards(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk t
 		simAccountAddr, _ := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
 		simAccount, found := simtypes.FindAccount(accs, simAccountAddr)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "Account not found"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, MsgClaimDelegationRewardsType, "Account not found"), nil, nil
 		}
 
 		msg := &types.MsgClaimDelegationRewards{
@@ -270,7 +285,6 @@ func SimulateMsgClaimRewards(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk t
 			TxGen:         tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:           cdc,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,

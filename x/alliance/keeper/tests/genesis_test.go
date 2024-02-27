@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
+
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 
@@ -23,7 +25,7 @@ func TestGenesis(t *testing.T) {
 			LastTakeRateClaimTime: time.Unix(0, 0).UTC(),
 		},
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset("stake", sdk.NewDec(1), sdk.ZeroDec(), sdk.NewDec(2), sdk.ZeroDec(), ctx.BlockTime()),
+			types.NewAllianceAsset("stake", math.LegacyNewDec(1), math.LegacyZeroDec(), math.LegacyNewDec(2), math.LegacyZeroDec(), ctx.BlockTime()),
 		},
 	})
 
@@ -40,13 +42,13 @@ func TestGenesis(t *testing.T) {
 	require.Equal(t, 1, len(assets))
 	require.Equal(t, &types.AllianceAsset{
 		Denom:                "stake",
-		RewardWeight:         sdk.NewDec(1.0),
-		RewardWeightRange:    types.RewardWeightRange{Min: sdk.ZeroDec(), Max: sdk.NewDec(2.0)},
-		TakeRate:             sdk.NewDec(0.0),
-		TotalTokens:          sdk.ZeroInt(),
-		TotalValidatorShares: sdk.ZeroDec(),
+		RewardWeight:         math.LegacyNewDec(1.0),
+		RewardWeightRange:    types.RewardWeightRange{Min: math.LegacyZeroDec(), Max: math.LegacyNewDec(2.0)},
+		TakeRate:             math.LegacyNewDec(0.0),
+		TotalTokens:          math.ZeroInt(),
+		TotalValidatorShares: math.LegacyZeroDec(),
 		RewardStartTime:      ctx.BlockTime(),
-		RewardChangeRate:     sdk.OneDec(),
+		RewardChangeRate:     math.LegacyOneDec(),
 		RewardChangeInterval: 0,
 	}, assets[0])
 }
@@ -64,7 +66,8 @@ func TestExportAndImportGenesis(t *testing.T) {
 	})
 
 	// All the addresses needed
-	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	delegations, err := app.StakingKeeper.GetAllDelegations(ctx)
+	require.NoError(t, err)
 	require.Len(t, delegations, 1)
 	delAddr, err := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
 	require.NoError(t, err)
@@ -73,8 +76,8 @@ func TestExportAndImportGenesis(t *testing.T) {
 	val1, err := app.AllianceKeeper.GetAllianceValidator(ctx, valAddr)
 	require.NoError(t, err)
 	addrs := test_helpers.AddTestAddrsIncremental(app, ctx, 3, sdk.NewCoins(
-		sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)),
-		sdk.NewCoin(AllianceDenomTwo, sdk.NewInt(1000_000)),
+		sdk.NewCoin(AllianceDenom, math.NewInt(1000_000)),
+		sdk.NewCoin(AllianceDenomTwo, math.NewInt(1000_000)),
 	))
 	valAddr2 := sdk.ValAddress(addrs[0])
 	_val2 := teststaking.NewValidator(t, valAddr2, test_helpers.CreateTestPubKeys(1)[0])
@@ -87,16 +90,16 @@ func TestExportAndImportGenesis(t *testing.T) {
 		Title:                "",
 		Description:          "",
 		Denom:                AllianceDenom,
-		RewardWeight:         sdk.NewDec(1),
-		RewardWeightRange:    types.RewardWeightRange{Min: sdk.NewDec(0), Max: sdk.NewDec(5)},
-		TakeRate:             sdk.NewDec(0),
-		RewardChangeRate:     sdk.MustNewDecFromStr("0.5"),
+		RewardWeight:         math.LegacyNewDec(1),
+		RewardWeightRange:    types.RewardWeightRange{Min: math.LegacyNewDec(0), Max: math.LegacyNewDec(5)},
+		TakeRate:             math.LegacyNewDec(0),
+		RewardChangeRate:     math.LegacyMustNewDecFromStr("0.5"),
 		RewardChangeInterval: time.Hour * 24,
 	})
 	require.NoError(t, err)
 
 	// Delegate
-	delegationCoin := sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000_000))
+	delegationCoin := sdk.NewCoin(AllianceDenom, math.NewInt(1000_000_000))
 	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegationCoin))
 	require.NoError(t, err)
 	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(delegationCoin))
@@ -105,16 +108,16 @@ func TestExportAndImportGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	// Redelegate
-	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr, val1, val2, sdk.NewCoin(AllianceDenom, sdk.NewInt(500_000_000)))
+	_, err = app.AllianceKeeper.Redelegate(ctx, delAddr, val1, val2, sdk.NewCoin(AllianceDenom, math.NewInt(500_000_000)))
 	require.NoError(t, err)
 
 	// Undelegate
-	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val1, sdk.NewCoin(AllianceDenom, sdk.NewInt(500_000_000)))
+	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val1, sdk.NewCoin(AllianceDenom, math.NewInt(500_000_000)))
 	require.NoError(t, err)
 
 	// Trigger update asset
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 25)).WithBlockHeight(ctx.BlockHeight() + 1)
-	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.NewAllianceAsset(AllianceDenom, sdk.MustNewDecFromStr("0.5"), sdk.ZeroDec(), sdk.OneDec(), sdk.ZeroDec(), ctx.BlockTime()))
+	err = app.AllianceKeeper.UpdateAllianceAsset(ctx, types.NewAllianceAsset(AllianceDenom, math.LegacyMustNewDecFromStr("0.5"), math.LegacyZeroDec(), math.LegacyOneDec(), math.LegacyZeroDec(), ctx.BlockTime()))
 	require.NoError(t, err)
 
 	genesisState := app.AllianceKeeper.ExportGenesis(ctx)
@@ -126,8 +129,9 @@ func TestExportAndImportGenesis(t *testing.T) {
 	require.Greater(t, len(genesisState.Redelegations), 0)
 	require.Greater(t, len(genesisState.RewardWeightChangeSnaphots), 0)
 
-	store := ctx.KVStore(app.AllianceKeeper.StoreKey())
-	iter := store.Iterator(nil, nil)
+	store := app.AllianceKeeper.StoreService().OpenKVStore(ctx)
+	iter, err := store.Iterator(nil, nil)
+	require.NoError(t, err)
 
 	// Init a new app
 	app, ctx = createTestContext(t)
@@ -136,7 +140,8 @@ func TestExportAndImportGenesis(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, genesisState)
 
 	// Check all items in the alliance store match
-	iter2 := store.Iterator(nil, nil)
+	iter2, err := store.Iterator(nil, nil)
+	require.NoError(t, err)
 	for ; iter.Valid(); iter.Next() {
 		require.Equal(t, iter.Key(), iter2.Key())
 		require.Equal(t, iter.Value(), iter2.Value())
