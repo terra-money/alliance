@@ -34,4 +34,5 @@ message RewardHistory {
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
+  string alliance = 3;
 }
