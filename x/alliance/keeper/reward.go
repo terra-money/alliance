@@ -88,8 +88,8 @@ func (k Keeper) ClaimDelegationRewards(
 // It takes past reward_rate changes into account by using the RewardRateChangeSnapshot entry
 func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, delegation types.Delegation, val types.AllianceValidator, asset types.AllianceAsset) (sdk.Coins, types.RewardHistories, error) {
 	totalRewards := sdk.NewCoins()
-	currentRewardHistory := types.NewRewardHistories(val.GlobalRewardHistory)
-	delegationRewardHistories := types.NewRewardHistories(delegation.RewardHistory)
+	currentRewardHistory := types.NewRewardHistories(val.GlobalRewardHistory).GetIndexByAlliance(asset.Denom)
+	delegationRewardHistories := types.NewRewardHistories(delegation.RewardHistory).GetIndexByAlliance(asset.Denom)
 	// If there are reward rate changes between last and current claim, sequentially claim with the help of the snapshots
 	snapshotIter := k.IterateWeightChangeSnapshot(ctx, asset.Denom, val.GetOperator(), delegation.LastRewardClaimHeight)
 	for ; snapshotIter.Valid(); snapshotIter.Next() {
@@ -113,15 +113,22 @@ func accumulateRewards(latestRewardHistories types.RewardHistories, rewardHistor
 
 	delegationTokens := sdk.NewDecFromInt(types.GetDelegationTokens(delegation, validator, asset).Amount)
 	for _, history := range latestRewardHistories {
-		rewardHistory, found := rewardHistories.GetIndexByDenom(history.Denom)
+		rewardHistory, found := rewardHistories.GetIndexByDenom(history.Denom, history.Alliance)
 		if !found {
 			rewardHistory.Denom = history.Denom
+			rewardHistory.Alliance = history.Alliance
 			rewardHistory.Index = sdk.ZeroDec()
 		}
 		if rewardHistory.Index.GTE(history.Index) {
 			continue
 		}
-		claimWeight := delegationTokens.Mul(rewardWeight)
+		var claimWeight sdk.Dec
+		// Handle legacy reward history that does not have a specific alliance
+		if rewardHistory.Alliance == "" {
+			claimWeight = delegationTokens.Mul(rewardWeight)
+		} else {
+			claimWeight = delegationTokens
+		}
 		totalClaimable := (history.Index.Sub(rewardHistory.Index)).Mul(claimWeight)
 		rewardHistory.Index = history.Index
 		rewards = rewards.Add(sdk.NewCoin(history.Denom, totalClaimable.TruncateInt()))
@@ -140,22 +147,35 @@ func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val 
 	if len(val.TotalDelegatorShares) == 0 {
 		return nil
 	}
+	alliances := k.GetAllAssets(ctx)
 
-	totalAssetWeight := k.totalAssetWeight(ctx, val)
-	if totalAssetWeight.IsZero() {
-		// Do nothing since there are no assets to distribute rewards to
-		return nil
+	// Get total reward weight to normalize weights
+	totalRewardWeight := sdk.NewDec(0)
+	for _, asset := range alliances {
+		if shouldSkipRewardsToAsset(ctx, *asset, val) {
+			continue
+		}
+		totalRewardWeight = totalRewardWeight.Add(asset.RewardWeight)
 	}
 
-	for _, c := range coins {
-		rewardHistory, found := rewardHistories.GetIndexByDenom(c.Denom)
-		if !found {
-			rewardHistories = append(rewardHistories, types.RewardHistory{
-				Denom: c.Denom,
-				Index: sdk.NewDecFromInt(c.Amount).Quo(totalAssetWeight),
-			})
-		} else {
-			rewardHistory.Index = rewardHistory.Index.Add(sdk.NewDecFromInt(c.Amount).Quo(totalAssetWeight))
+	for _, asset := range alliances {
+		if shouldSkipRewardsToAsset(ctx, *asset, val) {
+			continue
+		}
+		normalizedWeight := asset.RewardWeight.Quo(totalRewardWeight)
+		for _, c := range coins {
+			rewardHistory, found := rewardHistories.GetIndexByDenom(c.Denom, asset.Denom)
+			totalTokens := val.TotalTokensWithAsset(*asset)
+			difference := sdk.NewDecFromInt(c.Amount).Mul(normalizedWeight).Quo(totalTokens)
+			if !found {
+				rewardHistories = append(rewardHistories, types.RewardHistory{
+					Denom:    c.Denom,
+					Alliance: asset.Denom,
+					Index:    difference,
+				})
+			} else {
+				rewardHistory.Index = rewardHistory.Index.Add(difference)
+			}
 		}
 	}
 
@@ -169,18 +189,6 @@ func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val 
 	return nil
 }
 
-func (k Keeper) totalAssetWeight(ctx sdk.Context, val types.AllianceValidator) sdk.Dec {
-	total := sdk.ZeroDec()
-	for _, token := range val.TotalDelegatorShares {
-		asset, found := k.GetAssetByDenom(ctx, token.Denom)
-		if !found {
-			continue
-		}
-		if !asset.RewardsStarted(ctx.BlockTime()) {
-			continue
-		}
-		totalValTokens := val.TotalTokensWithAsset(asset)
-		total = total.Add(asset.RewardWeight.Mul(totalValTokens))
-	}
-	return total
+func shouldSkipRewardsToAsset(ctx sdk.Context, asset types.AllianceAsset, val types.AllianceValidator) bool {
+	return asset.TotalTokens.IsZero() || !asset.RewardsStarted(ctx.BlockTime()) || val.TotalTokensWithAsset(asset).IsZero()
 }

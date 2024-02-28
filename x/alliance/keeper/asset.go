@@ -21,10 +21,6 @@ func (k Keeper) InitializeAllianceAssets(ctx sdk.Context, assets []*types.Allian
 			continue
 		}
 		asset.IsInitialized = true
-		k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) bool {
-			k.CreateInitialRewardWeightChangeSnapshot(ctx, asset.Denom, valAddr, info)
-			return false
-		})
 		k.SetAsset(ctx, *asset)
 	}
 }
@@ -341,14 +337,6 @@ func (k Keeper) DeductAssetsWithTakeRate(ctx sdk.Context, lastClaim time.Time, a
 func (k Keeper) SetRewardWeightChangeSnapshot(ctx sdk.Context, asset types.AllianceAsset, val types.AllianceValidator) {
 	snapshot := types.NewRewardWeightChangeSnapshot(asset, val)
 	k.setRewardWeightChangeSnapshot(ctx, asset.Denom, val.GetOperator(), uint64(ctx.BlockHeight()), snapshot)
-}
-
-func (k Keeper) CreateInitialRewardWeightChangeSnapshot(ctx sdk.Context, denom string, valAddr sdk.ValAddress, info types.AllianceValidatorInfo) {
-	snapshot := types.RewardWeightChangeSnapshot{
-		PrevRewardWeight: sdk.ZeroDec(),
-		RewardHistories:  info.GlobalRewardHistory,
-	}
-	k.setRewardWeightChangeSnapshot(ctx, denom, valAddr, uint64(ctx.BlockHeight()), snapshot)
 }
 
 func (k Keeper) setRewardWeightChangeSnapshot(ctx sdk.Context, denom string, valAddr sdk.ValAddress, height uint64, snapshot types.RewardWeightChangeSnapshot) {
