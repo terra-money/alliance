@@ -137,6 +137,7 @@
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `index` | [string](#string) |  |  |
+| `alliance` | [string](#string) |  |  |
 
 
 

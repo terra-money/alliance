@@ -28,15 +28,6 @@ func (k Keeper) InitializeAllianceAssets(ctx context.Context, assets []*types.Al
 			continue
 		}
 		asset.IsInitialized = true
-		err = k.IterateAllianceValidatorInfo(ctx, func(valAddr sdk.ValAddress, info types.AllianceValidatorInfo) bool {
-			if err = k.CreateInitialRewardWeightChangeSnapshot(ctx, asset.Denom, valAddr, info); err != nil {
-				return true
-			}
-			return false
-		})
-		if err != nil {
-			return err
-		}
 		if err = k.SetAsset(ctx, *asset); err != nil {
 			return err
 		}
@@ -403,15 +394,6 @@ func (k Keeper) SetRewardWeightChangeSnapshot(ctx context.Context, asset types.A
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return k.setRewardWeightChangeSnapshot(ctx, asset.Denom, valAddr, uint64(sdkCtx.BlockHeight()), snapshot)
-}
-
-func (k Keeper) CreateInitialRewardWeightChangeSnapshot(ctx context.Context, denom string, valAddr sdk.ValAddress, info types.AllianceValidatorInfo) error {
-	snapshot := types.RewardWeightChangeSnapshot{
-		PrevRewardWeight: cmath.LegacyZeroDec(),
-		RewardHistories:  info.GlobalRewardHistory,
-	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return k.setRewardWeightChangeSnapshot(ctx, denom, valAddr, uint64(sdkCtx.BlockHeight()), snapshot)
 }
 
 func (k Keeper) setRewardWeightChangeSnapshot(ctx context.Context, denom string, valAddr sdk.ValAddress, height uint64, snapshot types.RewardWeightChangeSnapshot) error {

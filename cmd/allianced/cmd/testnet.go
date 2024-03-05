@@ -39,7 +39,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -296,10 +296,10 @@ func initTestnetFiles(
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
-
+		valAddr := sdk.ValAddress(addr)
 		valTokens := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
-			addr.String(),
+			valAddr.String(),
 			valPubKeys[i],
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
@@ -385,14 +385,14 @@ func initGenFiles(
 	appGenState[stakingtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&stakingGenState)
 
 	// GOV
-	govGenState := *govtypesv1.NewGenesisState(
-		1,
-		govtypesv1.NewDepositParams(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000))), time.Minute),
-		govtypesv1.NewVotingParams(time.Minute),
-		govtypesv1.DefaultTallyParams(),
-	)
+	defaultGovParams := govtypesv1.DefaultParams()
+	defaultGovParams.MinDeposit = sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))
 
-	appGenState[govtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&govGenState)
+	govGenState := govtypesv1.NewGenesisState(1, defaultGovParams)
+	govTime := time.Minute
+	govGenState.Params.MaxDepositPeriod = &govTime
+	govGenState.Params.VotingPeriod = &govTime
+	appGenState[govtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(govGenState)
 
 	// MINT
 	var mintGenState minttypes.GenesisState
