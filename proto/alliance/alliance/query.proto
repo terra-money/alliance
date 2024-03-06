@@ -14,26 +14,19 @@ import "alliance/alliance/redelegations.proto";
 option go_package = "github.com/terra-money/alliance/x/alliance/types";
 
 service Query {
+
+  // Query Alliance module parameters more info about the params 
+  // https://docs.alliance.money/tech/parameters
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/terra/alliances/params";
   }
 
-  // Query paginated alliances
+  // Query all alliances with pagination
   rpc Alliances(QueryAlliancesRequest) returns (QueryAlliancesResponse) {
     option (google.api.http).get = "/terra/alliances";
   }
 
-  // Query a specific alliance by ibc hash
-  // @deprecated: this endpoint will be replaced for by the encoded version
-  // of the denom e.g.: GET:/terra/alliances/ibc%2Falliance
-  rpc IBCAlliance(QueryIBCAllianceRequest) returns (QueryAllianceResponse) {
-    // Deprecated. Please use the default endpoint 
-    // with the encoded denom e.g from ibc/alliance to ibc%2Falliance
-    option deprecated = true;
-    option (google.api.http).get = "/terra/alliances/ibc/{hash}";
-  }
-
-  // Query all paginated alliance delegations
+  // Query all alliances delegations with pagination
   rpc AllAlliancesDelegations(QueryAllAlliancesDelegationsRequest) returns (QueryAlliancesDelegationsResponse) {
     option (google.api.http).get = "/terra/alliances/delegations";
   }
@@ -58,22 +51,12 @@ service Query {
     option (google.api.http).get = "/terra/alliances/delegations/{delegator_addr}/{validator_addr}";
   }
 
-  // Query a delegation to an alliance by delegator addr, validator_addr and denom
+  // Query a specific delegation by delegator addr, validator addr and denom
   rpc AllianceDelegation(QueryAllianceDelegationRequest) returns (QueryAllianceDelegationResponse) {
     option (google.api.http).get = "/terra/alliances/delegations/{delegator_addr}/{validator_addr}/{denom}";
   }
 
-  // Query a delegation to an alliance by delegator addr, validator_addr and denom
-  // @deprecated: this endpoint will be replaced for by the encoded version
-  // of the denom e.g.: GET:/terra/alliances/terradr1231/terravaloper41234/ibc%2Falliance
-  rpc IBCAllianceDelegation(QueryIBCAllianceDelegationRequest) returns (QueryAllianceDelegationResponse) {
-    // Deprecated. Please use the default endpoint 
-    // with the encoded denom e.g from ibc/alliance to ibc%2Falliance
-    option deprecated = true;
-    option (google.api.http).get = "/terra/alliances/delegations/{delegator_addr}/{validator_addr}/ibc/{hash}";
-  }
-
-  // Query for rewards by delegator addr, validator_addr and denom
+  // Query a specific delegation rewards by delegator addr, validator addr and denom
   rpc AllianceDelegationRewards(QueryAllianceDelegationRewardsRequest) returns (QueryAllianceDelegationRewardsResponse) {
     option (google.api.http).get = "/terra/alliances/rewards/{delegator_addr}/{validator_addr}/{denom}";
   }
@@ -87,17 +70,27 @@ service Query {
     option (google.api.http).get = "/terra/alliances/rewards/{delegator_addr}/{validator_addr}/ibc/{hash}";
   }
 
-  // Query for rewards by delegator addr, validator_addr and denom
+  // Query unbondings by delegator address
+  rpc AllianceUnbondingsByDelegator(QueryAllianceUnbondingsByDelegatorRequest) returns (QueryAllianceUnbondingsByDelegatorResponse) {
+    option (google.api.http).get = "/terra/alliances/unbondings/{delegator_addr}";
+  }
+  
+  // Query unbondings by denom, delegator addr
   rpc AllianceUnbondingsByDenomAndDelegator(QueryAllianceUnbondingsByDenomAndDelegatorRequest) returns (QueryAllianceUnbondingsByDenomAndDelegatorResponse) {
     option (google.api.http).get = "/terra/alliances/unbondings/{denom}/{delegator_addr}";
   }
 
-  // Query for rewards by delegator addr, validator_addr and denom
+  // Query unbondings by denom, delegator addr, validator addr 
   rpc AllianceUnbondings(QueryAllianceUnbondingsRequest) returns (QueryAllianceUnbondingsResponse) {
     option (google.api.http).get = "/terra/alliances/unbondings/{denom}/{delegator_addr}/{validator_addr}";
   }
 
-  // Query redelegations by denom and delegator address
+  // Query paginated redelegations delegator addr
+  rpc AllianceRedelegationsByDelegator(QueryAllianceRedelegationsByDelegatorRequest) returns (QueryAllianceRedelegationsByDelegatorResponse) {
+    option (google.api.http).get = "/terra/alliances/redelegations/{delegator_addr}";
+  }
+
+  // Query paginated redelegations by denom and delegator addr
   rpc AllianceRedelegations(QueryAllianceRedelegationsRequest) returns (QueryAllianceRedelegationsResponse) {
     option (google.api.http).get = "/terra/alliances/redelegations/{denom}/{delegator_addr}";
   }
@@ -285,6 +278,23 @@ message QueryAllianceValidatorsResponse {
 }
 
 // AllianceDelegation
+message QueryAllianceUnbondingsByDelegatorRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_addr  = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryAllianceUnbondingsByDelegatorResponse {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  repeated UnbondingDelegation unbondings = 1 [(gogoproto.nullable) = false];
+}
+
+
+// AllianceDelegation
 message QueryAllianceUnbondingsByDenomAndDelegatorRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -331,6 +341,23 @@ message QueryAllianceRedelegationsRequest {
 }
 
 message QueryAllianceRedelegationsResponse {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  repeated RedelegationEntry redelegations = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+
+message QueryAllianceRedelegationsByDelegatorRequest {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_addr  = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAllianceRedelegationsByDelegatorResponse {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
