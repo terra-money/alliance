@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"bytes"
-	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -19,11 +18,11 @@ func (k Keeper) GetUnbondings(
 	valAddr sdk.ValAddress,
 ) (unbondingDelegations []types.UnbondingDelegation, err error) {
 	// Get the store
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := ctx.KVStore(k.storeKey)
 	// create the iterator with the correct prefix
 	prefix := types.GetUndelegationsIndexOrderedByValidatorKey(valAddr)
 	// Get the iterator
-	iter := storetypes.KVStorePrefixIterator(store, prefix)
+	iter := sdk.KVStorePrefixIterator(store, prefix)
 	defer iter.Close()
 	suffix := types.GetPartialUnbondingKeySuffix(denom, delAddr)
 
@@ -114,7 +113,7 @@ func (k Keeper) CompleteUnbondings(ctx sdk.Context) error {
 
 // This method retun all in-progress unbondings for a given delegator address
 func (k Keeper) GetUnbondingsByDelegator(
-	ctx context.Context,
+	ctx sdk.Context,
 	delAddr sdk.AccAddress,
 ) (unbondingDelegations []types.UnbondingDelegation, err error) {
 	// Get and iterate over all alliances

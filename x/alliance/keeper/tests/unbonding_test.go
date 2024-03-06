@@ -30,16 +30,13 @@ func TestUnbondingMethods(t *testing.T) {
 		RewardWeightRange:    types.RewardWeightRange{Min: math.LegacyNewDec(0), Max: math.LegacyNewDec(1)},
 		IsInitialized:        true,
 	}
-	err := app.AllianceKeeper.SetAsset(ctx, allianceAsset)
-	require.NoError(t, err)
+	app.AllianceKeeper.SetAsset(ctx, allianceAsset)
 
 	// Query staking module unbonding time to assert later on
-	unbondingTime, err := app.StakingKeeper.UnbondingTime(ctx)
-	require.NoError(t, err)
+	unbondingTime := app.StakingKeeper.UnbondingTime(ctx)
 
 	// Get the native delegations to have a validator address where to delegate
-	delegations, err := app.StakingKeeper.GetAllDelegations(ctx)
-	require.NoError(t, err)
+	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	valAddr, err := sdk.ValAddressFromBech32(delegations[0].ValidatorAddress)
 	require.NoError(t, err)
 

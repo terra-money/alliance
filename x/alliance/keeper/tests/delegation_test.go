@@ -412,8 +412,6 @@ func TestSuccessfulRedelegation(t *testing.T) {
 		},
 	}, redelegationsRes)
 
-	unbondingPeriod, err := app.StakingKeeper.UnbondingTime(ctx)
-	require.NoError(t, err)
 	require.Equal(t, types.RedelegationEntry{
 		DelegatorAddress:    delAddr1.String(),
 		SrcValidatorAddress: valAddr1.String(),
