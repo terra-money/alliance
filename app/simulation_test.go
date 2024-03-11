@@ -58,7 +58,6 @@ func TestFullAppSimulation(t *testing.T) {
 		map[int64]bool{},
 		app.DefaultNodeHome,
 		simcli.FlagPeriodValue,
-		app.MakeTestEncodingConfig(),
 		simtestutil.EmptyAppOptions{},
 		baseapp.SetChainID(simulationAppChainID),
 	)
@@ -107,8 +106,6 @@ func BenchmarkSimulation(b *testing.B) {
 		require.NoError(b, err)
 	})
 
-	encoding := app.MakeTestEncodingConfig()
-
 	app := app.New(logger,
 		db,
 		nil,
@@ -116,7 +113,6 @@ func BenchmarkSimulation(b *testing.B) {
 		map[int64]bool{},
 		app.DefaultNodeHome,
 		0,
-		encoding,
 		simtestutil.EmptyAppOptions{},
 	)
 

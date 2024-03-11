@@ -23,7 +23,6 @@ func TestAppExportAndBlockedAddrs(t *testing.T) {
 		map[int64]bool{},
 		DefaultNodeHome,
 		0,
-		MakeTestEncodingConfig(),
 		EmptyAppOptions{},
 	)
 	blockedAddrs := app.BlockedModuleAccountAddrs()
