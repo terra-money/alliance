@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -113,15 +112,14 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	return app
 }
 
-func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
+func setup(withGenesis bool, invCheckPeriod uint) (*App, map[string]json.RawMessage) {
 	db := dbm.NewMemDB()
-	encCdc := MakeTestEncodingConfig()
 
-	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
+	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, EmptyAppOptions{})
 	if withGenesis {
-		return app, NewDefaultGenesisState(encCdc.Marshaler)
+		return app, app.DefaultGenesis()
 	}
-	return app, GenesisState{}
+	return app, app.DefaultGenesis()
 }
 
 func MakeTestEncodingConfig() params.EncodingConfig {
@@ -141,15 +139,10 @@ func MakeTestEncodingConfig() params.EncodingConfig {
 
 	encodingConfig := params.EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
-		Marshaler:         pcdc,
+		Codec:             pcdc,
 		TxConfig:          tx.NewTxConfig(pcdc, tx.DefaultSignModes),
 		Amino:             cdc,
 	}
-
-	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
-	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
 	return encodingConfig
 }
@@ -311,13 +304,12 @@ func NewTestNetworkFixture() network.TestFixture {
 		map[int64]bool{},
 		dir,
 		0,
-		MakeTestEncodingConfig(),
 		EmptyAppOptions{},
 	)
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return New(
 			val.GetCtx().Logger, dbm.NewMemDB(), nil, true, map[int64]bool{},
-			val.GetCtx().Config.RootDir, 0, MakeTestEncodingConfig(),
+			val.GetCtx().Config.RootDir, 0,
 			EmptyAppOptions{},
 			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
@@ -326,7 +318,7 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	return network.TestFixture{
 		AppConstructor: appCtr,
-		GenesisState:   NewDefaultGenesisState(app.AppCodec()),
+		GenesisState:   app.DefaultGenesis(),
 		EncodingConfig: testutil.TestEncodingConfig{
 			InterfaceRegistry: app.InterfaceRegistry(),
 			Codec:             app.AppCodec(),
