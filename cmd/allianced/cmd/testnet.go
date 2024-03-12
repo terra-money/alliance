@@ -216,6 +216,7 @@ func initTestnetFiles(
 	appConfig := srvconfig.DefaultConfig()
 	appConfig.MinGasPrices = args.minGasPrices
 	appConfig.API.Enable = true
+	appConfig.API.Swagger = true
 	appConfig.Telemetry.Enabled = true
 	appConfig.Telemetry.PrometheusRetentionTime = 60
 	appConfig.Telemetry.EnableHostnameLabel = false
