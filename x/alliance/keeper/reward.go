@@ -149,20 +149,23 @@ func (k Keeper) AddAssetsToRewardPool(ctx sdk.Context, from sdk.AccAddress, val 
 	}
 	alliances := k.GetAllAssets(ctx)
 
-	// Get total reward weight to normalize weights
-	totalRewardWeight := sdk.NewDec(0)
+	totalStakedRewardWeight := sdk.NewDec(0)
+	// Map is used here only as a lookup table so it does not change the order of the results therefore it is consensus safe
+	assetStakedRewardWeights := make(map[string]sdk.Dec)
 	for _, asset := range alliances {
 		if shouldSkipRewardsToAsset(ctx, *asset, val) {
 			continue
 		}
-		totalRewardWeight = totalRewardWeight.Add(asset.RewardWeight)
+		stakedRewardWeight := asset.RewardWeight.Mul(val.TotalTokensWithAsset(*asset)).QuoInt(asset.TotalTokens)
+		assetStakedRewardWeights[asset.Denom] = stakedRewardWeight
+		totalStakedRewardWeight = totalStakedRewardWeight.Add(stakedRewardWeight)
 	}
 
 	for _, asset := range alliances {
 		if shouldSkipRewardsToAsset(ctx, *asset, val) {
 			continue
 		}
-		normalizedWeight := asset.RewardWeight.Quo(totalRewardWeight)
+		normalizedWeight := assetStakedRewardWeights[asset.Denom].Quo(totalStakedRewardWeight)
 		for _, c := range coins {
 			rewardHistory, found := rewardHistories.GetIndexByDenom(c.Denom, asset.Denom)
 			totalTokens := val.TotalTokensWithAsset(*asset)
