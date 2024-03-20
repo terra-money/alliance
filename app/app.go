@@ -104,6 +104,7 @@ import (
 	"github.com/terra-money/alliance/docs"
 
 	"cosmossdk.io/x/tx/signing"
+
 	alliancemodule "github.com/terra-money/alliance/x/alliance"
 	alliancemodulekeeper "github.com/terra-money/alliance/x/alliance/keeper"
 	alliancemoduletypes "github.com/terra-money/alliance/x/alliance/types"
