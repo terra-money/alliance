@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	"fmt"
 	"time"
 
@@ -10,6 +11,8 @@ import (
 )
 
 var (
+	// Rounder is used to round up small errors due to fix point math
+	Rounder               = math.LegacyNewDecWithPrec(1, 2)
 	RewardDelayTime       = []byte("RewardDelayTime")
 	TakeRateClaimInterval = []byte("TakeRateClaimInterval")
 	LastTakeRateClaimTime = []byte("LastTakeRateClaimTime")
