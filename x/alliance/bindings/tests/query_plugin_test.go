@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
+	"cosmossdk.io/math"
+
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -18,7 +19,7 @@ import (
 
 func createTestContext(t *testing.T) (*app.App, sdk.Context) {
 	app := app.Setup(t)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false)
 	return app, ctx
 }
 
@@ -30,7 +31,7 @@ func TestAssetQuery(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), sdk.NewDec(5), sdk.NewDec(0), genesisTime),
+			types.NewAllianceAsset(AllianceDenom, math.LegacyNewDec(2), math.LegacyZeroDec(), math.LegacyNewDec(5), math.LegacyNewDec(0), genesisTime),
 		},
 	})
 
@@ -53,16 +54,16 @@ func TestAssetQuery(t *testing.T) {
 
 	require.Equal(t, bindingtypes.AllianceResponse{
 		Denom:                AllianceDenom,
-		RewardWeight:         sdk.MustNewDecFromStr("2").String(),
-		TakeRate:             sdk.MustNewDecFromStr("0").String(),
+		RewardWeight:         math.LegacyMustNewDecFromStr("2").String(),
+		TakeRate:             math.LegacyMustNewDecFromStr("0").String(),
 		TotalTokens:          "0",
-		TotalValidatorShares: sdk.MustNewDecFromStr("0").String(),
+		TotalValidatorShares: math.LegacyMustNewDecFromStr("0").String(),
 		RewardStartTime:      uint64(genesisTime.Nanosecond()),
-		RewardChangeRate:     sdk.MustNewDecFromStr("1").String(),
+		RewardChangeRate:     math.LegacyMustNewDecFromStr("1").String(),
 		LastRewardChangeTime: 0,
 		RewardWeightRange: bindingtypes.RewardWeightRange{
-			Min: sdk.MustNewDecFromStr("0").String(),
-			Max: sdk.MustNewDecFromStr("5").String(),
+			Min: math.LegacyMustNewDecFromStr("0").String(),
+			Max: math.LegacyMustNewDecFromStr("5").String(),
 		},
 		IsInitialized: false,
 	}, assetResponse)
@@ -74,10 +75,11 @@ func TestDelegationQuery(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), sdk.NewDec(5), sdk.NewDec(0), genesisTime),
+			types.NewAllianceAsset(AllianceDenom, math.LegacyNewDec(2), math.LegacyZeroDec(), math.LegacyNewDec(5), math.LegacyNewDec(0), genesisTime),
 		},
 	})
-	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	delegations, err := app.StakingKeeper.GetAllDelegations(ctx)
+	require.NoError(t, err)
 	require.Len(t, delegations, 1)
 	// All the addresses needed
 	delAddr, err := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
@@ -88,17 +90,18 @@ func TestDelegationQuery(t *testing.T) {
 	require.NoError(t, err)
 
 	// Mint alliance tokens
-	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, math.NewInt(2000_000))))
 	require.NoError(t, err)
-	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, math.NewInt(2000_000))))
 	require.NoError(t, err)
 
 	// Check current total staked tokens
-	totalBonded := app.StakingKeeper.TotalBondedTokens(ctx)
-	require.Equal(t, sdk.NewInt(1000_000), totalBonded)
+	totalBonded, err := app.StakingKeeper.TotalBondedTokens(ctx)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(1000_000), totalBonded)
 
 	// Delegate
-	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, math.NewInt(1000_000)))
 	require.NoError(t, err)
 
 	querierPlugin := bindings.NewAllianceQueryPlugin(app.AllianceKeeper)
@@ -107,7 +110,7 @@ func TestDelegationQuery(t *testing.T) {
 	delegationQuery := bindingtypes.AllianceQuery{
 		Delegation: &bindingtypes.Delegation{
 			Delegator: delAddr.String(),
-			Validator: val.GetOperator().String(),
+			Validator: val.GetOperator(),
 			Denom:     AllianceDenom,
 		},
 	}
@@ -122,7 +125,7 @@ func TestDelegationQuery(t *testing.T) {
 
 	require.Equal(t, bindingtypes.DelegationResponse{
 		Delegator: delAddr.String(),
-		Validator: val.GetOperator().String(),
+		Validator: val.GetOperator(),
 		Denom:     AllianceDenom,
 		Amount: bindingtypes.Coin{
 			Denom:  AllianceDenom,
@@ -137,10 +140,11 @@ func TestDelegationRewardsQuery(t *testing.T) {
 	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
 		Params: types.DefaultParams(),
 		Assets: []types.AllianceAsset{
-			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), sdk.NewDec(5), sdk.NewDec(0), genesisTime),
+			types.NewAllianceAsset(AllianceDenom, math.LegacyNewDec(2), math.LegacyZeroDec(), math.LegacyNewDec(5), math.LegacyNewDec(0), genesisTime),
 		},
 	})
-	delegations := app.StakingKeeper.GetAllDelegations(ctx)
+	delegations, err := app.StakingKeeper.GetAllDelegations(ctx)
+	require.NoError(t, err)
 	require.Len(t, delegations, 1)
 	// All the addresses needed
 	delAddr, err := sdk.AccAddressFromBech32(delegations[0].DelegatorAddress)
@@ -151,17 +155,18 @@ func TestDelegationRewardsQuery(t *testing.T) {
 	require.NoError(t, err)
 
 	// Mint alliance tokens
-	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, math.NewInt(2000_000))))
 	require.NoError(t, err)
-	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, sdk.NewInt(2000_000))))
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, math.NewInt(2000_000))))
 	require.NoError(t, err)
 
 	// Check current total staked tokens
-	totalBonded := app.StakingKeeper.TotalBondedTokens(ctx)
-	require.Equal(t, sdk.NewInt(1000_000), totalBonded)
+	totalBonded, err := app.StakingKeeper.TotalBondedTokens(ctx)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(1000_000), totalBonded)
 
 	// Delegate
-	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, sdk.NewInt(1000_000)))
+	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, math.NewInt(1000_000)))
 	require.NoError(t, err)
 
 	assets := app.AllianceKeeper.GetAllAssets(ctx)
@@ -170,9 +175,9 @@ func TestDelegationRewardsQuery(t *testing.T) {
 
 	// Transfer to reward pool
 	mintPoolAddr := app.AccountKeeper.GetModuleAddress(minttypes.ModuleName)
-	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(4000_000))))
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(4000_000))))
 	require.NoError(t, err)
-	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000_000))))
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(2000_000))))
 	require.NoError(t, err)
 
 	querierPlugin := bindings.NewAllianceQueryPlugin(app.AllianceKeeper)
@@ -181,7 +186,7 @@ func TestDelegationRewardsQuery(t *testing.T) {
 	delegationQuery := bindingtypes.AllianceQuery{
 		DelegationRewards: &bindingtypes.DelegationRewards{
 			Delegator: delAddr.String(),
-			Validator: val.GetOperator().String(),
+			Validator: val.GetOperator(),
 			Denom:     AllianceDenom,
 		},
 	}

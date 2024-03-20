@@ -74,9 +74,20 @@ func NewRewardHistories(r []RewardHistory) RewardHistories {
 	return r
 }
 
-func (r RewardHistories) GetIndexByDenom(denom string) (ri *RewardHistory, found bool) {
+func (r RewardHistories) GetIndexByAlliance(alliance string) (ris RewardHistories) {
+	for _, rh := range r {
+		// If alliance is empty, it means it was the legacy reward history that does not have a specific alliance
+		// Used to handle the old implementation of reward history
+		if rh.Alliance == alliance || rh.Alliance == "" {
+			ris = append(ris, rh)
+		}
+	}
+	return ris
+}
+
+func (r RewardHistories) GetIndexByDenom(denom string, alliance string) (ri *RewardHistory, found bool) {
 	idx := slices.IndexFunc(r, func(e RewardHistory) bool {
-		return e.Denom == denom
+		return e.Denom == denom && e.Alliance == alliance
 	})
 	if idx < 0 {
 		return &RewardHistory{}, false

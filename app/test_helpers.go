@@ -10,16 +10,19 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
+	"cosmossdk.io/x/tx/signing"
+
 	cosmoserrors "cosmossdk.io/errors"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/std"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -31,14 +34,14 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/terra-money/alliance/app/params"
 
-	dbm "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 )
 
@@ -59,7 +62,7 @@ func Setup(t *testing.T) *App {
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000))),
 	}
 
 	app := SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
@@ -78,57 +81,68 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	genesisState, err := simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, genAccs, balances...)
 	require.NoError(t, err)
 
+	// Set inflation to 0
+	var mintGenesisState minttypes.GenesisState
+	err = app.AppCodec().UnmarshalJSON(genesisState[minttypes.ModuleName], &mintGenesisState)
+	require.NoError(t, err)
+	mintGenesisState.Params.InflationMin = math.LegacyZeroDec()
+	mintGenesisState.Params.InflationMax = math.LegacyZeroDec()
+	mintGenesisState.Params.InflationRateChange = math.LegacyZeroDec()
+	genesisState[minttypes.ModuleName] = app.AppCodec().MustMarshalJSON(&mintGenesisState)
+
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(
-		abci.RequestInitChain{
+	_, err = app.InitChain(
+		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)
+	require.NoError(t, err)
 
-	// commit genesis changes
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
-		AppHash:            app.LastCommitID().Hash,
-		ValidatorsHash:     valSet.Hash(),
 		NextValidatorsHash: valSet.Hash(),
-	}})
+	})
+	require.NoError(t, err)
 
 	return app
 }
 
-func setup(withGenesis bool, invCheckPeriod uint) (*App, GenesisState) {
+func setup(withGenesis bool, invCheckPeriod uint) (*App, map[string]json.RawMessage) {
 	db := dbm.NewMemDB()
-	encCdc := MakeTestEncodingConfig()
 
-	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
+	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, EmptyAppOptions{})
 	if withGenesis {
-		return app, NewDefaultGenesisState(encCdc.Marshaler)
+		return app, app.DefaultGenesis()
 	}
-	return app, GenesisState{}
+	return app, app.DefaultGenesis()
 }
 
 func MakeTestEncodingConfig() params.EncodingConfig {
 	cdc := codec.NewLegacyAmino()
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	codec := codec.NewProtoCodec(interfaceRegistry)
+	interfaceRegistry, _ := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+			},
+			ValidatorAddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+			},
+		},
+	})
+	pcdc := codec.NewProtoCodec(interfaceRegistry)
 
 	encodingConfig := params.EncodingConfig{
 		InterfaceRegistry: interfaceRegistry,
-		Marshaler:         codec,
-		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
+		Codec:             pcdc,
+		TxConfig:          tx.NewTxConfig(pcdc, tx.DefaultSignModes),
 		Amino:             cdc,
 	}
-
-	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
-	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
 	return encodingConfig
 }
@@ -263,10 +277,15 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 func RegisterNewValidator(t *testing.T, app *App, ctx sdk.Context, val stakingtypes.Validator) {
 	t.Helper()
 	val.Status = stakingtypes.Bonded
-	app.StakingKeeper.SetValidator(ctx, val)
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, val) //nolint:errcheck
-	app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
-	err := app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+	err := app.StakingKeeper.SetValidator(ctx, val)
+	require.NoError(t, err)
+	err = app.StakingKeeper.SetValidatorByConsAddr(ctx, val)
+	require.NoError(t, err)
+	err = app.StakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
+	require.NoError(t, err)
+	valAddr, err := sdk.ValAddressFromBech32(val.GetOperator())
+	require.NoError(t, err)
+	err = app.StakingKeeper.Hooks().AfterValidatorCreated(ctx, valAddr)
 	require.NoError(t, err)
 }
 
@@ -276,8 +295,7 @@ func NewTestNetworkFixture() network.TestFixture {
 	if err != nil {
 		panic(fmt.Sprintf("failed creating temporary directory: %v", err))
 	}
-	defer os.RemoveAll(dir)
-
+	defer os.RemoveAll(dir) //nolint:errcheck,nolintlint
 	app := New(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),
@@ -286,13 +304,12 @@ func NewTestNetworkFixture() network.TestFixture {
 		map[int64]bool{},
 		dir,
 		0,
-		MakeTestEncodingConfig(),
 		EmptyAppOptions{},
 	)
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return New(
 			val.GetCtx().Logger, dbm.NewMemDB(), nil, true, map[int64]bool{},
-			val.GetCtx().Config.RootDir, 0, MakeTestEncodingConfig(),
+			val.GetCtx().Config.RootDir, 0,
 			EmptyAppOptions{},
 			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
@@ -301,7 +318,7 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	return network.TestFixture{
 		AppConstructor: appCtr,
-		GenesisState:   NewDefaultGenesisState(app.AppCodec()),
+		GenesisState:   app.DefaultGenesis(),
 		EncodingConfig: testutil.TestEncodingConfig{
 			InterfaceRegistry: app.InterfaceRegistry(),
 			Codec:             app.AppCodec(),

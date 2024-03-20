@@ -3,17 +3,18 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/core/store"
+
 	"github.com/terra-money/alliance/x/alliance/types"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type Keeper struct {
-	storeKey           storetypes.StoreKey
+	storeService       store.KVStoreService
 	cdc                codec.BinaryCodec
 	accountKeeper      types.AccountKeeper
 	bankKeeper         types.BankKeeper
@@ -25,7 +26,7 @@ type Keeper struct {
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey storetypes.StoreKey,
+	storeService store.KVStoreService,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	stakingKeeper types.StakingKeeper,
@@ -39,7 +40,7 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		storeKey:           storeKey,
+		storeService:       storeService,
 		cdc:                cdc,
 		accountKeeper:      accountKeeper,
 		bankKeeper:         bankKeeper,
@@ -60,8 +61,8 @@ func (k Keeper) StakingHooks() Hooks {
 	}
 }
 
-func (k Keeper) StoreKey() storetypes.StoreKey {
-	return k.storeKey
+func (k Keeper) StoreService() store.KVStoreService {
+	return k.storeService
 }
 
 func (k Keeper) GetAuthority() string {

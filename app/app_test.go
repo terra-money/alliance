@@ -3,8 +3,8 @@ package app
 import (
 	"testing"
 
-	db "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	db "github.com/cosmos/cosmos-db"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
@@ -23,7 +23,6 @@ func TestAppExportAndBlockedAddrs(t *testing.T) {
 		map[int64]bool{},
 		DefaultNodeHome,
 		0,
-		MakeTestEncodingConfig(),
 		EmptyAppOptions{},
 	)
 	blockedAddrs := app.BlockedModuleAccountAddrs()

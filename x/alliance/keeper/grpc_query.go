@@ -5,9 +5,13 @@ import (
 	"fmt"
 	"net/url"
 
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
+
 	"github.com/terra-money/alliance/x/alliance/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -33,7 +37,7 @@ func (k QueryServer) AllAlliancesDelegations(c context.Context, req *types.Query
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	delegationStore := prefix.NewStore(store, types.DelegationKey)
 
 	pageRes, err := query.Paginate(delegationStore, req.Pagination, func(key []byte, value []byte) error {
@@ -108,7 +112,7 @@ func (k QueryServer) AllAllianceValidators(c context.Context, req *types.QueryAl
 		Pagination: nil,
 	}
 
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	valStore := prefix.NewStore(store, types.ValidatorInfoKey)
 
 	pageRes, err := query.Paginate(valStore, req.Pagination, func(key []byte, value []byte) error {
@@ -165,7 +169,7 @@ func (k QueryServer) Alliances(c context.Context, req *types.QueryAlliancesReque
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// Get the key-value module store using the store key
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
 	// Get the part of the store that keeps assets
 	assetsStore := prefix.NewStore(store, types.AssetKey)
@@ -217,13 +221,6 @@ func (k QueryServer) Alliance(c context.Context, req *types.QueryAllianceRequest
 	}, nil
 }
 
-func (k QueryServer) IBCAlliance(c context.Context, request *types.QueryIBCAllianceRequest) (*types.QueryAllianceResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceRequest is deprecated
-	req := types.QueryAllianceRequest{
-		Denom: "ibc/" + request.Hash,
-	}
-	return k.Alliance(c, &req)
-}
-
 func (k QueryServer) AllianceDelegationRewards(context context.Context, req *types.QueryAllianceDelegationRewardsRequest) (*types.QueryAllianceDelegationRewardsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(context)
 	decodedDenom, err := url.QueryUnescape(req.Denom)
@@ -248,7 +245,7 @@ func (k QueryServer) AllianceDelegationRewards(context context.Context, req *typ
 		return nil, err
 	}
 
-	_, found = k.GetDelegation(ctx, delAddr, val.GetOperator(), req.Denom)
+	_, found = k.GetDelegation(ctx, delAddr, valAddr, req.Denom)
 	if !found {
 		return nil, stakingtypes.ErrNoDelegation
 	}
@@ -260,17 +257,6 @@ func (k QueryServer) AllianceDelegationRewards(context context.Context, req *typ
 	return &types.QueryAllianceDelegationRewardsResponse{
 		Rewards: rewards,
 	}, nil
-}
-
-func (k QueryServer) IBCAllianceDelegationRewards(context context.Context, request *types.QueryIBCAllianceDelegationRewardsRequest) (*types.QueryAllianceDelegationRewardsResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRewardsRequest is deprecated
-	req := types.QueryAllianceDelegationRewardsRequest{
-		DelegatorAddr: request.DelegatorAddr,
-		ValidatorAddr: request.ValidatorAddr,
-		Denom:         "ibc/" + request.Hash,
-		Pagination:    request.Pagination,
-	}
-
-	return k.AllianceDelegationRewards(context, &req)
 }
 
 func (k QueryServer) AlliancesDelegation(c context.Context, req *types.QueryAlliancesDelegationsRequest) (*types.QueryAlliancesDelegationsResponse, error) {
@@ -285,7 +271,7 @@ func (k QueryServer) AlliancesDelegation(c context.Context, req *types.QueryAlli
 	}
 
 	// Get the key-value module store using the store key
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
 	// Get the specific delegations key
 	key := types.GetDelegationsKey(delAddr)
@@ -345,13 +331,13 @@ func (k QueryServer) AlliancesDelegationByValidator(c context.Context, req *type
 		return nil, err
 	}
 
-	_, found := k.stakingKeeper.GetValidator(ctx, valAddr)
-	if !found {
+	_, err = k.stakingKeeper.GetValidator(ctx, valAddr)
+	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Validator not found by address %s", req.ValidatorAddr)
 	}
 
 	// Get the key-value module store using the store key
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
 	// Get the specific delegations key
 	key := types.GetDelegationsKeyForAllDenoms(delAddr, valAddr)
@@ -425,12 +411,12 @@ func (k QueryServer) AllianceDelegation(c context.Context, req *types.QueryAllia
 		return nil, status.Errorf(codes.NotFound, "AllianceAsset not found by denom %s", req.Denom)
 	}
 
-	delegation, found := k.GetDelegation(ctx, delAddr, validator.GetOperator(), req.Denom)
+	delegation, found := k.GetDelegation(ctx, delAddr, valAddr, req.Denom)
 	if !found {
 		return &types.QueryAllianceDelegationResponse{
 			Delegation: types.DelegationResponse{
-				Delegation: types.NewDelegation(ctx, delAddr, valAddr, req.Denom, sdk.ZeroDec(), []types.RewardHistory{}),
-				Balance:    sdk.NewCoin(req.Denom, sdk.ZeroInt()),
+				Delegation: types.NewDelegation(ctx, delAddr, valAddr, req.Denom, math.LegacyZeroDec(), []types.RewardHistory{}),
+				Balance:    sdk.NewCoin(req.Denom, math.ZeroInt()),
 			},
 		}, nil
 	}
@@ -442,6 +428,21 @@ func (k QueryServer) AllianceDelegation(c context.Context, req *types.QueryAllia
 			Balance:    balance,
 		},
 	}, nil
+}
+
+func (k QueryServer) AllianceUnbondingsByDelegator(c context.Context, req *types.QueryAllianceUnbondingsByDelegatorRequest) (*types.QueryAllianceUnbondingsByDelegatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := k.GetUnbondingsByDelegator(ctx, delAddr)
+
+	return &types.QueryAllianceUnbondingsByDelegatorResponse{
+		Unbondings: res,
+	}, err
 }
 
 func (k QueryServer) AllianceUnbondingsByDenomAndDelegator(c context.Context, req *types.QueryAllianceUnbondingsByDenomAndDelegatorRequest) (*types.QueryAllianceUnbondingsByDenomAndDelegatorResponse, error) {
@@ -502,7 +503,7 @@ func (k QueryServer) AllianceRedelegations(c context.Context, req *types.QueryAl
 	}
 
 	// Get the key-value module store using the store key
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
 	// Get the part of the store that keeps assets
 	redelegationsStore := prefix.NewStore(store, types.GetRedelegationsKeyByDelegatorAndDenom(delAddr, req.Denom))
@@ -538,14 +539,49 @@ func (k QueryServer) AllianceRedelegations(c context.Context, req *types.QueryAl
 	}, err
 }
 
-func (k QueryServer) IBCAllianceDelegation(c context.Context, request *types.QueryIBCAllianceDelegationRequest) (*types.QueryAllianceDelegationResponse, error) { //nolint:staticcheck // SA1019: types.QueryIBCAllianceDelegationRequest is deprecated
-	req := types.QueryAllianceDelegationRequest{
-		DelegatorAddr: request.DelegatorAddr,
-		ValidatorAddr: request.ValidatorAddr,
-		Denom:         "ibc/" + request.Hash,
-		Pagination:    request.Pagination,
+func (k QueryServer) AllianceRedelegationsByDelegator(c context.Context, req *types.QueryAllianceRedelegationsByDelegatorRequest) (*types.QueryAllianceRedelegationsByDelegatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
+	if err != nil {
+		return nil, err
 	}
-	return k.AllianceDelegation(c, &req)
+
+	// Get the key-value module store using the store key
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+
+	// Get the part of the store that keeps assets
+	redelegationsStore := prefix.NewStore(store, types.GetRedelegationsKeyByDelegator(delAddr))
+
+	var redelegationEntries []types.RedelegationEntry
+
+	// Paginate the assets store based on PageRequest
+	pageRes, err := query.Paginate(redelegationsStore, req.Pagination, func(key []byte, value []byte) error {
+		var redelegation types.Redelegation
+		k.cdc.MustUnmarshal(value, &redelegation)
+		// get the completion time from the latest bytes of the key
+		completionTime := types.ParseRedelegationPaginationKeyTime(key)
+
+		redelegationEntry := types.RedelegationEntry{
+			DelegatorAddress:    redelegation.DelegatorAddress,
+			SrcValidatorAddress: redelegation.SrcValidatorAddress,
+			DstValidatorAddress: redelegation.DstValidatorAddress,
+			Balance:             redelegation.Balance,
+			CompletionTime:      completionTime,
+		}
+
+		redelegationEntries = append(redelegationEntries, redelegationEntry)
+		return nil
+	})
+	// Throw an error if pagination failed
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllianceRedelegationsByDelegatorResponse{
+		Redelegations: redelegationEntries,
+		Pagination:    pageRes,
+	}, err
 }
 
 func NewQueryServerImpl(keeper Keeper) types.QueryServer {

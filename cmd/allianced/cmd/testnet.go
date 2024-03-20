@@ -2,12 +2,15 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
 	"os"
 	"path/filepath"
 	"time"
+
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	tmconfig "github.com/cometbft/cometbft/config"
 	tmrand "github.com/cometbft/cometbft/libs/rand"
@@ -36,7 +39,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -213,6 +216,7 @@ func initTestnetFiles(
 	appConfig := srvconfig.DefaultConfig()
 	appConfig.MinGasPrices = args.minGasPrices
 	appConfig.API.Enable = true
+	appConfig.API.Swagger = true
 	appConfig.Telemetry.Enabled = true
 	appConfig.Telemetry.PrometheusRetentionTime = 60
 	appConfig.Telemetry.EnableHostnameLabel = false
@@ -293,17 +297,17 @@ func initTestnetFiles(
 
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
-
+		valAddr := sdk.ValAddress(addr)
 		valTokens := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
 		createValMsg, err := stakingtypes.NewMsgCreateValidator(
-			sdk.ValAddress(addr),
+			valAddr.String(),
 			valPubKeys[i],
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(
-				sdk.NewDec(1).Quo(sdk.NewDec(100)),
-				sdk.NewDec(1).Quo(sdk.NewDec(100)),
-				sdk.NewDec(1).Quo(sdk.NewDec(100)),
+				math.LegacyNewDec(1).Quo(math.LegacyNewDec(100)),
+				math.LegacyNewDec(1).Quo(math.LegacyNewDec(100)),
+				math.LegacyNewDec(1).Quo(math.LegacyNewDec(100)),
 			),
 			math.OneInt(),
 		)
@@ -325,7 +329,7 @@ func initTestnetFiles(
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
 
-		if err := tx.Sign(txFactory, nodeDirName, txBuilder, true); err != nil {
+		if err := tx.Sign(context.Background(), txFactory, nodeDirName, txBuilder, true); err != nil {
 			return err
 		}
 
@@ -382,23 +386,23 @@ func initGenFiles(
 	appGenState[stakingtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&stakingGenState)
 
 	// GOV
-	govGenState := *govtypesv1.NewGenesisState(
-		1,
-		govtypesv1.NewDepositParams(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000))), time.Minute),
-		govtypesv1.NewVotingParams(time.Minute),
-		govtypesv1.DefaultTallyParams(),
-	)
+	defaultGovParams := govtypesv1.DefaultParams()
+	defaultGovParams.MinDeposit = sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))
 
-	appGenState[govtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&govGenState)
+	govGenState := govtypesv1.NewGenesisState(1, defaultGovParams)
+	govTime := time.Minute
+	govGenState.Params.MaxDepositPeriod = &govTime
+	govGenState.Params.VotingPeriod = &govTime
+	appGenState[govtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(govGenState)
 
 	// MINT
 	var mintGenState minttypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState)
 	minterParams := mintGenState.GetMinter()
-	minterParams.Inflation = sdk.NewDecWithPrec(50, 2)
+	minterParams.Inflation = math.LegacyNewDecWithPrec(50, 2)
 	mintGenState.Minter = minterParams
 	mintParams := mintGenState.GetParams()
-	mintParams.InflationMax = sdk.NewDec(1)
+	mintParams.InflationMax = math.LegacyNewDec(1)
 	mintGenState.Params = mintParams
 	appGenState[minttypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&mintGenState)
 
@@ -463,7 +467,7 @@ func collectGenFiles(
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
 		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, nodeID, valPubKey)
 
-		genDoc, err := types.GenesisDocFromFile(nodeConfig.GenesisFile())
+		appGen, err := genutiltypes.AppGenesisFromFile(nodeConfig.GenesisFile())
 		if err != nil {
 			return err
 		}
@@ -473,9 +477,10 @@ func collectGenFiles(
 			clientCtx.TxConfig,
 			nodeConfig,
 			initCfg,
-			*genDoc,
+			appGen,
 			genBalIterator,
 			genutiltypes.DefaultMessageValidator,
+			authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		)
 		if err != nil {
 			return err
@@ -547,7 +552,7 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 	networkConfig.SigningAlgo = args.algo
 	networkConfig.MinGasPrices = args.minGasPrices
 	networkConfig.NumValidators = args.numValidators
-	networkConfig.EnableTMLogging = args.enableLogging
+	networkConfig.EnableLogging = args.enableLogging
 	networkConfig.RPCAddress = args.rpcAddress
 	networkConfig.APIAddress = args.apiAddress
 	networkConfig.GRPCAddress = args.grpcAddress

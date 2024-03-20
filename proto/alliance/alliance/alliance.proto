@@ -14,11 +14,11 @@ message RewardWeightRange {
   option (gogoproto.goproto_getters)  = false;
 
   string min = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   string max = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 }
@@ -33,22 +33,22 @@ message AllianceAsset {
   // It does not need to sum to 1. rate = weight / total_weight
   // Native asset is always assumed to have a weight of 1.s
   string reward_weight = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   // A positive take rate is used for liquid staking derivatives. It defines an rate that is applied per take_rate_interval
   // that will be redirected to the distribution rewards pool
   string take_rate = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   string total_tokens = 4 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false
   ];
   string total_validator_shares = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   google.protobuf.Timestamp reward_start_time = 6 [
@@ -56,7 +56,7 @@ message AllianceAsset {
     (gogoproto.nullable)   = false
   ];
   string reward_change_rate = 7 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   google.protobuf.Duration reward_change_interval = 8 [
@@ -78,7 +78,7 @@ message RewardWeightChangeSnapshot {
   option (gogoproto.goproto_getters)  = false;
 
   string prev_reward_weight = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   repeated RewardHistory reward_histories = 2 [
