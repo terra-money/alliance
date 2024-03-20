@@ -1,9 +1,10 @@
 package types
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
 	"time"
+
+	"cosmossdk.io/math"
 
 	"golang.org/x/exp/slices"
 
