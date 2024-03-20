@@ -1065,7 +1065,8 @@ func TestUndelegatingLargeNumbers(t *testing.T) {
 		RewardWeightRange:    types.RewardWeightRange{Min: math.LegacyNewDec(0), Max: math.LegacyNewDec(1)},
 		IsInitialized:        true,
 	}
-	app.AllianceKeeper.SetAsset(ctx, allianceAsset)
+	err := app.AllianceKeeper.SetAsset(ctx, allianceAsset)
+	require.NoError(t, err)
 
 	// Query staking module unbonding time to assert later on
 	unbondingTime, err := app.StakingKeeper.UnbondingTime(ctx)
