@@ -47,7 +47,7 @@ func GetDelegationTokens(del Delegation, val AllianceValidator, asset AllianceAs
 
 	// We add a small epsilon before rounding down to make sure cases like
 	// 9.999999 get round to 10
-	delTokens = delTokens.Add(math.LegacyNewDecWithPrec(1, 6))
+	delTokens = delTokens.Add(Rounder)
 	return sdk.NewCoin(asset.Denom, delTokens.TruncateInt())
 }
 
@@ -58,7 +58,7 @@ func GetDelegationTokensWithShares(delegatorShares math.LegacyDec, val AllianceV
 
 	// We add a small epsilon before rounding down to make sure cases like
 	// 9.999999 get round to 10
-	delTokens = delTokens.Add(math.LegacyNewDecWithPrec(1, 6))
+	delTokens = delTokens.Add(Rounder)
 	return sdk.NewCoin(asset.Denom, delTokens.TruncateInt())
 }
 

@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
+
 	"golang.org/x/exp/slices"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var (
+	// Rounder is used to round up small errors due to fix point math
+	Rounder               = math.LegacyNewDecWithPrec(1, 2)
 	RewardDelayTime       = []byte("RewardDelayTime")
 	TakeRateClaimInterval = []byte("TakeRateClaimInterval")
 	LastTakeRateClaimTime = []byte("LastTakeRateClaimTime")
