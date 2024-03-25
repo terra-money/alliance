@@ -389,7 +389,7 @@ func (k Keeper) ValidateDelegatedAmount(delegation types.Delegation, coin sdk.Co
 	// Account for rounding in which shares for a full withdraw is slightly more or less than the number of shares recorded
 	// Withdraw all in that case
 	// 1e6 of margin should be enough to handle realistic rounding issues caused by using the fix-point math.
-	if delegation.Shares.Sub(delegationSharesToUpdate).Abs().LT(sdk.NewDecWithPrec(1, 6)) {
+	if delegation.Shares.Sub(delegationSharesToUpdate).Abs().LT(types.Rounder) {
 		return delegation.Shares, nil
 	}
 

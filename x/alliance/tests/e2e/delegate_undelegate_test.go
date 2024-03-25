@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	"github.com/terra-money/alliance/x/alliance"
 
 	"github.com/terra-money/alliance/x/alliance/keeper"
