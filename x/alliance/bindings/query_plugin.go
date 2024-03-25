@@ -2,6 +2,7 @@ package bindings
 
 import (
 	"encoding/json"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -48,7 +49,7 @@ func CustomQuerier(q *QueryPlugin) func(ctx sdk.Context, request json.RawMessage
 				validator,
 			)
 		}
-		return nil, nil
+		return nil, fmt.Errorf("unknown query")
 	}
 }
 
