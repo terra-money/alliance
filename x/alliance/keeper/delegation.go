@@ -38,6 +38,12 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, validator type
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		// Claim validator rewards first to ensure that we distribute accrued rewards to delegators before the new delegation
+		_, err = k.ClaimValidatorRewards(ctx, validator)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Create or update a delegation
