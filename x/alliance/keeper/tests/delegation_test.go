@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"cosmossdk.io/math"
 
 	test_helpers "github.com/terra-money/alliance/app"
@@ -616,6 +618,7 @@ func TestSuccessfulUndelegation(t *testing.T) {
 			types.NewAllianceAsset(AllianceDenomTwo, math.LegacyNewDec(10), math.LegacyNewDec(2), math.LegacyNewDec(12), math.LegacyNewDec(0), ctx.BlockTime()),
 		},
 	})
+	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 	delegations, err := app.StakingKeeper.GetAllDelegations(ctx)
 	require.NoError(t, err)
 	require.Len(t, delegations, 1)
@@ -634,6 +637,12 @@ func TestSuccessfulUndelegation(t *testing.T) {
 	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(AllianceDenom, math.NewInt(2000_000))))
 	require.NoError(t, err)
 	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delAddr, sdk.NewCoins(sdk.NewCoin(AllianceDenom, math.NewInt(2000_000))))
+	require.NoError(t, err)
+
+	// Mint reward tokens
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin("reward", math.NewInt(2000_000))))
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin("reward", math.NewInt(2000_000))))
 	require.NoError(t, err)
 
 	// Delegate to a validator
@@ -661,6 +670,19 @@ func TestSuccessfulUndelegation(t *testing.T) {
 		Shares:           math.LegacyNewDec(2),
 	}, d)
 
+	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), val, sdk.NewCoins(sdk.NewCoin("reward", math.NewInt(1000_000))))
+	require.NoError(t, err)
+
+	rewards, err := queryServer.AllianceDelegationRewards(ctx, &types.QueryAllianceDelegationRewardsRequest{
+		DelegatorAddr: delAddr.String(),
+		ValidatorAddr: valAddr.String(),
+		Denom:         AllianceDenom,
+		Pagination:    nil,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(rewards.Rewards))
+	rewardAmount := rewards.Rewards[0].Amount
+
 	// Immediately undelegate from the validator
 	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, math.NewInt(250_000)))
 	require.NoError(t, err)
@@ -668,8 +690,11 @@ func TestSuccessfulUndelegation(t *testing.T) {
 	_, err = app.AllianceKeeper.Undelegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, math.NewInt(250_000)))
 	require.NoError(t, err)
 
+	// Check that rewards sent out
+	rewardBalance := app.BankKeeper.GetBalance(ctx, delAddr, "reward")
+	require.Equal(t, rewardAmount, rewardBalance.Amount)
+
 	// Query unbondings directly from the entry point
-	queryServer := keeper.NewQueryServerImpl(app.AllianceKeeper)
 	res, err := queryServer.AllianceUnbondingsByDelegator(ctx, &types.QueryAllianceUnbondingsByDelegatorRequest{
 		DelegatorAddr: delAddr.String(),
 	})
@@ -748,6 +773,17 @@ func TestSuccessfulUndelegation(t *testing.T) {
 	// Completing again should not process anymore undelegations
 	err = app.AllianceKeeper.CompleteUnbondings(ctx)
 	require.NoError(t, err)
+
+	q := keeper.NewQueryServerImpl(app.AllianceKeeper)
+	rewardRes, err := q.AllianceDelegationRewards(ctx, &types.QueryAllianceDelegationRewardsRequest{
+		DelegatorAddr: delAddr.String(),
+		ValidatorAddr: valAddr.String(),
+		Denom:         AllianceDenom,
+		Pagination:    nil,
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, 0, len(rewardRes.Rewards))
 }
 
 func TestUndelegationWithoutDelegation(t *testing.T) {
