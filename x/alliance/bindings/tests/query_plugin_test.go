@@ -203,3 +203,21 @@ func TestDelegationRewardsQuery(t *testing.T) {
 		},
 	}, response)
 }
+
+func TestCustomQuerier(t *testing.T) {
+	app, ctx := createTestContext(t)
+	genesisTime := ctx.BlockTime()
+	app.AllianceKeeper.InitGenesis(ctx, &types.GenesisState{
+		Params: types.DefaultParams(),
+		Assets: []types.AllianceAsset{
+			types.NewAllianceAsset(AllianceDenom, sdk.NewDec(2), sdk.ZeroDec(), sdk.NewDec(5), sdk.NewDec(0), genesisTime),
+		},
+	})
+
+	querierPlugin := bindings.NewAllianceQueryPlugin(app.AllianceKeeper)
+	querier := bindings.CustomQuerier(querierPlugin)
+
+	queryBytes := []byte("{\"random\": \"query\"}")
+	_, err := querier(ctx, queryBytes)
+	require.Error(t, err)
+}

@@ -2,6 +2,7 @@ package bindings
 
 import (
 	"encoding/json"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -25,7 +26,7 @@ func CustomQuerier(q *QueryPlugin) func(ctx sdk.Context, request json.RawMessage
 		var AllianceRequest types.AllianceQuery
 		err = json.Unmarshal(request, &AllianceRequest)
 		if err != nil {
-			return
+			return nil, err
 		}
 		if AllianceRequest.Alliance != nil {
 			return q.GetAlliance(ctx, AllianceRequest.Alliance.Denom)
@@ -48,7 +49,7 @@ func CustomQuerier(q *QueryPlugin) func(ctx sdk.Context, request json.RawMessage
 				validator,
 			)
 		}
-		return nil, nil
+		return nil, fmt.Errorf("unknown query")
 	}
 }
 
