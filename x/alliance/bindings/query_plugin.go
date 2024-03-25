@@ -26,7 +26,7 @@ func CustomQuerier(q *QueryPlugin) func(ctx sdk.Context, request json.RawMessage
 		var AllianceRequest types.AllianceQuery
 		err = json.Unmarshal(request, &AllianceRequest)
 		if err != nil {
-			return
+			return nil, err
 		}
 		if AllianceRequest.Alliance != nil {
 			return q.GetAlliance(ctx, AllianceRequest.Alliance.Denom)
