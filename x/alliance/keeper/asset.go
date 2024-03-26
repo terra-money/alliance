@@ -5,6 +5,7 @@ import (
 	"math"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -236,7 +237,7 @@ func (k Keeper) GetAssetByDenom(ctx sdk.Context, denom string) (asset types.Alli
 }
 
 func (k Keeper) DeleteAsset(ctx sdk.Context, asset types.AllianceAsset) error {
-	if asset.TotalTokens.GT(sdk.ZeroInt()) {
+	if asset.TotalTokens.GT(sdkmath.ZeroInt()) {
 		return fmt.Errorf("cannot delete alliance assets that still have tokens")
 	}
 	k.deleteAsset(ctx, asset.Denom)
@@ -375,7 +376,7 @@ func (k Keeper) IterateAllWeightChangeSnapshot(ctx sdk.Context, cb func(denom st
 func (k Keeper) RewardWeightChangeHook(ctx sdk.Context, assets []*types.AllianceAsset) error {
 	for _, asset := range assets {
 		// If no reward changes are required, skip
-		if asset.RewardChangeInterval == 0 || asset.RewardChangeRate.Equal(sdk.OneDec()) {
+		if asset.RewardChangeInterval == 0 || asset.RewardChangeRate.Equal(sdkmath.LegacyOneDec()) {
 			continue
 		}
 		// If it is not scheduled for change, skip

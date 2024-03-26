@@ -1,6 +1,7 @@
 package types
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"google.golang.org/grpc/codes"
@@ -43,7 +44,7 @@ func (msg MsgDelegate) Route() string {
 }
 
 func (msg MsgDelegate) ValidateBasic() error {
-	if !msg.Amount.Amount.GT(sdk.ZeroInt()) {
+	if !msg.Amount.Amount.GT(sdkmath.ZeroInt()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance delegation amount must be more than zero")
 	}
 	return nil
@@ -77,7 +78,7 @@ func (msg MsgRedelegate) Route() string {
 }
 
 func (msg MsgRedelegate) ValidateBasic() error {
-	if msg.Amount.Amount.LTE(sdk.ZeroInt()) {
+	if msg.Amount.Amount.LTE(sdkmath.ZeroInt()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance redelegation amount must be more than zero")
 	}
 	return nil
@@ -110,7 +111,7 @@ func (msg MsgUndelegate) Route() string {
 }
 
 func (msg MsgUndelegate) ValidateBasic() error {
-	if msg.Amount.Amount.LTE(sdk.ZeroInt()) {
+	if msg.Amount.Amount.LTE(sdkmath.ZeroInt()) {
 		return status.Errorf(codes.InvalidArgument, "Alliance undelegate amount must be more than zero")
 	}
 	return nil
