@@ -5,8 +5,9 @@ import (
 	"math/rand"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cometbft/cometbft/libs/json"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -39,10 +40,10 @@ func RandomizedGenesisState(simState *module.SimulationState) {
 
 	var allianceAssets []types.AllianceAsset
 	for i := 0; i < numOfAllianceAssets; i++ {
-		rewardRate := simulation.RandomDecAmount(r, sdk.NewDec(5))
-		takeRate := simulation.RandomDecAmount(r, sdk.MustNewDecFromStr("0.0005"))
+		rewardRate := simulation.RandomDecAmount(r, sdkmath.LegacyNewDec(5))
+		takeRate := simulation.RandomDecAmount(r, sdkmath.LegacyMustNewDecFromStr("0.0005"))
 		startTime := time.Now().Add(time.Duration(simulation.RandIntBetween(r, 60, 60*60*24*3*2)) * time.Second)
-		allianceAssets = append(allianceAssets, types.NewAllianceAsset(fmt.Sprintf("ASSET%d", i), rewardRate, sdk.NewDec(0), sdk.NewDec(15), takeRate, startTime))
+		allianceAssets = append(allianceAssets, types.NewAllianceAsset(fmt.Sprintf("ASSET%d", i), rewardRate, sdkmath.LegacyNewDec(0), sdkmath.LegacyNewDec(15), takeRate, startTime))
 	}
 
 	allianceGenesis := types.GenesisState{

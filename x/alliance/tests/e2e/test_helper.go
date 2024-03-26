@@ -4,17 +4,17 @@ import (
 	"testing"
 	"time"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	sdkmath "cosmossdk.io/math"
 	test_helpers "github.com/terra-money/alliance/app"
 )
 
 func setupApp(t *testing.T, numValidators int, numDelegators int, initBalance sdk.Coins) (app *test_helpers.App, ctx sdk.Context, valAddrs []sdk.ValAddress, delAddrs []sdk.AccAddress) {
 	app = test_helpers.Setup(t)
-	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx = app.BaseApp.NewContext(false)
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime)
 
@@ -28,9 +28,9 @@ func setupApp(t *testing.T, numValidators int, numDelegators int, initBalance sd
 		_val := teststaking.NewValidator(t, valAddr, pks[i])
 		_val.Commission = stakingtypes.Commission{
 			CommissionRates: stakingtypes.CommissionRates{
-				Rate:          sdk.NewDec(0),
-				MaxRate:       sdk.NewDec(0),
-				MaxChangeRate: sdk.NewDec(0),
+				Rate:          sdkmath.LegacyNewDec(0),
+				MaxRate:       sdkmath.LegacyNewDec(0),
+				MaxChangeRate: sdkmath.LegacyNewDec(0),
 			},
 			UpdateTime: time.Now(),
 		}

@@ -21,18 +21,18 @@ message MsgCreateAllianceProposal {
     // It does not need to sum to 1. rate = weight / total_weight
     // Native asset is always assumed to have a weight of 1.
     string reward_weight = 4 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+        (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
         (gogoproto.nullable)   = false
     ];
     // A positive take rate is used for liquid staking derivatives. It defines an annualized reward rate that
     // will be redirected to the distribution rewards pool
     string take_rate = 5 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+        (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
       (gogoproto.nullable)   = false
     ];
 
     string reward_change_rate = 6 [
-      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+      (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
       (gogoproto.nullable)   = false
     ];
 
@@ -61,17 +61,17 @@ message MsgUpdateAllianceProposal {
     // It does not need to sum to 1. rate = weight / total_weight
     // Native asset is always assumed to have a weight of 1.
     string reward_weight = 4 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+        (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
         (gogoproto.nullable)   = false
     ];
 
     string take_rate = 5 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+        (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
         (gogoproto.nullable)   = false
     ];
 
     string reward_change_rate = 6 [
-      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+      (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
       (gogoproto.nullable)   = false
     ];
 

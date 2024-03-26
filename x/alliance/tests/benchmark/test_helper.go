@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -18,14 +18,14 @@ import (
 
 func SetupApp(t *testing.T, r *rand.Rand, numAssets int, numValidators int, numDelegators int) (app *test_helpers.App, ctx sdk.Context, assets []types.AllianceAsset, valAddrs []sdk.AccAddress, delAddrs []sdk.AccAddress) {
 	app = test_helpers.Setup(t)
-	ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx = app.BaseApp.NewContext(false)
 	startTime := time.Now()
 	ctx = ctx.WithBlockTime(startTime)
 	for i := 0; i < numAssets; i++ {
-		rewardWeight := simulation.RandomDecAmount(r, sdk.NewDec(1))
-		takeRate := simulation.RandomDecAmount(r, sdk.MustNewDecFromStr("0.0001"))
-		asset := types.NewAllianceAsset(fmt.Sprintf("ASSET%d", i), rewardWeight, sdk.ZeroDec(), sdk.NewDec(5), takeRate, startTime)
-		asset.RewardChangeRate = sdk.OneDec().Sub(simulation.RandomDecAmount(r, sdk.MustNewDecFromStr("0.00001")))
+		rewardWeight := simulation.RandomDecAmount(r, sdkmath.LegacyNewDec(1))
+		takeRate := simulation.RandomDecAmount(r, sdkmath.LegacyMustNewDecFromStr("0.0001"))
+		asset := types.NewAllianceAsset(fmt.Sprintf("ASSET%d", i), rewardWeight, sdkmath.LegacyZeroDec(), sdkmath.LegacyNewDec(5), takeRate, startTime)
+		asset.RewardChangeRate = sdkmath.LegacyOneDec().Sub(simulation.RandomDecAmount(r, sdkmath.LegacyMustNewDecFromStr("0.00001")))
 		asset.RewardChangeInterval = time.Minute * 5
 		assets = append(assets, asset)
 	}
@@ -45,9 +45,9 @@ func SetupApp(t *testing.T, r *rand.Rand, numAssets int, numValidators int, numD
 		_val := teststaking.NewValidator(t, valAddr, pks[i])
 		_val.Commission = stakingtypes.Commission{
 			CommissionRates: stakingtypes.CommissionRates{
-				Rate:          sdk.NewDec(0),
-				MaxRate:       sdk.NewDec(0),
-				MaxChangeRate: sdk.NewDec(0),
+				Rate:          sdkmath.LegacyNewDec(0),
+				MaxRate:       sdkmath.LegacyNewDec(0),
+				MaxChangeRate: sdkmath.LegacyNewDec(0),
 			},
 			UpdateTime: time.Now(),
 		}

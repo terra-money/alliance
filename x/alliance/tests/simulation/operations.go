@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,7 +63,7 @@ func SimulateMsgDelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types
 		}
 		idx := simtypes.RandIntBetween(r, 0, len(assets)-1)
 		assetToDelegate := assets[idx]
-		amountToDelegate := simtypes.RandomAmount(r, sdk.NewInt(1000_000_000))
+		amountToDelegate := simtypes.RandomAmount(r, sdkmath.NewInt(1000_000_000))
 		if amountToDelegate.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "0 delegate amount"), nil, nil
 		}
@@ -76,7 +77,7 @@ func SimulateMsgDelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types
 
 		msg := &types.MsgDelegate{
 			DelegatorAddress: simAccount.Address.String(),
-			ValidatorAddress: validatorToDelegateTo.GetOperator().String(),
+			ValidatorAddress: validatorToDelegateTo.GetOperator(),
 			Amount:           coinToDelegate,
 		}
 
@@ -86,7 +87,6 @@ func SimulateMsgDelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types
 			TxGen:           tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:             cdc,
 			Msg:             msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
@@ -144,14 +144,14 @@ func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 		idx = simtypes.RandIntBetween(r, 0, len(validators)-1)
 		validatorToDelegateTo := validators[idx]
 
-		if delegation.ValidatorAddress == validatorToDelegateTo.GetOperator().String() {
+		if delegation.ValidatorAddress == validatorToDelegateTo.GetOperator() {
 			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "redelegation to the same validator"), nil, nil
 		}
 
 		msg := &types.MsgRedelegate{
 			DelegatorAddress:    delegation.DelegatorAddress,
 			ValidatorSrcAddress: delegation.ValidatorAddress,
-			ValidatorDstAddress: validatorToDelegateTo.GetOperator().String(),
+			ValidatorDstAddress: validatorToDelegateTo.GetOperator(),
 			Amount:              sdk.NewCoin(asset.Denom, amountToRedelegate),
 		}
 
@@ -161,7 +161,6 @@ func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 			TxGen:         tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:           cdc,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,
@@ -205,7 +204,7 @@ func SimulateMsgUndelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 		asset, _ := k.GetAssetByDenom(ctx, delegation.Denom)
 		bondedTokens := types.GetDelegationTokens(delegation, validator, asset)
 
-		amountToUndelegate := simtypes.RandomAmount(r, bondedTokens.Amount.Sub(sdk.NewInt(1))).Add(sdk.NewInt(1))
+		amountToUndelegate := simtypes.RandomAmount(r, bondedTokens.Amount.Sub(sdkmath.NewInt(1))).Add(sdkmath.NewInt(1))
 		if amountToUndelegate.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "0 undelegate amount"), nil, nil
 		}
@@ -222,7 +221,6 @@ func SimulateMsgUndelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 			TxGen:         tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:           cdc,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,
@@ -270,7 +268,6 @@ func SimulateMsgClaimRewards(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk t
 			TxGen:         tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:           cdc,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,

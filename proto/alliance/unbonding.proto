@@ -19,7 +19,7 @@ message UnbondingDelegation {
     // amount defines the tokens to receive at completion.
     string amount = 3 [
       (cosmos_proto.scalar)  = "cosmos.Int",
-      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+      (gogoproto.customtype) = "cosmossdk.io/math.Int",
       (gogoproto.nullable)   = false
     ];
 }
