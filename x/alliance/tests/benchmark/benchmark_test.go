@@ -8,6 +8,7 @@ import (
 
 	"github.com/terra-money/alliance/x/alliance/tests/benchmark"
 
+	sdkmath "cosmossdk.io/math"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -40,7 +41,7 @@ var createdDelegations = []types.Delegation{}
 func TestRunBenchmarks(t *testing.T) {
 	r := rand.New(rand.NewSource(SEED))
 	app, ctx, assets, vals, dels := benchmark.SetupApp(t, r, NumOfAssets, NumOfValidators, NumOfDelegators)
-	powerReduction := sdk.OneInt()
+	powerReduction := sdkmath.OneInt()
 	operations := make(map[string]int)
 
 	for b := 0; b < NumOfBlocks; b++ {

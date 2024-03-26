@@ -77,7 +77,7 @@ func SimulateMsgDelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types
 
 		msg := &types.MsgDelegate{
 			DelegatorAddress: simAccount.Address.String(),
-			ValidatorAddress: validatorToDelegateTo.GetOperator().String(),
+			ValidatorAddress: validatorToDelegateTo.GetOperator(),
 			Amount:           coinToDelegate,
 		}
 
@@ -87,7 +87,6 @@ func SimulateMsgDelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types
 			TxGen:           tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:             cdc,
 			Msg:             msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
@@ -145,14 +144,14 @@ func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 		idx = simtypes.RandIntBetween(r, 0, len(validators)-1)
 		validatorToDelegateTo := validators[idx]
 
-		if delegation.ValidatorAddress == validatorToDelegateTo.GetOperator().String() {
+		if delegation.ValidatorAddress == validatorToDelegateTo.GetOperator() {
 			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "redelegation to the same validator"), nil, nil
 		}
 
 		msg := &types.MsgRedelegate{
 			DelegatorAddress:    delegation.DelegatorAddress,
 			ValidatorSrcAddress: delegation.ValidatorAddress,
-			ValidatorDstAddress: validatorToDelegateTo.GetOperator().String(),
+			ValidatorDstAddress: validatorToDelegateTo.GetOperator(),
 			Amount:              sdk.NewCoin(asset.Denom, amountToRedelegate),
 		}
 
@@ -162,7 +161,6 @@ func SimulateMsgRedelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 			TxGen:         tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:           cdc,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,
@@ -223,7 +221,6 @@ func SimulateMsgUndelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 			TxGen:         tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:           cdc,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,
@@ -271,7 +268,6 @@ func SimulateMsgClaimRewards(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk t
 			TxGen:         tx.NewTxConfig(cdc, tx.DefaultSignModes),
 			Cdc:           cdc,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,

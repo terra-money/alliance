@@ -24,6 +24,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
@@ -31,7 +32,6 @@ var (
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModule           = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
-	_ module.EndBlockAppModule   = AppModule{}
 )
 
 type AppModuleBasic struct {
@@ -98,9 +98,11 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 }
 
-func (a AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, a.keeper)
-}
+// IsAppModule implements module.AppModule.
+func (AppModule) IsAppModule() {}
+
+// IsOnePerModuleType implements module.AppModule.
+func (AppModule) IsOnePerModuleType() {}
 
 func (a AppModule) InitGenesis(ctx sdk.Context, jsonCodec codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
 	var genesis types.GenesisState
@@ -139,7 +141,7 @@ func (a AppModule) ProposalContents(_ module.SimulationState) []simtypes.Weighte
 	return nil
 }
 
-func (a AppModule) RegisterStoreDecoder(registry sdk.StoreDecoderRegistry) {
+func (a AppModule) RegisterStoreDecoder(registry simulation.StoreDecoderRegistry) {
 	registry[types.StoreKey] = simulation2.NewDecodeStore(a.cdc)
 }
 
