@@ -9,6 +9,7 @@ import (
 	teststaking "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	sdkmath "cosmossdk.io/math"
 	test_helpers "github.com/terra-money/alliance/app"
 )
 
@@ -28,9 +29,9 @@ func setupApp(t *testing.T, numValidators int, numDelegators int, initBalance sd
 		_val := teststaking.NewValidator(t, valAddr, pks[i])
 		_val.Commission = stakingtypes.Commission{
 			CommissionRates: stakingtypes.CommissionRates{
-				Rate:          sdk.NewDec(0),
-				MaxRate:       sdk.NewDec(0),
-				MaxChangeRate: sdk.NewDec(0),
+				Rate:          sdkmath.LegacyNewDec(0),
+				MaxRate:       sdkmath.LegacyNewDec(0),
+				MaxChangeRate: sdkmath.LegacyNewDec(0),
 			},
 			UpdateTime: time.Now(),
 		}

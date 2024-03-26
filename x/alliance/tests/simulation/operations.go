@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,7 +63,7 @@ func SimulateMsgDelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types
 		}
 		idx := simtypes.RandIntBetween(r, 0, len(assets)-1)
 		assetToDelegate := assets[idx]
-		amountToDelegate := simtypes.RandomAmount(r, sdk.NewInt(1000_000_000))
+		amountToDelegate := simtypes.RandomAmount(r, sdkmath.NewInt(1000_000_000))
 		if amountToDelegate.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "0 delegate amount"), nil, nil
 		}
@@ -205,7 +206,7 @@ func SimulateMsgUndelegate(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk typ
 		asset, _ := k.GetAssetByDenom(ctx, delegation.Denom)
 		bondedTokens := types.GetDelegationTokens(delegation, validator, asset)
 
-		amountToUndelegate := simtypes.RandomAmount(r, bondedTokens.Amount.Sub(sdk.NewInt(1))).Add(sdk.NewInt(1))
+		amountToUndelegate := simtypes.RandomAmount(r, bondedTokens.Amount.Sub(sdkmath.NewInt(1))).Add(sdkmath.NewInt(1))
 		if amountToUndelegate.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, types.MsgRedelegateType, "0 undelegate amount"), nil, nil
 		}
