@@ -1,5 +1,7 @@
 package types
 
+import sdk "github.com/cosmos/cosmos-sdk/types"
+
 type AllianceResponse struct {
 	Denom                string            `json:"denom"`
 	RewardWeight         string            `json:"reward_weight"`
@@ -18,18 +20,13 @@ type RewardWeightRange struct {
 	Max string `json:"max"`
 }
 
-type Coin struct {
-	Denom  string `json:"denom"`
-	Amount string `json:"amount"`
-}
-
 type DelegationResponse struct {
 	Delegator string `json:"delegator"`
 	Validator string `json:"validator"`
 	Denom     string `json:"denom"`
-	Amount    Coin   `json:"amount"`
+	Amount    string `json:"amount"`
 }
 
 type DelegationRewardsResponse struct {
-	Rewards []Coin `json:"rewards"`
+	Rewards sdk.Coins `json:"rewards"`
 }

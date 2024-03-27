@@ -12,10 +12,10 @@ import (
 )
 
 type QueryPlugin struct {
-	allianceKeeper keeper.Keeper
+	allianceKeeper *keeper.Keeper
 }
 
-func NewAllianceQueryPlugin(keeper keeper.Keeper) *QueryPlugin {
+func NewAllianceQueryPlugin(keeper *keeper.Keeper) *QueryPlugin {
 	return &QueryPlugin{
 		allianceKeeper: keeper,
 	}
@@ -73,7 +73,7 @@ func (q *QueryPlugin) GetAlliance(ctx sdk.Context, denom string) (res []byte, er
 		},
 		IsInitialized: asset.IsInitialized,
 	})
-	return
+	return res, err
 }
 
 func (q *QueryPlugin) GetDelegation(ctx sdk.Context, denom string, delegator string, validator string) (res []byte, err error) {
@@ -103,10 +103,7 @@ func (q *QueryPlugin) GetDelegation(ctx sdk.Context, denom string, delegator str
 		Delegator: delegation.DelegatorAddress,
 		Validator: delegation.ValidatorAddress,
 		Denom:     delegation.Denom,
-		Amount: types.Coin{
-			Denom:  balance.Denom,
-			Amount: balance.Amount.String(),
-		},
+		Amount:    balance.Amount.String(),
 	})
 	return res, err
 }
@@ -124,34 +121,18 @@ func (q *QueryPlugin) GetDelegationRewards(ctx sdk.Context,
 	if err != nil {
 		return nil, err
 	}
-	delegation, found := q.allianceKeeper.GetDelegation(ctx, delegatorAddr, validatorAddr, denom)
-	if !found {
-		return nil, alliancetypes.ErrDelegationNotFound
-	}
 	allianceValidator, err := q.allianceKeeper.GetAllianceValidator(ctx, validatorAddr)
 	if err != nil {
 		return nil, err
 	}
-	asset, found := q.allianceKeeper.GetAssetByDenom(ctx, denom)
-	if !found {
-		return nil, alliancetypes.ErrUnknownAsset
-	}
 
-	rewards, _, err := q.allianceKeeper.CalculateDelegationRewards(ctx, delegation, allianceValidator, asset)
+	rewards, err := q.allianceKeeper.ClaimDelegationRewards(ctx, delegatorAddr, allianceValidator, denom)
 	if err != nil {
 		return nil, err
 	}
 
-	var coins []types.Coin
-	for _, coin := range rewards {
-		coins = append(coins, types.Coin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.String(),
-		})
-	}
-
 	res, err = json.Marshal(types.DelegationRewardsResponse{
-		Rewards: coins,
+		Rewards: rewards,
 	})
 	return res, err
 }
