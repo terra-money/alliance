@@ -200,7 +200,7 @@ func TestDelegationRewardsQuery(t *testing.T) {
 		Rewards: []sdk.Coin{
 			{
 				Denom:  "stake",
-				Amount: sdk.NewInt(2000000),
+				Amount: math.NewInt(2000000),
 			},
 		},
 	}, response)

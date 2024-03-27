@@ -73,7 +73,7 @@ func (q *QueryPlugin) GetAlliance(ctx sdk.Context, denom string) (res []byte, er
 		},
 		IsInitialized: asset.IsInitialized,
 	})
-	return
+	return res, err
 }
 
 func (q *QueryPlugin) GetDelegation(ctx sdk.Context, denom string, delegator string, validator string) (res []byte, err error) {
