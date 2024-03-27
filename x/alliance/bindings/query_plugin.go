@@ -73,17 +73,17 @@ func (q *QueryPlugin) GetAlliance(ctx sdk.Context, denom string) (res []byte, er
 		},
 		IsInitialized: asset.IsInitialized,
 	})
-	return
+	return res, err
 }
 
 func (q *QueryPlugin) GetDelegation(ctx sdk.Context, denom string, delegator string, validator string) (res []byte, err error) {
 	delegatorAddr, err := sdk.AccAddressFromBech32(delegator)
 	if err != nil {
-		return
+		return nil, err
 	}
 	validatorAddr, err := sdk.ValAddressFromBech32(validator)
 	if err != nil {
-		return
+		return nil, err
 	}
 	delegation, found := q.allianceKeeper.GetDelegation(ctx, delegatorAddr, validatorAddr, denom)
 	if !found {
@@ -115,11 +115,11 @@ func (q *QueryPlugin) GetDelegationRewards(ctx sdk.Context,
 ) (res []byte, err error) {
 	delegatorAddr, err := sdk.AccAddressFromBech32(delegator)
 	if err != nil {
-		return
+		return nil, err
 	}
 	validatorAddr, err := sdk.ValAddressFromBech32(validator)
 	if err != nil {
-		return
+		return nil, err
 	}
 	allianceValidator, err := q.allianceKeeper.GetAllianceValidator(ctx, validatorAddr)
 	if err != nil {
@@ -128,7 +128,7 @@ func (q *QueryPlugin) GetDelegationRewards(ctx sdk.Context,
 
 	rewards, err := q.allianceKeeper.ClaimDelegationRewards(ctx, delegatorAddr, allianceValidator, denom)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	res, err = json.Marshal(types.DelegationRewardsResponse{
