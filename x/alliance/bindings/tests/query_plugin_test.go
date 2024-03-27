@@ -35,7 +35,7 @@ func TestAssetQuery(t *testing.T) {
 		},
 	})
 
-	querierPlugin := bindings.NewAllianceQueryPlugin(app.AllianceKeeper)
+	querierPlugin := bindings.NewAllianceQueryPlugin(&app.AllianceKeeper)
 	querier := bindings.CustomQuerier(querierPlugin)
 
 	assetQuery := bindingtypes.AllianceQuery{
@@ -104,7 +104,7 @@ func TestDelegationQuery(t *testing.T) {
 	_, err = app.AllianceKeeper.Delegate(ctx, delAddr, val, sdk.NewCoin(AllianceDenom, math.NewInt(1000_000)))
 	require.NoError(t, err)
 
-	querierPlugin := bindings.NewAllianceQueryPlugin(app.AllianceKeeper)
+	querierPlugin := bindings.NewAllianceQueryPlugin(&app.AllianceKeeper)
 	querier := bindings.CustomQuerier(querierPlugin)
 
 	delegationQuery := bindingtypes.AllianceQuery{
@@ -127,10 +127,7 @@ func TestDelegationQuery(t *testing.T) {
 		Delegator: delAddr.String(),
 		Validator: val.GetOperator(),
 		Denom:     AllianceDenom,
-		Amount: bindingtypes.Coin{
-			Denom:  AllianceDenom,
-			Amount: "1000000",
-		},
+		Amount:    "1000000",
 	}, delegationResponse)
 }
 
@@ -180,7 +177,7 @@ func TestDelegationRewardsQuery(t *testing.T) {
 	err = app.AllianceKeeper.AddAssetsToRewardPool(ctx, mintPoolAddr, val, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(2000_000))))
 	require.NoError(t, err)
 
-	querierPlugin := bindings.NewAllianceQueryPlugin(app.AllianceKeeper)
+	querierPlugin := bindings.NewAllianceQueryPlugin(&app.AllianceKeeper)
 	querier := bindings.CustomQuerier(querierPlugin)
 
 	delegationQuery := bindingtypes.AllianceQuery{
@@ -200,10 +197,10 @@ func TestDelegationRewardsQuery(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, bindingtypes.DelegationRewardsResponse{
-		Rewards: []bindingtypes.Coin{
+		Rewards: []sdk.Coin{
 			{
 				Denom:  "stake",
-				Amount: "2000000",
+				Amount: sdk.NewInt(2000000),
 			},
 		},
 	}, response)
@@ -219,7 +216,7 @@ func TestCustomQuerier(t *testing.T) {
 		},
 	})
 
-	querierPlugin := bindings.NewAllianceQueryPlugin(app.AllianceKeeper)
+	querierPlugin := bindings.NewAllianceQueryPlugin(&app.AllianceKeeper)
 	querier := bindings.CustomQuerier(querierPlugin)
 
 	queryBytes := []byte("{\"random\": \"query\"}")
