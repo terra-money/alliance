@@ -13,6 +13,7 @@ import "amino/amino.proto";
 option go_package = "github.com/terra-money/alliance/x/alliance/types";
 
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   rpc Delegate(MsgDelegate) returns (MsgDelegateResponse);
   rpc Redelegate(MsgRedelegate) returns(MsgRedelegateResponse);
   rpc Undelegate(MsgUndelegate) returns(MsgUndelegateResponse);
