@@ -2,6 +2,7 @@ package alliance
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/terra-money/alliance/x/alliance/keeper"
 	"github.com/terra-money/alliance/x/alliance/types"
@@ -13,7 +14,7 @@ import (
 
 // EndBlocker
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, ctx.BlockTime(), telemetry.MetricKeyEndBlocker)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 	k.CompleteRedelegations(ctx)
 	if err := k.CompleteUnbondings(ctx); err != nil {
 		panic(fmt.Errorf("failed to complete undelegations from x/alliance module: %s", err))
