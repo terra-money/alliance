@@ -26,7 +26,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/go-metrics v0.5.2
 	github.com/spf13/cast v1.6.0
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
 	google.golang.org/genproto/googleapis/api v0.0.0-20231120223509-83a465c0220f
